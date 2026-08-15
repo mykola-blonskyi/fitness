@@ -1,11 +1,11 @@
-export const GENDERS = ["male", "female"] as const;
-export const GOALS = ["weight_loss", "maintenance", "muscle_gain"] as const;
+export const GENDERS = ['male', 'female'] as const;
+export const GOALS = ['weight_loss', 'maintenance', 'muscle_gain'] as const;
 export const ACTIVITY_LEVELS = [
-  "sedentary",
-  "light",
-  "moderate",
-  "active",
-  "very_active",
+  'sedentary',
+  'light',
+  'moderate',
+  'active',
+  'very_active',
 ] as const;
 
 export type Gender = (typeof GENDERS)[number];

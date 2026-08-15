@@ -1,5 +1,5 @@
-import { headers } from "next/headers";
-import type { Identity } from "@/shared/types/identity";
+import { headers } from 'next/headers';
+import type { Identity } from '@shared/types/identity';
 
 // Server-side fetch wrapper for the internal-only NestJS API (ADR-001 — the
 // frontend never talks to Postgres directly, this is the sole path).
@@ -17,19 +17,19 @@ export async function apiFetch<T>(
     // Routes covered by proxy.ts's matcher already have these injected
     // into the request headers; read them back out here.
     const headerList = await headers();
-    userId = headerList.get("x-user-id");
-    email = headerList.get("x-user-email");
+    userId = headerList.get('x-user-id');
+    email = headerList.get('x-user-email');
   }
 
   const res = await fetch(`${process.env.BACKEND_URL}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
-      ...(userId ? { "x-user-id": userId } : {}),
-      ...(email ? { "x-user-email": email } : {}),
+      'Content-Type': 'application/json',
+      ...(userId ? { 'x-user-id': userId } : {}),
+      ...(email ? { 'x-user-email': email } : {}),
       ...init?.headers,
     },
-    cache: "no-store",
+    cache: 'no-store',
   });
 
   if (!res.ok) {

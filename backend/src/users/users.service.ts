@@ -14,9 +14,7 @@ import { toUserResponse, UserResponse } from './user.mapper';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
-  ) {}
+  constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
 
   async findById(id: string): Promise<UserResponse | null> {
     const user = await this.db.query.users.findFirst({

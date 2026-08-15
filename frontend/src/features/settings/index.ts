@@ -1,1 +1,1 @@
-export { ProfileForm } from "./components/ProfileForm";
+export { ProfileForm } from '@features/settings/components/ProfileForm';

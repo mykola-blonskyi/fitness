@@ -19,6 +19,11 @@
       }
     ],
     "paths": {
+      "@app/*": ["./src/app/*"],
+      "@features/*": ["./src/features/*"],
+      "@libs/*": ["./src/shared/libs/*"],
+      "@ui/*": ["./src/shared/ui/*"],
+      "@shared/*": ["./src/shared/*"],
       "@/*": ["./src/*"]
     }
   },

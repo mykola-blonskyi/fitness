@@ -53,10 +53,21 @@ actionable work. `PATCH .../work-items/{id}/` with `{"priority": "<value>"}`.
 ## Markdown → description_html gotcha
 
 `description_html` must be actual HTML, not raw markdown — the API silently ignores a plain
-`description` field. Acceptance-criteria checklists (`- [ ] ...`) need Tiptap's task-list shape:
-`<ul data-type="taskList"><li data-checked="false"><label><input type="checkbox"><span></span></label><div><p>...</p></div></li></ul>`
-A plain markdown converter turns `- [ ] foo` into a literal bullet reading "[ ] foo" instead of a
-checkbox — verify by round-tripping a PATCH and reading it back before trusting a fresh conversion.
+`description` field. Acceptance-criteria checklists (`- [ ] ...`) need Tiptap's task-list shape.
+**Every `<li>` needs `data-type="taskItem"`, not just the parent `<ul>`'s `data-type="taskList"`**
+— confirmed against a real, UI-edited TODO-project ticket (`TODO-54`), and the omission is exactly
+what caused FITNESS-7/FITNESS-8's checklists to silently corrupt the moment they were opened in
+Plane's web editor: only the first `<li>` survived as a real taskItem, the rest got demoted to a
+plain bullet list on the editor's own re-save. An API round-trip (`GET` after `PATCH`) is **not**
+sufficient proof — it only shows the raw stored value survived the API layer unchanged, not that
+Plane's own Tiptap parser accepts the shape. The only real test is opening it in the web UI (or
+matching a ticket that has already survived that, like `TODO-54`).
+
+Correct shape per item:
+`<li data-type="taskItem" data-checked="false"><label><input type="checkbox"><span></span></label><div><p>...</p></div></li>`
+wrapped in `<ul data-type="taskList">...</ul>`. Cosmetic attributes the editor itself adds on save
+(`class`, `data-id` on every element) are not required for correct parsing — only `data-type` and
+`data-checked` are functional.
 
 ## States
 

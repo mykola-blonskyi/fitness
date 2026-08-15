@@ -8,11 +8,16 @@ This repository follows the global Claude configuration.
 
 ## Current State
 
-**No application code exists yet.** This repository currently holds only planning artifacts — specs, ADRs, and a domain model — ahead of implementation. There is no `package.json`, no build/lint/test tooling, and nothing to run. Do not invent commands; there are none to invent.
+Scaffolding, Hub SSO auth, and profile onboarding/settings are built and merged (FITNESS-7, FITNESS-9, FITNESS-10). CI/CD (FITNESS-8) is in progress. See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
 
-The intended stack (Next.js frontend, NestJS backend, Drizzle/Postgres, Redis, MinIO, a Python/FastAPI photo-analysis worker) is documented in `docs/architecture.md` — read that before scaffolding anything, since key decisions (e.g. NestJS owns the database, not Next.js Server Actions) are already settled in `docs/decisions.md`.
+Common commands (run from repo root):
 
-Work is tracked in Plane (see `docs/agents/issue-tracker.md`), project `FITNESS`. The first implementation ticket is **FITNESS-7** ("App scaffolding + Drizzle/Postgres wiring", Phase 1 of `plans/current.md`) — it has no blockers and establishes the commands (`dev`, `build`, `lint`, `test`, `migrate`) that this section should be updated with once it lands.
+- `pnpm install` — install all workspace deps
+- `pnpm dev` — start both apps in parallel (backend :3001, frontend :3000)
+- `pnpm build` — build both apps
+- `pnpm --filter backend <script>` / `pnpm --filter frontend <script>` — run a script in one package; see each `package.json` for the full list (`lint`, `lint:check`, `format`, `format:check`, `test`, `test:e2e`, `db:generate`, `db:migrate`, `db:studio` on the backend)
+
+The intended stack (Next.js frontend, NestJS backend, Drizzle/Postgres, Redis, MinIO, a Python/FastAPI photo-analysis worker) is documented in `docs/architecture.md` — read that before touching architecture, since key decisions (e.g. NestJS owns the database, not Next.js Server Actions) are already settled in `docs/decisions.md`.
 
 ## Source of Truth
 
@@ -88,3 +93,7 @@ Specs and tickets live in Plane (`plane.blonskyi.dev`, workspace `blonskyi`, pro
 ### Domain docs
 
 Single-context, non-standard paths — this repo's own `knowledge/`/`docs/` layout, not `CONTEXT.md`/`docs/adr/`. See `docs/agents/domain.md`.
+
+### Design
+
+Always use the `ui-ux-pro-max` skill for any UI/UX design work in this repo — page layout, component design, color/typography choices, styling decisions. Load it before writing frontend UI code, not just when explicitly asked for a "design."

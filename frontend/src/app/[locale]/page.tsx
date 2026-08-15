@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/libs/api-client";
+import { apiFetch } from '@libs/api-client';
 
 // Shape of the backend's GET /me response (backend/src/identity/identity.types.ts).
 interface Me {
@@ -9,7 +9,7 @@ interface Me {
 export default async function Home() {
   // Proves the full chain: proxy.ts resolved this request's identity ->
   // apiFetch forwarded it -> the backend's IdentityGuard trusted it.
-  const me = await apiFetch<Me>("/me");
+  const me = await apiFetch<Me>('/me');
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-2">
