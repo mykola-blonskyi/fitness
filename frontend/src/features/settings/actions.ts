@@ -1,13 +1,13 @@
-"use server";
+'use server';
 
-import { revalidatePath } from "next/cache";
-import { apiFetch } from "@/shared/libs/api-client";
+import { revalidatePath } from 'next/cache';
+import { apiFetch } from '@/shared/libs/api-client';
 import type {
   ActivityLevel,
   Gender,
   Goal,
   UserProfile,
-} from "@/shared/types/user";
+} from '@/shared/types/user';
 
 export interface UpdateProfileState {
   error?: string;
@@ -19,24 +19,23 @@ export async function updateProfile(
   formData: FormData,
 ): Promise<UpdateProfileState> {
   try {
-    await apiFetch<UserProfile>("/users/me", {
-      method: "PATCH",
+    await apiFetch<UserProfile>('/users/me', {
+      method: 'PATCH',
       body: JSON.stringify({
-        name: String(formData.get("name") ?? "").trim(),
-        gender: formData.get("gender") as Gender,
-        dateOfBirth: String(formData.get("dateOfBirth") ?? ""),
-        height: Number(formData.get("height")),
-        goal: formData.get("goal") as Goal,
-        activityLevel: formData.get("activityLevel") as ActivityLevel,
+        name: String(formData.get('name') ?? '').trim(),
+        gender: formData.get('gender') as Gender,
+        dateOfBirth: String(formData.get('dateOfBirth') ?? ''),
+        height: Number(formData.get('height')),
+        goal: formData.get('goal') as Goal,
+        activityLevel: formData.get('activityLevel') as ActivityLevel,
       }),
     });
   } catch {
     return {
-      error:
-        "Couldn't save your profile — check your inputs and try again.",
+      error: "Couldn't save your profile — check your inputs and try again.",
     };
   }
 
-  revalidatePath("/[locale]/settings/profile", "page");
+  revalidatePath('/[locale]/settings/profile', 'page');
   return { success: true };
 }

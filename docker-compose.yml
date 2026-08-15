@@ -1,0 +1,62 @@
+# Coolify deployment (see docs/decisions.md ADR-005, docs/architecture.md).
+#
+# No `networks:` block on purpose - Coolify manages one network per stack
+# itself, and a custom network here causes Traefik container-IP issues (see
+# Coolify's own docker-compose guidance). To reach the shared VPS Postgres
+# instance, enable this stack's "Connect to Predefined Network" toggle in
+# the Coolify UI.
+#
+# Every ${VAR} below is supplied by Coolify's own per-resource environment
+# variable panel at deploy time - never a committed .env file. See
+# backend/.env.example and frontend/.env.example for what each one means.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: 3001
+    restart: unless-stopped
+    # No ports/domain: stays private on Coolify's network (ADR-001 - the
+    # backend is internal-only). The frontend reaches it at
+    # http://backend:3001 over that network.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:3001/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      API_URL: ${API_URL}
+      APP_URL: ${APP_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
+      PROJECT_SLUG: ${PROJECT_SLUG}
+      BACKEND_URL: http://backend:3001
+      DEV_BYPASS_AUTH: 'false'
+    depends_on:
+      - backend
+    restart: unless-stopped
+    # Public domain is assigned via Coolify's own per-service domain config,
+    # not declared here - Coolify's proxy picks up the Dockerfile's EXPOSE.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:3000/en/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

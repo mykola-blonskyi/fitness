@@ -96,3 +96,28 @@ Rename the concept to Daily Log, keyed by `(user_id, date)` with `weight` nullab
 ### Consequences
 
 Diet generation and any weight-trend logic must explicitly handle days with no weight value (skip or carry-forward from the last known weigh-in) rather than assuming every Daily Log has one.
+
+---
+
+## ADR-005: Migrations run at container boot, not as a separate CI step
+
+Date: 2026-08-15
+
+Status: Accepted
+
+### Context
+
+FITNESS-8's original ticket description assumed "pushing to main runs `drizzle migrate` against the shared Postgres instance before deploy" as a distinct CI job. But GitHub Actions runners have no network path to the production Postgres instance (it's only reachable from inside Coolify's private network), so a CI-level migration step can't actually reach it without exposing the database publicly — not something to do for a shared instance backing multiple pet projects.
+
+### Decision
+
+The backend's own Docker container runs the migration as its entrypoint, before starting the server: `drizzle-kit migrate && node dist/main` (see `backend/Dockerfile`). CI's `deploy` job only triggers a Coolify webhook; Coolify builds and starts the container, and the container migrates itself against whatever `DATABASE_URL` Coolify injects.
+
+### Alternatives Considered
+
+- A dedicated CI migration step: would require exposing the production Postgres instance to GitHub Actions runners, or running self-hosted runners inside the same private network — meaningfully more infrastructure for no real benefit over letting the container that already has network access do it.
+- SSH into the VPS and run migrations manually from CI: possible, but couples the pipeline to a specific host/credential rather than to Coolify's own deploy mechanism, and doesn't compose with Coolify's health-check-gated rollout.
+
+### Consequences
+
+A failed migration crashes the new container before it ever calls `app.listen()`, so it never passes Coolify's healthcheck — Coolify's own rolling-deploy behavior then leaves the previous, still-healthy container running rather than cutting over. This is how "a failed migration blocks the deploy and leaves the previous version running" is actually satisfied, not by a separate gate. `drizzle-kit` had to move from `devDependencies` to `dependencies` in `backend/package.json` so the CLI is present in the production image (`pnpm deploy --prod` strips devDependencies) — same reason `todolist` keeps `prisma` itself, not just `@prisma/client`, in its own `dependencies`.

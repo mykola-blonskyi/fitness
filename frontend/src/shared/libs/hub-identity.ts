@@ -1,4 +1,4 @@
-import type { Identity } from "@/shared/types/identity";
+import type { Identity } from '@/shared/types/identity';
 
 // Local dev only — the .blonskyi.dev cookie domain doesn't resolve on
 // localhost and there's no way to reach a real deployed hub from here.
@@ -6,8 +6,8 @@ import type { Identity } from "@/shared/types/identity";
 // proxy.ts can skip the Hub JWT check entirely in this mode, not just the
 // validate-endpoint call.
 export function devBypassIdentity(): Identity | null {
-  if (process.env.NODE_ENV === "production") return null;
-  if (process.env.DEV_BYPASS_AUTH !== "true") return null;
+  if (process.env.NODE_ENV === 'production') return null;
+  if (process.env.DEV_BYPASS_AUTH !== 'true') return null;
 
   const userId = process.env.DEV_USER_ID;
   const email = process.env.DEV_USER_EMAIL;
@@ -27,12 +27,12 @@ export async function resolveIdentity(
   if (bypass) return bypass;
 
   const API_URL = process.env.API_URL!;
-  const PROJECT_SLUG = process.env.PROJECT_SLUG ?? "fitness";
+  const PROJECT_SLUG = process.env.PROJECT_SLUG ?? 'fitness';
 
   try {
     const res = await fetch(
       `${API_URL}/api/auth/validate?project=${PROJECT_SLUG}`,
-      { headers: { cookie: cookieHeader }, cache: "no-store" },
+      { headers: { cookie: cookieHeader }, cache: 'no-store' },
     );
     if (!res.ok) return null;
 

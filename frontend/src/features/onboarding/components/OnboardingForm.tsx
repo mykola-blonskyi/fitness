@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useActionState } from "react";
-import { ACTIVITY_LEVELS, GENDERS, GOALS } from "@/shared/types/user";
-import { completeOnboarding } from "../actions";
+import { useActionState } from 'react';
+import { ACTIVITY_LEVELS, GENDERS, GOALS } from '@/shared/types/user';
+import { completeOnboarding } from '../actions';
 
 const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
-  weight_loss: "Weight loss",
-  maintenance: "Maintenance",
-  muscle_gain: "Muscle gain",
+  weight_loss: 'Weight loss',
+  maintenance: 'Maintenance',
+  muscle_gain: 'Muscle gain',
 };
 
 const ACTIVITY_LABELS: Record<(typeof ACTIVITY_LEVELS)[number], string> = {
-  sedentary: "Sedentary",
-  light: "Light",
-  moderate: "Moderate",
-  active: "Active",
-  very_active: "Very active",
+  sedentary: 'Sedentary',
+  light: 'Light',
+  moderate: 'Moderate',
+  active: 'Active',
+  very_active: 'Very active',
 };
 
 export function OnboardingForm() {
@@ -54,7 +54,7 @@ export function OnboardingForm() {
           </option>
           {GENDERS.map((g) => (
             <option key={g} value={g}>
-              {g === "male" ? "Male" : "Female"}
+              {g === 'male' ? 'Male' : 'Female'}
             </option>
           ))}
         </select>
@@ -141,9 +141,9 @@ export function OnboardingForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-foreground px-4 py-2 text-background disabled:opacity-50"
+        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {pending ? "Saving…" : "Complete profile"}
+        {pending ? 'Saving…' : 'Complete profile'}
       </button>
     </form>
   );

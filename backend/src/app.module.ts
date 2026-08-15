@@ -10,9 +10,6 @@ import { UsersModule } from './users/users.module';
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), DbModule, UsersModule],
   controllers: [AppController],
-  providers: [
-    AppService,
-    { provide: APP_GUARD, useClass: IdentityGuard },
-  ],
+  providers: [AppService, { provide: APP_GUARD, useClass: IdentityGuard }],
 })
 export class AppModule {}

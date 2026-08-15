@@ -1,1 +1,1 @@
-export { ProfileForm } from "./components/ProfileForm";
+export { ProfileForm } from './components/ProfileForm';

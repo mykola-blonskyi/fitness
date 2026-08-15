@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { devBypassIdentity, resolveIdentity } from "@/shared/libs/hub-identity";
-import type { Identity } from "@/shared/types/identity";
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import { devBypassIdentity, resolveIdentity } from '@/shared/libs/hub-identity';
+import type { Identity } from '@/shared/types/identity';
 
 const API_URL = process.env.API_URL!;
 const AUTH_SECRET = process.env.AUTH_SECRET!;
@@ -10,7 +10,7 @@ const BACKEND_URL = process.env.BACKEND_URL!;
 
 // TODO(FITNESS-11): once next-intl lands, read the locale from the
 // NEXT_LOCALE cookie / routing default instead of hardcoding "en".
-const LOCALE = "en";
+const LOCALE = 'en';
 
 function loginRedirect(req: NextRequest) {
   const callbackUrl = `${APP_URL}${req.nextUrl.pathname}${req.nextUrl.search}`;
@@ -21,10 +21,10 @@ function loginRedirect(req: NextRequest) {
 async function hasCompletedProfile(identity: Identity): Promise<boolean> {
   const res = await fetch(`${BACKEND_URL}/users/me`, {
     headers: {
-      "x-user-id": identity.userId,
-      "x-user-email": identity.email,
+      'x-user-id': identity.userId,
+      'x-user-email': identity.email,
     },
-    cache: "no-store",
+    cache: 'no-store',
   });
   return res.ok;
 }
@@ -32,7 +32,7 @@ async function hasCompletedProfile(identity: Identity): Promise<boolean> {
 export async function proxy(req: NextRequest) {
   // Health checks stay public for infra monitoring (Coolify etc. have no
   // Hub session cookie to present).
-  if (req.nextUrl.pathname.endsWith("/health")) {
+  if (req.nextUrl.pathname.endsWith('/health')) {
     return NextResponse.next();
   }
 
@@ -51,35 +51,31 @@ export async function proxy(req: NextRequest) {
     const token = await getToken({
       req,
       secret: AUTH_SECRET,
-      cookieName: "authjs.session-token",
+      cookieName: 'authjs.session-token',
     });
     if (!token) {
       return loginRedirect(req);
     }
 
-    identity = await resolveIdentity(req.headers.get("cookie") ?? "");
+    identity = await resolveIdentity(req.headers.get('cookie') ?? '');
     if (!identity) {
       return loginRedirect(req);
     }
   }
 
   const headers = new Headers(req.headers);
-  headers.set("x-user-id", identity.userId);
-  headers.set("x-user-email", identity.email);
+  headers.set('x-user-id', identity.userId);
+  headers.set('x-user-email', identity.email);
 
   // Profile completion is enforced here, before any other feature route
   // is reached (see the Auth spec's Implementation Decisions). /onboarding
   // itself is exempt, or a completed user could never reach it to submit
   // the form in the first place.
-  const isOnboarding = req.nextUrl.pathname
-    .split("/")
-    .includes("onboarding");
+  const isOnboarding = req.nextUrl.pathname.split('/').includes('onboarding');
   if (!isOnboarding) {
     const complete = await hasCompletedProfile(identity);
     if (!complete) {
-      return NextResponse.redirect(
-        new URL(`/${LOCALE}/onboarding`, req.url),
-      );
+      return NextResponse.redirect(new URL(`/${LOCALE}/onboarding`, req.url));
     }
   }
 
@@ -90,5 +86,5 @@ export const config = {
   // Excludes API routes, Next.js internals, and static files — routes
   // outside this matcher (e.g. future /api/* route handlers) must call
   // resolveIdentity() themselves rather than relying on this proxy.
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 };

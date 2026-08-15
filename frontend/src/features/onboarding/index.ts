@@ -1,1 +1,1 @@
-export { OnboardingForm } from "./components/OnboardingForm";
+export { OnboardingForm } from './components/OnboardingForm';
