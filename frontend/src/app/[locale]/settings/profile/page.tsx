@@ -1,6 +1,6 @@
-import { ProfileForm } from '@/features/settings';
-import { apiFetch } from '@/shared/libs/api-client';
-import type { UserProfile } from '@/shared/types/user';
+import { ProfileForm } from '@features/settings';
+import { apiFetch } from '@libs/api-client';
+import type { UserProfile } from '@shared/types/user';
 
 export default async function ProfileSettingsPage() {
   const profile = await apiFetch<UserProfile>('/users/me');

@@ -6,8 +6,8 @@ import {
   GENDERS,
   GOALS,
   type UserProfile,
-} from '@/shared/types/user';
-import { updateProfile } from '../actions';
+} from '@shared/types/user';
+import { updateProfile } from '@features/settings/actions';
 
 const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
   weight_loss: 'Weight loss',

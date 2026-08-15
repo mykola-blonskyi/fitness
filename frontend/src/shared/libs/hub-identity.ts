@@ -1,4 +1,4 @@
-import type { Identity } from '@/shared/types/identity';
+import type { Identity } from '@shared/types/identity';
 
 // Local dev only — the .blonskyi.dev cookie domain doesn't resolve on
 // localhost and there's no way to reach a real deployed hub from here.

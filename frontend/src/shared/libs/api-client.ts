@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import type { Identity } from '@/shared/types/identity';
+import type { Identity } from '@shared/types/identity';
 
 // Server-side fetch wrapper for the internal-only NestJS API (ADR-001 — the
 // frontend never talks to Postgres directly, this is the sole path).

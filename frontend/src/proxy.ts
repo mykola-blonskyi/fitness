@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { devBypassIdentity, resolveIdentity } from '@/shared/libs/hub-identity';
-import type { Identity } from '@/shared/types/identity';
+import { devBypassIdentity, resolveIdentity } from '@libs/hub-identity';
+import type { Identity } from '@shared/types/identity';
 
 const API_URL = process.env.API_URL!;
 const AUTH_SECRET = process.env.AUTH_SECRET!;

@@ -1,8 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { ACTIVITY_LEVELS, GENDERS, GOALS } from '@/shared/types/user';
-import { completeOnboarding } from '../actions';
+import { ACTIVITY_LEVELS, GENDERS, GOALS } from '@shared/types/user';
+import { completeOnboarding } from '@features/onboarding/actions';
 
 const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
   weight_loss: 'Weight loss',

@@ -1,14 +1,14 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { apiFetch } from '@/shared/libs/api-client';
+import { apiFetch } from '@libs/api-client';
 import type {
   ActivityLevel,
   Gender,
   Goal,
   UserProfile,
   UserProfileInput,
-} from '@/shared/types/user';
+} from '@shared/types/user';
 
 export interface OnboardingState {
   error?: string;

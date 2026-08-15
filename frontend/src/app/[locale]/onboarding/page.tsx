@@ -1,4 +1,4 @@
-import { OnboardingForm } from '@/features/onboarding';
+import { OnboardingForm } from '@features/onboarding';
 
 export default function OnboardingPage() {
   return (

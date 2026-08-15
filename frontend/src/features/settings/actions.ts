@@ -1,13 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { apiFetch } from '@/shared/libs/api-client';
+import { apiFetch } from '@libs/api-client';
 import type {
   ActivityLevel,
   Gender,
   Goal,
   UserProfile,
-} from '@/shared/types/user';
+} from '@shared/types/user';
 
 export interface UpdateProfileState {
   error?: string;

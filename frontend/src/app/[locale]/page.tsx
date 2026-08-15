@@ -1,4 +1,4 @@
-import { apiFetch } from '@/shared/libs/api-client';
+import { apiFetch } from '@libs/api-client';
 
 // Shape of the backend's GET /me response (backend/src/identity/identity.types.ts).
 interface Me {
