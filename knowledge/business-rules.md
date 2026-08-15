@@ -1,0 +1,111 @@
+# Business Rules
+
+## Daily Log requires no weigh-in
+
+Progress photos, workout logs, and diets attach to a Daily Log ([[glossary]]) whose `weight` field is nullable. A user can log a workout, upload photos, or generate a diet on a day with no weight recorded.
+
+Why: the original schema required weight NOT NULL, which would have blocked any daily activity without a weigh-in first — doesn't match real usage (people train far more often than they weigh in).
+
+---
+
+## Multiple concurrent active Training Programs
+
+A user may have several Training Programs active at the same time (e.g. Strength + Running + Stretching in parallel). `UserActiveProgram` is a plain many-to-many join, not one-to-one.
+
+Why: the grooming note's example explicitly described concurrent programs; the original schema's one-to-one constraint contradicted it.
+
+---
+
+## Diet regeneration is always manual
+
+Logging a new weight or changing food/diet preferences never creates a Diet automatically. It only makes a "Regenerate menu" action relevant/visible in the UI — the user must explicitly trigger generation.
+
+Why: avoids the `diets` table filling with rows nobody asked for, and avoids burning calculation work on days the user never opens their diet.
+
+---
+
+## Current diet resolution
+
+The "current" Diet for a Daily Log is the most recently created `diets` row for that Daily Log (`ORDER BY created_at DESC LIMIT 1`). Older Diets for the same Daily Log are kept as history, not marked obsolete or deleted.
+
+Why: no extra state (`is_current` flag) to keep in sync; regenerating is just inserting a new row.
+
+---
+
+## Diet menu generation is a greedy heuristic
+
+For each meal, pick one Food Item per required Food Role, then scale portion size (`weight_grams`) to hit that meal's calorie share; adjust the largest items if the day's total drifts outside tolerance (~±5%) of the target.
+
+Why: this is a recommendation feature, not a medical prescription — "close enough" is the actual requirement. A constraint solver would add real complexity and a new dependency for no meaningful benefit here.
+
+---
+
+## Food Replacement and diet generation are role-based
+
+Two Food Items are interchangeable only if they share the same Food Role (e.g. Chicken Breast and Turkey Breast are both `lean_protein`). Category and Subcategory are for browsing/filtering only, never for substitution logic.
+
+---
+
+## Food Preferences target structured entities, not free text
+
+`user_food_preferences.target_type` + `target_id` point at a Food Category, Food Subcategory, Food Role, or a specific Food Item. A candidate Food Item is excluded from diet generation if any of its own category/subcategory/role/id matches an active preference's target.
+
+Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut butter, not all nuts") with one mechanism, using real foreign keys instead of fuzzy text matching.
+
+---
+
+## Diet Calculation Algorithm formula is documentation only
+
+`diet_calculation_algorithms.formula` is a human-readable description for display/audit purposes. The real calculation is versioned backend code (e.g. a `mifflinV1()` function) looked up by `code` — never parsed or evaluated at runtime.
+
+Why: avoids an expression-evaluation dependency/risk surface for a feature that doesn't need runtime flexibility; new algorithm versions are code changes, which is the normal and safer path.
+
+---
+
+## Photo analysis failure handling: auto-retry then give up
+
+The Python worker automatically retries a failed analysis job a few times with backoff before marking `progress_photos.analysis_status = 'failed'` permanently. No further automatic retries after that; the UI can offer a manual retry.
+
+---
+
+## Progress photos are private
+
+Photos are stored in a private MinIO bucket. `progress_photos` stores an object key, never a permanent public URL. The backend generates a short-lived presigned GET URL per authenticated request after checking ownership — the same presigning pattern already used for uploads, applied symmetrically to reads.
+
+Why: these are sensitive personal body photos; a permanent public link would leak via referrers, screenshots, or bucket enumeration.
+
+---
+
+## Python worker accesses MinIO directly, not via presigned URLs
+
+The photo-analysis worker is a trusted internal service (like the NestJS backend) with its own MinIO credentials, and reads objects directly by key over the internal Docker network. Presigned URLs exist specifically for the untrusted browser leg of the upload flow, not for service-to-service reads.
+
+---
+
+## Cross-language job queue uses plain Redis primitives, not BullMQ
+
+NestJS and the Python worker communicate over a plain Redis list/stream with a JSON payload (`LPUSH`/`BRPOP` or `XADD`/`XREADGROUP`) — not BullMQ, which is Node-only with no maintained Python client. NestJS may use BullMQ internally for its own scheduling, but the cross-language contract is always a plain Redis primitive.
+
+---
+
+## Migrations are a mandatory pre-deploy gate
+
+CI/CD runs lint + tests → build → `drizzle migrate` against the shared Postgres instance → deploys the new container only if migration succeeds. A failed migration blocks deploy; the previous version keeps serving traffic.
+
+Why: the Postgres instance is shared across the user's other pet projects — migrations must never run unattended after a broken deploy.
+
+---
+
+## Food/exercise data import is a one-time curated seed, not a live sync
+
+A backend script pulls a subset from Open Food Facts/USDA/wger once, maps source categories to this project's category/subcategory/role taxonomy via an explicit mapping table, and inserts with `source` + `is_verified=false`. Re-run manually to add more items later. Per-locale name translations (uk/ru/es) are machine-translated at the same import step and also marked unverified.
+
+Why: avoids maintaining a recurring sync job and unattended auto-categorization against a taxonomy the external sources don't natively provide.
+
+---
+
+## PWA offline supports queued writes, not just cached reads
+
+The service worker caches active programs/exercises/recent logs for offline viewing, and lets the user log workout sets while offline. Writes queue in IndexedDB and flush to the NestJS API in order once connectivity returns. No conflict resolution is needed since workout sets are append-only, never concurrently edited.
+
+Why: "gym usage without internet" only holds if the core action (logging a set) works with no signal, not just viewing cached data.
