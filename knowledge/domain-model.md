@@ -1,0 +1,283 @@
+# Domain Model
+
+See [[glossary]] for term definitions and [[business-rules]] for the rules referenced below.
+
+## Entities
+
+### User
+
+Responsibilities:
+
+Owns profile data used for calorie/macro calculation; owns Daily Logs, Training Programs, Diets (via Daily Logs), and Food/Diet Preferences. Identity itself is owned by the Hub — this table stores fitness-specific profile fields only.
+
+Fields:
+
+- name, email, date_of_birth, height (metric), gender (male/female)
+- goal (weight_loss/maintenance/muscle_gain)
+- activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation
+- avatar_url
+
+Relationships:
+
+- one_to_many Daily Logs
+- one_to_many Training Programs
+- many_to_many active Training Programs (via UserActiveProgram — see Business Rules: multiple concurrent active programs)
+- one_to_many Food Preferences, Diet Preferences
+- one_to_many Photo Sessions
+
+---
+
+### Daily Log
+
+Responsibilities:
+
+The per-day anchor a user's activity attaches to. See [[glossary]] "Daily Log" — weight is optional, not required.
+
+Fields:
+
+- user_id, date (unique together)
+- weight (nullable)
+
+Relationships:
+
+- one_to_many Progress Photos
+- one_to_many Diets
+- one_to_many Workout Logs
+
+---
+
+### Photo Session
+
+Responsibilities:
+
+Groups Progress Photos captured together on one occasion; tracks whether this occasion is the user's baseline reference point.
+
+Fields:
+
+- user_id, date, is_baseline (only one true per user, enforced by unique partial index)
+
+Relationships:
+
+- one_to_many Progress Photos
+- many_to_one User
+
+---
+
+### Progress Photo
+
+Responsibilities:
+
+A single tagged image with async ML analysis results.
+
+Fields:
+
+- pose (front/side/back)
+- image location (private MinIO object key — see Business Rules: photo access)
+- analysis_status (pending/processing/completed/failed)
+- pose_landmarks, alignment_data (JSON, populated by the Python worker)
+
+Relationships:
+
+- many_to_one Daily Log
+- many_to_one Photo Session
+
+---
+
+### Training Program
+
+Responsibilities:
+
+A reusable, editable plan of exercises. Multiple programs may be active for a user at once.
+
+Fields:
+
+- title, is_archived
+
+Relationships:
+
+- many_to_one User
+- one_to_many Program Exercises (ordered)
+- many_to_many active status via UserActiveProgram
+
+---
+
+### Program Exercise
+
+Responsibilities:
+
+One planned exercise slot within a Training Program.
+
+Fields:
+
+- order_index, target_sets, target_reps, target_duration_seconds (nullable — depends on exercise type)
+
+Relationships:
+
+- many_to_one Training Program
+- many_to_one Exercise
+
+---
+
+### Workout Log
+
+Responsibilities:
+
+A record of a completed session. Survives edits/deletion of the source Training Program (history is never retroactively altered).
+
+Fields:
+
+- title
+
+Relationships:
+
+- many_to_one Daily Log
+- many_to_one Training Program (nullable — ad hoc workouts allowed)
+- one_to_many Workout Sets
+
+---
+
+### Workout Set
+
+Responsibilities:
+
+One logged set of an exercise. Reps/weight vs. duration is inferred from the Exercise's category (`cardio` → duration; everything else → reps/weight) — see Business Rules.
+
+Fields:
+
+- set_number, weight (nullable), reps (nullable), duration_seconds (nullable)
+
+Relationships:
+
+- many_to_one Workout Log
+- many_to_one Exercise
+
+---
+
+### Exercise
+
+Responsibilities:
+
+A catalog entry (from wger/ExerciseDB or manually created) used to build programs and log sets.
+
+Fields:
+
+- name, image_url, category (chest/back/shoulders/biceps/triceps/legs/core/cardio/full_body)
+
+Relationships:
+
+- one_to_many Program Exercises, Workout Sets
+- one_to_many Exercise Translations (per-locale name)
+
+---
+
+### Diet
+
+Responsibilities:
+
+A single generated meal plan for one Daily Log. Never edited in place — see Business Rules: current diet resolution.
+
+Fields:
+
+- total_calories, total_protein, total_carbs, total_fat
+- calculation_metadata (JSON snapshot of algorithm inputs/outputs)
+
+Relationships:
+
+- many_to_one Daily Log
+- many_to_one Diet Calculation Algorithm
+- one_to_many Diet Items
+
+---
+
+### Diet Item
+
+Responsibilities:
+
+One food entry within a generated Diet.
+
+Fields:
+
+- weight_grams, meal_type (breakfast/lunch/dinner/snack), order_index
+
+Relationships:
+
+- many_to_one Diet
+- many_to_one Food Item
+
+---
+
+### Diet Calculation Algorithm
+
+Responsibilities:
+
+A versioned, named calorie/macro formula. `formula` is documentation only — see Business Rules: algorithm implementation.
+
+Fields:
+
+- code (unique), name, description, formula (human-readable text)
+
+Relationships:
+
+- one_to_many Diets
+
+---
+
+### Food Item
+
+Responsibilities:
+
+A catalog entry classified by Category → Subcategory → Role, from Open Food Facts/USDA or manual entry.
+
+Fields:
+
+- name, image_url, protein, carbs, fat, calories (per reference unit)
+- source (open_food_facts/usda/manual), is_verified
+
+Relationships:
+
+- many_to_one Food Category, Food Subcategory, Food Role
+- one_to_many Diet Items
+- one_to_many Food Item Translations (per-locale name)
+
+---
+
+### Food Category / Food Subcategory / Food Role
+
+Responsibilities:
+
+Fixed taxonomies used for browsing (Category/Subcategory) and for diet generation + Food Replacement matching (Role — see Business Rules: replacement is role-based, same-role foods are interchangeable).
+
+Relationships:
+
+- Food Subcategory many_to_one Food Category
+- Food Item many_to_one each of the three
+
+---
+
+### Food Preference
+
+Responsibilities:
+
+A user's allergy or exclusion, targeting a taxonomy node or a specific Food Item — see Business Rules and [[glossary]] "Food Preference".
+
+Fields:
+
+- type (allergy/exclude)
+- target_type (category/subcategory/role/food_item)
+- target_id (polymorphic FK)
+
+Relationships:
+
+- many_to_one User
+
+---
+
+### Diet Preference
+
+Responsibilities:
+
+A user's declared diet type (vegetarian/vegan/keto/paleo), used as an additional filter during diet generation.
+
+Relationships:
+
+- many_to_one User
