@@ -1,0 +1,11 @@
+{
+  "name": "fitness",
+  "private": true,
+  "packageManager": "pnpm@11.12.0",
+  "scripts": {
+    "prepare": "husky",
+    "dev": "pnpm --parallel --filter backend --filter frontend dev",
+    "build": "pnpm --filter backend build && pnpm --filter frontend build"
+  },
+  "devDependencies": { "husky": "^9.1.7", "lint-staged": "^17.2.0" }
+}

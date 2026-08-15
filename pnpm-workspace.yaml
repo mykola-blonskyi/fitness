@@ -1,0 +1,9 @@
+packages:
+  - backend
+  - frontend
+injectWorkspacePackages: true
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  sharp: true
+  unrs-resolver: false
