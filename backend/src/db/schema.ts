@@ -23,9 +23,12 @@ export const activityLevelEnum = pgEnum('activity_level', [
 ]);
 
 // User (see knowledge/domain-model.md) — profile fields owned by this
-// project; identity itself belongs to the Hub.
+// project; identity itself belongs to the Hub. id is NOT locally
+// generated — it's always set to the Hub's own user id (also a uuid,
+// confirmed against my-projects/drizzle/schema.ts) so cross-project
+// identity stays aligned, per the Auth spec's decision.
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuid('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   dateOfBirth: date('date_of_birth').notNull(),
