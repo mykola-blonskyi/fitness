@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
@@ -25,7 +26,10 @@ export async function generateStaticParams() {
 export default async function RootLayout({
   children,
   params,
-}: LayoutProps<'/[locale]'>) {
+}: {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
 
   return (
