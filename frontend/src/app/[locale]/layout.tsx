@@ -23,6 +23,12 @@ export async function generateStaticParams() {
   return [{ locale: 'en' }];
 }
 
+// Without this, any single-segment path not otherwise routed (e.g. a
+// browser's automatic /sw.js or /robots.txt probe) matches [locale]
+// dynamically and renders the full page tree instead of 404ing - which
+// crashes here since pages assume a real, authenticated locale.
+export const dynamicParams = false;
+
 export default async function RootLayout({
   children,
   params,
