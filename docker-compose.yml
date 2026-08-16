@@ -38,12 +38,22 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      # SOURCE_COMMIT only populates when Coolify's "Include Source Commit
+      # in Build" is enabled (see backend service and docs/decisions.md
+      # ADR-006) - same toggle governs both services' release tag.
+      args:
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
+        SENTRY_ORG: ${SENTRY_ORG}
+        SENTRY_PROJECT: ${SENTRY_PROJECT}
+        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
+        SENTRY_RELEASE: ${SOURCE_COMMIT}
     environment:
       API_URL: ${API_URL}
       APP_URL: ${APP_URL}
       AUTH_SECRET: ${AUTH_SECRET}
       COOKIE_DOMAIN: ${COOKIE_DOMAIN}
       PROJECT_SLUG: ${PROJECT_SLUG}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
       BACKEND_URL: http://backend:3001
       DEV_BYPASS_AUTH: 'false'
     depends_on:

@@ -1,4 +1,5 @@
 import { headers } from 'next/headers';
+import * as Sentry from '@sentry/nextjs';
 import type { Identity } from '@shared/types/identity';
 
 export class ApiError extends Error {
@@ -29,6 +30,10 @@ export async function apiFetch<T>(
     userId = headerList.get('x-user-id');
     email = headerList.get('x-user-email');
   }
+
+  // Only the UUID, never email - ADR-006, this app handles real health
+  // data and Sentry is a third-party service.
+  if (userId) Sentry.setUser({ id: userId });
 
   const res = await fetch(`${process.env.BACKEND_URL}${path}`, {
     ...init,

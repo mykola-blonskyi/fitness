@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { apiFetch } from '@libs/api-client';
+import * as Sentry from '@sentry/nextjs';
+import { apiFetch, ApiError } from '@libs/api-client';
 
 export interface DailyLog {
   id: string;
@@ -20,24 +21,42 @@ export async function setWeight(
   _prevState: WeightFormState | undefined,
   formData: FormData,
 ): Promise<WeightFormState> {
-  const weight = Number(formData.get('weight'));
+  return Sentry.withServerActionInstrumentation(
+    'setWeight',
+    { formData },
+    async () => {
+      const weight = Number(formData.get('weight'));
 
-  try {
-    await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
-      method: 'PUT',
-      body: JSON.stringify({ weight }),
-    });
-  } catch {
-    return { error: "Couldn't save your weight — try again." };
-  }
+      try {
+        await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
+          method: 'PUT',
+          body: JSON.stringify({ weight }),
+        });
+      } catch {
+        return { error: "Couldn't save your weight — try again." };
+      }
 
-  revalidatePath('/[locale]/diary', 'page');
-  return {};
+      revalidatePath('/[locale]/diary', 'page');
+      return {};
+    },
+  );
 }
 
 export async function clearWeight(date: string): Promise<void> {
-  await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
-    method: 'DELETE',
+  return Sentry.withServerActionInstrumentation('clearWeight', {}, async () => {
+    try {
+      await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      // Already cleared (e.g. a stale UI double-click) is not a real
+      // failure - anything else is genuinely unexpected and should
+      // propagate to Sentry via the instrumentation wrapper above.
+      if (!(err instanceof ApiError && err.status === 404)) {
+        throw err;
+      }
+    }
+
+    revalidatePath('/[locale]/diary', 'page');
   });
-  revalidatePath('/[locale]/diary', 'page');
 }
