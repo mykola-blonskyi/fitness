@@ -20,7 +20,7 @@ See [[domain-model]] and [[business-rules]] for the domain layer this architectu
 
 ### Frontend
 
-Next.js (App Router), TypeScript, TailwindCSS, ShadCN, next-intl (en/uk/ru/es), TanStack Query, TanStack Virtual, service worker for PWA offline support.
+Next.js (App Router), TypeScript, TailwindCSS, ShadCN, next-intl (en/uk/ru/es), TanStack Query, TanStack Virtual, service worker for PWA offline support. Zustand for client-only state that crosses a non-parent-child boundary or must live outside the React tree (e.g. the offline write-queue, FITNESS-13) — see [ADR-008](docs/decisions.md); not adopted preemptively, and not a default for local component state.
 
 Responsibilities:
 

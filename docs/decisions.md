@@ -197,3 +197,38 @@ Locale switching and theme toggling are **out of scope for this header entirely*
 ### Consequences
 
 The header ships without sign-out, which is a real, visible gap for a personal-data app until the Hub exposes a public logout mechanism — worth tracking as follow-up work, potentially its own ADR on the Hub side once more than one subdomain app needs it. The nav menu's "only what's built" scoping means it needs a small manual addition every time a new top-level section ships its first page — a cheap, one-line cost each time, not a one-time setup burden. Per-page breadcrumb depth was explicitly considered and dropped in favor of the nav menu, so if a future page hierarchy ever gets deep enough that "where am I" becomes a real problem again (e.g. nested Training Program → Workout → Set detail pages), that's a separate, later decision, not something this ADR's nav menu already solves.
+
+---
+
+## ADR-008: Zustand is the standard tool for cross-component/outside-React client state, adopted when FITNESS-13 needs it
+
+Date: 2026-08-17
+
+Status: Accepted
+
+### Context
+
+The frontend currently has zero client-side state management of any kind — no Context, no TanStack Query (listed in `docs/architecture.md`'s intended stack but never installed or used), no Zustand. Every page today is server-centric: Server Components fetch via `apiFetch` directly, Server Actions mutate and `revalidatePath`. Nothing currently needs a global client store.
+
+The concrete trigger raised in this session is `knowledge/business-rules.md`'s offline write-queue rule (FITNESS-13): "Writes queue in IndexedDB and flush to the NestJS API in order once connectivity returns." This is qualitatively different from anything TanStack Query would solve (server-data caching) — it's client-only state (a queue of not-yet-synced local writes) that must survive page reloads while offline and be driven by a browser `online` event, not a component lifecycle.
+
+Resolving *how* a queued write eventually reaches the backend also surfaced a real architectural question: per ADR-001, the frontend never calls the NestJS backend directly from client-side code — only server-side code (Server Components/Actions) does, using trusted identity headers Next's `headers()` provides. A queued-while-offline write needs to make a network call from the *browser* once back online, which is a different code path than anything the app has today.
+
+### Decision
+
+**Zustand is adopted specifically to build FITNESS-13's offline write-queue** — not installed preemptively, and not a general replacement for local component state. The queue is a Zustand store using the `persist` middleware with a custom IndexedDB storage adapter (e.g. `idb-keyval` — Zustand's `persist` defaults to `localStorage`, which doesn't satisfy the business rule's explicit IndexedDB requirement).
+
+**Sync replays through the existing Server Actions**, not a new backend-facing pathway: the queue stores enough data to call the same Server Action already used for the online write path (e.g. a future `logWorkoutSet`), and an `online` event listener drains the queue by calling those Server Actions directly, in order, once connectivity returns. This reuses the app's one existing mutation pattern rather than inventing a second one (a new Route Handler mirroring `apiFetch`'s trusted-header forwarding was considered and rejected for this reason).
+
+**Standing heuristic for all future work**, not just this ticket: reach for Zustand when state needs to be read or written across a **non-parent-child boundary** (siblings, or a component far down the tree from where the state logically lives) **or needs to persist/be read outside the React tree entirely** (like the offline queue, driven by a browser event listener, not a component). Plain `useState`/`useReducer`/Context stays the default for anything a single component or its direct children own — form field state, a dropdown's open/closed flag, a wizard's current-step state — even when that component is otherwise complex. Global store only once prop-drilling or Context re-render cost is an actual problem, not preemptively.
+
+### Alternatives Considered
+
+- Installing Zustand now, ahead of any concrete need: rejected — nothing currently requires it, and premature adoption invites premature use for things plain React state already handles.
+- A new Route Handler for offline-queue sync, mirroring `apiFetch`'s identity forwarding: rejected — a second mutation pathway alongside Server Actions that doesn't exist anywhere else in this app, for no benefit over just calling the Server Action directly from client code (which already works today for any `onClick`-style invocation).
+- Zustand's default `localStorage` persistence: rejected — doesn't satisfy the business rule's explicit IndexedDB requirement; needs a custom storage adapter.
+- Treating Zustand as the default tool for any "complicated" component: rejected — React's own `useState`/`useReducer`/Context already handle plenty of local complexity (a form's own state, a wizard confined to one component tree) without a global store; reaching for Zustand by default rather than by the boundary-crossing heuristic above would be introducing a new pattern where an existing, adequate one still works.
+
+### Consequences
+
+TanStack Query's place in the stack is unaffected by this decision — it remains listed as intended but unadopted, and this ADR doesn't resolve whether/when it gets adopted (that's a server-data-caching question, orthogonal to Zustand's client-only-state role here). The heuristic in this ADR is the standing rule for upcoming complex UI — the Training Program builder (FITNESS-18, likely multi-step) and catalog browse/search UIs (FITNESS-17 exercise, FITNESS-28 food, where filter state may be shared between sibling components) are the next places it's likely to actually get exercised, not necessarily FITNESS-13 alone.
