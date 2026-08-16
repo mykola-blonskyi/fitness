@@ -1,6 +1,15 @@
 import { headers } from 'next/headers';
 import type { Identity } from '@shared/types/identity';
 
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 // Server-side fetch wrapper for the internal-only NestJS API (ADR-001 — the
 // frontend never talks to Postgres directly, this is the sole path).
 // The browser never calls this directly; it's used from Server
@@ -33,7 +42,10 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`API request to ${path} failed: ${res.status}`);
+    throw new ApiError(
+      res.status,
+      `API request to ${path} failed: ${res.status}`,
+    );
   }
 
   return res.json() as Promise<T>;

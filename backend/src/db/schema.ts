@@ -6,6 +6,7 @@ import {
   numeric,
   timestamp,
   pgEnum,
+  unique,
 } from 'drizzle-orm/pg-core';
 
 export const genderEnum = pgEnum('gender', ['male', 'female']);
@@ -44,3 +45,28 @@ export const users = pgTable('users', {
     .notNull()
     .defaultNow(),
 });
+
+// Daily Log (see knowledge/glossary.md, docs/decisions.md ADR-004) — the
+// per-(user, date) anchor other daily activity attaches to. weight is
+// nullable by design: no daily activity should require a weigh-in first.
+// The row itself is created lazily on first write against a given date,
+// and never deleted once created — deleting a weight entry just nulls
+// the column so the row stays available for other attachments.
+export const dailyLogs = pgTable(
+  'daily_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    date: date('date').notNull(),
+    weight: numeric('weight'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [unique().on(table.userId, table.date)],
+);
