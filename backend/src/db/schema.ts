@@ -7,6 +7,7 @@ import {
   timestamp,
   pgEnum,
   unique,
+  boolean,
 } from 'drizzle-orm/pg-core';
 
 export const genderEnum = pgEnum('gender', ['male', 'female']);
@@ -69,4 +70,58 @@ export const dailyLogs = pgTable(
       .defaultNow(),
   },
   (table) => [unique().on(table.userId, table.date)],
+);
+
+export const exerciseCategoryEnum = pgEnum('exercise_category', [
+  'chest',
+  'back',
+  'shoulders',
+  'biceps',
+  'triceps',
+  'legs',
+  'core',
+  'cardio',
+  'full_body',
+]);
+
+// Exercise (see knowledge/domain-model.md, knowledge/business-rules.md
+// "Food/exercise data import"). Seeded rows carry `source`/`sourceId` from
+// the external catalog (e.g. 'wger') so a re-run of the import script can
+// upsert idempotently without duplicating; manually created exercises
+// leave both null. is_verified starts false for every seeded row and is
+// flipped by a human reviewer later — never by the import script itself.
+export const exercises = pgTable(
+  'exercises',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    imageUrl: text('image_url'),
+    category: exerciseCategoryEnum('category').notNull(),
+    source: text('source'),
+    sourceId: text('source_id'),
+    isVerified: boolean('is_verified').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [unique().on(table.source, table.sourceId)],
+);
+
+// Exercise Translation — per-locale display name for an Exercise. Never
+// created for 'en' (Exercise.name is already the canonical English name).
+// isVerified mirrors Exercise.isVerified's meaning: true only once a human
+// reviewer has confirmed the name, regardless of whether it came from the
+// source API's own translation or a machine-translation fallback.
+export const exerciseTranslations = pgTable(
+  'exercise_translations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    exerciseId: uuid('exercise_id')
+      .notNull()
+      .references(() => exercises.id),
+    locale: text('locale').notNull(),
+    name: text('name').notNull(),
+    isVerified: boolean('is_verified').notNull().default(false),
+  },
+  (table) => [unique().on(table.exerciseId, table.locale)],
 );
