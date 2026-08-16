@@ -1,6 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { weightSchema, type WeightInput } from '@shared/schemas/weight';
 import {
   clearWeight,
   setWeight,
@@ -14,41 +16,66 @@ export function WeightForm({
   date: string;
   dailyLog: DailyLog | null;
 }) {
-  const [state, formAction, pending] = useActionState(
-    setWeight.bind(null, date),
-    {},
-  );
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<WeightInput>({
+    resolver: zodResolver(weightSchema),
+    defaultValues: { weight: dailyLog?.weight ?? undefined },
+    // Real-time field validation (on-blur, then on every change once a
+    // field has an error) - react-hook-form defaults to submit-only.
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+  });
+
+  async function onSubmit(input: WeightInput) {
+    const result = await setWeight(date, input);
+    if (result.error) {
+      setError('root', { message: result.error });
+    }
+    for (const [field, message] of Object.entries(result.fieldErrors ?? {})) {
+      setError(field as keyof WeightInput, { message });
+    }
+  }
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
-      <form action={formAction} className="flex items-end gap-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex items-end gap-2">
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="weight" className="text-sm font-medium">
             Weight today (kg)
           </label>
           <input
             id="weight"
-            name="weight"
             type="number"
             step="0.1"
-            min={0.1}
-            defaultValue={dailyLog?.weight ?? undefined}
-            required
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+            {...register('weight', { valueAsNumber: true })}
           />
+          {errors.weight && (
+            <p className="text-sm text-red-600" role="alert">
+              {errors.weight.message}
+            </p>
+          )}
         </div>
         <button
           type="submit"
-          disabled={pending}
+          disabled={isSubmitting}
           className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
         >
-          {pending ? 'Saving…' : dailyLog?.weight != null ? 'Update' : 'Log'}
+          {isSubmitting
+            ? 'Saving…'
+            : dailyLog?.weight != null
+              ? 'Update'
+              : 'Log'}
         </button>
       </form>
 
-      {state?.error && (
+      {errors.root?.message && (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {errors.root.message}
         </p>
       )}
 
