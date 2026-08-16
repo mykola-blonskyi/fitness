@@ -104,6 +104,14 @@ Why: avoids maintaining a recurring sync job and unattended auto-categorization 
 
 ---
 
+## Error reports never carry more than a user's UUID
+
+Sentry (see [[decisions]] ADR-006) only ever receives a user's UUID as identifying context — never email, IP, or request bodies, even though NestJS trusts an `x-user-email` header it could easily attach. Only unhandled exceptions and 5xx-class errors are reported; a deliberately-thrown 4xx (validation rejection, 404, 401/403) is expected control flow, not a failure, and is never sent.
+
+Why: this app handles real health data (weight, date of birth, goals) — sending more than the minimum needed to correlate "this user hit this bug" to a third-party SaaS should be a deliberate choice, not an SDK default.
+
+---
+
 ## PWA offline supports queued writes, not just cached reads
 
 The service worker caches active programs/exercises/recent logs for offline viewing, and lets the user log workout sets while offline. Writes queue in IndexedDB and flush to the NestJS API in order once connectivity returns. No conflict resolution is needed since workout sets are append-only, never concurrently edited.

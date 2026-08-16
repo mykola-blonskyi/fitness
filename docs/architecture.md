@@ -121,7 +121,7 @@ Per-project access granted via the Hub's `project_access` table (registered once
 
 Secrets Management:
 
-`AUTH_SECRET` must match the Hub's byte-for-byte. MinIO/Redis/Postgres credentials and the translation-API key are environment variables, not committed.
+`AUTH_SECRET` must match the Hub's byte-for-byte. MinIO/Redis/Postgres credentials and the translation-API key are environment variables, not committed. Same for the Sentry DSN and the build-time Sentry auth token used to upload frontend source maps (see [[decisions]] ADR-006) — the auth token is a CI/build secret, not a runtime one, and only needs upload-project-scoped access.
 
 Photo privacy: the MinIO bucket for progress photos is **private**. No permanent public URLs are ever stored or served — see [[business-rules]] "Progress photos are private."
 
@@ -129,13 +129,16 @@ Photo privacy: the MinIO bucket for progress photos is **private**. No permanent
 
 ## Observability
 
-Logging:
+Error tracking:
 
+Sentry (SaaS, free tier) — see [[decisions]] ADR-006. One Sentry org shared with the user's other `*.blonskyi.dev` pet projects; fitness is its own project within that org. `@sentry/nestjs` on the backend and `@sentry/nextjs` on the frontend (client- and server-side), active in production only — never during local `pnpm dev`, so local testing doesn't consume the shared org's event quota. Only unhandled exceptions and 5xx-class errors are reported; deliberately-thrown 4xx `HttpException`s (validation, 404, 401/403) are not. Events carry only the user's UUID as Sentry `user` context — `sendDefaultPii` is disabled and request bodies are scrubbed, so email, IP, and payload contents (which could include health data like weight or date of birth) never reach the third-party service. Alerting is Sentry's own built-in email notifications; no additional relay (e.g. into the Telegram bot used for uptime alerts) for now. Events are tagged with the deploying commit SHA as the Sentry release, and frontend source maps are uploaded at build time so stack traces resolve to real source, not minified bundle positions. One-off scripts (e.g. `seed-exercises.ts`) are out of scope — they're run interactively and watched, so a crash is already visible without a reporting layer. The Python photo-analysis worker isn't built yet (FITNESS-22/23/24); whether it gets Sentry too is a decision for whenever that work starts.
 
+General log management (structured application logs, aggregation, retention) is intentionally out of scope for now — a separate, deliberate decision when it's actually needed, not bundled into the error-tracking setup above.
 
 Metrics:
 
-
+Not yet decided.
 
 Tracing:
 
+Not yet decided.

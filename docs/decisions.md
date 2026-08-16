@@ -123,3 +123,43 @@ The backend's own Docker container runs the migration as its entrypoint, before 
 A failed migration crashes the new container before it ever calls `app.listen()`, so it never passes Coolify's healthcheck — Coolify's own rolling-deploy behavior then leaves the previous, still-healthy container running rather than cutting over. This is how "a failed migration blocks the deploy and leaves the previous version running" is actually satisfied, not by a separate gate. `drizzle-kit` had to move from `devDependencies` to `dependencies` in `backend/package.json` so the CLI is present in the production image (`pnpm deploy --prod` strips devDependencies) — same reason `todolist` keeps `prisma` itself, not just `@prisma/client`, in its own `dependencies`.
 
 The first real deploy (2026-08-16) hit exactly this failure mode for an unrelated reason: Postgres 15+ doesn't grant `CREATE` on the `public` schema to a freshly created role by default, so `fitness_app` could connect but not create the migrations table — the container crash-looped with no clear error (the drizzle-kit CLI's spinner swallowed it) until `GRANT ALL ON SCHEMA public TO fitness_app;` was applied on the shared instance. See `my-projects/docs/runbooks.md` ("New app crash-loops on first deploy") — this is a one-time grant needed for any new app database on the shared Postgres, not specific to this repo.
+
+---
+
+## ADR-006: Error tracking is Sentry SaaS, one org shared across pet projects, UUID-only PII
+
+Date: 2026-08-16
+
+Status: Accepted
+
+### Context
+
+The app had no error-tracking layer at all — a crash in production was only visible if someone happened to notice broken behavior or went looking at container logs. Fixing that raised several coupled questions at once: which tool, whether to self-host it, whether to share infrastructure with the user's other pet projects the way Postgres already is, and — since this app handles real health data (weight, date of birth, goals) — how much of that data a third-party SaaS should ever see.
+
+### Decision
+
+**Tool**: Sentry SaaS, free tier. Self-hosting was considered and rejected — full Sentry OSS needs Kafka + ClickHouse + Postgres + Redis + Zookeeper (realistically 16GB+ RAM), and the VPS had only ~1.4GB free at evaluation time. Even the lighter self-hosted alternative (GlitchTip) would still compete for RAM/disk on an already-loaded box. Beyond the resource math: an error tracker living on the same VPS as the app can't report the app is down if the VPS itself is degraded — which is exactly what happened during this project's Cloudflare SSL outage (see `my-projects/docs/runbooks.md`). Off-box error tracking stays reachable precisely when it matters most.
+
+**Org structure**: one Sentry org shared across the user's `*.blonskyi.dev` pet projects, with fitness as its own project inside that org — mirrors the existing shared-Postgres-instance pattern. The free tier's ~5k-events/month quota is pooled per-org, not per-project, so a noisy bug in one app can eat into another's budget; accepted as a real but low-probability risk given how low-traffic these personal projects are, revisitable by splitting into a dedicated org later if it ever actually bites.
+
+**Scope**: backend (`@sentry/nestjs`) and frontend (`@sentry/nextjs`, client- and server-side) only. One-off scripts (e.g. `backend/src/scripts/seed-exercises.ts`) are excluded — they're run interactively and watched, so a crash is already visible without a reporting layer. Active in production only, never during local `pnpm dev`, so local testing doesn't consume the shared org's quota.
+
+**Signal vs. noise**: only unhandled exceptions and 5xx-class errors are reported. Deliberately-thrown 4xx `HttpException`s (validation rejections, 404s like the Daily Log page's "no entry yet" case, 401/403 from the identity guard) are never sent — they're expected control flow, not bugs, and reporting them would just train the user to ignore Sentry.
+
+**PII policy**: only the user's UUID (already-trusted `x-user-id`) is attached as Sentry `user` context. `sendDefaultPii` is disabled; request bodies are scrubbed from events. Email, IP address, and payload contents (which could include a weight value or date of birth) never reach Sentry.
+
+**Alerting**: Sentry's own built-in email notifications. No relay into the Telegram bot used for uptime alerts — that would be new infrastructure to maintain for a consolidation that isn't worth it until email alerts have actually proven insufficient.
+
+Events are tagged with the deploying commit SHA as the Sentry release (CI already has it), and frontend source maps are uploaded at build time via a Sentry auth token so stack traces resolve to real source.
+
+### Alternatives Considered
+
+- Full self-hosted Sentry OSS: rejected on resource grounds (see above).
+- GlitchTip (self-hosted, Sentry-protocol-compatible): still competes for RAM/disk with everything else already running on the VPS; revisitable later if the SaaS free tier's event quota ever becomes the actual constraint, since the same SDKs would work unmodified.
+- A dedicated Sentry org just for fitness: avoids the shared-quota risk entirely, but adds a second account/login to manage for a risk judged unlikely to materialize in practice.
+- Attaching email to Sentry's user context: would make support/debugging slightly easier, but puts a real person's email in a third-party tool by default rather than as a deliberate choice — rejected.
+- Relaying alerts through the existing Telegram bot: more consolidated, but Sentry has no native Telegram integration, so it means building and maintaining a webhook relay — deferred until email alerts prove insufficient.
+
+### Consequences
+
+General log management (structured application logs, aggregation, retention) was explicitly scoped out of this decision — it's a separate, larger piece of work with its own tradeoffs (storage, retention policy, query tooling), not something to bundle in as an afterthought. The Python photo-analysis worker (FITNESS-22/23/24, not yet built) isn't covered by this ADR; whether it gets Sentry too is a decision for whenever that work starts. Because the shared org's quota is pooled across all pet projects, a runaway error loop in any one of them is now everyone's problem — worth remembering if alerts suddenly go quiet or Sentry starts dropping events.
