@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DailyLogsModule } from './daily-logs/daily-logs.module';
@@ -10,12 +11,19 @@ import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     DbModule,
     UsersModule,
     DailyLogsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: IdentityGuard }],
+  providers: [
+    AppService,
+    // Registered before IdentityGuard's own APP_GUARD provider so it can
+    // still capture exceptions the guard itself throws.
+    { provide: APP_FILTER, useClass: SentryGlobalFilter },
+    { provide: APP_GUARD, useClass: IdentityGuard },
+  ],
 })
 export class AppModule {}
