@@ -1,6 +1,12 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  userProfileSchema,
+  type UserProfileInput,
+} from '@shared/schemas/user-profile';
 import {
   ACTIVITY_LEVELS,
   GENDERS,
@@ -24,13 +30,45 @@ const ACTIVITY_LABELS: Record<(typeof ACTIVITY_LEVELS)[number], string> = {
 };
 
 export function ProfileForm({ profile }: { profile: UserProfile }) {
-  const [state, formAction, pending] = useActionState(updateProfile, {
-    error: undefined,
-    success: undefined,
+  const [saved, setSaved] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<UserProfileInput>({
+    resolver: zodResolver(userProfileSchema),
+    defaultValues: {
+      name: profile.name,
+      gender: profile.gender,
+      dateOfBirth: profile.dateOfBirth,
+      height: profile.height,
+      goal: profile.goal,
+      activityLevel: profile.activityLevel,
+    },
+    // Real-time field validation (on-blur, then on every change once a
+    // field has an error) - react-hook-form defaults to submit-only.
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   });
 
+  async function onSubmit(input: UserProfileInput) {
+    setSaved(false);
+    const result = await updateProfile(input);
+    if (result.error) {
+      setError('root', { message: result.error });
+    }
+    for (const [field, message] of Object.entries(result.fieldErrors ?? {})) {
+      setError(field as keyof UserProfileInput, { message });
+    }
+    if (result.success) setSaved(true);
+  }
+
   return (
-    <form action={formAction} className="flex w-full max-w-sm flex-col gap-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex w-full max-w-sm flex-col gap-4"
+    >
       <p className="text-sm text-zinc-500">
         {profile.email} &middot; {profile.age} years old
       </p>
@@ -41,12 +79,15 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
         </label>
         <input
           id="name"
-          name="name"
           type="text"
-          defaultValue={profile.name}
-          required
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('name')}
         />
+        {errors.name && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.name.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -55,10 +96,8 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
         </label>
         <select
           id="gender"
-          name="gender"
-          required
-          defaultValue={profile.gender}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('gender')}
         >
           {GENDERS.map((g) => (
             <option key={g} value={g}>
@@ -66,6 +105,11 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
             </option>
           ))}
         </select>
+        {errors.gender && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.gender.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -74,12 +118,15 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
         </label>
         <input
           id="dateOfBirth"
-          name="dateOfBirth"
           type="date"
-          defaultValue={profile.dateOfBirth}
-          required
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('dateOfBirth')}
         />
+        {errors.dateOfBirth && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.dateOfBirth.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -88,14 +135,15 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
         </label>
         <input
           id="height"
-          name="height"
           type="number"
-          min={30}
-          max={300}
-          defaultValue={profile.height}
-          required
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('height', { valueAsNumber: true })}
         />
+        {errors.height && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.height.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -104,10 +152,8 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
         </label>
         <select
           id="goal"
-          name="goal"
-          required
-          defaultValue={profile.goal}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('goal')}
         >
           {GOALS.map((g) => (
             <option key={g} value={g}>
@@ -115,6 +161,11 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
             </option>
           ))}
         </select>
+        {errors.goal && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.goal.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -123,10 +174,8 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
         </label>
         <select
           id="activityLevel"
-          name="activityLevel"
-          required
-          defaultValue={profile.activityLevel}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('activityLevel')}
         >
           {ACTIVITY_LEVELS.map((a) => (
             <option key={a} value={a}>
@@ -134,14 +183,19 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
             </option>
           ))}
         </select>
+        {errors.activityLevel && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.activityLevel.message}
+          </p>
+        )}
       </div>
 
-      {state?.error && (
+      {errors.root?.message && (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {errors.root.message}
         </p>
       )}
-      {state?.success && (
+      {saved && !errors.root && (
         <p className="text-sm text-green-600" role="status">
           Saved.
         </p>
@@ -149,10 +203,10 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {pending ? 'Saving…' : 'Save changes'}
+        {isSubmitting ? 'Saving…' : 'Save changes'}
       </button>
     </form>
   );

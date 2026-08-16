@@ -3,21 +3,21 @@
 import { revalidatePath } from 'next/cache';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch } from '@libs/api-client';
-import type {
-  ActivityLevel,
-  Gender,
-  Goal,
-  UserProfile,
-} from '@shared/types/user';
+import {
+  userProfileSchema,
+  type UserProfileInput,
+} from '@shared/schemas/user-profile';
+import { firstFieldErrors } from '@shared/schemas/zod-errors';
+import type { UserProfile } from '@shared/types/user';
 
 export interface UpdateProfileState {
   error?: string;
+  fieldErrors?: Partial<Record<keyof UserProfileInput, string>>;
   success?: boolean;
 }
 
 export async function updateProfile(
-  _prevState: UpdateProfileState | undefined,
-  formData: FormData,
+  input: UserProfileInput,
 ): Promise<UpdateProfileState> {
   // No `formData` option - see the identical comment in
   // features/onboarding/actions.ts for why.
@@ -25,17 +25,17 @@ export async function updateProfile(
     'updateProfile',
     {},
     async () => {
+      // react-hook-form's own zodResolver already validated client-side -
+      // this is a defensive re-check, not the primary gate.
+      const parsed = userProfileSchema.safeParse(input);
+      if (!parsed.success) {
+        return { fieldErrors: firstFieldErrors(parsed.error) };
+      }
+
       try {
         await apiFetch<UserProfile>('/users/me', {
           method: 'PATCH',
-          body: JSON.stringify({
-            name: String(formData.get('name') ?? '').trim(),
-            gender: formData.get('gender') as Gender,
-            dateOfBirth: String(formData.get('dateOfBirth') ?? ''),
-            height: Number(formData.get('height')),
-            goal: formData.get('goal') as Goal,
-            activityLevel: formData.get('activityLevel') as ActivityLevel,
-          }),
+          body: JSON.stringify(parsed.data),
         });
       } catch {
         return {
