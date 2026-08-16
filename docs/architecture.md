@@ -26,6 +26,7 @@ Responsibilities:
 
 - All UI rendering and client-side interaction
 - Validates the Hub's shared auth cookie and forwards trusted identity headers to the backend (see Security below) — **no direct database access**, no Server Actions touching Drizzle/Postgres
+- App-wide nav header (see [ADR-007](docs/decisions.md)) — a nav menu scoped to built sections, not a breadcrumb trail, since fitness has several sibling top-level sections a user moves *between* rather than a single hierarchy to track depth within. Renders everywhere except `/onboarding`; locale switching and theme toggling are deliberately not part of it yet
 - Offline: caches active programs/exercises/recent logs for viewing; queues workout-set writes in IndexedDB and flushes them to the API in order once back online
 
 Dependencies:

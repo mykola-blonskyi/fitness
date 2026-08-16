@@ -163,3 +163,37 @@ Events are tagged with the deploying commit SHA as the Sentry release (CI alread
 ### Consequences
 
 General log management (structured application logs, aggregation, retention) was explicitly scoped out of this decision — it's a separate, larger piece of work with its own tradeoffs (storage, retention policy, query tooling), not something to bundle in as an afterthought. The Python photo-analysis worker (FITNESS-22/23/24, not yet built) isn't covered by this ADR; whether it gets Sentry too is a decision for whenever that work starts. Because the shared org's quota is pooled across all pet projects, a runaway error loop in any one of them is now everyone's problem — worth remembering if alerts suddenly go quiet or Sentry starts dropping events.
+
+---
+
+## ADR-007: App header uses a nav menu, not breadcrumbs; account menu is identity-only, no sign-out
+
+Date: 2026-08-17
+
+Status: Accepted
+
+### Context
+
+Every other `*.blonskyi.dev` subdomain app (`todolist`, the Hub itself) uses a breadcrumb-style header (`Hub brand → app name`), so that was the starting assumption for fitness too. But `todolist` is a single-feature app — lists and tasks, nothing else — so a breadcrumb back to the Hub is essentially all the navigation it needs. Fitness has several genuinely separate top-level sections (Training, Diary, Diet, Photos, Settings, per `docs/architecture.md`) that a user needs to move *between*, not just track depth within — breadcrumbs answer "where am I," not "where can I go." Also surfaced while designing this: fitness has no shared UI component yet (`shared/ui/components/` was an empty placeholder), no theming infrastructure beyond OS-level `prefers-color-scheme`, and no i18n routing (FITNESS-11 not started) — so a header that copied `todolist`'s locale switcher and theme toggle wholesale would be gluing three separate pieces of unbuilt infrastructure onto one ticket.
+
+Separately: an account menu naturally wants a sign-out action, but fitness has no way to offer one. The Hub's actual sign-out (`my-projects/src/features/auth/actions/logout.ts`) is a Server Action bound to the Hub's own Auth.js session — invokable only from a form rendered inside the Hub's own UI. Unlike login, which has a clean public URL fitness already redirects to (`${API_URL}/${locale}/login?callbackUrl=...`), there is no equivalent public sign-out URL. Fitness clearing the shared `.blonskyi.dev` cookie itself was considered and rejected — it works technically, but contradicts ADR-001's whole premise that the frontend only *validates* auth, never owns it, and would duplicate logic that should exist in exactly one place.
+
+### Decision
+
+The header is a **nav menu**, not a breadcrumb trail — it lists links to fitness's own top-level sections, scoped to **only what's actually built** (currently Diary and Settings), growing as each feature ships its first real page rather than showing dead links to unbuilt sections. It renders on every route except `/onboarding`, which is a distinct, focused flow exempted the same way it's already exempted from the profile-completion gate elsewhere.
+
+The account menu is **identity-only** — the user's name/email as plain text, no dropdown (nothing in it needs interactivity), no settings link (already in the nav menu, no reason to duplicate it), and **no sign-out**, dropped entirely rather than worked around.
+
+Locale switching and theme toggling are **out of scope for this header entirely** — not even rendered as disabled placeholders. They belong to FITNESS-11 (i18n routing) and a new, not-yet-created theming ticket (`next-themes` plus restructuring `globals.css` from pure `prefers-color-scheme` to class-based dark mode), respectively, and get added to the header once those tickets actually exist and land.
+
+### Alternatives Considered
+
+- Breadcrumb trail matching `todolist`/the Hub: rejected — doesn't serve fitness's actual navigation need (jumping between sibling sections), which a breadcrumb-only header can't do at all.
+- One large ticket bundling the header with next-intl routing and next-themes/dark-mode CSS: rejected — breaks vertical-slice discipline, turns "add a header" into three tickets' worth of infrastructure under one name.
+- Showing all five intended top-level sections now with unbuilt ones disabled/grayed: rejected — a nav item pointing at nothing for months is worse UX than a shorter menu that grows honestly, and costs nothing to extend later.
+- A public logout route added to the Hub (`my-projects`) that fitness could redirect to, mirroring login: not rejected outright, but explicitly deferred — it's cross-repo work outside this ticket, and every subdomain app will eventually hit this same gap, not just fitness, so it's worth deciding deliberately later rather than bolting on here.
+- Fitness clearing the shared auth cookie itself to implement its own sign-out: rejected, contradicts ADR-001.
+
+### Consequences
+
+The header ships without sign-out, which is a real, visible gap for a personal-data app until the Hub exposes a public logout mechanism — worth tracking as follow-up work, potentially its own ADR on the Hub side once more than one subdomain app needs it. The nav menu's "only what's built" scoping means it needs a small manual addition every time a new top-level section ships its first page — a cheap, one-line cost each time, not a one-time setup burden. Per-page breadcrumb depth was explicitly considered and dropped in favor of the nav menu, so if a future page hierarchy ever gets deep enough that "where am I" becomes a real problem again (e.g. nested Training Program → Workout → Set detail pages), that's a separate, later decision, not something this ADR's nav menu already solves.
