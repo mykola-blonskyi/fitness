@@ -4,10 +4,12 @@ Fitness-tracking PWA at [fitness.blonskyi.dev](https://fitness.blonskyi.dev) —
 of the personal hub ([blonskyi.dev](https://blonskyi.dev), repo `my-projects`). Users log in
 exclusively via the hub's SSO; this repo never implements its own login.
 
-**Status: early implementation.** Design is complete (specs, ADRs, and domain model — see `docs/`
-and `knowledge/`) and tracked ticket-by-ticket in Plane. Project scaffolding
-([FITNESS-7](https://github.com/mykola-blonskyi/fitness/pull/1)) is the first ticket in progress;
-see [plans/current.md](plans/current.md) for the phased plan.
+**Status: in active development, live in production.** Scaffolding, Hub SSO auth, profile
+onboarding/settings, CI/CD, Daily Log + weight logging, and the exercise-catalog seed script are
+built, merged, and deployed at [fitness.blonskyi.dev](https://fitness.blonskyi.dev). Training
+programs, the diet engine, progress photos, i18n, and PWA offline support are designed (specs,
+ADRs, domain model — see `docs/` and `knowledge/`) but not yet built. See
+[plans/current.md](plans/current.md) for the phased plan and current progress.
 
 ## What it does (once built)
 
@@ -75,11 +77,15 @@ or `pnpm dev` / `pnpm build` to run both at once:
 | E2E tests | `test:e2e` | — |
 | Drizzle | `db:generate`, `db:migrate`, `db:studio` | — |
 
-Frontend format/test tooling isn't set up yet — that lands with the CI/CD ticket
-([FITNESS-8](https://plane.blonskyi.dev/blonskyi/projects/a36feeea-ab0c-4aaf-8356-d4bdb7d8ae87/issues/868d6747-6f98-41ec-9809-d13dc160c537))
-and the first tickets that need it.
+Frontend `test` runs Vitest, but no test files exist yet (`passWithNoTests: true` — see
+`reports/audits/2026-08-16-project-review.md` for the coverage gap this leaves open).
 
 ## Testing
+
+Current coverage is thin — see `reports/audits/2026-08-16-project-review.md` for specifics (in
+short: the `IdentityGuard`/`UsersController`/`DailyLogsController` and the entire frontend have no
+tests yet; the one exception is `backend/src/scripts/seed-exercises.spec.ts`, which does unit-test
+its category-mapping logic).
 
 Planned seams (agreed during spec grilling, not yet implemented beyond scaffolding defaults):
 
@@ -109,7 +115,7 @@ vertical-slice breakdown of each spec, in dependency order (`blocked_by` relatio
 
 ## Deployment
 
-Planned: Coolify on the same VPS as the hub and the other subdomain projects, sharing the Postgres
-instance. Docker Compose, migration-before-deploy gate. Not live yet — see
-[FITNESS-8](https://plane.blonskyi.dev/blonskyi/projects/a36feeea-ab0c-4aaf-8356-d4bdb7d8ae87/issues/868d6747-6f98-41ec-9809-d13dc160c537)
-and `plans/current.md` Phase 5.
+Live at [fitness.blonskyi.dev](https://fitness.blonskyi.dev) via Coolify, on the same VPS as the
+hub and the other subdomain projects, sharing the Postgres instance. Docker Compose, with a
+migration-before-deploy gate (see [ADR-005](docs/decisions.md)) — a failed migration blocks the
+deploy and leaves the previous version running.

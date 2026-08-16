@@ -8,19 +8,19 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 ## Phase 1 — Project scaffolding & auth
 
-- [ ] Scaffold Next.js frontend + NestJS backend per `my-projects/boilerplates/subdomain-app.md`
-- [ ] Wire up Hub auth reuse (Auth.js cookie validation in Next.js, `x-user-id`/`x-user-email` forwarding to NestJS)
-- [ ] Register `fitness` project slug + access grant in the Hub's Postgres
-- [ ] Set up Drizzle schema for User, Daily Log (see ADR-004), Training Program stack, and migration step in CI/CD
+- [x] Scaffold Next.js frontend + NestJS backend per `my-projects/boilerplates/subdomain-app.md` (FITNESS-7)
+- [x] Wire up Hub auth reuse (Auth.js cookie validation in Next.js, `x-user-id`/`x-user-email` forwarding to NestJS) (FITNESS-9)
+- [x] Register `fitness` project slug + access grant in the Hub's Postgres (FITNESS-9)
+- [ ] Set up Drizzle schema for User, Daily Log (see ADR-004), Training Program stack, and migration step in CI/CD (User schema + migration-in-CI done via FITNESS-7/8; Daily Log schema done via FITNESS-14; Training Program stack schema not yet started)
 
 ---
 
 ## Phase 2 — Training & body-weight diary
 
-- [ ] Exercise catalog (schema + one-time seed import from wger/ExerciseDB + translations)
+- [x] Exercise catalog (schema + one-time seed import from wger/ExerciseDB + translations) (FITNESS-16)
 - [ ] Training Programs, Program Exercises, multiple concurrent active programs (many-to-many `UserActiveProgram`)
 - [ ] Workout Logs/Sets, offline queued writes (IndexedDB + service worker sync)
-- [ ] Daily Log + weigh-in tracking
+- [x] Daily Log + weigh-in tracking (FITNESS-14)
 
 ---
 
@@ -44,10 +44,10 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 ## Phase 5 — Polish & deploy
 
-- [ ] next-intl for UI chrome (en/uk/ru/es)
-- [ ] PWA manifest + service worker offline caching
-- [ ] Coolify/Docker Compose deployment, CI/CD gates (lint, prettier, tests, migration-before-deploy)
-- [ ] Plane workspace (FITNESS) ticket setup: Modules = specs above, Work items = individual tickets, branch-per-ticket workflow
+- [ ] next-intl for UI chrome (en/uk/ru/es) (FITNESS-11, not started)
+- [ ] PWA manifest + service worker offline caching (FITNESS-12, not started)
+- [x] Coolify/Docker Compose deployment, CI/CD gates (lint, prettier, tests, migration-before-deploy) — live at fitness.blonskyi.dev (FITNESS-8)
+- [x] Plane workspace (FITNESS) ticket setup: Modules = specs above, Work items = individual tickets, branch-per-ticket workflow
 
 ---
 

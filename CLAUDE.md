@@ -8,7 +8,7 @@ This repository follows the global Claude configuration.
 
 ## Current State
 
-Scaffolding, Hub SSO auth, and profile onboarding/settings are built and merged (FITNESS-7, FITNESS-9, FITNESS-10). CI/CD (FITNESS-8) is in progress. See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
+Scaffolding, Hub SSO auth, profile onboarding/settings, CI/CD, Daily Log + weight logging, and the exercise-catalog seed script are built, merged, and deployed to production at fitness.blonskyi.dev (FITNESS-7, 8, 9, 10, 14, 16). Error tracking (Sentry — see ADR-006) is designed and ticketed (FITNESS-32, 33) but not yet implemented. See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
 
 Common commands (run from repo root):
 
