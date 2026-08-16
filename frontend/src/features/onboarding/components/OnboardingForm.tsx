@@ -1,6 +1,11 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  userProfileSchema,
+  type UserProfileInput,
+} from '@shared/schemas/user-profile';
 import { ACTIVITY_LEVELS, GENDERS, GOALS } from '@shared/types/user';
 import { completeOnboarding } from '@features/onboarding/actions';
 
@@ -19,23 +24,50 @@ const ACTIVITY_LABELS: Record<(typeof ACTIVITY_LEVELS)[number], string> = {
 };
 
 export function OnboardingForm() {
-  const [state, formAction, pending] = useActionState(completeOnboarding, {
-    error: undefined,
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<UserProfileInput>({
+    resolver: zodResolver(userProfileSchema),
+    // Real-time field validation (on-blur, then on every change once a
+    // field has an error) - react-hook-form defaults to submit-only.
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   });
 
+  async function onSubmit(input: UserProfileInput) {
+    const result = await completeOnboarding(input);
+    if (!result) return; // success - completeOnboarding already redirected
+    if (result.error) {
+      setError('root', { message: result.error });
+    }
+    for (const [field, message] of Object.entries(result.fieldErrors ?? {})) {
+      setError(field as keyof UserProfileInput, { message });
+    }
+  }
+
   return (
-    <form action={formAction} className="flex w-full max-w-sm flex-col gap-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex w-full max-w-sm flex-col gap-4"
+    >
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className="text-sm font-medium">
           Name
         </label>
         <input
           id="name"
-          name="name"
           type="text"
-          required
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('name')}
         />
+        {errors.name && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.name.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -44,10 +76,9 @@ export function OnboardingForm() {
         </label>
         <select
           id="gender"
-          name="gender"
-          required
           defaultValue=""
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('gender')}
         >
           <option value="" disabled>
             Select…
@@ -58,6 +89,11 @@ export function OnboardingForm() {
             </option>
           ))}
         </select>
+        {errors.gender && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.gender.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -66,11 +102,15 @@ export function OnboardingForm() {
         </label>
         <input
           id="dateOfBirth"
-          name="dateOfBirth"
           type="date"
-          required
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('dateOfBirth')}
         />
+        {errors.dateOfBirth && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.dateOfBirth.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -79,13 +119,15 @@ export function OnboardingForm() {
         </label>
         <input
           id="height"
-          name="height"
           type="number"
-          min={30}
-          max={300}
-          required
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('height', { valueAsNumber: true })}
         />
+        {errors.height && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.height.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -94,10 +136,9 @@ export function OnboardingForm() {
         </label>
         <select
           id="goal"
-          name="goal"
-          required
           defaultValue=""
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('goal')}
         >
           <option value="" disabled>
             Select…
@@ -108,6 +149,11 @@ export function OnboardingForm() {
             </option>
           ))}
         </select>
+        {errors.goal && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.goal.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -116,10 +162,9 @@ export function OnboardingForm() {
         </label>
         <select
           id="activityLevel"
-          name="activityLevel"
-          required
           defaultValue=""
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('activityLevel')}
         >
           <option value="" disabled>
             Select…
@@ -130,20 +175,25 @@ export function OnboardingForm() {
             </option>
           ))}
         </select>
+        {errors.activityLevel && (
+          <p className="text-sm text-red-600" role="alert">
+            {errors.activityLevel.message}
+          </p>
+        )}
       </div>
 
-      {state?.error && (
+      {errors.root?.message && (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {errors.root.message}
         </p>
       )}
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {pending ? 'Saving…' : 'Complete profile'}
+        {isSubmitting ? 'Saving…' : 'Complete profile'}
       </button>
     </form>
   );
