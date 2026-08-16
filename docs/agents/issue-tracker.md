@@ -38,6 +38,12 @@ Related tickets also get the spec ticket set as their `parent` (`PATCH .../work-
 `{"parent": "<spec-id>"}`) — independent from module membership; both get set. A ticket that
 doesn't map cleanly to one spec (cross-cutting infra) is left out of every module, `parent: null`.
 
+**When every ticket in a module (the spec plus all its related tickets) is Done, set the module's
+own `status` to `completed`** — `PATCH .../modules/{module_id}/` with `{"status": "completed"}`.
+Don't trust the module's own `completed_issues`/`backlog_issues` aggregate counts for this check —
+they're cached and can be stale; verify against each ticket's actual current state instead. Module
+`status` values: `backlog`, `planned` (default), `in-progress`, `paused`, `completed`, `cancelled`.
+
 ## Dependencies (`blocked_by`) and priority
 
 - **Set blocking**: `POST .../work-items/{id}/relations/` with
