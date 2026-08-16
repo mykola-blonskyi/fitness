@@ -3,21 +3,20 @@
 import { redirect } from 'next/navigation';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch } from '@libs/api-client';
-import type {
-  ActivityLevel,
-  Gender,
-  Goal,
-  UserProfile,
-  UserProfileInput,
-} from '@shared/types/user';
+import {
+  userProfileSchema,
+  type UserProfileInput,
+} from '@shared/schemas/user-profile';
+import { firstFieldErrors } from '@shared/schemas/zod-errors';
+import type { UserProfile } from '@shared/types/user';
 
 export interface OnboardingState {
   error?: string;
+  fieldErrors?: Partial<Record<keyof UserProfileInput, string>>;
 }
 
 export async function completeOnboarding(
-  _prevState: OnboardingState | undefined,
-  formData: FormData,
+  input: UserProfileInput,
 ): Promise<OnboardingState | undefined> {
   // Deliberately not passing `formData` here - Sentry's own docs describe
   // that option as "attach form data to events", which would put this
@@ -28,19 +27,17 @@ export async function completeOnboarding(
     'completeOnboarding',
     {},
     async () => {
-      const input: UserProfileInput = {
-        name: String(formData.get('name') ?? '').trim(),
-        gender: formData.get('gender') as Gender,
-        dateOfBirth: String(formData.get('dateOfBirth') ?? ''),
-        height: Number(formData.get('height')),
-        goal: formData.get('goal') as Goal,
-        activityLevel: formData.get('activityLevel') as ActivityLevel,
-      };
+      // react-hook-form's own zodResolver already validated client-side -
+      // this is a defensive re-check, not the primary gate.
+      const parsed = userProfileSchema.safeParse(input);
+      if (!parsed.success) {
+        return { fieldErrors: firstFieldErrors(parsed.error) };
+      }
 
       try {
         await apiFetch<UserProfile>('/users/me', {
           method: 'POST',
-          body: JSON.stringify(input),
+          body: JSON.stringify(parsed.data),
         });
       } catch {
         return {

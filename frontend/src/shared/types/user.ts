@@ -28,12 +28,6 @@ export interface UserProfile {
   updatedAt: string;
 }
 
-export interface UserProfileInput {
-  name: string;
-  gender: Gender;
-  dateOfBirth: string;
-  height: number;
-  goal: Goal;
-  activityLevel: ActivityLevel;
-  avatarUrl?: string;
-}
+// UserProfileInput was replaced by z.infer<typeof userProfileSchema> in
+// shared/schemas/user-profile.ts - shape and validation now live in one
+// place instead of two.
