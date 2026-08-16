@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
   // Traces a minimal server bundle for the Docker runner stage — see
@@ -24,4 +25,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Uploads source maps at build time (see docs/decisions.md ADR-006) so
+// Sentry stack traces resolve to real source, not minified bundle
+// positions. Only actually uploads when SENTRY_AUTH_TOKEN is present -
+// silently no-ops otherwise, so local dev builds are unaffected.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+});

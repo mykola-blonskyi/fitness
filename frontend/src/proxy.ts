@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import * as Sentry from '@sentry/nextjs';
 import { devBypassIdentity, resolveIdentity } from '@libs/hub-identity';
 import type { Identity } from '@shared/types/identity';
 
@@ -62,6 +63,10 @@ export async function proxy(req: NextRequest) {
       return loginRedirect(req);
     }
   }
+
+  // Only the UUID, never email - ADR-006, this app handles real health
+  // data and Sentry is a third-party service.
+  Sentry.setUser({ id: identity.userId });
 
   const headers = new Headers(req.headers);
   headers.set('x-user-id', identity.userId);

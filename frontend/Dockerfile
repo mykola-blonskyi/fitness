@@ -18,6 +18,20 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 WORKDIR /usr/src/app/frontend
+# NEXT_PUBLIC_SENTRY_DSN must be present here, not just at runtime - Next.js
+# inlines NEXT_PUBLIC_* vars into the client bundle at build time. The
+# other three are build-only (source map upload, see docs/decisions.md
+# ADR-006) and deliberately never appear in the runner stage below.
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ARG SENTRY_AUTH_TOKEN
+ARG SENTRY_RELEASE
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+ENV SENTRY_ORG=$SENTRY_ORG
+ENV SENTRY_PROJECT=$SENTRY_PROJECT
+ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
 RUN pnpm exec next build
 
 FROM node:${NODE_VERSION}-slim AS runner
