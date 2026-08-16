@@ -21,25 +21,24 @@ export async function setWeight(
   _prevState: WeightFormState | undefined,
   formData: FormData,
 ): Promise<WeightFormState> {
-  return Sentry.withServerActionInstrumentation(
-    'setWeight',
-    { formData },
-    async () => {
-      const weight = Number(formData.get('weight'));
+  // No `formData` option - see features/onboarding/actions.ts for why
+  // (this one carries a weight value, ADR-006's own named example of
+  // health data that must never reach Sentry).
+  return Sentry.withServerActionInstrumentation('setWeight', {}, async () => {
+    const weight = Number(formData.get('weight'));
 
-      try {
-        await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
-          method: 'PUT',
-          body: JSON.stringify({ weight }),
-        });
-      } catch {
-        return { error: "Couldn't save your weight — try again." };
-      }
+    try {
+      await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
+        method: 'PUT',
+        body: JSON.stringify({ weight }),
+      });
+    } catch {
+      return { error: "Couldn't save your weight — try again." };
+    }
 
-      revalidatePath('/[locale]/diary', 'page');
-      return {};
-    },
-  );
+    revalidatePath('/[locale]/diary', 'page');
+    return {};
+  });
 }
 
 export async function clearWeight(date: string): Promise<void> {

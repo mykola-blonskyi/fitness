@@ -19,9 +19,11 @@ export async function updateProfile(
   _prevState: UpdateProfileState | undefined,
   formData: FormData,
 ): Promise<UpdateProfileState> {
+  // No `formData` option - see the identical comment in
+  // features/onboarding/actions.ts for why.
   return Sentry.withServerActionInstrumentation(
     'updateProfile',
-    { formData },
+    {},
     async () => {
       try {
         await apiFetch<UserProfile>('/users/me', {

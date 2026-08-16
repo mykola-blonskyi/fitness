@@ -19,9 +19,14 @@ export async function completeOnboarding(
   _prevState: OnboardingState | undefined,
   formData: FormData,
 ): Promise<OnboardingState | undefined> {
+  // Deliberately not passing `formData` here - Sentry's own docs describe
+  // that option as "attach form data to events", which would put this
+  // profile's name/date of birth/height into Sentry (ADR-006 explicitly
+  // forbids this, and it happens on the transaction pipeline, which
+  // sentry-shared.ts's beforeSend never even sees - only beforeSendTransaction does).
   const result = await Sentry.withServerActionInstrumentation(
     'completeOnboarding',
-    { formData },
+    {},
     async () => {
       const input: UserProfileInput = {
         name: String(formData.get('name') ?? '').trim(),
