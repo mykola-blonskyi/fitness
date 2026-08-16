@@ -26,6 +26,12 @@ RUN cp -r backend/drizzle /prod/backend/drizzle
 RUN cp backend/drizzle.config.ts /prod/backend/drizzle.config.ts
 
 FROM base AS runner
+# Coolify only populates this build arg when "Include Source Commit in
+# Build" is enabled in the app's General settings (off by default, to
+# preserve build cache) - see docs/decisions.md ADR-006. Baked into an ENV
+# since ARGs don't persist into the running container.
+ARG SOURCE_COMMIT
+ENV SENTRY_RELEASE=$SOURCE_COMMIT
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build --chown=node:node /prod/backend ./

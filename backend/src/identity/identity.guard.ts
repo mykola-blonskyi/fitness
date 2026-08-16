@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import * as Sentry from '@sentry/nestjs';
 import type { Request } from 'express';
 import { IS_PUBLIC_KEY } from './public.decorator';
 import { Identity } from './identity.types';
@@ -30,6 +31,9 @@ export class IdentityGuard implements CanActivate {
     }
 
     (req as Request & { identity: Identity }).identity = identity;
+    // Only the UUID, never email - ADR-006, this app handles real health
+    // data and Sentry is a third-party service.
+    Sentry.setUser({ id: identity.hubUserId });
     return true;
   }
 }
