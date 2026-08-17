@@ -36,9 +36,22 @@ const nextConfig: NextConfig = {
 // tell success from failure short of checking Sentry's dashboard
 // directly. Stay quiet only when there's genuinely nothing to upload
 // with (local dev); be verbose whenever an upload is actually attempted.
+//
+// SENTRY_RELEASE comes from Coolify's SOURCE_COMMIT, which is not
+// reliably populated on every deploy (confirmed via a real build
+// reproduction: an empty SENTRY_RELEASE env var reaches this file as
+// '', not undefined, and Sentry's CLI hard-rejects an empty --release
+// value, failing the entire upload). Fall back to a build-time
+// timestamp so an upload never fails outright over this - real commit
+// hashes are still used whenever Coolify supplies one correctly.
+const sentryRelease = process.env.SENTRY_RELEASE || `build-${Date.now()}`;
+
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.SENTRY_AUTH_TOKEN,
+  release: {
+    name: sentryRelease,
+  },
 });

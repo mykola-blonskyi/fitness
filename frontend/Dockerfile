@@ -12,6 +12,12 @@ FROM node:${NODE_VERSION}-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
 RUN corepack enable
+# node:slim ships without CA certificates - without this, any HTTPS call
+# needing certificate verification fails ("unable to get local issuer
+# certificate"), which is exactly what silently broke the Sentry source
+# map upload step below (sentry-cli calling sentry.io during the build).
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build
 COPY . /usr/src/app
