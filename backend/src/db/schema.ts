@@ -125,3 +125,93 @@ export const exerciseTranslations = pgTable(
   },
   (table) => [unique().on(table.exerciseId, table.locale)],
 );
+
+// Food Category / Food Subcategory / Food Role (see
+// knowledge/domain-model.md "Food Category / Food Subcategory / Food
+// Role"). Real tables, not enums: Food Preference (a later ticket) needs
+// a stable row id to target polymorphically ("exclude everything in this
+// category"), which a pgEnum can't provide. Rows are fixed and seeded
+// once by seed-food-catalog.ts's upsertTaxonomy() - never created by
+// end-user action. Category and Role are independent classifications
+// (Role is not derived from Category) - see the domain-model note.
+export const foodCategories = pgTable('food_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // Fixed set: meat, fish, dairy, vegetables, fruits, grains, legumes,
+  // nuts, oils, eggs
+  name: text('name').notNull().unique(),
+});
+
+export const foodSubcategories = pgTable('food_subcategories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  categoryId: uuid('category_id')
+    .notNull()
+    .references(() => foodCategories.id),
+  // Fixed set per category - meat: lean_meat/fatty_meat/processed_meat;
+  // fish: lean_fish/fatty_fish/shellfish; dairy: low_fat_dairy/
+  // full_fat_dairy/fermented_dairy; vegetables: leafy_vegetables/
+  // cruciferous_vegetables/starchy_vegetables/other_vegetables;
+  // fruits: fresh_fruit/dried_fruit; grains: complex_carbs/simple_carbs;
+  // legumes: beans/lentils_and_peas; nuts: tree_nuts/seeds; oils:
+  // healthy_oils/saturated_oils; eggs: whole_eggs/egg_whites
+  name: text('name').notNull().unique(),
+});
+
+export const foodRoles = pgTable('food_roles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // Fixed set: lean_protein, fatty_protein, plant_protein, complex_carb,
+  // simple_carb, vegetable, fruit, healthy_fat, saturated_fat, dairy,
+  // treat
+  name: text('name').notNull().unique(),
+});
+
+// Food Item (table name `food_calories` per knowledge/glossary.md).
+// Seeded rows carry source/sourceId so a re-run of the import script can
+// upsert idempotently without duplicating; manually created items leave
+// both null. is_verified starts false for every seeded row, same
+// convention as `exercises`. Macro fields are per-100g so Diet Item can
+// scale by weight_grams (see knowledge/business-rules.md).
+export const foodCalories = pgTable(
+  'food_calories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    imageUrl: text('image_url'),
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => foodCategories.id),
+    subcategoryId: uuid('subcategory_id')
+      .notNull()
+      .references(() => foodSubcategories.id),
+    roleId: uuid('role_id')
+      .notNull()
+      .references(() => foodRoles.id),
+    caloriesPer100g: numeric('calories_per_100g').notNull(),
+    proteinPer100g: numeric('protein_per_100g').notNull(),
+    carbsPer100g: numeric('carbs_per_100g').notNull(),
+    fatPer100g: numeric('fat_per_100g').notNull(),
+    source: text('source'),
+    sourceId: text('source_id'),
+    isVerified: boolean('is_verified').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [unique().on(table.source, table.sourceId)],
+);
+
+// Food Item Translation - per-locale display name for a Food Item. Never
+// created for 'en' (foodCalories.name is already the canonical English
+// name). isVerified mirrors exerciseTranslations' convention.
+export const foodCalorieTranslations = pgTable(
+  'food_calorie_translations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foodCalorieId: uuid('food_calorie_id')
+      .notNull()
+      .references(() => foodCalories.id),
+    locale: text('locale').notNull(),
+    name: text('name').notNull(),
+    isVerified: boolean('is_verified').notNull().default(false),
+  },
+  (table) => [unique().on(table.foodCalorieId, table.locale)],
+);
