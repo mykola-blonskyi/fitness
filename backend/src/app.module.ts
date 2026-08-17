@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DailyLogsModule } from './daily-logs/daily-logs.module';
 import { DbModule } from './db/db.module';
+import { FoodItemsModule } from './food-items/food-items.module';
 import { IdentityGuard } from './identity/identity.guard';
 import { UsersModule } from './users/users.module';
 
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module';
     DbModule,
     UsersModule,
     DailyLogsModule,
+    FoodItemsModule,
   ],
   controllers: [AppController],
   providers: [
