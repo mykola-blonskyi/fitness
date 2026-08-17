@@ -245,7 +245,12 @@ Relationships:
 
 Responsibilities:
 
-Fixed taxonomies used for browsing (Category/Subcategory) and for diet generation + Food Replacement matching (Role — see Business Rules: replacement is role-based, same-role foods are interchangeable).
+Fixed taxonomies used for browsing (Category/Subcategory) and for diet generation + Food Replacement matching (Role — see Business Rules: replacement is role-based, same-role foods are interchangeable). Category and Role are independent classifications on the same Food Item, not hierarchical with each other — a `legumes`-category item's Role is `plant_protein`, not derived from its category name.
+
+Fixed values:
+
+- Category → Subcategory: `meat` (lean_meat, fatty_meat, processed_meat) · `fish` (lean_fish, fatty_fish, shellfish) · `dairy` (low_fat_dairy, full_fat_dairy, fermented_dairy) · `vegetables` (leafy_vegetables, cruciferous_vegetables, starchy_vegetables, other_vegetables) · `fruits` (fresh_fruit, dried_fruit) · `grains` (complex_carbs, simple_carbs) · `legumes` (beans, lentils_and_peas) · `nuts` (tree_nuts, seeds) · `oils` (healthy_oils, saturated_oils) · `eggs` (whole_eggs, egg_whites)
+- Role: `lean_protein`, `fatty_protein`, `plant_protein`, `complex_carb`, `simple_carb`, `vegetable`, `fruit`, `healthy_fat`, `saturated_fat`, `dairy`, `treat`
 
 Relationships:
 
