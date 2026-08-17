@@ -1,0 +1,57 @@
+import Link from 'next/link';
+
+interface HeaderProps {
+  locale: string;
+  identity: { name: string; email: string };
+}
+
+// See docs/decisions.md ADR-007 for why this is a nav menu, not a
+// breadcrumb trail like the hub/todolist use: fitness has several
+// sibling top-level sections (Training, Diary, Diet, Photos, Settings)
+// a user needs to move *between*, not a single hierarchy to track depth
+// within. Nav items are scoped to only what's actually built today
+// (Diary, Settings) - add one line here each time a new section ships
+// its first real page, per ADR-007's Consequences.
+export function Header({ locale, identity }: HeaderProps) {
+  return (
+    <header className="border-b border-zinc-200 dark:border-zinc-800">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+        <nav className="flex items-center gap-4">
+          <a
+            href={`${process.env.API_URL}/${locale}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            blonskyi.dev
+          </a>
+          <Link
+            href={`/${locale}`}
+            className="text-sm font-semibold text-zinc-900 dark:text-zinc-100"
+          >
+            Fitness
+          </Link>
+          <Link
+            href={`/${locale}/diary`}
+            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            Diary
+          </Link>
+          <Link
+            href={`/${locale}/settings/profile`}
+            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            Settings
+          </Link>
+        </nav>
+
+        {/* Identity only - no dropdown, no settings link (already in
+            nav above), no sign-out (the Hub has no public logout URL to
+            delegate to - see ADR-007's Consequences). */}
+        <span className="text-sm text-zinc-500">
+          {identity.name || identity.email}
+        </span>
+      </div>
+    </header>
+  );
+}
