@@ -29,9 +29,16 @@ const nextConfig: NextConfig = {
 // Sentry stack traces resolve to real source, not minified bundle
 // positions. Only actually uploads when SENTRY_AUTH_TOKEN is present -
 // silently no-ops otherwise, so local dev builds are unaffected.
+//
+// `silent` keys off SENTRY_AUTH_TOKEN, not CI - Coolify production
+// builds never set CI=true, so `silent: !process.env.CI` silenced every
+// real deploy's plugin output (including upload errors) with no way to
+// tell success from failure short of checking Sentry's dashboard
+// directly. Stay quiet only when there's genuinely nothing to upload
+// with (local dev); be verbose whenever an upload is actually attempted.
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: !process.env.CI,
+  silent: !process.env.SENTRY_AUTH_TOKEN,
 });
