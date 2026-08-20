@@ -118,7 +118,9 @@ change:
    (per the grooming note's stated convention), not this repo's usual `type/description` pattern.
 4. **Implement** the ticket, applying Modules/`blocked_by`/priority conventions above for anything
    Plane-side the work touches.
-5. **Ship**: commit, push, `gh pr create`. Wait for CI to pass before treating the PR as ready.
+5. **Ship**: run `/code-review main` (or the relevant fixed point) before the first commit of the
+   ticket's work — fix what it finds, then commit, push, `gh pr create`. Wait for CI to pass before
+   treating the PR as ready.
 6. **Stop — do not merge it yourself.** Open the PR, confirm CI is green, report it as ready;
    merging stays a deliberate human action.
 7. **Close out**: only after the PR is merged into `main`:
