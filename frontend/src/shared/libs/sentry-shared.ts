@@ -25,12 +25,18 @@ export function sharedSentryOptions(): Parameters<typeof Sentry.init>[0] {
       event.user = scrubUser(event.user);
       delete event.request?.data;
       delete event.request?.cookies;
+      // apiFetch sends x-user-email on every request (see
+      // shared/libs/api-client.ts) - it lands in event.request.headers,
+      // not .data or .user, so it needs its own scrub or a real email
+      // reaches Sentry despite the rest of this file's PII guarantees.
+      delete event.request?.headers;
       return event;
     },
     beforeSendTransaction(event) {
       event.user = scrubUser(event.user);
       delete event.request?.data;
       delete event.request?.cookies;
+      delete event.request?.headers;
       // Defense-in-depth: the real fix is that no `formData`/`headers`
       // option is ever passed to withServerActionInstrumentation (see
       // features/*/actions.ts), so nothing should reach span data in the
