@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { weightSchema, type WeightInput } from '@shared/schemas/weight';
+import { FieldError } from '@shared/ui/components/FieldError';
 import {
   clearWeight,
   setWeight,
@@ -54,11 +55,7 @@ export function WeightForm({
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             {...register('weight', { valueAsNumber: true })}
           />
-          {errors.weight && (
-            <p className="text-sm text-red-600" role="alert">
-              {errors.weight.message}
-            </p>
-          )}
+          <FieldError message={errors.weight?.message} />
         </div>
         <button
           type="submit"
@@ -73,11 +70,7 @@ export function WeightForm({
         </button>
       </form>
 
-      {errors.root?.message && (
-        <p className="text-sm text-red-600" role="alert">
-          {errors.root.message}
-        </p>
-      )}
+      <FieldError message={errors.root?.message} />
 
       {dailyLog?.weight != null && (
         <form action={clearWeight.bind(null, date)}>

@@ -6,22 +6,9 @@ import {
   userProfileSchema,
   type UserProfileInput,
 } from '@shared/schemas/user-profile';
-import { ACTIVITY_LEVELS, GENDERS, GOALS } from '@shared/types/user';
+import { ProfileFields } from '@shared/ui/components/ProfileFields';
+import { FieldError } from '@shared/ui/components/FieldError';
 import { completeOnboarding } from '@features/onboarding/actions';
-
-const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
-  weight_loss: 'Weight loss',
-  maintenance: 'Maintenance',
-  muscle_gain: 'Muscle gain',
-};
-
-const ACTIVITY_LABELS: Record<(typeof ACTIVITY_LEVELS)[number], string> = {
-  sedentary: 'Sedentary',
-  light: 'Light',
-  moderate: 'Moderate',
-  active: 'Active',
-  very_active: 'Very active',
-};
 
 export function OnboardingForm() {
   const {
@@ -53,140 +40,9 @@ export function OnboardingForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="flex w-full max-w-sm flex-col gap-4"
     >
-      <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
-          Name
-        </label>
-        <input
-          id="name"
-          type="text"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('name')}
-        />
-        {errors.name && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.name.message}
-          </p>
-        )}
-      </div>
+      <ProfileFields register={register} errors={errors} showPlaceholder />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="gender" className="text-sm font-medium">
-          Gender
-        </label>
-        <select
-          id="gender"
-          defaultValue=""
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('gender')}
-        >
-          <option value="" disabled>
-            Select…
-          </option>
-          {GENDERS.map((g) => (
-            <option key={g} value={g}>
-              {g === 'male' ? 'Male' : 'Female'}
-            </option>
-          ))}
-        </select>
-        {errors.gender && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.gender.message}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="dateOfBirth" className="text-sm font-medium">
-          Date of birth
-        </label>
-        <input
-          id="dateOfBirth"
-          type="date"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('dateOfBirth')}
-        />
-        {errors.dateOfBirth && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.dateOfBirth.message}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="height" className="text-sm font-medium">
-          Height (cm)
-        </label>
-        <input
-          id="height"
-          type="number"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('height', { valueAsNumber: true })}
-        />
-        {errors.height && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.height.message}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="goal" className="text-sm font-medium">
-          Goal
-        </label>
-        <select
-          id="goal"
-          defaultValue=""
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('goal')}
-        >
-          <option value="" disabled>
-            Select…
-          </option>
-          {GOALS.map((g) => (
-            <option key={g} value={g}>
-              {GOAL_LABELS[g]}
-            </option>
-          ))}
-        </select>
-        {errors.goal && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.goal.message}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="activityLevel" className="text-sm font-medium">
-          Activity level
-        </label>
-        <select
-          id="activityLevel"
-          defaultValue=""
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('activityLevel')}
-        >
-          <option value="" disabled>
-            Select…
-          </option>
-          {ACTIVITY_LEVELS.map((a) => (
-            <option key={a} value={a}>
-              {ACTIVITY_LABELS[a]}
-            </option>
-          ))}
-        </select>
-        {errors.activityLevel && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.activityLevel.message}
-          </p>
-        )}
-      </div>
-
-      {errors.root?.message && (
-        <p className="text-sm text-red-600" role="alert">
-          {errors.root.message}
-        </p>
-      )}
+      <FieldError message={errors.root?.message} />
 
       <button
         type="submit"

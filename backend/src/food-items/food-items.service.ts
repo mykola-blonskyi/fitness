@@ -4,7 +4,11 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import type { CreateFoodItemDto } from './dto/create-food-item.dto';
-import type { FoodItemResponse, TaxonomyResponse } from './food-item.mapper';
+import {
+  toFoodItemResponse,
+  type FoodItemResponse,
+  type TaxonomyResponse,
+} from './food-item.mapper';
 
 const DEFAULT_LOCALE = 'en';
 
@@ -73,18 +77,9 @@ export class FoodItemsService {
       )
       .orderBy(schema.foodCalories.name);
 
-    return rows.map((row) => ({
-      id: row.id,
-      name: row.translatedName ?? row.name,
-      category: row.category,
-      subcategory: row.subcategory,
-      role: row.role,
-      caloriesPer100g: Number(row.caloriesPer100g),
-      proteinPer100g: Number(row.proteinPer100g),
-      carbsPer100g: Number(row.carbsPer100g),
-      fatPer100g: Number(row.fatPer100g),
-      isVerified: row.isVerified,
-    }));
+    return rows.map((row) =>
+      toFoodItemResponse({ ...row, name: row.translatedName ?? row.name }),
+    );
   }
 
   // Powers the browse-by-category picker and the manual-creation form's
@@ -162,17 +157,6 @@ export class FoodItemsService {
       )
       .where(eq(schema.foodCalories.id, inserted.id));
 
-    return {
-      id: row.id,
-      name: row.name,
-      category: row.category,
-      subcategory: row.subcategory,
-      role: row.role,
-      caloriesPer100g: Number(row.caloriesPer100g),
-      proteinPer100g: Number(row.proteinPer100g),
-      carbsPer100g: Number(row.carbsPer100g),
-      fatPer100g: Number(row.fatPer100g),
-      isVerified: row.isVerified,
-    };
+    return toFoodItemResponse(row);
   }
 }

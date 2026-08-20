@@ -6,17 +6,22 @@ import {
   createFoodItemSchema,
   type CreateFoodItemInput,
 } from '@shared/schemas/food-item';
+import type { Macros } from '@shared/types/food';
+import { FieldError } from '@shared/ui/components/FieldError';
 import {
   createFoodItem,
   type FoodTaxonomy,
 } from '@features/food-catalog/actions';
 
+// `satisfies` guards against MACRO_FIELDS drifting out of sync with
+// Macros (a typo or a field rename in one would fail here, not silently
+// render an unregistered input).
 const MACRO_FIELDS = [
   { name: 'caloriesPer100g', label: 'Calories (per 100g)' },
   { name: 'proteinPer100g', label: 'Protein (g per 100g)' },
   { name: 'carbsPer100g', label: 'Carbs (g per 100g)' },
   { name: 'fatPer100g', label: 'Fat (g per 100g)' },
-] as const;
+] as const satisfies { name: keyof Macros; label: string }[];
 
 export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
   const {
@@ -69,11 +74,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('name')}
         />
-        {errors.name && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.name.message}
-          </p>
-        )}
+        <FieldError message={errors.name?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
@@ -92,11 +93,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
             </option>
           ))}
         </select>
-        {errors.categoryId && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.categoryId.message}
-          </p>
-        )}
+        <FieldError message={errors.categoryId?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
@@ -116,11 +113,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
             </option>
           ))}
         </select>
-        {errors.subcategoryId && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.subcategoryId.message}
-          </p>
-        )}
+        <FieldError message={errors.subcategoryId?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
@@ -139,11 +132,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
             </option>
           ))}
         </select>
-        {errors.roleId && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.roleId.message}
-          </p>
-        )}
+        <FieldError message={errors.roleId?.message} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -159,11 +148,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
               className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
               {...register(name, { valueAsNumber: true })}
             />
-            {errors[name] && (
-              <p className="text-sm text-red-600" role="alert">
-                {errors[name]?.message}
-              </p>
-            )}
+            <FieldError message={errors[name]?.message} />
           </div>
         ))}
       </div>
@@ -176,11 +161,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
         {isSubmitting ? 'Adding…' : 'Add food item'}
       </button>
 
-      {errors.root?.message && (
-        <p className="text-sm text-red-600" role="alert">
-          {errors.root.message}
-        </p>
-      )}
+      <FieldError message={errors.root?.message} />
     </form>
   );
 }

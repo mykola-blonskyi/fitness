@@ -4,7 +4,10 @@ import { revalidatePath } from 'next/cache';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import { weightSchema, type WeightInput } from '@shared/schemas/weight';
-import { firstFieldErrors } from '@shared/schemas/zod-errors';
+import {
+  submitFormAction,
+  type FormActionError,
+} from '@shared/libs/form-action';
 
 export interface DailyLog {
   id: string;
@@ -14,10 +17,7 @@ export interface DailyLog {
   updatedAt: string;
 }
 
-export interface WeightFormState {
-  error?: string;
-  fieldErrors?: Partial<Record<keyof WeightInput, string>>;
-}
+export type WeightFormState = FormActionError<WeightInput>;
 
 export async function setWeight(
   date: string,
@@ -26,26 +26,19 @@ export async function setWeight(
   // No `formData` option - see features/onboarding/actions.ts for why
   // (this one carries a weight value, ADR-006's own named example of
   // health data that must never reach Sentry).
-  return Sentry.withServerActionInstrumentation('setWeight', {}, async () => {
-    // react-hook-form's own zodResolver already validated client-side -
-    // this is a defensive re-check, not the primary gate (e.g. against a
-    // tampered request), so it never trusts the client alone.
-    const parsed = weightSchema.safeParse(input);
-    if (!parsed.success) {
-      return { fieldErrors: firstFieldErrors(parsed.error) };
-    }
-
-    try {
+  return submitFormAction({
+    name: 'setWeight',
+    schema: weightSchema,
+    input,
+    errorMessage: "Couldn't save your weight — try again.",
+    async mutate(parsed) {
       await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
         method: 'PUT',
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(parsed),
       });
-    } catch {
-      return { error: "Couldn't save your weight — try again." };
-    }
-
-    revalidatePath('/[locale]/diary', 'page');
-    return {};
+      revalidatePath('/[locale]/diary', 'page');
+      return {};
+    },
   });
 }
 

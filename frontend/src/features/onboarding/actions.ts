@@ -1,19 +1,18 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import * as Sentry from '@sentry/nextjs';
 import { apiFetch } from '@libs/api-client';
 import {
   userProfileSchema,
   type UserProfileInput,
 } from '@shared/schemas/user-profile';
-import { firstFieldErrors } from '@shared/schemas/zod-errors';
 import type { UserProfile } from '@shared/types/user';
+import {
+  submitFormAction,
+  type FormActionError,
+} from '@shared/libs/form-action';
 
-export interface OnboardingState {
-  error?: string;
-  fieldErrors?: Partial<Record<keyof UserProfileInput, string>>;
-}
+export type OnboardingState = FormActionError<UserProfileInput>;
 
 export async function completeOnboarding(
   input: UserProfileInput,
@@ -23,38 +22,26 @@ export async function completeOnboarding(
   // profile's name/date of birth/height into Sentry (ADR-006 explicitly
   // forbids this, and it happens on the transaction pipeline, which
   // sentry-shared.ts's beforeSend never even sees - only beforeSendTransaction does).
-  const result = await Sentry.withServerActionInstrumentation(
-    'completeOnboarding',
-    {},
-    async () => {
-      // react-hook-form's own zodResolver already validated client-side -
-      // this is a defensive re-check, not the primary gate.
-      const parsed = userProfileSchema.safeParse(input);
-      if (!parsed.success) {
-        return { fieldErrors: firstFieldErrors(parsed.error) };
-      }
-
-      try {
-        await apiFetch<UserProfile>('/users/me', {
-          method: 'POST',
-          body: JSON.stringify(parsed.data),
-        });
-      } catch {
-        return {
-          error:
-            "Couldn't save your profile — check your inputs and try again.",
-        };
-      }
-
+  const result = await submitFormAction({
+    name: 'completeOnboarding',
+    schema: userProfileSchema,
+    input,
+    errorMessage:
+      "Couldn't save your profile — check your inputs and try again.",
+    async mutate(parsed) {
+      await apiFetch<UserProfile>('/users/me', {
+        method: 'POST',
+        body: JSON.stringify(parsed),
+      });
       return undefined;
     },
-  );
+  });
 
   if (result) return result;
 
   // TODO(FITNESS-11): locale-aware redirect once next-intl lands.
-  // Outside the instrumentation callback - redirect() works by throwing,
-  // and doing that inside withServerActionInstrumentation would report it
-  // to Sentry as a real error.
+  // Outside submitFormAction's instrumentation callback - redirect() works
+  // by throwing, and doing that inside withServerActionInstrumentation
+  // would report it to Sentry as a real error.
   redirect('/en');
 }
