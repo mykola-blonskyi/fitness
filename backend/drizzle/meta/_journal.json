@@ -36,6 +36,20 @@
       "when": 1786957943508,
       "tag": "0004_optimal_bug",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787240921686,
+      "tag": "0005_first_wild_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787240930040,
+      "tag": "0006_seed_mifflin_v1_algorithm",
+      "breakpoints": true
     }
   ]
 }

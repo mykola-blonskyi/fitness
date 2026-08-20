@@ -215,3 +215,23 @@ export const foodCalorieTranslations = pgTable(
   },
   (table) => [unique().on(table.foodCalorieId, table.locale)],
 );
+
+// Diet Calculation Algorithm (see knowledge/domain-model.md,
+// knowledge/business-rules.md "Diet Calculation Algorithm formula is
+// documentation only", docs/decisions.md ADR-010). `formula` is
+// human-readable text for display/audit only — the real calculation is
+// versioned backend code in calorie-targets/algorithm-registry.ts, looked
+// up by `code`. Never parsed or evaluated at runtime.
+export const dietCalculationAlgorithms = pgTable(
+  'diet_calculation_algorithms',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    code: text('code').notNull().unique(),
+    name: text('name').notNull(),
+    description: text('description').notNull(),
+    formula: text('formula').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);

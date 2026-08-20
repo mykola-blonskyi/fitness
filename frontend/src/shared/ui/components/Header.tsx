@@ -10,8 +10,8 @@ interface HeaderProps {
 // sibling top-level sections (Training, Diary, Diet, Photos, Settings)
 // a user needs to move *between*, not a single hierarchy to track depth
 // within. Nav items are scoped to only what's actually built today
-// (Diary, Food, Settings) - add one line here each time a new section
-// ships its first real page, per ADR-007's Consequences.
+// (Diary, Food, Diet, Settings) - add one line here each time a new
+// section ships its first real page, per ADR-007's Consequences.
 export function Header({ locale, identity }: HeaderProps) {
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
@@ -42,6 +42,12 @@ export function Header({ locale, identity }: HeaderProps) {
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
             Food
+          </Link>
+          <Link
+            href={`/${locale}/diet`}
+            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            Diet
           </Link>
           <Link
             href={`/${locale}/settings/profile`}

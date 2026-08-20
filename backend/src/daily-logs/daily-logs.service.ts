@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, isNotNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -18,6 +18,21 @@ export class DailyLogsService {
         eq(schema.dailyLogs.userId, userId),
         eq(schema.dailyLogs.date, date),
       ),
+    });
+    return row ? toDailyLogResponse(row) : null;
+  }
+
+  // The most recent Daily Log with a recorded weight - used by
+  // calorie-targets, which needs a real weigh-in and can't fall back to
+  // a date with weight left null (see Business Rules: Daily Log requires
+  // no weigh-in - not every date has one).
+  async findLatestWeighIn(userId: string): Promise<DailyLogResponse | null> {
+    const row = await this.db.query.dailyLogs.findFirst({
+      where: and(
+        eq(schema.dailyLogs.userId, userId),
+        isNotNull(schema.dailyLogs.weight),
+      ),
+      orderBy: desc(schema.dailyLogs.date),
     });
     return row ? toDailyLogResponse(row) : null;
   }
