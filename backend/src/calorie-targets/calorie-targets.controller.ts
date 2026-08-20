@@ -6,7 +6,7 @@ import { CalorieTargetsService } from './calorie-targets.service';
 
 // Operates on the caller's own profile/weigh-ins only, same convention as
 // UsersController/DailyLogsController - no route accepts another user's id.
-@Controller('calorie-target')
+@Controller('calorie-targets')
 export class CalorieTargetsController {
   constructor(private readonly calorieTargetsService: CalorieTargetsService) {}
 

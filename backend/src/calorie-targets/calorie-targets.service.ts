@@ -7,7 +7,10 @@ import { DailyLogsService } from '../daily-logs/daily-logs.service';
 import { UsersService } from '../users/users.service';
 import { CALORIE_ALGORITHMS } from './algorithm-registry';
 import type { MifflinV1Input } from './algorithms/mifflin-v1';
-import type { CalorieTargetResponse } from './calorie-target.mapper';
+import {
+  toCalorieTargetResponse,
+  type CalorieTargetResponse,
+} from './calorie-target.mapper';
 
 const ALGORITHM_CODE = 'mifflin_v1';
 
@@ -57,18 +60,10 @@ export class CalorieTargetsService {
     };
     const result = CALORIE_ALGORITHMS[ALGORITHM_CODE](input);
 
-    return {
-      algorithm: {
-        code: algorithm.code,
-        name: algorithm.name,
-        description: algorithm.description,
-        formula: algorithm.formula,
-      },
-      weighIn: { weight: weighIn.weight, date: weighIn.date },
-      calories: result.calories,
-      proteinG: result.proteinG,
-      carbsG: result.carbsG,
-      fatG: result.fatG,
-    };
+    return toCalorieTargetResponse(
+      algorithm,
+      { weight: weighIn.weight, date: weighIn.date },
+      result,
+    );
   }
 }

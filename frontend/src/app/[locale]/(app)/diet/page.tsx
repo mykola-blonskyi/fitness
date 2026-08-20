@@ -1,25 +1,6 @@
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@libs/api-client';
-
-// Mirrors backend/src/calorie-targets/calorie-target.mapper.ts's
-// CalorieTargetResponse. No Server Action needed - this is a pure read,
-// same as the diary page's DailyLog fetch.
-interface CalorieTarget {
-  algorithm: {
-    code: string;
-    name: string;
-    description: string;
-    formula: string;
-  };
-  weighIn: {
-    weight: number;
-    date: string;
-  };
-  calories: number;
-  proteinG: number;
-  carbsG: number;
-  fatG: number;
-}
+import type { CalorieTarget } from '@features/diet/actions';
 
 export default async function DietPage({
   params,
@@ -30,7 +11,7 @@ export default async function DietPage({
 
   let target: CalorieTarget | null = null;
   try {
-    target = await apiFetch<CalorieTarget>('/calorie-target');
+    target = await apiFetch<CalorieTarget>('/calorie-targets');
   } catch (err) {
     // No weigh-in yet is expected for a new user - anything else (auth
     // failure, backend down) should surface as a real error, same
