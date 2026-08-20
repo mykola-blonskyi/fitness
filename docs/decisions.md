@@ -263,3 +263,41 @@ Status: Accepted
 ### Consequences
 
 Keep extracting plain shared components (`FieldError`, `ProfileFields`, and similar) for now rather than reaching for ShadCN piecemeal — a partial adoption (some forms ShadCN, some raw Tailwind) would be a worse inconsistency than the current uniform-raw-Tailwind state. When the trigger condition above is hit, migrate deliberately rather than only using ShadCN for the one new form that needed it.
+
+---
+
+## ADR-010: mifflin_v1 calorie/macro calculation — formula constants and code/DB split
+
+Date: 2026-08-20
+
+Status: Accepted
+
+### Context
+
+FITNESS-26 needed a real, versioned calorie/macro-target algorithm (`mifflin_v1`, per `knowledge/glossary.md`'s already-documented `diet_calculation_algorithms` entity), but neither `knowledge/business-rules.md` nor the Diet Engine spec pin down the actual numbers — activity multipliers, a goal-based calorie adjustment, a macro split, or a safety floor. These are real product decisions, not derivable from existing docs, and picking them silently inside a PR would leave no record of why.
+
+### Decision
+
+**BMR**: standard Mifflin-St Jeor equation — `10×weight(kg) + 6.25×height(cm) − 5×age(yr) + 5` (male) or `−161` (female).
+
+**Activity multiplier**: the standard Harris-Benedict/Mifflin activity scale, which conveniently already matches this app's `activity_level` enum names exactly: sedentary 1.2, light 1.375, moderate 1.55, active 1.725, very_active 1.9.
+
+**Goal adjustment**: applied to TDEE (BMR × activity multiplier) — weight_loss −500 kcal/day (~0.45 kg/week, a commonly recommended moderate rate), maintenance 0, muscle_gain +300 kcal/day (a modest surplus to limit fat gain while bulking).
+
+**Safety floor**: calories never computed below 1200 kcal/day regardless of goal — a commonly cited absolute floor, clamped rather than silently allowed to go lower for a low-BMR + aggressive-deficit combination.
+
+**Macro split**: protein 2.0 g/kg bodyweight (within the evidence-based 1.6–2.2 g/kg range for general fitness/recomposition goals, applied uniformly across all three goals to keep the formula simple), fat 25% of total calories, carbs the remainder — clamped at 0 rather than rebalanced if protein+fat alone would exceed a floor-clamped calorie target (a synthetic edge case only reachable by unrealistic bodyweight/height/age combinations, not a realistic profile — see `mifflin-v1.spec.ts`'s "never returns negative carbs" test).
+
+**Code/DB split**: `diet_calculation_algorithms` (migration `0005_first_wild_pack.sql`) stores only `code`/`name`/`description`/`formula` — display and audit metadata, matching `knowledge/business-rules.md`'s "formula is documentation only" rule. The actual math is `calorie-targets/algorithms/mifflin-v1.ts`, a pure function registered under the same `code` string in `calorie-targets/algorithm-registry.ts`. The one required `mifflin_v1` row is seeded via a data migration (`0006_seed_mifflin_v1_algorithm.sql`), not a manual `pnpm db:seed:*` script like the food/exercise catalogs — unlike those (optional, large, externally-sourced import data), the calorie-target feature can't function without this single row, so it belongs behind the mandatory migrate-at-boot gate (ADR-005), not a step someone could forget to run after a fresh deploy.
+
+**No `diets`/`diet_items` tables yet**: FITNESS-26's scope is the target calculation only — display, not persistence. FITNESS-30 (Diet generation) is the ticket that will add `diets`/`diet_items` and give them an FK to `diet_calculation_algorithms` for `calculation_metadata` audit snapshots; adding those tables now would be speculative for a feature not yet built.
+
+### Alternatives Considered
+
+- Goal-dependent protein targets (e.g. higher during weight_loss to preserve muscle in a deficit): rejected for v1 — a single fixed 2.0 g/kg keeps the formula simple and auditable; a future `adaptive_v1` algorithm code is the natural place for that refinement if it's ever wanted, without touching `mifflin_v1` once shipped.
+- Storing the formula as a DB-evaluated expression: rejected — already settled by `knowledge/business-rules.md`'s "formula is documentation only" rule; this ADR just supplies the actual constants that rule left unspecified.
+- Skipping the `diet_calculation_algorithms` table entirely and keeping display metadata only in code: rejected — the domain model and glossary already treat this as a first-class entity with those exact fields, and a DB row is what a future `GET` of "which algorithms exist" would query without a code deploy.
+
+### Consequences
+
+Changing any of these constants (multipliers, goal adjustment, floor, macro split) is an edit to `mifflin-v1.ts` plus its spec — the DB row's `formula` text should be updated in the same change so the human-readable description doesn't drift from what the code actually computes, even though the two are never mechanically linked.

@@ -4,6 +4,7 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CalorieTargetsModule } from './calorie-targets/calorie-targets.module';
 import { DailyLogsModule } from './daily-logs/daily-logs.module';
 import { DbModule } from './db/db.module';
 import { FoodItemsModule } from './food-items/food-items.module';
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     DailyLogsModule,
     FoodItemsModule,
+    CalorieTargetsModule,
   ],
   controllers: [AppController],
   providers: [
