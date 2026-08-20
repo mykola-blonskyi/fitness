@@ -166,6 +166,8 @@ General log management (structured application logs, aggregation, retention) was
 
 **Post-implementation finding (2026-08-17)**: frontend source-map upload silently produced empty releases in production for a while after this ADR was implemented, despite `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN` all being correctly configured — two compounding bugs, found by reproducing the exact Coolify build directly on the VPS rather than relying on its build log (which doesn't capture `docker compose build` output at all, regardless of the Sentry plugin's own `silent` setting): (1) `next.config.ts`'s `silent: !process.env.CI` stayed `true` on every Coolify build since Coolify never sets `CI=true`, hiding the plugin's own errors — fixed by keying `silent` off `SENTRY_AUTH_TOKEN`'s presence instead; (2) Coolify's `SOURCE_COMMIT` isn't reliably populated on every deploy, and an empty (not unset) `SENTRY_RELEASE` makes `sentry-cli` hard-reject the upload outright — fixed with a build-time timestamp fallback so an upload never fails over this. Separately, `node:slim` ships with no CA certificates, so `sentry-cli`'s HTTPS calls failed TLS verification in the actual Docker build even after both of the above were fixed — a local (non-Docker) build never surfaces this, since the host OS supplies its own trust store. All three fixes landed together; a release with a version Sentry has already seen (even an empty one from before these fixes) is silently skipped on upload, not retried — a real content or version change is needed to force a fresh attempt.
 
+**Post-implementation finding (2026-08-20)**: a code review caught that the "Email... never reach Sentry" guarantee above was violated in practice, not just at risk — `apiFetch` (`frontend/src/shared/libs/api-client.ts`) sends a real `x-user-email` header on every backend request, and neither side's Sentry config scrubbed `event.request.headers` before this fix. The backend's `requestDataIntegration({ include: { data: false } })` only strips the body; the frontend's `beforeSend`/`beforeSendTransaction` stripped `.data`/`.cookies` but not `.headers`. Fixed by explicitly deleting `event.request?.headers` in both `beforeSend` and `beforeSendTransaction` on both sides (`backend/src/instrument.ts`, `frontend/src/shared/libs/sentry-shared.ts`) — the same "both pipelines, not just one" lesson the source-map finding above already recorded for a different field. Same pass also fixed the backend's `SENTRY_RELEASE` to fall back to `undefined` rather than an empty string when Coolify's "Include Source Commit" toggle is off, mirroring the frontend's existing timestamp fallback.
+
 ---
 
 ## ADR-007: App header uses a nav menu, not breadcrumbs; account menu is identity-only, no sign-out
@@ -234,3 +236,30 @@ Resolving *how* a queued write eventually reaches the backend also surfaced a re
 ### Consequences
 
 TanStack Query's place in the stack is unaffected by this decision — it remains listed as intended but unadopted, and this ADR doesn't resolve whether/when it gets adopted (that's a server-data-caching question, orthogonal to Zustand's client-only-state role here). The heuristic in this ADR is the standing rule for upcoming complex UI — the Training Program builder (FITNESS-18, likely multi-step) and catalog browse/search UIs (FITNESS-17 exercise, FITNESS-28 food, where filter state may be shared between sibling components) are the next places it's likely to actually get exercised, not necessarily FITNESS-13 alone.
+
+---
+
+## ADR-009: ShadCN is deferred; forms use shared raw-Tailwind primitives instead
+
+Date: 2026-08-20
+
+Status: Accepted
+
+### Context
+
+`docs/architecture.md` lists ShadCN as part of the intended frontend stack, but every form shipped so far (Onboarding, Profile, Weight, Create Food Item) plus the header uses hand-rolled `<input>`/`<select>`/`<button>` elements styled directly with Tailwind classes. Unlike TanStack Query, which ADR-008 already records as "listed as intended but unadopted," this divergence had no documented rationale anywhere — flagged as an undocumented standards violation by a code review.
+
+### Decision
+
+**Defer ShadCN**, same status as TanStack Query: listed in the intended stack, not yet installed, not yet needed. The four forms shipped so far are plain field lists (text/number/select) with no interaction complexity ShadCN would meaningfully help with. In the same change that raised this gap, the actual duplication across those forms (repeated error markup, repeated field blocks) was addressed directly with two small shared components (`FieldError`, `ProfileFields`) rather than pulling in ShadCN to solve it.
+
+**Trigger for revisiting**: adopt ShadCN as one deliberate migration — not form-by-form — once a form needs a primitive that's genuinely hard to hand-roll correctly (`Combobox`, `Popover`-based date picker, a `Dialog`-driven multi-step flow), which the Training Program builder (FITNESS-18) is the most likely candidate to need first.
+
+### Alternatives Considered
+
+- Adopt ShadCN now, retrofit the four existing forms: rejected — the existing raw markup already works correctly and accessibly for plain text/number/select fields; a retrofit here is churn with no functional benefit, not a fix for an actual problem.
+- Drop ShadCN from `docs/architecture.md`'s intended stack entirely: rejected — future forms (multi-step wizards, comboboxes, date pickers) are a better bet built on tested accessible primitives than hand-rolled from scratch; keeping it listed as intended (not adopted) keeps that option open and documented, same pattern as TanStack Query.
+
+### Consequences
+
+Keep extracting plain shared components (`FieldError`, `ProfileFields`, and similar) for now rather than reaching for ShadCN piecemeal — a partial adoption (some forms ShadCN, some raw Tailwind) would be a worse inconsistency than the current uniform-raw-Tailwind state. When the trigger condition above is hit, migrate deliberately rather than only using ShadCN for the one new form that needed it.

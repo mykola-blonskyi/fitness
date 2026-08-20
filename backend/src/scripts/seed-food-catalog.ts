@@ -12,6 +12,7 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, and } from 'drizzle-orm';
 import * as schema from '../db/schema';
+import type { Macros } from '../food-items/food-item.types';
 
 const USER_AGENT = 'FitnessApp-SeedScript/1.0 (+https://fitness.blonskyi.dev)';
 const OFF_BASE_URL = 'https://world.openfoodfacts.org/api/v2/search';
@@ -106,15 +107,11 @@ async function upsertTaxonomy(db: Db) {
 // Shared curated-item shape both sources normalize into before insert.
 // ---------------------------------------------------------------------
 
-interface CuratedItem {
+interface CuratedItem extends Macros {
   name: string;
   category: string;
   subcategory: string;
   role: string;
-  caloriesPer100g: number;
-  proteinPer100g: number;
-  carbsPer100g: number;
-  fatPer100g: number;
   source: string;
   sourceId: string;
 }
