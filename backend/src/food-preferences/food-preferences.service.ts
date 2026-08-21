@@ -107,10 +107,14 @@ export class FoodPreferencesService {
     userId: string,
     dto: CreateFoodPreferenceDto,
   ): Promise<FoodPreferenceResponse> {
-    const targetName = (
-      await this.fetchTargetNames(dto.targetType, [dto.targetId])
-    ).get(dto.targetId);
-    if (!targetName) {
+    const targetNames = await this.fetchTargetNames(dto.targetType, [
+      dto.targetId,
+    ]);
+    const targetName = targetNames.get(dto.targetId);
+    // A truthy check here would wrongly reject a real target whose name
+    // happens to be an empty string - Map.get()'s undefined is the only
+    // real "not found" signal.
+    if (targetName === undefined) {
       throw new BadRequestException(
         `No ${dto.targetType} found with id ${dto.targetId}`,
       );
