@@ -18,6 +18,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SENTRY_DSN: ${SENTRY_DSN}
+      USDA_API_KEY: ${USDA_API_KEY}
+      DEEPL_API_KEY: ${DEEPL_API_KEY}
       PORT: 3001
     restart: unless-stopped
     # No ports/domain: stays private on Coolify's network (ADR-001 - the
