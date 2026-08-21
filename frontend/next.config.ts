@@ -23,6 +23,17 @@ const nextConfig: NextConfig = {
       '../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**/*',
     ],
   },
+  // Food catalog thumbnails come from Open Food Facts (see
+  // seed-food-catalog.ts) - the only external image host this app renders.
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.openfoodfacts.org',
+        pathname: '/images/products/**',
+      },
+    ],
+  },
 };
 
 // Uploads source maps at build time (see docs/decisions.md ADR-006) so

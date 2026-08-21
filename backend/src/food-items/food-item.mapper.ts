@@ -7,6 +7,7 @@ export interface FoodItemResponse extends Macros {
   subcategory: string;
   role: string;
   isVerified: boolean;
+  imageUrl: string | null;
 }
 
 export interface TaxonomyResponse {
@@ -33,6 +34,7 @@ export interface FoodItemRow {
   carbsPer100g: string;
   fatPer100g: string;
   isVerified: boolean;
+  imageUrl: string | null;
 }
 
 export function toFoodItemResponse(row: FoodItemRow): FoodItemResponse {
@@ -47,5 +49,6 @@ export function toFoodItemResponse(row: FoodItemRow): FoodItemResponse {
     carbsPer100g: Number(row.carbsPer100g),
     fatPer100g: Number(row.fatPer100g),
     isVerified: row.isVerified,
+    imageUrl: row.imageUrl,
   };
 }

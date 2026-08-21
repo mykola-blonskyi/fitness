@@ -4,20 +4,51 @@
 //   pnpm --filter backend db:seed:food-catalog
 // Safe to re-run: taxonomy rows are upserted on name, food_calories rows
 // on (source, sourceId), so an already-imported item is skipped rather
-// than duplicated. USDA import is skipped (with a warning) if
+// than duplicated - except a missing image_url, which gets backfilled onto
+// the existing row (see insertItem) since that field didn't exist at the
+// time of the first import. USDA import is skipped (with a warning) if
 // USDA_API_KEY is unset; translation is skipped (with a warning) if
 // DEEPL_API_KEY is unset - both stay optional so this script still does
 // something useful without either.
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import type { Macros } from '../food-items/food-item.types';
 
 const USER_AGENT = 'FitnessApp-SeedScript/1.0 (+https://fitness.blonskyi.dev)';
 const OFF_BASE_URL = 'https://world.openfoodfacts.org/api/v2/search';
+const OFF_IMAGE_HOST = 'images.openfoodfacts.org';
+const OFF_IMAGE_PATH_PREFIX = '/images/products/';
 const USDA_BASE_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const DEEPL_TARGET_LOCALES = ['uk', 'ru', 'es'] as const;
+
+// OFF is a public, community-editable dataset - a product's image_front_url
+// is untrusted input, not a value we can assume is well-formed. Only accept
+// an https URL on OFF's own image host and path - kept in lock-step with
+// frontend/next.config.ts's images.remotePatterns entry
+// (hostname: 'images.openfoodfacts.org', pathname: '/images/products/**'):
+// a URL this rejects would be refused by next/image anyway, so better to
+// never persist it. Anything else - a malformed value, an unexpected host
+// or path - is dropped rather than stored.
+export function sanitizeOffImageUrl(
+  url: string | undefined,
+): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    if (
+      parsed.protocol === 'https:' &&
+      parsed.hostname === OFF_IMAGE_HOST &&
+      parsed.pathname.startsWith(OFF_IMAGE_PATH_PREFIX)
+    ) {
+      return url;
+    }
+  } catch {
+    // Not a parseable URL - fall through to undefined.
+  }
+  return undefined;
+}
 
 // ---------------------------------------------------------------------
 // Fixed taxonomy (knowledge/domain-model.md "Food Category / Food
@@ -114,6 +145,7 @@ interface CuratedItem extends Macros {
   role: string;
   source: string;
   sourceId: string;
+  imageUrl?: string;
 }
 
 // ---------------------------------------------------------------------
@@ -147,6 +179,7 @@ interface OffProduct {
   lang?: string;
   categories_tags?: string[];
   nutriments?: Record<string, number>;
+  image_front_url?: string;
 }
 
 interface OffSearchResponse {
@@ -278,7 +311,7 @@ async function fetchOffCategory(
   ) {
     const url =
       `${OFF_BASE_URL}?categories_tags_en=${offTag}` +
-      `&fields=code,product_name,lang,categories_tags,nutriments` +
+      `&fields=code,product_name,lang,categories_tags,nutriments,image_front_url` +
       `&page=${page}&page_size=${OFF_PAGE_SIZE}`;
     let data: OffSearchResponse;
     try {
@@ -332,6 +365,7 @@ async function fetchOffCategory(
         fatPer100g: fat,
         source: 'open_food_facts',
         sourceId: product.code,
+        imageUrl: sanitizeOffImageUrl(product.image_front_url),
       });
     }
   }
@@ -588,39 +622,80 @@ async function insertItem(
   db: Db,
   item: CuratedItem,
   ids: Awaited<ReturnType<typeof upsertTaxonomy>>,
-): Promise<{ foodCalorieId: string; inserted: boolean }> {
+): Promise<{
+  foodCalorieId: string;
+  inserted: boolean;
+  imageBackfilled: boolean;
+}> {
   const categoryId = ids.categoryIds.get(item.category)!;
   const subcategoryId = ids.subcategoryIds.get(item.subcategory)!;
   const roleId = ids.roleIds.get(item.role)!;
 
-  const [inserted] = await db
-    .insert(schema.foodCalories)
-    .values({
-      name: item.name,
-      categoryId,
-      subcategoryId,
-      roleId,
-      caloriesPer100g: String(item.caloriesPer100g),
-      proteinPer100g: String(item.proteinPer100g),
-      carbsPer100g: String(item.carbsPer100g),
-      fatPer100g: String(item.fatPer100g),
-      source: item.source,
-      sourceId: item.sourceId,
-    })
-    .onConflictDoNothing({
-      target: [schema.foodCalories.source, schema.foodCalories.sourceId],
-    })
-    .returning();
+  const values = {
+    name: item.name,
+    categoryId,
+    subcategoryId,
+    roleId,
+    caloriesPer100g: String(item.caloriesPer100g),
+    proteinPer100g: String(item.proteinPer100g),
+    carbsPer100g: String(item.carbsPer100g),
+    fatPer100g: String(item.fatPer100g),
+    source: item.source,
+    sourceId: item.sourceId,
+    imageUrl: item.imageUrl,
+  };
+  const target = [schema.foodCalories.source, schema.foodCalories.sourceId];
+  // `xmax = 0` is Postgres's own tell for "this returned row came from the
+  // INSERT branch, not an ON CONFLICT UPDATE" - lets one round-trip cover
+  // both the insert and the conflict-update case below instead of a
+  // separate follow-up query to tell them apart.
+  const returningInsertedFlag = {
+    id: schema.foodCalories.id,
+    isFreshInsert: sql<boolean>`(xmax = 0)`,
+  };
 
-  if (inserted) return { foodCalorieId: inserted.id, inserted: true };
+  // Only reaches for a write when there's an image to offer at all - a
+  // conflicting row's image_url is set exactly when it's currently null
+  // (setWhere), so the null-check and the write happen in the same
+  // statement: no read-then-write gap, and an already-imaged row, a
+  // human-verified row, or its macros/classification are never touched.
+  const [row] = item.imageUrl
+    ? await db
+        .insert(schema.foodCalories)
+        .values(values)
+        .onConflictDoUpdate({
+          target,
+          set: { imageUrl: item.imageUrl },
+          setWhere: isNull(schema.foodCalories.imageUrl),
+        })
+        .returning(returningInsertedFlag)
+    : await db
+        .insert(schema.foodCalories)
+        .values(values)
+        .onConflictDoNothing({ target })
+        .returning(returningInsertedFlag);
 
+  if (row) {
+    return {
+      foodCalorieId: row.id,
+      inserted: row.isFreshInsert,
+      imageBackfilled: !row.isFreshInsert,
+    };
+  }
+
+  // Conflicted but nothing changed - either there was no image to offer, or
+  // the existing row already had one. Just need its id for the caller.
   const existing = await db.query.foodCalories.findFirst({
     where: and(
       eq(schema.foodCalories.source, item.source),
       eq(schema.foodCalories.sourceId, item.sourceId),
     ),
   });
-  return { foodCalorieId: existing!.id, inserted: false };
+  return {
+    foodCalorieId: existing!.id,
+    inserted: false,
+    imageBackfilled: false,
+  };
 }
 
 // Fixed spacing between calls, on top of translate()'s own 429 backoff -
@@ -679,6 +754,7 @@ async function main() {
 
   let imported = 0;
   let skippedExisting = 0;
+  let imagesBackfilled = 0;
 
   for (const [category, offTag] of Object.entries(OFF_CATEGORY_TAGS)) {
     const items = await fetchOffCategory(category, offTag);
@@ -686,10 +762,12 @@ async function main() {
       const result = await insertItem(db, item, ids);
       if (result.inserted) imported++;
       else skippedExisting++;
+      if (result.imageBackfilled) imagesBackfilled++;
     }
   }
   console.log(
-    `Open Food Facts: imported ${imported}, already present ${skippedExisting}.`,
+    `Open Food Facts: imported ${imported}, already present ${skippedExisting}, ` +
+      `images backfilled on ${imagesBackfilled} existing row(s).`,
   );
 
   const usdaApiKey = process.env.USDA_API_KEY;
