@@ -216,6 +216,70 @@ export const foodCalorieTranslations = pgTable(
   (table) => [unique().on(table.foodCalorieId, table.locale)],
 );
 
+export const foodPreferenceTypeEnum = pgEnum('food_preference_type', [
+  'allergy',
+  'exclude',
+]);
+export const foodPreferenceTargetTypeEnum = pgEnum(
+  'food_preference_target_type',
+  ['category', 'subcategory', 'role', 'food_item'],
+);
+
+// Food Preference (see knowledge/domain-model.md,
+// knowledge/business-rules.md "Food Preferences target structured
+// entities, not free text"). targetId is deliberately not a real FK —
+// it points at one of four different tables (foodCategories/
+// foodSubcategories/foodRoles/foodCalories) depending on targetType, and
+// Postgres has no polymorphic FK. Existence is validated in
+// food-preferences.service.ts instead. The unique constraint stops a
+// user from declaring the exact same preference twice, not from
+// declaring overlapping ones (e.g. excluding both a category and one of
+// its items) — diet generation treats those as redundant, not invalid.
+export const foodPreferences = pgTable(
+  'food_preferences',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    type: foodPreferenceTypeEnum('type').notNull(),
+    targetType: foodPreferenceTargetTypeEnum('target_type').notNull(),
+    targetId: uuid('target_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique().on(table.userId, table.type, table.targetType, table.targetId),
+  ],
+);
+
+export const dietTypeEnum = pgEnum('diet_type', [
+  'vegetarian',
+  'vegan',
+  'keto',
+  'paleo',
+]);
+
+// Diet Preference (see knowledge/domain-model.md). A user may hold
+// several at once (e.g. vegetarian + keto) — each is an independent
+// filter applied during diet generation, not a mutually exclusive
+// single choice.
+export const dietPreferences = pgTable(
+  'diet_preferences',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    dietType: dietTypeEnum('diet_type').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [unique().on(table.userId, table.dietType)],
+);
+
 // Diet Calculation Algorithm (see knowledge/domain-model.md,
 // knowledge/business-rules.md "Diet Calculation Algorithm formula is
 // documentation only", docs/decisions.md ADR-010). `formula` is
