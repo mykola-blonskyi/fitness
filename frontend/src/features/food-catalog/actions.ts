@@ -20,6 +20,7 @@ export interface FoodItem extends Macros {
   subcategory: string;
   role: string;
   isVerified: boolean;
+  imageUrl: string | null;
 }
 
 // Mirrors backend/src/food-items/food-item.mapper.ts's TaxonomyResponse.

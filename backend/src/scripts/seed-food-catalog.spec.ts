@@ -1,6 +1,7 @@
 import {
   resolveOffClassification,
   resolveUsdaClassification,
+  sanitizeOffImageUrl,
 } from './seed-food-catalog';
 
 describe('resolveOffClassification', () => {
@@ -124,5 +125,42 @@ describe('resolveUsdaClassification', () => {
 
   it('returns null for an unmapped category', () => {
     expect(resolveUsdaClassification('unknown', 'anything')).toBeNull();
+  });
+});
+
+describe('sanitizeOffImageUrl', () => {
+  const validUrl =
+    'https://images.openfoodfacts.org/images/products/330/274/004/7404/front_en.400.jpg';
+
+  it('returns undefined when no url is given', () => {
+    expect(sanitizeOffImageUrl(undefined)).toBeUndefined();
+  });
+
+  it('accepts a well-formed OFF image url', () => {
+    expect(sanitizeOffImageUrl(validUrl)).toBe(validUrl);
+  });
+
+  it('rejects a non-https url', () => {
+    expect(
+      sanitizeOffImageUrl(validUrl.replace('https://', 'http://')),
+    ).toBeUndefined();
+  });
+
+  it('rejects a lookalike host', () => {
+    expect(
+      sanitizeOffImageUrl(
+        'https://images.openfoodfacts.org.evil.example/images/products/x.jpg',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('rejects a path outside images/products', () => {
+    expect(
+      sanitizeOffImageUrl('https://images.openfoodfacts.org/other/x.jpg'),
+    ).toBeUndefined();
+  });
+
+  it('rejects a malformed url', () => {
+    expect(sanitizeOffImageUrl('not a url')).toBeUndefined();
   });
 });

@@ -12,6 +12,23 @@ import {
 
 const DEFAULT_LOCALE = 'en';
 
+// Shared column projection for both list() and create()'s post-insert
+// re-select - one place to add a new food_calories column so it can't go
+// missing from just one of the two call sites.
+const foodItemColumns = {
+  id: schema.foodCalories.id,
+  name: schema.foodCalories.name,
+  category: schema.foodCategories.name,
+  subcategory: schema.foodSubcategories.name,
+  role: schema.foodRoles.name,
+  caloriesPer100g: schema.foodCalories.caloriesPer100g,
+  proteinPer100g: schema.foodCalories.proteinPer100g,
+  carbsPer100g: schema.foodCalories.carbsPer100g,
+  fatPer100g: schema.foodCalories.fatPer100g,
+  isVerified: schema.foodCalories.isVerified,
+  imageUrl: schema.foodCalories.imageUrl,
+};
+
 @Injectable()
 export class FoodItemsService {
   constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
@@ -30,17 +47,8 @@ export class FoodItemsService {
 
     const rows = await this.db
       .select({
-        id: schema.foodCalories.id,
-        name: schema.foodCalories.name,
+        ...foodItemColumns,
         translatedName: schema.foodCalorieTranslations.name,
-        category: schema.foodCategories.name,
-        subcategory: schema.foodSubcategories.name,
-        role: schema.foodRoles.name,
-        caloriesPer100g: schema.foodCalories.caloriesPer100g,
-        proteinPer100g: schema.foodCalories.proteinPer100g,
-        carbsPer100g: schema.foodCalories.carbsPer100g,
-        fatPer100g: schema.foodCalories.fatPer100g,
-        isVerified: schema.foodCalories.isVerified,
       })
       .from(schema.foodCalories)
       .innerJoin(
@@ -130,18 +138,7 @@ export class FoodItemsService {
       .returning();
 
     const [row] = await this.db
-      .select({
-        id: schema.foodCalories.id,
-        name: schema.foodCalories.name,
-        category: schema.foodCategories.name,
-        subcategory: schema.foodSubcategories.name,
-        role: schema.foodRoles.name,
-        caloriesPer100g: schema.foodCalories.caloriesPer100g,
-        proteinPer100g: schema.foodCalories.proteinPer100g,
-        carbsPer100g: schema.foodCalories.carbsPer100g,
-        fatPer100g: schema.foodCalories.fatPer100g,
-        isVerified: schema.foodCalories.isVerified,
-      })
+      .select(foodItemColumns)
       .from(schema.foodCalories)
       .innerJoin(
         schema.foodCategories,
