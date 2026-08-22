@@ -7,11 +7,13 @@ import {
   NotFoundException,
   Param,
   Put,
+  Query,
 } from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import { SetWeightDto } from './dto/set-weight.dto';
-import type { DailyLogResponse } from './daily-log.mapper';
+import { WeightTrendQueryDto } from './dto/weight-trend-query.dto';
+import type { DailyLogResponse, WeightTrendPoint } from './daily-log.mapper';
 import { DailyLogsService } from './daily-logs.service';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -28,6 +30,30 @@ function assertValidDate(date: string): void {
 @Controller('daily-logs')
 export class DailyLogsController {
   constructor(private readonly dailyLogsService: DailyLogsService) {}
+
+  // Registered ahead of the `:date` route below - both are static
+  // segments that `:date` would otherwise swallow as a literal date
+  // value (Express/Nest match routes in registration order).
+  @Get('weight-trend')
+  async getWeightTrend(
+    @CurrentUser() identity: Identity,
+    @Query() query: WeightTrendQueryDto,
+  ): Promise<WeightTrendPoint[]> {
+    return this.dailyLogsService.getWeightTrend(identity.hubUserId, query.days);
+  }
+
+  @Get('latest-weigh-in')
+  async getLatestWeighIn(
+    @CurrentUser() identity: Identity,
+  ): Promise<DailyLogResponse> {
+    const log = await this.dailyLogsService.findLatestWeighIn(
+      identity.hubUserId,
+    );
+    if (!log) {
+      throw new NotFoundException('No weigh-in yet');
+    }
+    return log;
+  }
 
   @Get(':date')
   async getByDate(
