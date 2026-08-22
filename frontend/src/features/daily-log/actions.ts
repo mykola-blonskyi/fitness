@@ -17,6 +17,14 @@ export interface DailyLog {
   updatedAt: string;
 }
 
+// One point in the weight-trend chart (FITNESS-15) - always a real
+// weigh-in, never gap-filled. See daily-log.mapper.ts's WeightTrendPoint
+// on the backend, which this mirrors.
+export interface WeightTrendPoint {
+  date: string;
+  weight: number;
+}
+
 export type WeightFormState = FormActionError<WeightInput>;
 
 export async function setWeight(

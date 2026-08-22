@@ -8,6 +8,14 @@ Why: the original schema required weight NOT NULL, which would have blocked any 
 
 ---
 
+## Weight-trend gaps are never interpolated
+
+The weight-trend chart (FITNESS-15) reads `daily_logs` filtered to rows where `weight IS NOT NULL`, ordered by date. Two weigh-ins are connected by a line only when they fall on consecutive calendar days; any missing day(s) between them — no row at all, or a row with `weight` left null — leaves a visible gap instead.
+
+Why: a straight line between two distant weigh-ins would assert a value for the days in between that was never actually recorded — misleading, given how easily a day's weigh-in gets skipped (see "Daily Log requires no weigh-in" above).
+
+---
+
 ## Multiple concurrent active Training Programs
 
 A user may have several Training Programs active at the same time (e.g. Strength + Running + Stretching in parallel). `UserActiveProgram` is a plain many-to-many join, not one-to-one.

@@ -19,3 +19,13 @@ export function toDailyLogResponse(row: DailyLogRow): DailyLogResponse {
     updatedAt: row.updatedAt,
   };
 }
+
+// One point in the weight-trend chart (FITNESS-15) - always a real
+// weigh-in, never a gap-filled/interpolated value. Missing days are
+// simply absent from the array; the frontend renders the gap rather than
+// connecting across it (see knowledge/business-rules.md and the
+// FITNESS-3 spec's "Weight-trend queries" implementation decision).
+export interface WeightTrendPoint {
+  date: string;
+  weight: number;
+}
