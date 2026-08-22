@@ -24,13 +24,21 @@ const nextConfig: NextConfig = {
     ],
   },
   // Food catalog thumbnails come from Open Food Facts (see
-  // seed-food-catalog.ts) - the only external image host this app renders.
+  // seed-food-catalog.ts); exercise catalog thumbnails come from wger
+  // (see seed-exercises.ts, e.g. https://wger.de/media/exercise-images/91/
+  // Crunches-1.png, confirmed against the live wger API) - the only two
+  // external image hosts this app renders.
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.openfoodfacts.org',
         pathname: '/images/products/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'wger.de',
+        pathname: '/media/exercise-images/**',
       },
     ],
   },

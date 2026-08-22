@@ -16,6 +16,7 @@ Fields:
 - goal (weight_loss/maintenance/muscle_gain)
 - activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation
 - avatar_url
+- locale (en/uk/ru/es, default en) — the user's stored UI locale preference, set at onboarding and editable in Settings. This is what catalog browse endpoints (e.g. Exercise) resolve translated display names against — deliberately not next-intl's route-based locale segment, which doesn't exist yet (FITNESS-11)
 
 Relationships:
 

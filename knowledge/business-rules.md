@@ -104,6 +104,14 @@ Why: avoids maintaining a recurring sync job and unattended auto-categorization 
 
 ---
 
+## Catalog display names resolve against the user's stored locale, not the route
+
+Catalog browse endpoints (Exercise; Food Item will follow the same rule once it's revisited) resolve each item's display name against the caller's own `users.locale` value — read server-side from the authenticated identity, never a `locale` value the client passes in. A translation row missing for that locale falls back to the item's base English `name`.
+
+Why: next-intl route-based locale segments (FITNESS-11) don't exist yet — the current `[locale]` route segment is a hardcoded `en` placeholder (see `frontend/src/app/[locale]/layout.tsx`), not a real locale switcher. Resolving against a stored user preference instead means catalog localization doesn't need to wait for FITNESS-11 to land, and won't need to change again once it does. Food Item's `list()` (`backend/src/food-items/food-items.service.ts`) still takes a `locale` query param tied to the route segment, predating this rule — a known inconsistency to fix when Food Item's browse UI is next touched, not retrofitted speculatively here.
+
+---
+
 ## Error reports never carry more than a user's UUID
 
 Sentry (see [[decisions]] ADR-006) only ever receives a user's UUID as identifying context — never email, IP, or request bodies, even though NestJS trusts an `x-user-email` header it could easily attach. Only unhandled exceptions and 5xx-class errors are reported; a deliberately-thrown 4xx (validation rejection, 404, 401/403) is expected control flow, not a failure, and is never sent.
