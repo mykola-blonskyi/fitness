@@ -301,3 +301,43 @@ FITNESS-26 needed a real, versioned calorie/macro-target algorithm (`mifflin_v1`
 ### Consequences
 
 Changing any of these constants (multipliers, goal adjustment, floor, macro split) is an edit to `mifflin-v1.ts` plus its spec — the DB row's `formula` text should be updated in the same change so the human-readable description doesn't drift from what the code actually computes, even though the two are never mechanically linked.
+
+---
+
+## ADR-011: Greedy diet generator — required-role set, portion scaling, and where meal count lives
+
+Date: 2026-08-22
+
+Status: Accepted
+
+### Context
+
+FITNESS-30 needed to turn `knowledge/business-rules.md`'s "Diet menu generation is a greedy heuristic" description into actual code: "For each meal, pick one Food Item per required Food Role, then scale portion size to hit that meal's calorie share; adjust the largest items if the day's total drifts outside tolerance (~±5%)." That sentence leaves several concrete choices unmade — which Food Roles are "required" per meal, how a day's calorie target splits across meals, exactly how the tolerance adjustment picks which items to nudge, and where "the user's configured meal count" (this ticket's acceptance criteria) is actually stored, since no such field existed anywhere in the schema or domain docs. Same situation ADR-010 already flagged for `mifflin_v1`: real product decisions, not derivable from existing docs, that shouldn't be picked silently inside a PR.
+
+### Decision
+
+**Meal count lives on `users.meal_count`** (integer, 1–4, default 3), not a per-request parameter — it's a profile setting like `goal`/`activity_level` that already influences algorithm behavior the same way, editable through the existing `CreateUserDto`/`UpdateUserDto`/`PATCH users/me` pattern rather than a new endpoint. Default 3 (breakfast/lunch/dinner) rather than all 4, so a user who never touches the setting doesn't get an unrequested snack slot.
+
+**Required Food Role set per meal**: every meal (regardless of which of the 4 slots it is) uses the same four macro-group slots — a protein role, a carb role, `vegetable`, and a fat role — so a generated meal is always a balanced plate rather than e.g. four protein sources. Each macro group is a fallback chain, tried in order until a role has an eligible candidate after Food Preference exclusion: protein `lean_protein → fatty_protein → plant_protein`, carb `complex_carb → simple_carb`, fat `healthy_fat → saturated_fat`, vegetable has no fallback (single role). A macro group with zero eligible candidates across its whole chain (e.g. every fat-role item excluded) is simply skipped for that meal rather than erroring — only a day with *zero* candidates across every role entirely fails generation (`UnprocessableEntityException`).
+
+**Meal calorie split**: the day's target divides evenly across the active meal count (`targetCalories / mealCount`), then evenly again across that meal's picked items. No weighted split (e.g. a smaller breakfast share) — nothing in the business rule or domain docs specifies meal-to-meal weighting, and even split is the simplest thing that satisfies "close enough."
+
+**Tolerance adjustment**: applied to total calories only, on the largest-calorie items first (sorted descending, nudging each one's `weight_grams` by the outstanding delta until the day is back within ±5% or items run out) — matches the business rule's literal wording ("adjust the largest items"). Protein/carbs/fat aren't independently tolerance-corrected; they move proportionally with whatever grams change happens during the calorie adjustment. The per-meal role diversity above is what keeps macros in the right ballpark, not a second correction pass — same "close enough" simplification ADR-010 already accepted for `mifflin-v1.ts`'s `carbsG` clamp.
+
+**Persistence shape**: `diets` stores the day's totals (`total_calories`/`total_protein`/`total_carbs`/`total_fat`) plus `calculation_metadata` (a JSON snapshot of the target inputs/outputs used at generation time), matching the domain model. `diet_items` stores only `weight_grams`/`meal_type`/`order_index` — no per-item calories/macros — those are derived at read time from `weight_grams × the Food Item's per-100g values`, the same derive-don't-store convention `user.mapper.ts` already uses for age.
+
+**Pure function split**: `diets/greedy-heuristic.ts` is a pure function (`generateDietItems`) with no I/O — `diets.service.ts` does all the DB work (candidate queries, exclusion lookups, persistence) and hands the algorithm plain data, mirroring `calorie-targets/algorithms/mifflin-v1.ts`'s split so the algorithm itself is unit-testable without a database, same as this repo's existing test-coverage pattern (no integration-test seam exists yet per the CI workflow's `backend-test` job comment).
+
+**Diet Preferences are a second exclusion source, merged with Food Preferences**: `knowledge/domain-model.md`'s Diet Preference entity says it's "used as an additional filter during diet generation," but neither it nor `knowledge/business-rules.md` says which category/role taxonomy nodes each diet type (vegetarian/vegan/keto/paleo) actually excludes — another real product decision this ticket has to make, not derivable from existing docs. `diets/diet-preference-exclusions.ts` is a pure, table-driven mapping: vegetarian excludes the `meat`/`fish` categories (lacto-ovo — dairy/eggs stay allowed); vegan additionally excludes `dairy`/`eggs`; keto excludes the `grains`/`legumes` categories plus the `complex_carb`/`simple_carb` roles; paleo excludes `grains`/`legumes`/`dairy`. `diets.service.ts` resolves a user's active Diet Preferences (via the existing `DietPreferencesService.list`, reused rather than re-queried) to category/role ids and unions them into the same `ExclusionTargets` shape `FoodPreferencesService.getExclusionTargets` already produces, so `findCandidatesByRole`'s single candidate query enforces both filters at once rather than needing two separate filtering passes.
+
+### Alternatives Considered
+
+- Meal count as a per-request parameter to the generate endpoint instead of a stored profile field: rejected — the acceptance criteria's "the user's *configured* meal count" reads as a persistent setting, and a stored field means clients don't have to remember and resend it on every regeneration.
+- A different required-role set per meal type (e.g. a lighter snack with just one role): rejected for v1 — adds real complexity (per-meal-type role tables) for a recommendation feature that already has explicit "close enough" cover from the business rules; a uniform 4-role plate per meal is simpler and still balanced.
+- Independently tolerance-correcting protein/carbs/fat alongside calories: rejected — the business rule only describes a calorie-driven adjustment ("adjust the largest items if the day's total drifts"); adding a separate macro-rebalancing pass is scope the ticket and business rule don't ask for.
+- Storing per-item calories/macros on `diet_items` directly: rejected — the domain model only lists `weight_grams`/`meal_type`/`order_index` for Diet Item, and deriving from the joined Food Item at read time avoids a second source of truth that could drift if a Food Item's macros are ever corrected after items were generated.
+- Filtering Diet Preferences as a separate pass after the Food Preference candidate query, instead of merging into the same `ExclusionTargets`: rejected — two independent filtering passes over the same candidate rows is more code for no behavioral difference, since both are just "exclude candidates matching this taxonomy node" at bottom.
+
+### Consequences
+
+Changing the required-role set or fallback chains is an edit to `diets/diet.types.ts`'s `MEAL_ROLE_CHAINS` plus `greedy-heuristic.spec.ts` — isolated from `diets.service.ts`'s DB-glue code. Because meal count is a stored profile field with no UI to edit it yet (this ticket is backend-only), every user effectively gets the default (3) until a future ticket adds that control to Settings — worth tracking as a follow-up gap, not a blocker for this ticket's backend-only scope.

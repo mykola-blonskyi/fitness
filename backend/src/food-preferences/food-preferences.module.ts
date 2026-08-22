@@ -5,5 +5,6 @@ import { FoodPreferencesService } from './food-preferences.service';
 @Module({
   controllers: [FoodPreferencesController],
   providers: [FoodPreferencesService],
+  exports: [FoodPreferencesService],
 })
 export class FoodPreferencesModule {}

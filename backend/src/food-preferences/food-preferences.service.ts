@@ -14,7 +14,11 @@ import {
   toFoodPreferenceResponse,
   type FoodPreferenceResponse,
 } from './food-preference.mapper';
-import type { FoodPreferenceTargetType } from './food-preference.types';
+import {
+  FOOD_PREFERENCE_TARGET_TYPES,
+  type ExclusionTargets,
+  type FoodPreferenceTargetType,
+} from './food-preference.types';
 
 @Injectable()
 export class FoodPreferencesService {
@@ -70,6 +74,35 @@ export class FoodPreferencesService {
         return new Map(rows.map((row) => [row.id, row.name]));
       }
     }
+  }
+
+  // Used by diets.service.ts (FITNESS-30) to filter candidate Food Items
+  // during generation - see knowledge/business-rules.md "Food Preferences
+  // target structured entities, not free text". Grouped by targetType so
+  // the caller can do one exclusion check per Food Item column
+  // (category/subcategory/role/id) instead of scanning every preference
+  // row per candidate.
+  async getExclusionTargets(userId: string): Promise<ExclusionTargets> {
+    const rows = await this.db
+      .select({
+        targetType: schema.foodPreferences.targetType,
+        targetId: schema.foodPreferences.targetId,
+      })
+      .from(schema.foodPreferences)
+      .where(eq(schema.foodPreferences.userId, userId));
+
+    const result = Object.fromEntries(
+      FOOD_PREFERENCE_TARGET_TYPES.map((targetType) => [
+        targetType,
+        new Set<string>(),
+      ]),
+    ) as ExclusionTargets;
+
+    for (const row of rows) {
+      result[row.targetType].add(row.targetId);
+    }
+
+    return result;
   }
 
   async list(userId: string): Promise<FoodPreferenceResponse[]> {

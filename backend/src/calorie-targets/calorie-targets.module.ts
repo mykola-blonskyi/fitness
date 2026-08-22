@@ -8,5 +8,6 @@ import { CalorieTargetsService } from './calorie-targets.service';
   imports: [UsersModule, DailyLogsModule],
   controllers: [CalorieTargetsController],
   providers: [CalorieTargetsService],
+  exports: [CalorieTargetsService],
 })
 export class CalorieTargetsModule {}

@@ -8,6 +8,7 @@ import { CalorieTargetsModule } from './calorie-targets/calorie-targets.module';
 import { DailyLogsModule } from './daily-logs/daily-logs.module';
 import { DbModule } from './db/db.module';
 import { DietPreferencesModule } from './diet-preferences/diet-preferences.module';
+import { DietsModule } from './diets/diets.module';
 import { ExercisesModule } from './exercises/exercises.module';
 import { FoodItemsModule } from './food-items/food-items.module';
 import { FoodPreferencesModule } from './food-preferences/food-preferences.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     FoodPreferencesModule,
     DietPreferencesModule,
     CalorieTargetsModule,
+    DietsModule,
   ],
   controllers: [AppController],
   providers: [
