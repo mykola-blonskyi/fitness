@@ -48,6 +48,7 @@ export class UsersService {
         activityLevel: dto.activityLevel,
         avatarUrl: dto.avatarUrl,
         ...(dto.mealCount !== undefined ? { mealCount: dto.mealCount } : {}),
+        locale: dto.locale,
       })
       .returning();
 

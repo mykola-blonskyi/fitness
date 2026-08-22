@@ -18,6 +18,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 ## Phase 2 — Training & body-weight diary
 
 - [x] Exercise catalog (schema + one-time seed import from wger/ExerciseDB + translations) (FITNESS-16)
+- [x] Exercise catalog browse/search + manual creation UI (FITNESS-17)
 - [ ] Training Programs, Program Exercises, multiple concurrent active programs (many-to-many `UserActiveProgram`)
 - [ ] Workout Logs/Sets, offline queued writes (IndexedDB + service worker sync)
 - [x] Daily Log + weigh-in tracking (FITNESS-14)

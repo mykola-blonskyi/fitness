@@ -1,9 +1,13 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, isNotNull } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, isNotNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
-import { DailyLogResponse, toDailyLogResponse } from './daily-log.mapper';
+import {
+  DailyLogResponse,
+  WeightTrendPoint,
+  toDailyLogResponse,
+} from './daily-log.mapper';
 
 @Injectable()
 export class DailyLogsService {
@@ -112,5 +116,42 @@ export class DailyLogsService {
       .returning();
 
     return toDailyLogResponse(row);
+  }
+
+  // Powers the weight-trend chart (FITNESS-15): only dated rows with a
+  // real (non-null) weight, within the last `days` calendar days
+  // (inclusive of today), ordered oldest-first. Days with no row or a
+  // null weight are simply absent - the frontend renders that as a gap
+  // rather than interpolating, per the FITNESS-3 spec.
+  async getWeightTrend(
+    userId: string,
+    days: number,
+  ): Promise<WeightTrendPoint[]> {
+    const today = new Date();
+    const since = new Date(
+      Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() - (days - 1),
+      ),
+    );
+    const sinceDate = since.toISOString().slice(0, 10);
+
+    const rows = await this.db.query.dailyLogs.findMany({
+      where: and(
+        eq(schema.dailyLogs.userId, userId),
+        isNotNull(schema.dailyLogs.weight),
+        gte(schema.dailyLogs.date, sinceDate),
+      ),
+      orderBy: asc(schema.dailyLogs.date),
+    });
+
+    // weight is non-null by construction of the WHERE clause above - the
+    // schema still types it nullable, hence the assertion rather than a
+    // redundant runtime check.
+    return rows.map((row) => ({
+      date: row.date,
+      weight: Number(row.weight!),
+    }));
   }
 }

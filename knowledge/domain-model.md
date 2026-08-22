@@ -17,6 +17,7 @@ Fields:
 - activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation
 - avatar_url
 - meal_count (1-4, default 3) — how many meal slots (breakfast/lunch/dinner/snack, in that order) diet generation splits a day's calorie target across
+- locale (en/uk/ru/es, default en) — the user's stored UI locale preference, set at onboarding and editable in Settings. This is what catalog browse endpoints (e.g. Exercise) resolve translated display names against — deliberately not next-intl's route-based locale segment, which doesn't exist yet (FITNESS-11)
 
 Relationships:
 

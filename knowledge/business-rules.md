@@ -8,6 +8,14 @@ Why: the original schema required weight NOT NULL, which would have blocked any 
 
 ---
 
+## Weight-trend gaps are never interpolated
+
+The weight-trend chart (FITNESS-15) reads `daily_logs` filtered to rows where `weight IS NOT NULL`, ordered by date. Two weigh-ins are connected by a line only when they fall on consecutive calendar days; any missing day(s) between them — no row at all, or a row with `weight` left null — leaves a visible gap instead.
+
+Why: a straight line between two distant weigh-ins would assert a value for the days in between that was never actually recorded — misleading, given how easily a day's weigh-in gets skipped (see "Daily Log requires no weigh-in" above).
+
+---
+
 ## Multiple concurrent active Training Programs
 
 A user may have several Training Programs active at the same time (e.g. Strength + Running + Stretching in parallel). `UserActiveProgram` is a plain many-to-many join, not one-to-one.
@@ -101,6 +109,14 @@ Why: the Postgres instance is shared across the user's other pet projects — mi
 A backend script pulls a subset from Open Food Facts/USDA/wger once, maps source categories to this project's category/subcategory/role taxonomy via an explicit mapping table, and inserts with `source` + `is_verified=false`. Re-run manually to add more items later. Per-locale names (uk/ru/es) are sourced from the source API's own translations where it provides them (e.g. wger ships community-maintained en/uk/ru/es names natively — used directly rather than re-translated), machine-translated at the same import step for sources that don't (e.g. Open Food Facts/USDA, English-only), and always marked unverified either way — "unverified" reflects that this project's own reviewers haven't checked it, regardless of translation origin.
 
 Why: avoids maintaining a recurring sync job and unattended auto-categorization against a taxonomy the external sources don't natively provide.
+
+---
+
+## Catalog display names resolve against the user's stored locale, not the route
+
+Catalog browse endpoints (Exercise; Food Item will follow the same rule once it's revisited) resolve each item's display name against the caller's own `users.locale` value — read server-side from the authenticated identity, never a `locale` value the client passes in. A translation row missing for that locale falls back to the item's base English `name`.
+
+Why: next-intl route-based locale segments (FITNESS-11) don't exist yet — the current `[locale]` route segment is a hardcoded `en` placeholder (see `frontend/src/app/[locale]/layout.tsx`), not a real locale switcher. Resolving against a stored user preference instead means catalog localization doesn't need to wait for FITNESS-11 to land, and won't need to change again once it does. Food Item's `list()` (`backend/src/food-items/food-items.service.ts`) still takes a `locale` query param tied to the route segment, predating this rule — a known inconsistency to fix when Food Item's browse UI is next touched, not retrofitted speculatively here.
 
 ---
 

@@ -7,10 +7,17 @@ export const ACTIVITY_LEVELS = [
   'active',
   'very_active',
 ] as const;
+// Matches backend/src/users/dto/create-user.dto.ts's LOCALES - the
+// user's stored UI locale preference (see knowledge/domain-model.md,
+// FITNESS-17), used to resolve catalog translation names server-side.
+// Deliberately not next-intl's route-based locale segment - FITNESS-11
+// hasn't landed yet.
+export const LOCALES = ['en', 'uk', 'ru', 'es'] as const;
 
 export type Gender = (typeof GENDERS)[number];
 export type Goal = (typeof GOALS)[number];
 export type ActivityLevel = (typeof ACTIVITY_LEVELS)[number];
+export type Locale = (typeof LOCALES)[number];
 
 // Mirrors backend/src/users/user.mapper.ts's UserResponse.
 export interface UserProfile {
@@ -24,6 +31,7 @@ export interface UserProfile {
   goal: Goal;
   activityLevel: ActivityLevel;
   avatarUrl: string | null;
+  locale: Locale;
   createdAt: string;
   updatedAt: string;
 }

@@ -9,6 +9,7 @@ import { DailyLogsModule } from './daily-logs/daily-logs.module';
 import { DbModule } from './db/db.module';
 import { DietPreferencesModule } from './diet-preferences/diet-preferences.module';
 import { DietsModule } from './diets/diets.module';
+import { ExercisesModule } from './exercises/exercises.module';
 import { FoodItemsModule } from './food-items/food-items.module';
 import { FoodPreferencesModule } from './food-preferences/food-preferences.module';
 import { IdentityGuard } from './identity/identity.guard';
@@ -21,6 +22,7 @@ import { UsersModule } from './users/users.module';
     DbModule,
     UsersModule,
     DailyLogsModule,
+    ExercisesModule,
     FoodItemsModule,
     FoodPreferencesModule,
     DietPreferencesModule,
