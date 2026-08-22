@@ -28,6 +28,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       height: profile.height,
       goal: profile.goal,
       activityLevel: profile.activityLevel,
+      locale: profile.locale,
     },
     // Real-time field validation (on-blur, then on every change once a
     // field has an error) - react-hook-form defaults to submit-only.

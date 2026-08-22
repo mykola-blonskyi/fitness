@@ -19,6 +19,10 @@ const ACTIVITY_LEVELS = [
   'active',
   'very_active',
 ] as const;
+// Matches list-food-items.dto.ts's LOCALES - the only locales a
+// translation row could ever exist for (see schema.ts's users.locale
+// comment).
+const LOCALES = ['en', 'uk', 'ru', 'es'] as const;
 
 export class CreateUserDto {
   @IsString()
@@ -45,4 +49,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsUrl()
   avatarUrl?: string;
+
+  // Optional - the schema default ('en') applies when omitted, so
+  // existing onboarding callers that don't yet send this field keep
+  // working unchanged.
+  @IsOptional()
+  @IsIn(LOCALES)
+  locale?: (typeof LOCALES)[number];
 }

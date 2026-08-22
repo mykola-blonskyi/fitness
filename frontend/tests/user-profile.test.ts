@@ -8,6 +8,7 @@ const valid = {
   height: 180,
   goal: 'weight_loss',
   activityLevel: 'sedentary',
+  locale: 'en',
 };
 
 describe('userProfileSchema', () => {
@@ -55,6 +56,14 @@ describe('userProfileSchema', () => {
     const result = userProfileSchema.safeParse({
       ...valid,
       activityLevel: 'extreme',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an invalid locale', () => {
+    const result = userProfileSchema.safeParse({
+      ...valid,
+      locale: 'fr',
     });
     expect(result.success).toBe(false);
   });

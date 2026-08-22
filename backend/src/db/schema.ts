@@ -39,6 +39,17 @@ export const users = pgTable('users', {
   goal: goalEnum('goal').notNull(),
   activityLevel: activityLevelEnum('activity_level').notNull(),
   avatarUrl: text('avatar_url'),
+  // The user's stored UI locale preference (see knowledge/domain-model.md,
+  // FITNESS-17). Deliberately plain text, not a pgEnum, matching
+  // exerciseTranslations.locale/foodCalorieTranslations.locale below -
+  // the fixed set of valid values (en/uk/ru/es) is enforced at the DTO
+  // layer (class-validator @IsIn), same convention as those two tables.
+  // This is what catalog browse endpoints resolve translated names
+  // against - deliberately NOT next-intl's route-based locale segment
+  // (FITNESS-11 hasn't landed; see exercises.service.ts). Defaults to
+  // 'en' so every existing/new profile has a valid value with no
+  // separate backfill migration needed.
+  locale: text('locale').notNull().default('en'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),

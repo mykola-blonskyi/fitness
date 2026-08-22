@@ -1,6 +1,6 @@
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 import type { UserProfileInput } from '@shared/schemas/user-profile';
-import { ACTIVITY_LEVELS, GENDERS, GOALS } from '@shared/types/user';
+import { ACTIVITY_LEVELS, GENDERS, GOALS, LOCALES } from '@shared/types/user';
 import { FieldError } from '@shared/ui/components/FieldError';
 
 const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
@@ -17,12 +17,25 @@ const ACTIVITY_LABELS: Record<(typeof ACTIVITY_LEVELS)[number], string> = {
   very_active: 'Very active',
 };
 
+// Native names, not English translations - a user looking for their own
+// language should be able to find it without already reading English.
+const LOCALE_LABELS: Record<(typeof LOCALES)[number], string> = {
+  en: 'English',
+  uk: 'Українська',
+  ru: 'Русский',
+  es: 'Español',
+};
+
 // Shared by OnboardingForm and ProfileForm - both edit the same
-// UserProfileInput shape via the same six fields, differing only in
-// whether react-hook-form already has a real defaultValue for the three
+// UserProfileInput shape via the same seven fields, differing only in
+// whether react-hook-form already has a real defaultValue for the
 // selects. Onboarding starts blank and needs a disabled placeholder
-// option; Profile always opens with the existing profile's values (set
-// via useForm's own defaultValues), so a placeholder would be wrong.
+// option for gender/goal/activityLevel (no sensible default exists);
+// Profile always opens with the existing profile's values (set via
+// useForm's own defaultValues), so a placeholder would be wrong there.
+// locale never uses the placeholder pattern, in either form - 'en' is a
+// legitimate default (see schema.ts's users.locale comment), so the
+// select always opens on a real, valid selection.
 export function ProfileFields({
   register,
   errors,
@@ -143,6 +156,25 @@ export function ProfileFields({
           ))}
         </select>
         <FieldError message={errors.activityLevel?.message} />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="locale" className="text-sm font-medium">
+          Language
+        </label>
+        <select
+          id="locale"
+          defaultValue={showPlaceholder ? 'en' : undefined}
+          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('locale')}
+        >
+          {LOCALES.map((l) => (
+            <option key={l} value={l}>
+              {LOCALE_LABELS[l]}
+            </option>
+          ))}
+        </select>
+        <FieldError message={errors.locale?.message} />
       </div>
     </>
   );

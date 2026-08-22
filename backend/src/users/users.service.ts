@@ -47,6 +47,7 @@ export class UsersService {
         goal: dto.goal,
         activityLevel: dto.activityLevel,
         avatarUrl: dto.avatarUrl,
+        locale: dto.locale,
       })
       .returning();
 
