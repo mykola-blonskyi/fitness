@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Lighthouse PWA-installability check output (FITNESS-12, CI-generated)
+/lighthouse-pwa-report.json
