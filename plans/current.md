@@ -26,10 +26,10 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 ## Phase 3 — Diet engine
 
-- [ ] Food catalog (schema + one-time curated seed from Open Food Facts/USDA + category/subcategory/role mapping + translations)
-- [ ] Polymorphic Food Preferences (category/subcategory/role/food_item targets) + Diet Preferences
-- [ ] Diet Calculation Algorithm registry (versioned code, `formula` field is documentation only)
-- [ ] Greedy-heuristic diet generator, manual regeneration trigger, current-diet resolution by `created_at`
+- [x] Food catalog (schema + one-time curated seed from Open Food Facts/USDA + category/subcategory/role mapping + translations) (FITNESS-28)
+- [x] Polymorphic Food Preferences (category/subcategory/role/food_item targets) + Diet Preferences (FITNESS-29)
+- [x] Diet Calculation Algorithm registry (versioned code, `formula` field is documentation only) (FITNESS-26)
+- [x] Greedy-heuristic diet generator, manual regeneration trigger, current-diet resolution by `created_at` (FITNESS-30)
 
 ---
 

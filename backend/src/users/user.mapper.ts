@@ -13,6 +13,7 @@ export interface UserResponse {
   goal: string;
   activityLevel: string;
   avatarUrl: string | null;
+  mealCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,7 @@ export function toUserResponse(user: UserRow): UserResponse {
     goal: user.goal,
     activityLevel: user.activityLevel,
     avatarUrl: user.avatarUrl,
+    mealCount: user.mealCount,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

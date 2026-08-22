@@ -8,6 +8,8 @@ import {
   pgEnum,
   unique,
   boolean,
+  integer,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 
 export const genderEnum = pgEnum('gender', ['male', 'female']);
@@ -39,6 +41,12 @@ export const users = pgTable('users', {
   goal: goalEnum('goal').notNull(),
   activityLevel: activityLevelEnum('activity_level').notNull(),
   avatarUrl: text('avatar_url'),
+  // How many meal slots (see mealTypeEnum below - breakfast/lunch/dinner/
+  // snack, in that fixed order) diet generation splits a day's calorie
+  // target across (FITNESS-30). Defaults to 3 (breakfast/lunch/dinner)
+  // so existing rows and the not-yet-built profile UI both get a sane
+  // value without requiring an explicit choice.
+  mealCount: integer('meal_count').notNull().default(3),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -299,3 +307,59 @@ export const dietCalculationAlgorithms = pgTable(
       .defaultNow(),
   },
 );
+
+// Fixed, ordered set of meal slots a generated Diet can use - see
+// users.mealCount above and diets/greedy-heuristic.ts, which always takes
+// the first N of this exact order (breakfast/lunch/dinner/snack).
+export const mealTypeEnum = pgEnum('meal_type', [
+  'breakfast',
+  'lunch',
+  'dinner',
+  'snack',
+]);
+
+// Diet (see knowledge/domain-model.md, knowledge/business-rules.md "Diet
+// menu generation is a greedy heuristic" and "Current diet resolution",
+// docs/decisions.md ADR-010, FITNESS-30). Never updated in place -
+// regenerating always inserts a new row; the current diet for a Daily Log
+// is simply the most recently created one (`ORDER BY created_at DESC
+// LIMIT 1`), resolved in diets.service.ts, not a stored flag.
+// calculationMetadata snapshots the algorithm's raw inputs/outputs at
+// generation time for audit purposes, independent of whether the
+// algorithm's own logic changes later.
+export const diets = pgTable('diets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  dailyLogId: uuid('daily_log_id')
+    .notNull()
+    .references(() => dailyLogs.id),
+  algorithmId: uuid('algorithm_id')
+    .notNull()
+    .references(() => dietCalculationAlgorithms.id),
+  totalCalories: numeric('total_calories').notNull(),
+  totalProtein: numeric('total_protein').notNull(),
+  totalCarbs: numeric('total_carbs').notNull(),
+  totalFat: numeric('total_fat').notNull(),
+  calculationMetadata: jsonb('calculation_metadata').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Diet Item (see knowledge/domain-model.md). orderIndex is scoped within
+// its own mealType (0-based), not across the whole Diet - matches
+// programExercises' ordering convention for a list a UI renders in order.
+export const dietItems = pgTable('diet_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  dietId: uuid('diet_id')
+    .notNull()
+    .references(() => diets.id),
+  foodItemId: uuid('food_item_id')
+    .notNull()
+    .references(() => foodCalories.id),
+  mealType: mealTypeEnum('meal_type').notNull(),
+  weightGrams: numeric('weight_grams').notNull(),
+  orderIndex: integer('order_index').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsIn,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -45,4 +46,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsUrl()
   avatarUrl?: string;
+
+  // Optional - schema defaults to 3 (breakfast/lunch/dinner) when omitted,
+  // see db/schema.ts's users.mealCount comment. Bounded to the fixed
+  // mealTypeEnum's 4 slots (FITNESS-30's diets/greedy-heuristic.ts always
+  // takes the first N of breakfast/lunch/dinner/snack).
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  mealCount?: number;
 }

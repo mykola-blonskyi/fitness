@@ -37,6 +37,35 @@ export class DailyLogsService {
     return row ? toDailyLogResponse(row) : null;
   }
 
+  // Lazily creates the Daily Log row for this (user, date) if one doesn't
+  // exist yet, leaving weight null - used by diets.service.ts (FITNESS-30)
+  // so generating a menu never requires a weigh-in on that specific date
+  // (see docs/decisions.md ADR-004; the calorie target itself still comes
+  // from the latest weigh-in regardless of date, via findLatestWeighIn).
+  // onConflictDoNothing + re-select rather than onConflictDoUpdate's
+  // no-op, since there's nothing to update on an existing row here.
+  async findOrCreate(userId: string, date: string): Promise<DailyLogResponse> {
+    await this.db
+      .insert(schema.dailyLogs)
+      .values({ userId, date })
+      .onConflictDoNothing({
+        target: [schema.dailyLogs.userId, schema.dailyLogs.date],
+      });
+
+    const row = await this.db.query.dailyLogs.findFirst({
+      where: and(
+        eq(schema.dailyLogs.userId, userId),
+        eq(schema.dailyLogs.date, date),
+      ),
+    });
+    // Unreachable in practice - the insert above guarantees the row
+    // exists by the time this query runs.
+    if (!row) {
+      throw new NotFoundException('Failed to resolve Daily Log');
+    }
+    return toDailyLogResponse(row);
+  }
+
   // Creates the Daily Log row on first write for this (user, date) or
   // updates the existing one — never a duplicate, enforced by the
   // unique(user_id, date) constraint via an atomic upsert.

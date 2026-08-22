@@ -57,6 +57,13 @@
       "when": 1787347355933,
       "tag": "0007_yellow_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787417598430,
+      "tag": "0008_lame_doomsday",
+      "breakpoints": true
     }
   ]
 }

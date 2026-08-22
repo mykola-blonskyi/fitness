@@ -16,6 +16,7 @@ Fields:
 - goal (weight_loss/maintenance/muscle_gain)
 - activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation
 - avatar_url
+- meal_count (1-4, default 3) — how many meal slots (breakfast/lunch/dinner/snack, in that order) diet generation splits a day's calorie target across
 
 Relationships:
 

@@ -12,3 +12,11 @@ export const FOOD_PREFERENCE_TARGET_TYPES = [
 ] as const;
 export type FoodPreferenceTargetType =
   (typeof FOOD_PREFERENCE_TARGET_TYPES)[number];
+
+// A user's active exclusion targets, grouped by targetType - what
+// diets.service.ts (FITNESS-30) filters candidate Food Items against.
+// Both preference `type`s (allergy/exclude) are exclusions for
+// generation purposes - see knowledge/business-rules.md "Food Preferences
+// target structured entities, not free text", which doesn't distinguish
+// them for this purpose, only for UI labeling.
+export type ExclusionTargets = Record<FoodPreferenceTargetType, Set<string>>;
