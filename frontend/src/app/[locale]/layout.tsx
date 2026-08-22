@@ -1,7 +1,9 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { ServiceWorkerRegistration } from '@shared/ui/components/ServiceWorkerRegistration';
+import { PWA_THEME_COLOR } from '@shared/constants/pwa';
 import './globals.css';
 
 // Locale list is a placeholder until next-intl lands (FITNESS-11).
@@ -20,6 +22,20 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Fitness',
   description: 'fitness.blonskyi.dev',
+  // Explicit link, in addition to app/manifest.ts's own file-convention
+  // head injection - see manifest.ts's comment (FITNESS-12).
+  manifest: '/manifest.webmanifest',
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
+};
+
+// theme-color is a viewport concern, not metadata, as of Next 14+ - see
+// the generateViewport docs (FITNESS-12: shares PWA_THEME_COLOR with
+// manifest.ts's theme_color so the browser chrome/status bar and the
+// installed app icon can't drift out of sync).
+export const viewport: Viewport = {
+  themeColor: PWA_THEME_COLOR,
 };
 
 export async function generateStaticParams() {
@@ -59,7 +75,10 @@ export default async function RootLayout({
       lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <ServiceWorkerRegistration />
+        {children}
+      </body>
     </html>
   );
 }

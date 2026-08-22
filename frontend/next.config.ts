@@ -42,6 +42,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // public/sw.js (FITNESS-12) must always be revalidated - unlike hashed
+  // /_next/static/* assets, its filename never changes between deploys,
+  // so a long-lived cache would keep serving a stale worker (and
+  // therefore stale cached pages) indefinitely after an update ships.
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'no-cache' }],
+      },
+    ];
+  },
 };
 
 // Uploads source maps at build time (see docs/decisions.md ADR-006) so
