@@ -145,6 +145,45 @@ export const exerciseTranslations = pgTable(
   (table) => [unique().on(table.exerciseId, table.locale)],
 );
 
+// Training Program (see knowledge/domain-model.md). Multiple programs may
+// be active for a user at once (knowledge/business-rules.md), so archiving
+// is a plain boolean here rather than the separate UserActiveProgram concept.
+export const trainingPrograms = pgTable('training_programs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
+  title: text('title').notNull(),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Program Exercise (see knowledge/domain-model.md). Exactly one of
+// (targetSets + targetReps) or targetDurationSeconds is set, never both,
+// never neither, depending on the exercise's category - enforced in
+// program-exercise-targets.ts rather than a DB CHECK constraint.
+export const programExercises = pgTable('program_exercises', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  trainingProgramId: uuid('training_program_id')
+    .notNull()
+    .references(() => trainingPrograms.id),
+  exerciseId: uuid('exercise_id')
+    .notNull()
+    .references(() => exercises.id),
+  orderIndex: integer('order_index').notNull(),
+  targetSets: integer('target_sets'),
+  targetReps: integer('target_reps'),
+  targetDurationSeconds: integer('target_duration_seconds'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // Food Category / Food Subcategory / Food Role (see
 // knowledge/domain-model.md "Food Category / Food Subcategory / Food
 // Role"). Real tables, not enums: Food Preference (a later ticket) needs
