@@ -13,13 +13,9 @@ export interface ProgramExerciseTargets {
   targetDurationSeconds: number | null;
 }
 
-// See knowledge/domain-model.md's Exercise entity note: a cardio-category
-// exercise is tracked by duration, every other category by sets/reps -
-// never both, never neither. A pure function (no DB access) so it's
-// unit-testable without the DB integration-test seam this repo doesn't
-// have yet - same "pure function split" convention docs/decisions.md
-// ADR-011 already used for calorie-targets/algorithms/mifflin-v1.ts and
-// diets/greedy-heuristic.ts.
+// A cardio-category exercise is tracked by duration, every other category
+// by sets/reps - never both, never neither (knowledge/domain-model.md's
+// Exercise entity note).
 export function resolveProgramExerciseTargets(
   category: ExerciseCategory,
   input: ProgramExerciseTargetsInput,

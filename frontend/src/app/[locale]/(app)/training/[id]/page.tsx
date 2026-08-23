@@ -23,17 +23,14 @@ export default async function TrainingProgramDetailPage({
   try {
     program = await apiFetch<TrainingProgram>(`/training-programs/${id}`);
   } catch (err) {
-    // Not found (wrong id, or owned by someone else - the backend never
-    // distinguishes the two) is a real 404, not an error to surface.
+    // Wrong id or owned by someone else - the backend never distinguishes
+    // the two, so both are a plain 404.
     if (err instanceof ApiError && err.status === 404) {
       notFound();
     }
     throw err;
   }
 
-  // The full catalog, same GET /exercises the Exercise Catalog page uses
-  // - no category/search filter here, the picker itself lets the user
-  // narrow by typing into the native <select>.
   const exercises = await apiFetch<Exercise[]>('/exercises');
 
   return (

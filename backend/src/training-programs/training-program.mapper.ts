@@ -1,20 +1,13 @@
 import type { ExerciseCategory } from '../exercises/exercise.types';
 import type { ProgramExerciseTargets } from './program-exercise-targets';
 
-// Joined program_exercises x exercises row - exercise display fields come
-// straight from the base English exercises.name/imageUrl, no locale
-// translation join, matching diets.service.ts's same call for Diet
-// Items x Food Items (see diet.mapper.ts's DietItemWithFoodRow comment) -
-// a nested owned resource referencing a shared catalog entry doesn't
-// bother with per-locale display the way the catalog's own browse
-// endpoint does. Extends ProgramExerciseTargets (program-exercise-
-// targets.ts) rather than redeclaring targetSets/targetReps/
-// targetDurationSeconds here - one definition of that shape.
+// Joined program_exercises x exercises row - display fields are the base
+// English exercises.name/imageUrl, no locale translation, matching
+// diet.mapper.ts's DietItemWithFoodRow.
 export interface ProgramExerciseRow extends ProgramExerciseTargets {
   id: string;
-  // Only needed by training-programs.service.ts's list() to group a
-  // multi-program joined query back into each program's own exercises -
-  // never read by toProgramExerciseResponse below.
+  // Only used by list() to group a multi-program query; not read by
+  // toProgramExerciseResponse.
   trainingProgramId?: string;
   exerciseId: string;
   orderIndex: number;

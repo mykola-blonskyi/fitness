@@ -77,9 +77,6 @@ describe('addProgramExerciseSchema', () => {
   });
 
   it('accepts a duration even when sets/reps are also absent', () => {
-    // A duration alone is a complete, valid target - matches
-    // AddProgramExerciseForm only ever rendering one field group at a
-    // time, based on the selected exercise's category.
     expect(
       addProgramExerciseSchema.safeParse({
         exerciseId,

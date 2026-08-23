@@ -1,9 +1,7 @@
 import type { ExerciseCategory } from './exercise';
 
 // Mirrors backend/src/training-programs/training-program.mapper.ts's
-// ProgramExerciseResponse - exerciseName/exerciseCategory/exerciseImageUrl
-// come straight from the base English exercises row, no locale
-// translation (see that mapper's comment).
+// ProgramExerciseResponse.
 export interface ProgramExercise {
   id: string;
   exerciseId: string;
@@ -16,8 +14,7 @@ export interface ProgramExercise {
   targetDurationSeconds: number | null;
 }
 
-// Mirrors backend/src/training-programs/training-program.mapper.ts's
-// TrainingProgramResponse.
+// Mirrors training-program.mapper.ts's TrainingProgramResponse.
 export interface TrainingProgram {
   id: string;
   title: string;

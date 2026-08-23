@@ -24,9 +24,8 @@ import {
 export class TrainingProgramsService {
   constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
 
-  // Ownership check reused by every route that operates on an existing
-  // program - same "no route accepts another user's id" convention as
-  // diet-preferences.service.ts/food-preferences.service.ts's remove().
+  // Reused by every route on an existing program - same ownership-check
+  // convention as diet-preferences.service.ts/food-preferences.service.ts.
   private async getOwnedProgram(userId: string, programId: string) {
     const program = await this.db.query.trainingPrograms.findFirst({
       where: and(
@@ -40,11 +39,9 @@ export class TrainingProgramsService {
     return program;
   }
 
-  // Same ownership check as getOwnedProgram, plus a read-only guard for
-  // the three routes that actually mutate a program's exercise list
-  // (addExercise/removeExercise/reorderExercises) - archive/reactivate
-  // and plain reads stay on getOwnedProgram directly, since reactivating
-  // an archived program (or just viewing it) must keep working.
+  // Same as getOwnedProgram, but also rejects archived programs - only
+  // used by the three routes that mutate the exercise list, since reading
+  // or reactivating an archived program must still work.
   private async getOwnedActiveProgram(userId: string, programId: string) {
     const program = await this.getOwnedProgram(userId, programId);
     if (program.isArchived) {
@@ -55,11 +52,9 @@ export class TrainingProgramsService {
     return program;
   }
 
-  // One joined query, filtered to the given program(s) - and optionally
-  // a single Program Exercise id - grouped by trainingProgramId in-memory
-  // below when listing more than one program (list()'s only caller with
-  // >1 id), avoiding an N+1 across it. No locale-translated exercise
-  // names - see training-program.mapper.ts's ProgramExerciseRow comment.
+  // One joined query for the given program(s), optionally narrowed to a
+  // single Program Exercise id; list() groups the rows by
+  // trainingProgramId in-memory to avoid an N+1 across multiple programs.
   private async fetchProgramExercises(
     programIds: string[],
     programExerciseId?: string,
@@ -135,11 +130,9 @@ export class TrainingProgramsService {
     return toTrainingProgramResponse(inserted, []);
   }
 
-  // Appends at the end of the program - orderIndex is never client-
-  // supplied (see schema.ts's programExercises comment); reordering is a
-  // separate explicit action (reorderExercises below). Uses max(existing
-  // orderIndex) + 1 rather than existing.length, so a slot freed by a
-  // prior removeExercise() can never collide with one still in use.
+  // orderIndex is server-assigned (never client-supplied) as max(existing)
+  // + 1, not existing.length, so a slot freed by a prior removeExercise()
+  // can't collide with one still in use.
   async addExercise(
     userId: string,
     programId: string,
@@ -212,12 +205,9 @@ export class TrainingProgramsService {
     return toProgramExerciseResponse(target);
   }
 
-  // Full replace, not a swap/move-by-one-position API - the client
-  // (a drag-reordered or up/down-button-reordered list) already knows
-  // the whole new order, so this just persists it in one shot. Rejects
-  // anything that isn't exactly this program's existing exercise-id set
-  // (wrong length, a foreign id, a duplicate) rather than silently
-  // ignoring the mismatch.
+  // Full replace, not a single-position move - the client already knows
+  // the whole new order. Rejects anything that isn't exactly this
+  // program's existing exercise-id set (wrong length, foreign id, duplicate).
   async reorderExercises(
     userId: string,
     programId: string,

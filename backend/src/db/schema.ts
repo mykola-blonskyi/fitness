@@ -145,14 +145,9 @@ export const exerciseTranslations = pgTable(
   (table) => [unique().on(table.exerciseId, table.locale)],
 );
 
-// Training Program (see knowledge/domain-model.md, FITNESS-18). A
-// reusable, editable plan of exercises - multiple programs may be active
-// for a user at once (knowledge/business-rules.md "Multiple concurrent
-// active Training Programs"), which is why archiving is a plain boolean
-// on the program itself rather than anything tied to that separate
-// concurrent-active-programs concept (UserActiveProgram, not part of this
-// ticket's scope). isArchived defaults false so a freshly created program
-// is immediately usable.
+// Training Program (see knowledge/domain-model.md). Multiple programs may
+// be active for a user at once (knowledge/business-rules.md), so archiving
+// is a plain boolean here rather than the separate UserActiveProgram concept.
 export const trainingPrograms = pgTable('training_programs', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
@@ -168,17 +163,10 @@ export const trainingPrograms = pgTable('training_programs', {
     .defaultNow(),
 });
 
-// Program Exercise (see knowledge/domain-model.md). One planned exercise
-// slot within a Training Program, ordered by orderIndex (0-based,
-// reassigned contiguously on every reorder - training-programs.service.ts
-// - so gaps left by a removed exercise are never load-bearing). Exactly
-// one of (targetSets + targetReps) or targetDurationSeconds is set,
-// never both, never neither - which one depends on the referenced
-// Exercise's category (cardio -> duration, everything else -> sets/reps,
-// per knowledge/domain-model.md's Exercise entity note). Enforced in
-// training-programs/program-exercise-targets.ts, not at the DB layer -
-// a CHECK constraint would need to duplicate the cardio/non-cardio rule
-// the application already owns.
+// Program Exercise (see knowledge/domain-model.md). Exactly one of
+// (targetSets + targetReps) or targetDurationSeconds is set, never both,
+// never neither, depending on the exercise's category - enforced in
+// program-exercise-targets.ts rather than a DB CHECK constraint.
 export const programExercises = pgTable('program_exercises', {
   id: uuid('id').primaryKey().defaultRandom(),
   trainingProgramId: uuid('training_program_id')

@@ -83,10 +83,9 @@ export async function removeProgramExercise(
           { method: 'DELETE' },
         );
       } catch (err) {
-        // Already removed (e.g. a stale UI double-click) is not a real
-        // failure - anything else is genuinely unexpected and should
-        // propagate to Sentry via the instrumentation wrapper above, same
-        // convention as removeFoodPreference/removeDietPreference.
+        // A 404 means it's already removed (e.g. a stale double-click),
+        // not a real failure; anything else propagates to Sentry via the
+        // wrapper above.
         if (!(err instanceof ApiError && err.status === 404)) {
           throw err;
         }
@@ -96,13 +95,9 @@ export async function removeProgramExercise(
   );
 }
 
-// Swaps a Program Exercise with its neighbor in the given direction. The
-// backend's reorder endpoint (training-programs.service.ts's
-// reorderExercises) always takes a full replacement of the ordered id
-// list, not a single-position move, so this reads the program's current
-// order first, swaps the two adjacent ids, and sends the whole list back
-// - a program's exercise list is short enough that re-fetching here is
-// never meaningfully slower than diffing what the page already rendered.
+// The backend's reorder endpoint takes a full replacement of the ordered
+// id list, not a single-position move, so this reads the current order,
+// swaps the two adjacent ids, and sends the whole list back.
 export async function moveProgramExercise(
   programId: string,
   programExerciseId: string,
@@ -136,10 +131,8 @@ export async function moveProgramExercise(
   );
 }
 
-// Shared by archiveTrainingProgram/reactivateTrainingProgram below - same
-// request/revalidate shape either way, only the endpoint segment and
-// Sentry action name differ. Mirrors training-programs.service.ts's own
-// private setArchived() on the backend.
+// Shared by archive/reactivateTrainingProgram - only the endpoint segment
+// and Sentry action name differ.
 async function setProgramArchived(
   programId: string,
   action: 'archive' | 'reactivate',

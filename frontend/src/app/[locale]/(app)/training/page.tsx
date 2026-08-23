@@ -7,11 +7,8 @@ import {
 import type { TrainingProgram } from '@shared/types/training-program';
 import { apiFetch } from '@libs/api-client';
 
-// Both active and archived programs come back from one list() call
-// (training-programs.controller.ts's list()) - split into two sections
-// here rather than the backend supporting a status filter, since the
-// whole point of showing archived programs at all is letting the user
-// find one to reactivate.
+// Splits the single list() response into active/archived sections here
+// so users can find something to reactivate.
 export default async function TrainingProgramsPage({
   params,
 }: {

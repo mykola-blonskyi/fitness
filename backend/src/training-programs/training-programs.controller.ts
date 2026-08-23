@@ -19,19 +19,16 @@ import type {
 } from './training-program.mapper';
 import { TrainingProgramsService } from './training-programs.service';
 
-// Every route here operates on the caller's own Training Programs only,
-// same "no route accepts another user's id" convention as daily-logs and
-// diet-preferences - ownership is always re-checked in the service via
-// getOwnedProgram(), never assumed from the URL alone.
+// Every route operates on the caller's own programs only - ownership is
+// re-checked in the service via getOwnedProgram(), never assumed from the URL.
 @Controller('training-programs')
 export class TrainingProgramsController {
   constructor(
     private readonly trainingProgramsService: TrainingProgramsService,
   ) {}
 
-  // Returns both active and archived programs - the frontend renders
-  // them as two sections so a user can find something to reactivate; a
-  // status filter query param would be premature for a list this small.
+  // Returns both active and archived programs - the frontend splits them
+  // into sections so a user can find something to reactivate.
   @Get()
   async list(
     @CurrentUser() identity: Identity,

@@ -5,11 +5,9 @@ import {
   removeProgramExercise,
 } from '@features/training-programs/actions';
 
-// A pure server component - reorder/remove are plain <form action={...}>
-// Server Action bindings (no client JS needed), same convention as
-// settings/preferences's remove buttons and daily-log's clearWeight.
-// Buttons are sized to the 44x44px minimum touch target (ux guidance),
-// with 8px+ gaps between them.
+// Server component using plain <form action> bindings, no client JS -
+// same convention as settings/preferences and daily-log's clearWeight.
+// Buttons meet the 44px touch-target minimum with 8px+ gaps.
 export function ProgramExerciseRow({
   programId,
   exercise,

@@ -10,14 +10,9 @@ import type { Exercise } from '@shared/types/exercise';
 import { FieldError } from '@shared/ui/components/FieldError';
 import { addProgramExercise } from '@features/training-programs/actions';
 
-// Which target fields apply depends on the selected exercise's category
-// (cardio -> duration, everything else -> sets/reps - see
-// knowledge/domain-model.md's Exercise entity note). Only the relevant
-// fields are rendered and submitted; addProgramExerciseSchema's own
-// superRefine (shared/schemas/training-program.ts) enforces which ones
-// are required from the submitted data alone. The backend
-// (program-exercise-targets.ts) is the source of truth for this rule and
-// re-validates it regardless of what the client sends.
+// Renders only the target fields for the selected exercise's category
+// (cardio -> duration, else sets/reps); the backend re-validates
+// regardless of what the client sends.
 export function AddProgramExerciseForm({
   programId,
   exercises,
