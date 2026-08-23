@@ -4,12 +4,9 @@ import { useOnlineStatus } from './useOnlineStatus';
 import { useOfflineQueueStore } from './offline-queue-store';
 import type { SyncStatus } from './types';
 
-// Derives the three states OfflineIndicator.tsx renders (AC: "a visible
-// indicator distinguishes offline / syncing / synced states"). A
-// non-empty queue counts as "syncing" even a moment before drain()
-// actually starts running (e.g. right after coming back online) -
-// simpler than a fourth "about to sync" state, and correct within one
-// render.
+// A non-empty queue counts as "syncing" even a moment before drain()
+// actually starts (e.g. right after reconnecting) - simpler than a
+// fourth "about to sync" state.
 export function useSyncStatus(): SyncStatus {
   const isOnline = useOnlineStatus();
   const queueLength = useOfflineQueueStore((state) => state.queue.length);
