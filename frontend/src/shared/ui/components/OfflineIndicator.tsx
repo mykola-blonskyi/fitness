@@ -19,8 +19,8 @@ const STATUS_COPY: Record<SyncStatus, { label: string; dot: string }> = {
   synced: { label: 'Synced', dot: 'bg-emerald-500' },
 };
 
-export function OfflineIndicator() {
-  useOfflineSync();
+export function OfflineIndicator({ userId }: { userId: string }) {
+  useOfflineSync(userId);
   const status = useSyncStatus();
   const { label, dot } = STATUS_COPY[status];
 

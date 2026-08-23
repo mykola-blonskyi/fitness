@@ -6,6 +6,7 @@ import {
   getSyncHandler,
   registerSyncHandler,
 } from '@shared/offline/sync-registry';
+import { useOfflineQueueStore } from '@shared/offline/offline-queue-store';
 import type { QueuedWrite, SyncHandler } from '@shared/offline/types';
 
 function write(id: string, type = 'test/write'): QueuedWrite {
@@ -144,5 +145,33 @@ describe('drainQueue', () => {
     await drainQueue([write('a'), write('b'), write('c')], () => handler);
 
     expect(maxInFlight).toBe(1);
+  });
+});
+
+describe('offline-queue-store ownerUserId', () => {
+  it('accepts the first user seen with no data loss', () => {
+    useOfflineQueueStore.setState({ ownerUserId: null, queue: [write('a')] });
+    useOfflineQueueStore.getState().setOwnerUserId('user-a');
+    expect(useOfflineQueueStore.getState().ownerUserId).toBe('user-a');
+    expect(useOfflineQueueStore.getState().queue).toHaveLength(1);
+  });
+
+  it('clears the queue instead of draining it under a different user', () => {
+    useOfflineQueueStore.setState({
+      ownerUserId: 'user-a',
+      queue: [write('a'), write('b')],
+    });
+    useOfflineQueueStore.getState().setOwnerUserId('user-b');
+    expect(useOfflineQueueStore.getState().ownerUserId).toBe('user-b');
+    expect(useOfflineQueueStore.getState().queue).toEqual([]);
+  });
+
+  it('is a no-op for the same user', () => {
+    useOfflineQueueStore.setState({
+      ownerUserId: 'user-a',
+      queue: [write('a')],
+    });
+    useOfflineQueueStore.getState().setOwnerUserId('user-a');
+    expect(useOfflineQueueStore.getState().queue).toHaveLength(1);
   });
 });

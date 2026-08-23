@@ -3,7 +3,7 @@ import { OfflineIndicator } from '@shared/ui/components/OfflineIndicator';
 
 interface HeaderProps {
   locale: string;
-  identity: { name: string; email: string };
+  identity: { userId: string; name: string; email: string };
 }
 
 // See docs/decisions.md ADR-007 for why this is a nav menu, not a
@@ -65,7 +65,7 @@ export function Header({ locale, identity }: HeaderProps) {
         </nav>
 
         <div className="flex items-center gap-4">
-          <OfflineIndicator />
+          <OfflineIndicator userId={identity.userId} />
           {/* Identity only - no dropdown, no settings link (already in
               nav above), no sign-out (the Hub has no public logout URL
               to delegate to - see ADR-007's Consequences). */}

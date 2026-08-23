@@ -15,10 +15,20 @@ import { useOfflineQueueStore } from './offline-queue-store';
 // drain() itself is a no-op when there's nothing queued or a drain is
 // already running (offline-queue-store.ts), so calling it eagerly here
 // is cheap and doesn't need its own guard.
-export function useOfflineSync(): boolean {
+export function useOfflineSync(userId: string): boolean {
   const isOnline = useOnlineStatus();
   const hasHydrated = useOfflineQueueStore((state) => state.hasHydrated);
+  const setOwnerUserId = useOfflineQueueStore((state) => state.setOwnerUserId);
   const drain = useOfflineQueueStore((state) => state.drain);
+
+  // Runs before the drain effect below on every render where hasHydrated
+  // just became true, so a queue left behind by a different user (shared
+  // device) is cleared before anything in it could be sent.
+  useEffect(() => {
+    if (hasHydrated) {
+      setOwnerUserId(userId);
+    }
+  }, [hasHydrated, userId, setOwnerUserId]);
 
   useEffect(() => {
     if (isOnline && hasHydrated) {

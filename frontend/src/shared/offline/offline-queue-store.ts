@@ -31,6 +31,13 @@ interface OfflineQueueState {
   // this before ever calling drain().
   hasHydrated: boolean;
   setHasHydrated: (hydrated: boolean) => void;
+  // Whoever queued the current contents of `queue`. IndexedDB is shared
+  // per browser origin, not per authenticated user - without this, a
+  // shared-device user switch would drain and submit one user's queued
+  // write under another user's session. setOwnerUserId clears the queue
+  // on a mismatch instead of draining it under the wrong identity.
+  ownerUserId: string | null;
+  setOwnerUserId: (userId: string) => void;
   enqueue: <TPayload>(type: string, payload: TPayload) => void;
   drain: () => Promise<void>;
 }
@@ -42,6 +49,16 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
       isSyncing: false,
       hasHydrated: false,
       setHasHydrated: (hydrated) => set({ hasHydrated: hydrated }),
+
+      ownerUserId: null,
+      setOwnerUserId: (userId) => {
+        const current = get().ownerUserId;
+        if (current !== null && current !== userId) {
+          set({ queue: [], ownerUserId: userId });
+        } else {
+          set({ ownerUserId: userId });
+        }
+      },
 
       enqueue: (type, payload) => {
         const item: QueuedWrite = {
@@ -85,9 +102,12 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
     {
       name: 'fitness-offline-write-queue',
       storage: createJSONStorage(() => idbStorage),
-      // Only the queue itself needs to survive a reload - isSyncing and
-      // hasHydrated are runtime-only.
-      partialize: (state) => ({ queue: state.queue }),
+      // Only the queue and its owner need to survive a reload - isSyncing
+      // and hasHydrated are runtime-only.
+      partialize: (state) => ({
+        queue: state.queue,
+        ownerUserId: state.ownerUserId,
+      }),
       onRehydrateStorage: () => (state, error) => {
         if (!error) state?.setHasHydrated(true);
       },
