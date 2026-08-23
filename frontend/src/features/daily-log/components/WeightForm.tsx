@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { weightSchema, type WeightInput } from '@shared/schemas/weight';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { clearWeight, type DailyLog } from '@features/daily-log/actions';
 import { syncedSetWeight } from '@features/daily-log/offline';
 
@@ -25,13 +25,8 @@ export function WeightForm({
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<WeightInput>({
-    resolver: zodResolver(weightSchema),
+  } = useZodForm<WeightInput>(weightSchema, {
     defaultValues: { weight: dailyLog?.weight ?? undefined },
-    // Real-time field validation (on-blur, then on every change once a
-    // field has an error) - react-hook-form defaults to submit-only.
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
   });
 
   async function onSubmit(input: WeightInput) {
@@ -45,13 +40,7 @@ export function WeightForm({
       setQueued(true);
       return;
     }
-    const { result } = outcome;
-    if (result.error) {
-      setError('root', { message: result.error });
-    }
-    for (const [field, message] of Object.entries(result.fieldErrors ?? {})) {
-      setError(field as keyof WeightInput, { message });
-    }
+    applyFormActionError(setError, outcome.result);
   }
 
   return (

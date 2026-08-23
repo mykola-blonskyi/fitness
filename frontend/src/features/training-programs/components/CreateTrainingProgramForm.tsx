@@ -1,12 +1,12 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createTrainingProgramSchema,
   type CreateTrainingProgramInput,
 } from '@shared/schemas/training-program';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createTrainingProgram } from '@features/training-programs/actions';
 
 export function CreateTrainingProgramForm() {
@@ -16,25 +16,11 @@ export function CreateTrainingProgramForm() {
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<CreateTrainingProgramInput>({
-    resolver: zodResolver(createTrainingProgramSchema),
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
-  });
+  } = useZodForm(createTrainingProgramSchema);
 
   async function onSubmit(input: CreateTrainingProgramInput) {
     const result = await createTrainingProgram(input);
-    if (result.error) {
-      setError('root', { message: result.error });
-      return;
-    }
-    if (result.fieldErrors) {
-      for (const [field, message] of Object.entries(result.fieldErrors)) {
-        setError(field as keyof CreateTrainingProgramInput, { message });
-      }
-      return;
-    }
-    reset();
+    if (!applyFormActionError(setError, result)) reset();
   }
 
   return (

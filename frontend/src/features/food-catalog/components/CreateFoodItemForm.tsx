@@ -1,13 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createFoodItemSchema,
   type CreateFoodItemInput,
 } from '@shared/schemas/food-item';
 import type { Macros } from '@shared/types/food';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import {
   createFoodItem,
   type FoodTaxonomy,
@@ -31,11 +31,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<CreateFoodItemInput>({
-    resolver: zodResolver(createFoodItemSchema),
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
-  });
+  } = useZodForm(createFoodItemSchema);
 
   // Subcategory options are scoped to whichever category is currently
   // selected - the fixed taxonomy makes categoryId -> subcategories a
@@ -47,17 +43,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
 
   async function onSubmit(input: CreateFoodItemInput) {
     const result = await createFoodItem(input);
-    if (result.error) {
-      setError('root', { message: result.error });
-      return;
-    }
-    if (result.fieldErrors) {
-      for (const [field, message] of Object.entries(result.fieldErrors)) {
-        setError(field as keyof CreateFoodItemInput, { message });
-      }
-      return;
-    }
-    reset();
+    if (!applyFormActionError(setError, result)) reset();
   }
 
   return (
