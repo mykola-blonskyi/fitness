@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { OfflineIndicator } from '@shared/ui/components/OfflineIndicator';
 
 interface HeaderProps {
   locale: string;
@@ -63,12 +64,15 @@ export function Header({ locale, identity }: HeaderProps) {
           </Link>
         </nav>
 
-        {/* Identity only - no dropdown, no settings link (already in
-            nav above), no sign-out (the Hub has no public logout URL to
-            delegate to - see ADR-007's Consequences). */}
-        <span className="text-sm text-zinc-500">
-          {identity.name || identity.email}
-        </span>
+        <div className="flex items-center gap-4">
+          <OfflineIndicator />
+          {/* Identity only - no dropdown, no settings link (already in
+              nav above), no sign-out (the Hub has no public logout URL
+              to delegate to - see ADR-007's Consequences). */}
+          <span className="text-sm text-zinc-500">
+            {identity.name || identity.email}
+          </span>
+        </div>
       </div>
     </header>
   );
