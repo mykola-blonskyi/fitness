@@ -1,10 +1,7 @@
 import { IsUUID } from 'class-validator';
 
-// The replacement Food Item's id. Role-match (same Food Role as the item
-// being swapped) and Food/Diet Preference exclusion checks are cross-table
-// DB lookups, not expressible as a class-validator decorator - both are
-// validated in diets.service.ts's swapItem(), same split
-// create-food-preference.dto.ts already uses for its own targetId.
+// Role-match and preference-exclusion checks are cross-table DB lookups,
+// so they're validated in diets.service.ts's swapItem(), not here.
 export class SwapDietItemDto {
   @IsUUID()
   foodItemId: string;
