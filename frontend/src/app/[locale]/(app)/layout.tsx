@@ -22,7 +22,11 @@ export default async function AppLayout({
     <>
       <Header
         locale={locale}
-        identity={{ name: profile.name, email: profile.email }}
+        identity={{
+          userId: profile.id,
+          name: profile.name,
+          email: profile.email,
+        }}
       />
       {children}
     </>

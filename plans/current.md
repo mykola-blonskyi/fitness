@@ -20,7 +20,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - [x] Exercise catalog (schema + one-time seed import from wger/ExerciseDB + translations) (FITNESS-16)
 - [x] Exercise catalog browse/search + manual creation UI (FITNESS-17)
 - [ ] Training Programs, Program Exercises, multiple concurrent active programs (many-to-many `UserActiveProgram`)
-- [ ] Workout Logs/Sets, offline queued writes (IndexedDB + service worker sync)
+- [ ] Workout Logs/Sets (the generic offline write-queue + sync + indicator mechanism they'll use is already built, FITNESS-13 — see Phase 5)
 - [x] Daily Log + weigh-in tracking (FITNESS-14)
 
 ---
@@ -46,7 +46,8 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 ## Phase 5 — Polish & deploy
 
 - [ ] next-intl for UI chrome (en/uk/ru/es) (FITNESS-11, not started)
-- [ ] PWA manifest + service worker offline caching (FITNESS-12, not started)
+- [x] PWA manifest + service worker offline caching (FITNESS-12)
+- [x] Generic IndexedDB offline write-queue + sync + offline/syncing/synced indicator, reusable by any feature's write endpoint; wired up to the daily-log weight entry Server Action as the concrete example (FITNESS-13)
 - [x] Coolify/Docker Compose deployment, CI/CD gates (lint, prettier, tests, migration-before-deploy) — live at fitness.blonskyi.dev (FITNESS-8)
 - [x] Plane workspace (FITNESS) ticket setup: Modules = specs above, Work items = individual tickets, branch-per-ticket workflow
 

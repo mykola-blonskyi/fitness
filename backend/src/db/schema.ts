@@ -125,6 +125,44 @@ export const exerciseTranslations = pgTable(
   (table) => [unique().on(table.exerciseId, table.locale)],
 );
 
+// Training Program (see knowledge/domain-model.md). Archiving is a plain
+// boolean, not the separate UserActiveProgram concept - multiple programs
+// may be active for a user at once.
+export const trainingPrograms = pgTable('training_programs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
+  title: text('title').notNull(),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Program Exercise. Exactly one of (targetSets + targetReps) or
+// targetDurationSeconds is set, depending on the exercise's category -
+// enforced in program-exercise-targets.ts, not a DB CHECK constraint.
+export const programExercises = pgTable('program_exercises', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  trainingProgramId: uuid('training_program_id')
+    .notNull()
+    .references(() => trainingPrograms.id),
+  exerciseId: uuid('exercise_id')
+    .notNull()
+    .references(() => exercises.id),
+  orderIndex: integer('order_index').notNull(),
+  targetSets: integer('target_sets'),
+  targetReps: integer('target_reps'),
+  targetDurationSeconds: integer('target_duration_seconds'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // Real tables, not enums: Food Preference needs a stable row id to target
 // polymorphically ("exclude everything in this category"), which a pgEnum
 // can't provide. Rows are fixed and seeded once by seed-food-catalog.ts.

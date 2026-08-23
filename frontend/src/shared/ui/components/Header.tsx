@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { OfflineIndicator } from '@shared/ui/components/OfflineIndicator';
 
 interface HeaderProps {
   locale: string;
-  identity: { name: string; email: string };
+  identity: { userId: string; name: string; email: string };
 }
 
 // See docs/decisions.md ADR-007 for why this is a nav menu, not a
@@ -10,8 +11,9 @@ interface HeaderProps {
 // sibling top-level sections (Training, Diary, Diet, Photos, Settings)
 // a user needs to move *between*, not a single hierarchy to track depth
 // within. Nav items are scoped to only what's actually built today
-// (Diary, Exercises, Food, Diet, Settings) - add one line here each time
-// a new section ships its first real page, per ADR-007's Consequences.
+// (Diary, Training, Exercises, Food, Diet, Settings) - add one line here
+// each time a new section ships its first real page, per ADR-007's
+// Consequences.
 export function Header({ locale, identity }: HeaderProps) {
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
@@ -36,6 +38,12 @@ export function Header({ locale, identity }: HeaderProps) {
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
             Diary
+          </Link>
+          <Link
+            href={`/${locale}/training`}
+            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            Training
           </Link>
           <Link
             href={`/${locale}/exercises`}
@@ -63,12 +71,15 @@ export function Header({ locale, identity }: HeaderProps) {
           </Link>
         </nav>
 
-        {/* Identity only - no dropdown, no settings link (already in
-            nav above), no sign-out (the Hub has no public logout URL to
-            delegate to - see ADR-007's Consequences). */}
-        <span className="text-sm text-zinc-500">
-          {identity.name || identity.email}
-        </span>
+        <div className="flex items-center gap-4">
+          <OfflineIndicator userId={identity.userId} />
+          {/* Identity only - no dropdown, no settings link (already in
+              nav above), no sign-out (the Hub has no public logout URL
+              to delegate to - see ADR-007's Consequences). */}
+          <span className="text-sm text-zinc-500">
+            {identity.name || identity.email}
+          </span>
+        </div>
       </div>
     </header>
   );

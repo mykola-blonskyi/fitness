@@ -13,6 +13,7 @@ import { ExercisesModule } from './exercises/exercises.module';
 import { FoodItemsModule } from './food-items/food-items.module';
 import { FoodPreferencesModule } from './food-preferences/food-preferences.module';
 import { IdentityGuard } from './identity/identity.guard';
+import { TrainingProgramsModule } from './training-programs/training-programs.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module';
     DietPreferencesModule,
     CalorieTargetsModule,
     DietsModule,
+    TrainingProgramsModule,
   ],
   controllers: [AppController],
   providers: [
