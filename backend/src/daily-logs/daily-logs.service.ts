@@ -26,10 +26,8 @@ export class DailyLogsService {
     return row ? toDailyLogResponse(row) : null;
   }
 
-  // The most recent Daily Log with a recorded weight - used by
-  // calorie-targets, which needs a real weigh-in and can't fall back to
-  // a date with weight left null (see Business Rules: Daily Log requires
-  // no weigh-in - not every date has one).
+  // Used by calorie-targets, which needs a real weigh-in and can't fall
+  // back to a date with weight left null.
   async findLatestWeighIn(userId: string): Promise<DailyLogResponse | null> {
     const row = await this.db.query.dailyLogs.findFirst({
       where: and(
@@ -41,13 +39,8 @@ export class DailyLogsService {
     return row ? toDailyLogResponse(row) : null;
   }
 
-  // Lazily creates the Daily Log row for this (user, date) if one doesn't
-  // exist yet, leaving weight null - used by diets.service.ts (FITNESS-30)
-  // so generating a menu never requires a weigh-in on that specific date
-  // (see docs/decisions.md ADR-004; the calorie target itself still comes
-  // from the latest weigh-in regardless of date, via findLatestWeighIn).
-  // onConflictDoNothing + re-select rather than onConflictDoUpdate's
-  // no-op, since there's nothing to update on an existing row here.
+  // Lazily creates the Daily Log row, leaving weight null - so generating a
+  // menu never requires a weigh-in on that specific date.
   async findOrCreate(userId: string, date: string): Promise<DailyLogResponse> {
     await this.db
       .insert(schema.dailyLogs)
@@ -70,9 +63,6 @@ export class DailyLogsService {
     return toDailyLogResponse(row);
   }
 
-  // Creates the Daily Log row on first write for this (user, date) or
-  // updates the existing one — never a duplicate, enforced by the
-  // unique(user_id, date) constraint via an atomic upsert.
   async setWeight(
     userId: string,
     date: string,
@@ -90,9 +80,6 @@ export class DailyLogsService {
     return toDailyLogResponse(row);
   }
 
-  // Clears the weight value but leaves the Daily Log row itself in
-  // place, available for other attachments (workout logs, diets, etc.)
-  // on the same date.
   async clearWeight(userId: string, date: string): Promise<DailyLogResponse> {
     const existing = await this.db.query.dailyLogs.findFirst({
       where: and(
@@ -118,11 +105,8 @@ export class DailyLogsService {
     return toDailyLogResponse(row);
   }
 
-  // Powers the weight-trend chart (FITNESS-15): only dated rows with a
-  // real (non-null) weight, within the last `days` calendar days
-  // (inclusive of today), ordered oldest-first. Days with no row or a
-  // null weight are simply absent - the frontend renders that as a gap
-  // rather than interpolating, per the FITNESS-3 spec.
+  // Days with no row or a null weight are simply absent - the frontend
+  // renders that as a gap rather than interpolating.
   async getWeightTrend(
     userId: string,
     days: number,

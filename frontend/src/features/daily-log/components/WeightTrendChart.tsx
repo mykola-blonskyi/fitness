@@ -4,10 +4,8 @@ const CHART_WIDTH = 600;
 const CHART_HEIGHT = 200;
 const PADDING = { top: 16, right: 12, bottom: 8, left: 40 };
 
-// Days since epoch, parsed as UTC midnight - matches todayIso() elsewhere
-// in this feature and the backend's own UTC-based window math, so a
-// day's width on the x-axis lines up with what the backend considers
-// "one day" when deciding whether two weigh-ins are consecutive.
+// Days since epoch, parsed as UTC midnight - matches the backend's own
+// UTC-based window math for deciding whether two weigh-ins are consecutive.
 export function dayIndex(date: string): number {
   return (
     Date.UTC(
@@ -18,19 +16,14 @@ export function dayIndex(date: string): number {
   );
 }
 
-// Inverse of dayIndex() - the Diary page uses this (rather than its own
-// date arithmetic) to compute the trend window's start date, so there's
-// exactly one place in the frontend that defines what "one day" means.
+// Inverse of dayIndex().
 export function dateFromDayIndex(index: number): string {
   return new Date(index * 86_400_000).toISOString().slice(0, 10);
 }
 
-// The core "honest gap" rule (FITNESS-15 acceptance criteria): two
-// weigh-ins are only ever connected by a line when they're on
-// consecutive calendar days. Any missing day(s) between them - one row
-// with weight null, or no row at all - breaks the line instead of being
-// interpolated across. Exported separately from the component so this
-// rule is unit-testable without rendering SVG.
+// Two weigh-ins are only connected by a line when they're on consecutive
+// calendar days - any gap breaks the line rather than interpolating.
+// Exported separately so this rule is unit-testable without rendering SVG.
 export function connectedPairs(
   points: WeightTrendPoint[],
 ): [WeightTrendPoint, WeightTrendPoint][] {
@@ -52,11 +45,6 @@ interface WeightTrendChartProps {
   windowDays: number;
 }
 
-// Honest line chart: only draws a segment between two weigh-ins that are
-// on consecutive calendar days. Any gap (one or more missing days)
-// between two points breaks the line rather than interpolating across
-// it, per FITNESS-15's acceptance criteria and the FITNESS-3 spec's
-// "Weight-trend queries" decision.
 export function WeightTrendChart({
   points,
   windowStart,

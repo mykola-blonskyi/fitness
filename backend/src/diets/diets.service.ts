@@ -28,9 +28,8 @@ import {
 import { MEAL_ROLE_CHAINS, type FoodCandidate } from './diet.types';
 import { generateDietItems } from './greedy-heuristic';
 
-// Same registered code calorie-targets.service.ts looks up - diet
-// generation reuses that service's target rather than recomputing it, so
-// they can never drift apart (see docs/decisions.md ADR-010).
+// Same registered code calorie-targets.service.ts looks up, so the two
+// services' targets can never drift apart.
 const ALGORITHM_CODE = 'mifflin_v1';
 
 @Injectable()
@@ -44,10 +43,6 @@ export class DietsService {
     private readonly dietPreferencesService: DietPreferencesService,
   ) {}
 
-  // id lookups for every Food Category/Food Role name, used both to
-  // resolve the Diet Preference -> taxonomy-name exclusions
-  // (diet-preference-exclusions.ts) down to real ids, and by
-  // findCandidatesByRole below.
   private async getTaxonomyIdMaps(): Promise<{
     roleIdByName: Map<string, string>;
     categoryIdByName: Map<string, string>;
@@ -69,12 +64,6 @@ export class DietsService {
     };
   }
 
-  // Merges the caller's active Diet Preferences (vegetarian/vegan/keto/
-  // paleo - knowledge/domain-model.md "Diet Preference": "used as an
-  // additional filter during diet generation") into the Food-Preference-
-  // derived exclusions, at the same category/role granularity, so both
-  // filters apply through the single candidate query in
-  // findCandidatesByRole.
   private async withDietPreferenceExclusions(
     userId: string,
     base: ExclusionTargets,
@@ -103,12 +92,8 @@ export class DietsService {
     return merged;
   }
 
-  // One query per role in MEAL_ROLE_CHAINS, filtered against the caller's
-  // merged Food Preference + Diet Preference exclusions at every
-  // granularity (category/subcategory/role/food_item -
-  // knowledge/business-rules.md "Food Preferences target structured
-  // entities, not free text"). A whole-role exclusion short-circuits to
-  // an empty candidate list without a query.
+  // A whole-role exclusion short-circuits to an empty candidate list
+  // without a query.
   private async findCandidatesByRole(
     exclusions: ExclusionTargets,
     roleIdByName: Map<string, string>,
@@ -157,11 +142,8 @@ export class DietsService {
       candidatesByRole.set(
         roleName,
         rows
-          // A 0-calorie item (e.g. water/black coffee - the schema doesn't
-          // forbid it) can't be portion-scaled to hit a calorie share at
-          // all - greedy-heuristic.ts's gramsForCalories divides by this
-          // value, so excluding it here keeps that division safe rather
-          // than guarding it in three different places downstream.
+          // Excludes 0-calorie items (e.g. water) - greedy-heuristic.ts
+          // divides by this value when portion-scaling.
           .filter((row) => Number(row.caloriesPer100g) > 0)
           .map((row) => ({
             id: row.id,
@@ -176,11 +158,9 @@ export class DietsService {
     return candidatesByRole;
   }
 
-  // Resolves the caller's full exclusion set - Food Preferences merged
-  // with Diet Preferences (withDietPreferenceExclusions) - the single
-  // source both generate()'s candidate query and swapItem()'s
-  // preference-violation check filter/reject against, so "excluded during
-  // generation" and "rejected on swap" can never drift apart.
+  // Shared by generate()'s candidate query and swapItem()'s violation
+  // check, so "excluded during generation" and "rejected on swap" can
+  // never drift apart.
   private async resolveExclusions(userId: string): Promise<{
     exclusions: ExclusionTargets;
     roleIdByName: Map<string, string>;
@@ -203,22 +183,15 @@ export class DietsService {
       where: eq(schema.dietCalculationAlgorithms.code, ALGORITHM_CODE),
     });
     if (!algorithm) {
-      // Seeded by a migration (drizzle/0006_seed_mifflin_v1_algorithm.sql)
-      // - only reachable if migrations haven't fully run, same as
-      // calorie-targets.service.ts's identical check.
+      // Seeded by a migration - only reachable if migrations haven't fully run.
       throw new NotFoundException('Calorie algorithm not configured');
     }
     return algorithm;
   }
 
-  // Generates a full day's menu on demand and inserts a brand-new Diet +
-  // Diet Items row set - see knowledge/business-rules.md "Diet
-  // regeneration is always manual" (this is always an explicit trigger,
-  // never called from elsewhere) and "Current diet resolution" (never
-  // edits a previous Diet in place). `date` selects which Daily Log the
-  // new Diet attaches to; the calorie/macro target itself always comes
-  // from the user's most recent weigh-in regardless of that date (see
-  // daily-logs.service.ts's findOrCreate comment).
+  // `date` selects which Daily Log the new Diet attaches to; the
+  // calorie/macro target itself always comes from the user's most recent
+  // weigh-in regardless of that date.
   async generate(userId: string, date: string): Promise<DietResponse> {
     const user = await this.usersService.findById(userId);
     if (!user) {
@@ -288,9 +261,8 @@ export class DietsService {
     return this.buildResponse(dietRow, algorithm);
   }
 
-  // "Current diet resolution" (knowledge/business-rules.md) - the most
-  // recently created Diet row for the Daily Log, not a stored is_current
-  // flag; older Diets are kept as history.
+  // Most recently created Diet row for the Daily Log, not a stored
+  // is_current flag; older Diets are kept as history.
   async findCurrent(userId: string, date: string): Promise<DietResponse> {
     const dailyLog = await this.dailyLogsService.findByDate(userId, date);
     if (!dailyLog) {
@@ -315,9 +287,8 @@ export class DietsService {
     return this.buildResponse(dietRow, algorithm);
   }
 
-  // Ownership check for a Diet by id - same join a Diet Item's parent Diet
-  // needs to verify against, since diets carries no userId column itself
-  // (it's reached only through its Daily Log, per the domain model).
+  // diets carries no userId column - ownership is only verifiable by
+  // joining through its Daily Log.
   private async findOwnedDiet(
     userId: string,
     dietId: string,
@@ -338,15 +309,6 @@ export class DietsService {
     return row.diet;
   }
 
-  // FITNESS-31 - swaps one Diet Item for another Food Item sharing the
-  // same Food Role (knowledge/business-rules.md "Food Replacement and
-  // diet generation are role-based"). Rejects a replacement that would
-  // violate an active Food or Diet Preference, reusing the exact same
-  // exclusion-resolution path generate() uses so "excluded during
-  // generation" and "rejected on swap" can never drift apart. The Diet's
-  // stored totals (domain model: Diet.total_calories/protein/carbs/fat)
-  // are recomputed from all of its items post-swap, not just patched by
-  // delta, so they can never drift from what the items actually sum to.
   async swapItem(
     userId: string,
     dietId: string,
@@ -376,8 +338,7 @@ export class DietsService {
     if (!replacementFoodItem) {
       throw new NotFoundException('Food item not found');
     }
-    // Unreachable in practice - dietItem.foodItemId is a not-null FK into
-    // food_calories, same as findOrCreate's "unreachable" comment above.
+    // Unreachable in practice - dietItem.foodItemId is a not-null FK.
     if (!currentFoodItem) {
       throw new NotFoundException('Original food item not found');
     }
@@ -406,12 +367,8 @@ export class DietsService {
         .set({ foodItemId: replacementFoodItem.id })
         .where(eq(schema.dietItems.id, dietItem.id));
 
-      // Re-derive the Diet's stored totals from every item it now has,
-      // rather than adjusting the old totals by the swapped item's delta
-      // - matches the derive-at-read-time math diet.mapper.ts's
-      // toDietItemResponse already uses (per-100g values x weight_grams),
-      // summed raw and rounded once, same as greedy-heuristic.ts's
-      // macroTotals/totals split.
+      // Re-derives totals from every item rather than adjusting by the
+      // swapped item's delta, so they can never drift from what the items sum to.
       const itemRows = await tx
         .select({
           weightGrams: schema.dietItems.weightGrams,

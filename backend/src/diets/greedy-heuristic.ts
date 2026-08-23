@@ -1,11 +1,8 @@
-// Greedy-heuristic diet generator - see docs/decisions.md ADR-010's "close
-// enough" philosophy and knowledge/business-rules.md "Diet menu
-// generation is a greedy heuristic": "For each meal, pick one Food Item
-// per required Food Role, then scale portion size (weight_grams) to hit
-// that meal's calorie share; adjust the largest items if the day's total
-// drifts outside tolerance (~+-5%) of the target." Pure function, no I/O -
-// same "algorithm apart from persistence" split as
-// calorie-targets/algorithms/mifflin-v1.ts, testable without a database.
+// Greedy-heuristic diet generator - see docs/decisions.md ADR-010. For each
+// meal, picks one Food Item per required Food Role, scales portion size to
+// hit that meal's calorie share, then adjusts the largest items if the
+// day's total drifts outside tolerance. Pure function, no I/O - testable
+// without a database.
 
 import {
   MEAL_ROLE_CHAINS,
@@ -21,15 +18,10 @@ const MIN_WEIGHT_GRAMS = 1;
 
 export interface GreedyHeuristicInput {
   targetCalories: number;
-  // 1-4, validated by users/dto/create-user.dto.ts at the point mealCount
-  // is set; not re-validated here.
+  // 1-4, validated at the point mealCount is set; not re-validated here.
   mealCount: number;
-  // Role name -> eligible candidates (already Food-Preference-filtered).
   candidatesByRole: Map<string, FoodCandidate[]>;
-  // Injectable so tests can pick deterministically; defaults to a real
-  // random pick for actual generation (variety across meals/regenerations
-  // isn't a documented requirement, but is a reasonable default over
-  // always picking the same item).
+  // Injectable so tests can pick deterministically; defaults to random.
   pickRandom?: <T>(items: T[]) => T;
 }
 
@@ -113,14 +105,9 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     };
   }
 
-  // Adjust the largest items if the day's total drifts outside tolerance
-  // (business-rules.md's literal wording) - applied to calories only, on
-  // the items contributing the most calories first. Protein/carbs/fat
-  // move proportionally with each adjusted item's grams; the per-macro
-  // role diversity above (not an independent macro-correction pass) is
-  // what keeps the day's macro totals in the same ballpark as the
-  // target - same "close enough" simplification ADR-010 already accepted
-  // for mifflin-v1.ts's carbsG.
+  // Correction targets calories only, on the items contributing the most
+  // calories first; protein/carbs/fat move proportionally with each
+  // adjusted item's grams rather than getting an independent pass.
   let totals = macroTotals(items);
   let delta = input.targetCalories - totals.calories;
   const toleranceCalories = input.targetCalories * CALORIE_TOLERANCE;

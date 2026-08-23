@@ -1,10 +1,8 @@
 import { IsIn, IsOptional, IsString } from 'class-validator';
 import { EXERCISE_CATEGORIES } from '../exercise.types';
 
-// No `locale` query param, unlike list-food-items.dto.ts - the caller's
-// display locale is resolved server-side from their own stored
-// users.locale preference (see exercises.service.ts), not passed by the
-// client. See schema.ts's users.locale comment for why.
+// No `locale` query param, unlike list-food-items.dto.ts - resolved
+// server-side from the caller's stored users.locale instead.
 export class ListExercisesDto {
   @IsOptional()
   @IsIn(EXERCISE_CATEGORIES)
