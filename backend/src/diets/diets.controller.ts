@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   Param,
@@ -9,6 +10,7 @@ import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import type { DietResponse } from './diet.mapper';
 import { DietsService } from './diets.service';
+import { SwapDietItemDto } from './dto/swap-diet-item.dto';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -47,5 +49,27 @@ export class DietsController {
   ): Promise<DietResponse> {
     assertValidDate(date);
     return this.dietsService.findCurrent(identity.hubUserId, date);
+  }
+
+  // Swaps one Diet Item for another Food Item sharing the same Food Role
+  // (FITNESS-31) - rejected if the replacement violates an active Food or
+  // Diet Preference. Updates the Diet's stored totals in place; unlike
+  // generate(), this edits the existing Diet row rather than inserting a
+  // new one, since a swap is a correction to the current menu, not a
+  // regeneration (knowledge/business-rules.md "Diet regeneration is
+  // always manual" governs full regeneration, not per-item edits).
+  @Post(':dietId/items/:itemId/swap')
+  async swapItem(
+    @CurrentUser() identity: Identity,
+    @Param('dietId') dietId: string,
+    @Param('itemId') itemId: string,
+    @Body() dto: SwapDietItemDto,
+  ): Promise<DietResponse> {
+    return this.dietsService.swapItem(
+      identity.hubUserId,
+      dietId,
+      itemId,
+      dto.foodItemId,
+    );
   }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
@@ -175,6 +176,28 @@ export class DietsService {
     return candidatesByRole;
   }
 
+  // Resolves the caller's full exclusion set - Food Preferences merged
+  // with Diet Preferences (withDietPreferenceExclusions) - the single
+  // source both generate()'s candidate query and swapItem()'s
+  // preference-violation check filter/reject against, so "excluded during
+  // generation" and "rejected on swap" can never drift apart.
+  private async resolveExclusions(userId: string): Promise<{
+    exclusions: ExclusionTargets;
+    roleIdByName: Map<string, string>;
+  }> {
+    const [foodPreferenceExclusions, taxonomyIds] = await Promise.all([
+      this.foodPreferencesService.getExclusionTargets(userId),
+      this.getTaxonomyIdMaps(),
+    ]);
+    const exclusions = await this.withDietPreferenceExclusions(
+      userId,
+      foodPreferenceExclusions,
+      taxonomyIds.categoryIdByName,
+      taxonomyIds.roleIdByName,
+    );
+    return { exclusions, roleIdByName: taxonomyIds.roleIdByName };
+  }
+
   private async getAlgorithm() {
     const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
       where: eq(schema.dietCalculationAlgorithms.code, ALGORITHM_CODE),
@@ -206,19 +229,10 @@ export class DietsService {
     const algorithm = await this.getAlgorithm();
     const dailyLog = await this.dailyLogsService.findOrCreate(userId, date);
 
-    const [foodPreferenceExclusions, taxonomyIds] = await Promise.all([
-      this.foodPreferencesService.getExclusionTargets(userId),
-      this.getTaxonomyIdMaps(),
-    ]);
-    const exclusions = await this.withDietPreferenceExclusions(
-      userId,
-      foodPreferenceExclusions,
-      taxonomyIds.categoryIdByName,
-      taxonomyIds.roleIdByName,
-    );
+    const { exclusions, roleIdByName } = await this.resolveExclusions(userId);
     const candidatesByRole = await this.findCandidatesByRole(
       exclusions,
-      taxonomyIds.roleIdByName,
+      roleIdByName,
     );
     const hasAnyCandidate = [...candidatesByRole.values()].some(
       (candidates) => candidates.length > 0,
@@ -299,6 +313,155 @@ export class DietsService {
     }
 
     return this.buildResponse(dietRow, algorithm);
+  }
+
+  // Ownership check for a Diet by id - same join a Diet Item's parent Diet
+  // needs to verify against, since diets carries no userId column itself
+  // (it's reached only through its Daily Log, per the domain model).
+  private async findOwnedDiet(
+    userId: string,
+    dietId: string,
+  ): Promise<typeof schema.diets.$inferSelect> {
+    const [row] = await this.db
+      .select({ diet: schema.diets })
+      .from(schema.diets)
+      .innerJoin(
+        schema.dailyLogs,
+        eq(schema.dailyLogs.id, schema.diets.dailyLogId),
+      )
+      .where(
+        and(eq(schema.diets.id, dietId), eq(schema.dailyLogs.userId, userId)),
+      );
+    if (!row) {
+      throw new NotFoundException('Diet not found');
+    }
+    return row.diet;
+  }
+
+  // FITNESS-31 - swaps one Diet Item for another Food Item sharing the
+  // same Food Role (knowledge/business-rules.md "Food Replacement and
+  // diet generation are role-based"). Rejects a replacement that would
+  // violate an active Food or Diet Preference, reusing the exact same
+  // exclusion-resolution path generate() uses so "excluded during
+  // generation" and "rejected on swap" can never drift apart. The Diet's
+  // stored totals (domain model: Diet.total_calories/protein/carbs/fat)
+  // are recomputed from all of its items post-swap, not just patched by
+  // delta, so they can never drift from what the items actually sum to.
+  async swapItem(
+    userId: string,
+    dietId: string,
+    itemId: string,
+    foodItemId: string,
+  ): Promise<DietResponse> {
+    const diet = await this.findOwnedDiet(userId, dietId);
+
+    const dietItem = await this.db.query.dietItems.findFirst({
+      where: and(
+        eq(schema.dietItems.id, itemId),
+        eq(schema.dietItems.dietId, diet.id),
+      ),
+    });
+    if (!dietItem) {
+      throw new NotFoundException('Diet item not found');
+    }
+
+    const [currentFoodItem, replacementFoodItem] = await Promise.all([
+      this.db.query.foodCalories.findFirst({
+        where: eq(schema.foodCalories.id, dietItem.foodItemId),
+      }),
+      this.db.query.foodCalories.findFirst({
+        where: eq(schema.foodCalories.id, foodItemId),
+      }),
+    ]);
+    if (!replacementFoodItem) {
+      throw new NotFoundException('Food item not found');
+    }
+    // Unreachable in practice - dietItem.foodItemId is a not-null FK into
+    // food_calories, same as findOrCreate's "unreachable" comment above.
+    if (!currentFoodItem) {
+      throw new NotFoundException('Original food item not found');
+    }
+
+    if (replacementFoodItem.roleId !== currentFoodItem.roleId) {
+      throw new BadRequestException(
+        'Replacement must share the same Food Role as the item being swapped',
+      );
+    }
+
+    const { exclusions } = await this.resolveExclusions(userId);
+    const violatesPreference =
+      exclusions.food_item.has(replacementFoodItem.id) ||
+      exclusions.category.has(replacementFoodItem.categoryId) ||
+      exclusions.subcategory.has(replacementFoodItem.subcategoryId) ||
+      exclusions.role.has(replacementFoodItem.roleId);
+    if (violatesPreference) {
+      throw new UnprocessableEntityException(
+        'This replacement violates an active food preference',
+      );
+    }
+
+    const updatedDiet = await this.db.transaction(async (tx) => {
+      await tx
+        .update(schema.dietItems)
+        .set({ foodItemId: replacementFoodItem.id })
+        .where(eq(schema.dietItems.id, dietItem.id));
+
+      // Re-derive the Diet's stored totals from every item it now has,
+      // rather than adjusting the old totals by the swapped item's delta
+      // - matches the derive-at-read-time math diet.mapper.ts's
+      // toDietItemResponse already uses (per-100g values x weight_grams),
+      // summed raw and rounded once, same as greedy-heuristic.ts's
+      // macroTotals/totals split.
+      const itemRows = await tx
+        .select({
+          weightGrams: schema.dietItems.weightGrams,
+          caloriesPer100g: schema.foodCalories.caloriesPer100g,
+          proteinPer100g: schema.foodCalories.proteinPer100g,
+          carbsPer100g: schema.foodCalories.carbsPer100g,
+          fatPer100g: schema.foodCalories.fatPer100g,
+        })
+        .from(schema.dietItems)
+        .innerJoin(
+          schema.foodCalories,
+          eq(schema.foodCalories.id, schema.dietItems.foodItemId),
+        )
+        .where(eq(schema.dietItems.dietId, diet.id));
+
+      const totals = itemRows.reduce(
+        (acc, row) => {
+          const factor = Number(row.weightGrams) / 100;
+          return {
+            calories: acc.calories + Number(row.caloriesPer100g) * factor,
+            protein: acc.protein + Number(row.proteinPer100g) * factor,
+            carbs: acc.carbs + Number(row.carbsPer100g) * factor,
+            fat: acc.fat + Number(row.fatPer100g) * factor,
+          };
+        },
+        { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      );
+
+      const [updated] = await tx
+        .update(schema.diets)
+        .set({
+          totalCalories: Math.round(totals.calories).toString(),
+          totalProtein: Math.round(totals.protein).toString(),
+          totalCarbs: Math.round(totals.carbs).toString(),
+          totalFat: Math.round(totals.fat).toString(),
+        })
+        .where(eq(schema.diets.id, diet.id))
+        .returning();
+
+      return updated;
+    });
+
+    const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
+      where: eq(schema.dietCalculationAlgorithms.id, updatedDiet.algorithmId),
+    });
+    if (!algorithm) {
+      throw new NotFoundException('Calorie algorithm not configured');
+    }
+
+    return this.buildResponse(updatedDiet, algorithm);
   }
 
   private async buildResponse(
