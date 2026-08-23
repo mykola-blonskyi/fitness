@@ -6,12 +6,8 @@ import { ListExercisesDto } from './dto/list-exercises.dto';
 import type { ExerciseResponse } from './exercise.mapper';
 import { ExercisesService } from './exercises.service';
 
-// The catalog itself is shared/global reference data, same as
-// `food_calories` - not scoped to the caller's own rows the way
-// daily-logs or users/me are. list() still needs @CurrentUser() though,
-// unlike food-items' list() - it resolves the caller's own stored locale
-// preference (see exercises.service.ts's resolveLocale()), not a value
-// the client passes in.
+// list() takes @CurrentUser() only to resolve the caller's stored locale
+// preference - the catalog itself is shared/global reference data.
 @Controller('exercises')
 export class ExercisesController {
   constructor(private readonly exercisesService: ExercisesService) {}

@@ -1,18 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { PWA_THEME_COLOR } from '@shared/constants/pwa';
 
-// Special Next.js file convention — served at /manifest.webmanifest,
-// statically generated at build time since nothing here depends on
-// request-time data (see the file-conventions/manifest docs). Root
-// layout's metadata.manifest links to it explicitly (see layout.tsx) so
-// the <link rel="manifest"> tag is guaranteed present regardless of the
-// file convention's own head-injection behavior.
-//
-// Theme/background colors and icon glyph per the ui-ux-pro-max
-// "Fitness/Gym App" palette (energy orange + dark on-primary) - see
-// FITNESS-12. No broader color system is adopted yet (ADR-009 keeps the
-// rest of the UI on raw Tailwind zinc), this is scoped to the installed
-// app's icon/splash presentation only.
+// Root layout's metadata.manifest also links to this explicitly (see
+// layout.tsx) so <link rel="manifest"> is guaranteed present regardless of
+// this file convention's own head-injection behavior.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Fitness',

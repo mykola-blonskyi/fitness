@@ -26,11 +26,8 @@ export const activityLevelEnum = pgEnum('activity_level', [
   'very_active',
 ]);
 
-// User (see knowledge/domain-model.md) — profile fields owned by this
-// project; identity itself belongs to the Hub. id is NOT locally
-// generated — it's always set to the Hub's own user id (also a uuid,
-// confirmed against my-projects/drizzle/schema.ts) so cross-project
-// identity stays aligned, per the Auth spec's decision.
+// id is NOT locally generated — it's always set to the Hub's own user id,
+// so cross-project identity stays aligned.
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   name: text('name').notNull(),
@@ -41,22 +38,13 @@ export const users = pgTable('users', {
   goal: goalEnum('goal').notNull(),
   activityLevel: activityLevelEnum('activity_level').notNull(),
   avatarUrl: text('avatar_url'),
-  // How many meal slots (see mealTypeEnum below - breakfast/lunch/dinner/
-  // snack, in that fixed order) diet generation splits a day's calorie
-  // target across (FITNESS-30). Defaults to 3 (breakfast/lunch/dinner)
-  // so existing rows and the not-yet-built profile UI both get a sane
-  // value without requiring an explicit choice.
+  // How many meal slots (breakfast/lunch/dinner/snack, in that fixed
+  // order) diet generation splits a day's calorie target across.
   mealCount: integer('meal_count').notNull().default(3),
-  // The user's stored UI locale preference (see knowledge/domain-model.md,
-  // FITNESS-17). Deliberately plain text, not a pgEnum, matching
-  // exerciseTranslations.locale/foodCalorieTranslations.locale below -
-  // the fixed set of valid values (en/uk/ru/es) is enforced at the DTO
-  // layer (class-validator @IsIn), same convention as those two tables.
-  // This is what catalog browse endpoints resolve translated names
-  // against - deliberately NOT next-intl's route-based locale segment
-  // (FITNESS-11 hasn't landed; see exercises.service.ts). Defaults to
-  // 'en' so every existing/new profile has a valid value with no
-  // separate backfill migration needed.
+  // Plain text, not a pgEnum, matching exerciseTranslations.locale /
+  // foodCalorieTranslations.locale - valid values enforced at the DTO
+  // layer instead. Deliberately NOT next-intl's route-based locale segment
+  // (FITNESS-11 hasn't landed).
   locale: text('locale').notNull().default('en'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
@@ -66,12 +54,9 @@ export const users = pgTable('users', {
     .defaultNow(),
 });
 
-// Daily Log (see knowledge/glossary.md, docs/decisions.md ADR-004) — the
-// per-(user, date) anchor other daily activity attaches to. weight is
-// nullable by design: no daily activity should require a weigh-in first.
-// The row itself is created lazily on first write against a given date,
-// and never deleted once created — deleting a weight entry just nulls
-// the column so the row stays available for other attachments.
+// weight is nullable by design: no daily activity should require a
+// weigh-in first. The row is created lazily on first write and never
+// deleted - clearing a weight entry just nulls the column.
 export const dailyLogs = pgTable(
   'daily_logs',
   {
@@ -103,12 +88,10 @@ export const exerciseCategoryEnum = pgEnum('exercise_category', [
   'full_body',
 ]);
 
-// Exercise (see knowledge/domain-model.md, knowledge/business-rules.md
-// "Food/exercise data import"). Seeded rows carry `source`/`sourceId` from
-// the external catalog (e.g. 'wger') so a re-run of the import script can
-// upsert idempotently without duplicating; manually created exercises
-// leave both null. is_verified starts false for every seeded row and is
-// flipped by a human reviewer later — never by the import script itself.
+// source/sourceId let a re-run of the import script upsert idempotently
+// without duplicating; manually created exercises leave both null.
+// isVerified starts false for every seeded row and is flipped only by a
+// human reviewer, never by the import script.
 export const exercises = pgTable(
   'exercises',
   {
@@ -126,11 +109,8 @@ export const exercises = pgTable(
   (table) => [unique().on(table.source, table.sourceId)],
 );
 
-// Exercise Translation — per-locale display name for an Exercise. Never
-// created for 'en' (Exercise.name is already the canonical English name).
-// isVerified mirrors Exercise.isVerified's meaning: true only once a human
-// reviewer has confirmed the name, regardless of whether it came from the
-// source API's own translation or a machine-translation fallback.
+// Never created for 'en' - Exercise.name is already the canonical English
+// name. isVerified mirrors Exercise.isVerified's meaning.
 export const exerciseTranslations = pgTable(
   'exercise_translations',
   {
@@ -145,18 +125,11 @@ export const exerciseTranslations = pgTable(
   (table) => [unique().on(table.exerciseId, table.locale)],
 );
 
-// Food Category / Food Subcategory / Food Role (see
-// knowledge/domain-model.md "Food Category / Food Subcategory / Food
-// Role"). Real tables, not enums: Food Preference (a later ticket) needs
-// a stable row id to target polymorphically ("exclude everything in this
-// category"), which a pgEnum can't provide. Rows are fixed and seeded
-// once by seed-food-catalog.ts's upsertTaxonomy() - never created by
-// end-user action. Category and Role are independent classifications
-// (Role is not derived from Category) - see the domain-model note.
+// Real tables, not enums: Food Preference needs a stable row id to target
+// polymorphically ("exclude everything in this category"), which a pgEnum
+// can't provide. Rows are fixed and seeded once by seed-food-catalog.ts.
 export const foodCategories = pgTable('food_categories', {
   id: uuid('id').primaryKey().defaultRandom(),
-  // Fixed set: meat, fish, dairy, vegetables, fruits, grains, legumes,
-  // nuts, oils, eggs
   name: text('name').notNull().unique(),
 });
 
@@ -165,30 +138,17 @@ export const foodSubcategories = pgTable('food_subcategories', {
   categoryId: uuid('category_id')
     .notNull()
     .references(() => foodCategories.id),
-  // Fixed set per category - meat: lean_meat/fatty_meat/processed_meat;
-  // fish: lean_fish/fatty_fish/shellfish; dairy: low_fat_dairy/
-  // full_fat_dairy/fermented_dairy; vegetables: leafy_vegetables/
-  // cruciferous_vegetables/starchy_vegetables/other_vegetables;
-  // fruits: fresh_fruit/dried_fruit; grains: complex_carbs/simple_carbs;
-  // legumes: beans/lentils_and_peas; nuts: tree_nuts/seeds; oils:
-  // healthy_oils/saturated_oils; eggs: whole_eggs/egg_whites
   name: text('name').notNull().unique(),
 });
 
 export const foodRoles = pgTable('food_roles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  // Fixed set: lean_protein, fatty_protein, plant_protein, complex_carb,
-  // simple_carb, vegetable, fruit, healthy_fat, saturated_fat, dairy,
-  // treat
   name: text('name').notNull().unique(),
 });
 
-// Food Item (table name `food_calories` per knowledge/glossary.md).
-// Seeded rows carry source/sourceId so a re-run of the import script can
-// upsert idempotently without duplicating; manually created items leave
-// both null. is_verified starts false for every seeded row, same
-// convention as `exercises`. Macro fields are per-100g so Diet Item can
-// scale by weight_grams (see knowledge/business-rules.md).
+// Food Item (table name `food_calories`). source/sourceId/isVerified follow
+// the same import-idempotency convention as `exercises`. Macro fields are
+// per-100g so Diet Item can scale by weight_grams.
 export const foodCalories = pgTable(
   'food_calories',
   {
@@ -218,9 +178,7 @@ export const foodCalories = pgTable(
   (table) => [unique().on(table.source, table.sourceId)],
 );
 
-// Food Item Translation - per-locale display name for a Food Item. Never
-// created for 'en' (foodCalories.name is already the canonical English
-// name). isVerified mirrors exerciseTranslations' convention.
+// Never created for 'en', same convention as exerciseTranslations.
 export const foodCalorieTranslations = pgTable(
   'food_calorie_translations',
   {
@@ -244,16 +202,11 @@ export const foodPreferenceTargetTypeEnum = pgEnum(
   ['category', 'subcategory', 'role', 'food_item'],
 );
 
-// Food Preference (see knowledge/domain-model.md,
-// knowledge/business-rules.md "Food Preferences target structured
-// entities, not free text"). targetId is deliberately not a real FK —
-// it points at one of four different tables (foodCategories/
-// foodSubcategories/foodRoles/foodCalories) depending on targetType, and
-// Postgres has no polymorphic FK. Existence is validated in
-// food-preferences.service.ts instead. The unique constraint stops a
-// user from declaring the exact same preference twice, not from
-// declaring overlapping ones (e.g. excluding both a category and one of
-// its items) — diet generation treats those as redundant, not invalid.
+// targetId is deliberately not a real FK - it points at one of four
+// different tables depending on targetType, and Postgres has no
+// polymorphic FK. Existence is validated in food-preferences.service.ts
+// instead. The unique constraint stops exact duplicates, not overlapping
+// preferences (e.g. excluding both a category and one of its items).
 export const foodPreferences = pgTable(
   'food_preferences',
   {
@@ -280,10 +233,8 @@ export const dietTypeEnum = pgEnum('diet_type', [
   'paleo',
 ]);
 
-// Diet Preference (see knowledge/domain-model.md). A user may hold
-// several at once (e.g. vegetarian + keto) — each is an independent
-// filter applied during diet generation, not a mutually exclusive
-// single choice.
+// A user may hold several at once (e.g. vegetarian + keto) - each is an
+// independent filter, not a mutually exclusive single choice.
 export const dietPreferences = pgTable(
   'diet_preferences',
   {
@@ -299,12 +250,9 @@ export const dietPreferences = pgTable(
   (table) => [unique().on(table.userId, table.dietType)],
 );
 
-// Diet Calculation Algorithm (see knowledge/domain-model.md,
-// knowledge/business-rules.md "Diet Calculation Algorithm formula is
-// documentation only", docs/decisions.md ADR-010). `formula` is
-// human-readable text for display/audit only — the real calculation is
-// versioned backend code in calorie-targets/algorithm-registry.ts, looked
-// up by `code`. Never parsed or evaluated at runtime.
+// `formula` is human-readable text for display/audit only, never parsed
+// or evaluated at runtime - the real calculation is versioned backend
+// code in calorie-targets/algorithm-registry.ts, looked up by `code`.
 export const dietCalculationAlgorithms = pgTable(
   'diet_calculation_algorithms',
   {
@@ -319,9 +267,6 @@ export const dietCalculationAlgorithms = pgTable(
   },
 );
 
-// Fixed, ordered set of meal slots a generated Diet can use - see
-// users.mealCount above and diets/greedy-heuristic.ts, which always takes
-// the first N of this exact order (breakfast/lunch/dinner/snack).
 export const mealTypeEnum = pgEnum('meal_type', [
   'breakfast',
   'lunch',
@@ -329,15 +274,10 @@ export const mealTypeEnum = pgEnum('meal_type', [
   'snack',
 ]);
 
-// Diet (see knowledge/domain-model.md, knowledge/business-rules.md "Diet
-// menu generation is a greedy heuristic" and "Current diet resolution",
-// docs/decisions.md ADR-010, FITNESS-30). Never updated in place -
-// regenerating always inserts a new row; the current diet for a Daily Log
-// is simply the most recently created one (`ORDER BY created_at DESC
-// LIMIT 1`), resolved in diets.service.ts, not a stored flag.
-// calculationMetadata snapshots the algorithm's raw inputs/outputs at
-// generation time for audit purposes, independent of whether the
-// algorithm's own logic changes later.
+// Never updated in place - regenerating always inserts a new row; the
+// current diet for a Daily Log is just the most recent one (`ORDER BY
+// created_at DESC LIMIT 1`), not a stored flag. calculationMetadata
+// snapshots the algorithm's raw inputs/outputs at generation time.
 export const diets = pgTable('diets', {
   id: uuid('id').primaryKey().defaultRandom(),
   dailyLogId: uuid('daily_log_id')
@@ -356,9 +296,8 @@ export const diets = pgTable('diets', {
     .defaultNow(),
 });
 
-// Diet Item (see knowledge/domain-model.md). orderIndex is scoped within
-// its own mealType (0-based), not across the whole Diet - matches
-// programExercises' ordering convention for a list a UI renders in order.
+// orderIndex is scoped within its own mealType (0-based), not across the
+// whole Diet.
 export const dietItems = pgTable('diet_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   dietId: uuid('diet_id')

@@ -21,16 +21,14 @@ function assertValidDate(date: string): void {
 }
 
 // Every route here operates on the caller's own Diets only, scoped by
-// :date under their own user id from the trusted identity headers - same
-// convention as daily-logs.controller.ts.
+// :date under their own user id from the trusted identity headers.
 @Controller('diets')
 export class DietsController {
   constructor(private readonly dietsService: DietsService) {}
 
-  // Always an explicit trigger (see knowledge/business-rules.md "Diet
-  // regeneration is always manual") - never called as a side effect of
-  // logging weight or changing preferences. Regenerating inserts a new
-  // Diet row rather than editing the previous one.
+  // Always an explicit trigger, never a side effect of logging weight or
+  // changing preferences. Inserts a new Diet row rather than editing the
+  // previous one.
   @Post(':date/generate')
   async generate(
     @CurrentUser() identity: Identity,
@@ -40,8 +38,7 @@ export class DietsController {
     return this.dietsService.generate(identity.hubUserId, date);
   }
 
-  // "Today's menu" - the most recently created Diet for this date's Daily
-  // Log (knowledge/business-rules.md "Current diet resolution").
+  // "Today's menu" - the most recently created Diet for this date's Daily Log.
   @Get(':date/current')
   async getCurrent(
     @CurrentUser() identity: Identity,
@@ -51,13 +48,8 @@ export class DietsController {
     return this.dietsService.findCurrent(identity.hubUserId, date);
   }
 
-  // Swaps one Diet Item for another Food Item sharing the same Food Role
-  // (FITNESS-31) - rejected if the replacement violates an active Food or
-  // Diet Preference. Updates the Diet's stored totals in place; unlike
-  // generate(), this edits the existing Diet row rather than inserting a
-  // new one, since a swap is a correction to the current menu, not a
-  // regeneration (knowledge/business-rules.md "Diet regeneration is
-  // always manual" governs full regeneration, not per-item edits).
+  // Unlike generate(), this edits the existing Diet row in place rather
+  // than inserting a new one - a swap is a correction, not a regeneration.
   @Post(':dietId/items/:itemId/swap')
   async swapItem(
     @CurrentUser() identity: Identity,

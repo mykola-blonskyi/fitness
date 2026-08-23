@@ -23,17 +23,14 @@ export const metadata: Metadata = {
   title: 'Fitness',
   description: 'fitness.blonskyi.dev',
   // Explicit link, in addition to app/manifest.ts's own file-convention
-  // head injection - see manifest.ts's comment (FITNESS-12).
+  // head injection - see manifest.ts.
   manifest: '/manifest.webmanifest',
   icons: {
     apple: '/apple-touch-icon.png',
   },
 };
 
-// theme-color is a viewport concern, not metadata, as of Next 14+ - see
-// the generateViewport docs (FITNESS-12: shares PWA_THEME_COLOR with
-// manifest.ts's theme_color so the browser chrome/status bar and the
-// installed app icon can't drift out of sync).
+// theme-color is a viewport concern, not metadata, as of Next 14+.
 export const viewport: Viewport = {
   themeColor: PWA_THEME_COLOR,
 };
@@ -42,17 +39,11 @@ export async function generateStaticParams() {
   return SUPPORTED_LOCALES.map((locale) => ({ locale }));
 }
 
-// Kept alongside the explicit check below (not a replacement for it) -
-// this protects statically-generated routes (e.g. /onboarding, /health,
-// neither of which calls apiFetch/headers() on initial render) for free.
-// It does NOT reliably protect genuinely dynamic routes like / and
-// /diary, which call apiFetch() -> headers(), forcing dynamic (SSR)
-// rendering - dynamicParams' NOT_FOUND fallback is fundamentally a
-// static-generation-time concept and empirically does not apply to
-// those. Confirmed live: a bot probing /wp-login.php (any single-segment
-// path not otherwise routed, matching [locale]="wp-login.php") rendered
-// the full page tree and crashed with a 500 instead of 404ing, despite
-// this flag being set - see docs/decisions.md.
+// Kept alongside the explicit check below, not as a replacement for it:
+// this only 404s statically-generated routes. Dynamic routes (/, /diary)
+// force SSR via apiFetch() -> headers(), and dynamicParams' NOT_FOUND
+// fallback empirically does not apply to those - confirmed live via a bot
+// probing /wp-login.php, which 500'd instead of 404ing despite this flag.
 export const dynamicParams = false;
 
 export default async function RootLayout({

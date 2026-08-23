@@ -7,11 +7,8 @@ export const ACTIVITY_LEVELS = [
   'active',
   'very_active',
 ] as const;
-// Matches backend/src/users/dto/create-user.dto.ts's LOCALES - the
-// user's stored UI locale preference (see knowledge/domain-model.md,
-// FITNESS-17), used to resolve catalog translation names server-side.
-// Deliberately not next-intl's route-based locale segment - FITNESS-11
-// hasn't landed yet.
+// Matches backend/src/users/dto/create-user.dto.ts's LOCALES. Deliberately
+// not next-intl's route-based locale segment - FITNESS-11 hasn't landed yet.
 export const LOCALES = ['en', 'uk', 'ru', 'es'] as const;
 
 export type Gender = (typeof GENDERS)[number];
@@ -35,7 +32,3 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
 }
-
-// UserProfileInput was replaced by z.infer<typeof userProfileSchema> in
-// shared/schemas/user-profile.ts - shape and validation now live in one
-// place instead of two.
