@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { OfflineIndicator } from '@shared/ui/components/OfflineIndicator';
 
 interface HeaderProps {
   locale: string;
-  identity: { name: string; email: string };
+  identity: { userId: string; name: string; email: string };
 }
 
 // See docs/decisions.md ADR-007 for why this is a nav menu, not a
@@ -63,12 +64,15 @@ export function Header({ locale, identity }: HeaderProps) {
           </Link>
         </nav>
 
-        {/* Identity only - no dropdown, no settings link (already in
-            nav above), no sign-out (the Hub has no public logout URL to
-            delegate to - see ADR-007's Consequences). */}
-        <span className="text-sm text-zinc-500">
-          {identity.name || identity.email}
-        </span>
+        <div className="flex items-center gap-4">
+          <OfflineIndicator userId={identity.userId} />
+          {/* Identity only - no dropdown, no settings link (already in
+              nav above), no sign-out (the Hub has no public logout URL
+              to delegate to - see ADR-007's Consequences). */}
+          <span className="text-sm text-zinc-500">
+            {identity.name || identity.email}
+          </span>
+        </div>
       </div>
     </header>
   );

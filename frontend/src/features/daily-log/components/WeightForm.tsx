@@ -1,14 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { weightSchema, type WeightInput } from '@shared/schemas/weight';
 import { FieldError } from '@shared/ui/components/FieldError';
-import {
-  clearWeight,
-  setWeight,
-  type DailyLog,
-} from '@features/daily-log/actions';
+import { clearWeight, type DailyLog } from '@features/daily-log/actions';
+import { syncedSetWeight } from '@features/daily-log/offline';
 
 export function WeightForm({
   date,
@@ -17,6 +15,11 @@ export function WeightForm({
   date: string;
   dailyLog: DailyLog | null;
 }) {
+  // Set (not replaced) when a submit gets queued instead of saved
+  // immediately (FITNESS-13) - cleared on the next submit attempt so it
+  // never lingers past a subsequent successful/errored save.
+  const [queued, setQueued] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -32,7 +35,17 @@ export function WeightForm({
   });
 
   async function onSubmit(input: WeightInput) {
-    const result = await setWeight(date, input);
+    setQueued(false);
+    const outcome = await syncedSetWeight({ date, input });
+    if (outcome.queued) {
+      // Offline (or the request just failed on the network) - the
+      // write is safely in IndexedDB and will flush automatically once
+      // connectivity returns (see OfflineIndicator in the header for
+      // sync status), not lost.
+      setQueued(true);
+      return;
+    }
+    const { result } = outcome;
     if (result.error) {
       setError('root', { message: result.error });
     }
@@ -71,6 +84,12 @@ export function WeightForm({
       </form>
 
       <FieldError message={errors.root?.message} />
+
+      {queued && (
+        <p className="text-sm text-zinc-500" role="status">
+          Saved offline — will sync automatically once you&apos;re back online.
+        </p>
+      )}
 
       {dailyLog?.weight != null && (
         <form action={clearWeight.bind(null, date)}>
