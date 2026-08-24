@@ -1,7 +1,6 @@
 import type { FieldValues, Path, UseFormSetError } from 'react-hook-form';
 import type { FormActionError } from './form-action';
 
-// Maps a submitFormAction-shaped result onto react-hook-form's setError.
 // Returns whether an error was applied, so callers can gate their own
 // success path (reset, a "saved" flag, etc.) on it.
 export function applyFormActionError<TInput extends FieldValues>(
