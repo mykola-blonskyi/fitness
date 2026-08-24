@@ -103,6 +103,19 @@ Relationships:
 
 ---
 
+### User Active Program
+
+Responsibilities:
+
+A plain many-to-many join marking which of a user's Training Programs are currently active. Independent of `Training Program.is_archived` — see Business Rules: multiple concurrent active programs.
+
+Relationships:
+
+- many_to_one User
+- many_to_one Training Program
+
+---
+
 ### Program Exercise
 
 Responsibilities:

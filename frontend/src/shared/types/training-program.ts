@@ -19,5 +19,6 @@ export interface TrainingProgram {
   id: string;
   title: string;
   isArchived: boolean;
+  isActive: boolean;
   exercises: ProgramExercise[];
 }

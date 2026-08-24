@@ -125,9 +125,9 @@ export const exerciseTranslations = pgTable(
   (table) => [unique().on(table.exerciseId, table.locale)],
 );
 
-// Training Program (see knowledge/domain-model.md). Archiving is a plain
-// boolean, not the separate UserActiveProgram concept - multiple programs
-// may be active for a user at once.
+// Training Program (see knowledge/domain-model.md). isArchived and "active"
+// (userActivePrograms below) are independent axes - a program can be
+// non-archived and inactive at the same time, e.g. right after creation.
 export const trainingPrograms = pgTable('training_programs', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
@@ -142,6 +142,26 @@ export const trainingPrograms = pgTable('training_programs', {
     .notNull()
     .defaultNow(),
 });
+
+// A user's currently-active Training Programs (many-to-many, see
+// knowledge/domain-model.md). userId is redundant with the FK chain through
+// trainingProgramId, kept anyway to match foodPreferences/dietPreferences.
+export const userActivePrograms = pgTable(
+  'user_active_programs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    trainingProgramId: uuid('training_program_id')
+      .notNull()
+      .references(() => trainingPrograms.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [unique().on(table.userId, table.trainingProgramId)],
+);
 
 // Program Exercise. Exactly one of (targetSets + targetReps) or
 // targetDurationSeconds is set, depending on the exercise's category -
