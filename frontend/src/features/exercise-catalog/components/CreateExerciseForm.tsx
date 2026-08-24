@@ -1,7 +1,5 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createExerciseSchema,
   type CreateExerciseInput,
@@ -11,6 +9,8 @@ import {
   EXERCISE_CATEGORY_LABELS,
 } from '@shared/types/exercise';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createExercise } from '@features/exercise-catalog/actions';
 
 export function CreateExerciseForm() {
@@ -20,25 +20,11 @@ export function CreateExerciseForm() {
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<CreateExerciseInput>({
-    resolver: zodResolver(createExerciseSchema),
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
-  });
+  } = useZodForm(createExerciseSchema);
 
   async function onSubmit(input: CreateExerciseInput) {
     const result = await createExercise(input);
-    if (result.error) {
-      setError('root', { message: result.error });
-      return;
-    }
-    if (result.fieldErrors) {
-      for (const [field, message] of Object.entries(result.fieldErrors)) {
-        setError(field as keyof CreateExerciseInput, { message });
-      }
-      return;
-    }
-    reset();
+    if (!applyFormActionError(setError, result)) reset();
   }
 
   return (

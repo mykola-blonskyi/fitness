@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createFoodPreferenceSchema,
   type CreateFoodPreferenceInput,
 } from '@shared/schemas/preferences';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createFoodPreference } from '@features/preferences/actions';
 import type { FoodTaxonomy } from '@features/food-catalog/actions';
 
@@ -26,11 +26,7 @@ export function AddFoodPreferenceForm({
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<CreateFoodPreferenceInput>({
-    resolver: zodResolver(createFoodPreferenceSchema),
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
-  });
+  } = useZodForm(createFoodPreferenceSchema);
 
   // Only one of the four targetId selects below is ever mounted at a
   // time - switching targetType must clear a stale selection from the
@@ -65,17 +61,7 @@ export function AddFoodPreferenceForm({
 
   async function onSubmit(input: CreateFoodPreferenceInput) {
     const result = await createFoodPreference(input);
-    if (result.error) {
-      setError('root', { message: result.error });
-      return;
-    }
-    if (result.fieldErrors) {
-      for (const [field, message] of Object.entries(result.fieldErrors)) {
-        setError(field as keyof CreateFoodPreferenceInput, { message });
-      }
-      return;
-    }
-    reset();
+    if (!applyFormActionError(setError, result)) reset();
   }
 
   return (

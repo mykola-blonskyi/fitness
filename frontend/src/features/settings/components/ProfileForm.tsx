@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   userProfileSchema,
   type UserProfileInput,
@@ -10,6 +8,8 @@ import {
 import type { UserProfile } from '@shared/types/user';
 import { ProfileFields } from '@shared/ui/components/ProfileFields';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { updateProfile } from '@features/settings/actions';
 
 export function ProfileForm({ profile }: { profile: UserProfile }) {
@@ -19,8 +19,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<UserProfileInput>({
-    resolver: zodResolver(userProfileSchema),
+  } = useZodForm<UserProfileInput>(userProfileSchema, {
     defaultValues: {
       name: profile.name,
       gender: profile.gender,
@@ -30,22 +29,12 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       activityLevel: profile.activityLevel,
       locale: profile.locale,
     },
-    // Real-time field validation (on-blur, then on every change once a
-    // field has an error) - react-hook-form defaults to submit-only.
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
   });
 
   async function onSubmit(input: UserProfileInput) {
     setSaved(false);
     const result = await updateProfile(input);
-    if (result.error) {
-      setError('root', { message: result.error });
-    }
-    for (const [field, message] of Object.entries(result.fieldErrors ?? {})) {
-      setError(field as keyof UserProfileInput, { message });
-    }
-    if (result.success) setSaved(true);
+    if (!applyFormActionError(setError, result)) setSaved(true);
   }
 
   return (

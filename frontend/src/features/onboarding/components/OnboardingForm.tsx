@@ -1,13 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   userProfileSchema,
   type UserProfileInput,
 } from '@shared/schemas/user-profile';
 import { ProfileFields } from '@shared/ui/components/ProfileFields';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { completeOnboarding } from '@features/onboarding/actions';
 
 export function OnboardingForm() {
@@ -16,23 +16,12 @@ export function OnboardingForm() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<UserProfileInput>({
-    resolver: zodResolver(userProfileSchema),
-    // Real-time field validation (on-blur, then on every change once a
-    // field has an error) - react-hook-form defaults to submit-only.
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
-  });
+  } = useZodForm(userProfileSchema);
 
   async function onSubmit(input: UserProfileInput) {
     const result = await completeOnboarding(input);
     if (!result) return; // success - completeOnboarding already redirected
-    if (result.error) {
-      setError('root', { message: result.error });
-    }
-    for (const [field, message] of Object.entries(result.fieldErrors ?? {})) {
-      setError(field as keyof UserProfileInput, { message });
-    }
+    applyFormActionError(setError, result);
   }
 
   return (

@@ -12,6 +12,7 @@ import {
   type DietType,
 } from '@shared/types/preferences';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createDietPreference } from '@features/preferences/actions';
 
 export function AddDietPreferenceForm({
@@ -35,17 +36,7 @@ export function AddDietPreferenceForm({
 
   async function onSubmit(input: CreateDietPreferenceInput) {
     const result = await createDietPreference(input);
-    if (result.error) {
-      setError('root', { message: result.error });
-      return;
-    }
-    if (result.fieldErrors) {
-      for (const [field, message] of Object.entries(result.fieldErrors)) {
-        setError(field as keyof CreateDietPreferenceInput, { message });
-      }
-      return;
-    }
-    reset();
+    if (!applyFormActionError(setError, result)) reset();
   }
 
   if (options.length === 0) return null;

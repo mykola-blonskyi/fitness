@@ -1,13 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   addProgramExerciseSchema,
   type AddProgramExerciseInput,
 } from '@shared/schemas/training-program';
 import type { Exercise } from '@shared/types/exercise';
 import { FieldError } from '@shared/ui/components/FieldError';
+import { useZodForm } from '@shared/libs/use-zod-form';
+import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { addProgramExercise } from '@features/training-programs/actions';
 
 // Renders only the target fields for the selected exercise's category
@@ -27,11 +27,7 @@ export function AddProgramExerciseForm({
     watch,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<AddProgramExerciseInput>({
-    resolver: zodResolver(addProgramExerciseSchema),
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
-  });
+  } = useZodForm(addProgramExerciseSchema);
 
   const selectedExerciseId = watch('exerciseId');
   const selectedExercise = exercises.find(
@@ -46,17 +42,7 @@ export function AddProgramExerciseForm({
         ? { targetDurationSeconds: input.targetDurationSeconds }
         : { targetSets: input.targetSets, targetReps: input.targetReps }),
     });
-    if (result.error) {
-      setError('root', { message: result.error });
-      return;
-    }
-    if (result.fieldErrors) {
-      for (const [field, message] of Object.entries(result.fieldErrors)) {
-        setError(field as keyof AddProgramExerciseInput, { message });
-      }
-      return;
-    }
-    reset();
+    if (!applyFormActionError(setError, result)) reset();
   }
 
   if (exercises.length === 0) {
