@@ -35,6 +35,7 @@ export interface TrainingProgramResponse {
   id: string;
   title: string;
   isArchived: boolean;
+  isActive: boolean;
   exercises: ProgramExerciseResponse[];
 }
 
@@ -57,11 +58,13 @@ export function toProgramExerciseResponse(
 export function toTrainingProgramResponse(
   program: TrainingProgramRow,
   exerciseRows: ProgramExerciseRow[],
+  isActive: boolean,
 ): TrainingProgramResponse {
   return {
     id: program.id,
     title: program.title,
     isArchived: program.isArchived,
+    isActive,
     exercises: exerciseRows.map(toProgramExerciseResponse),
   };
 }

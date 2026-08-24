@@ -131,11 +131,11 @@ export async function moveProgramExercise(
   );
 }
 
-// Shared by archive/reactivateTrainingProgram - only the endpoint segment
-// and Sentry action name differ.
-async function setProgramArchived(
+// Shared by archive/reactivate/activate/deactivateTrainingProgram - only
+// the endpoint segment and Sentry action name differ.
+async function patchProgramStatus(
   programId: string,
-  action: 'archive' | 'reactivate',
+  action: 'archive' | 'reactivate' | 'activate' | 'deactivate',
 ): Promise<void> {
   return Sentry.withServerActionInstrumentation(
     `${action}TrainingProgram`,
@@ -152,11 +152,23 @@ async function setProgramArchived(
 }
 
 export async function archiveTrainingProgram(programId: string): Promise<void> {
-  return setProgramArchived(programId, 'archive');
+  return patchProgramStatus(programId, 'archive');
 }
 
 export async function reactivateTrainingProgram(
   programId: string,
 ): Promise<void> {
-  return setProgramArchived(programId, 'reactivate');
+  return patchProgramStatus(programId, 'reactivate');
+}
+
+export async function activateTrainingProgram(
+  programId: string,
+): Promise<void> {
+  return patchProgramStatus(programId, 'activate');
+}
+
+export async function deactivateTrainingProgram(
+  programId: string,
+): Promise<void> {
+  return patchProgramStatus(programId, 'deactivate');
 }

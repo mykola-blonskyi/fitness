@@ -42,7 +42,7 @@ export class TrainingProgramsService {
   // Same as getOwnedProgram, but also rejects archived programs - only
   // used by the three routes that mutate the exercise list, since reading
   // or reactivating an archived program must still work.
-  private async getOwnedActiveProgram(userId: string, programId: string) {
+  private async getOwnedUnarchivedProgram(userId: string, programId: string) {
     const program = await this.getOwnedProgram(userId, programId);
     if (program.isArchived) {
       throw new BadRequestException(
@@ -50,6 +50,30 @@ export class TrainingProgramsService {
       );
     }
     return program;
+  }
+
+  // Which of the given program ids are currently active for this user.
+  // Scoped by userId (redundant with the FK chain through
+  // trainingPrograms.userId) so callers don't need a second join just to
+  // read active status.
+  private async getActiveProgramIds(
+    userId: string,
+    programIds: string[],
+  ): Promise<Set<string>> {
+    if (programIds.length === 0) return new Set();
+
+    const rows = await this.db
+      .select({
+        trainingProgramId: schema.userActivePrograms.trainingProgramId,
+      })
+      .from(schema.userActivePrograms)
+      .where(
+        and(
+          eq(schema.userActivePrograms.userId, userId),
+          inArray(schema.userActivePrograms.trainingProgramId, programIds),
+        ),
+      );
+    return new Set(rows.map((row) => row.trainingProgramId));
   }
 
   // One joined query for the given program(s), optionally narrowed to a
@@ -100,22 +124,28 @@ export class TrainingProgramsService {
     });
     if (programs.length === 0) return [];
 
-    const exerciseRows = await this.fetchProgramExercises(
-      programs.map((program) => program.id),
-    );
+    const programIds = programs.map((program) => program.id);
+    const [exerciseRows, activeIds] = await Promise.all([
+      this.fetchProgramExercises(programIds),
+      this.getActiveProgramIds(userId, programIds),
+    ]);
 
     return programs.map((program) =>
       toTrainingProgramResponse(
         program,
         exerciseRows.filter((row) => row.trainingProgramId === program.id),
+        activeIds.has(program.id),
       ),
     );
   }
 
   async findOne(userId: string, id: string): Promise<TrainingProgramResponse> {
     const program = await this.getOwnedProgram(userId, id);
-    const exerciseRows = await this.fetchProgramExercises([id]);
-    return toTrainingProgramResponse(program, exerciseRows);
+    const [exerciseRows, activeIds] = await Promise.all([
+      this.fetchProgramExercises([id]),
+      this.getActiveProgramIds(userId, [id]),
+    ]);
+    return toTrainingProgramResponse(program, exerciseRows, activeIds.has(id));
   }
 
   async create(
@@ -127,7 +157,10 @@ export class TrainingProgramsService {
       .values({ userId, title: dto.title })
       .returning();
 
-    return toTrainingProgramResponse(inserted, []);
+    // Starts inactive, same as isArchived starting false - activating is a
+    // separate, explicit step so a program under construction doesn't show
+    // up as "currently active" before it has any exercises.
+    return toTrainingProgramResponse(inserted, [], false);
   }
 
   // orderIndex is server-assigned (never client-supplied) as max(existing)
@@ -138,7 +171,7 @@ export class TrainingProgramsService {
     programId: string,
     dto: AddProgramExerciseDto,
   ): Promise<ProgramExerciseResponse> {
-    await this.getOwnedActiveProgram(userId, programId);
+    await this.getOwnedUnarchivedProgram(userId, programId);
 
     const exercise = await this.db.query.exercises.findFirst({
       where: eq(schema.exercises.id, dto.exerciseId),
@@ -188,7 +221,7 @@ export class TrainingProgramsService {
     programId: string,
     programExerciseId: string,
   ): Promise<ProgramExerciseResponse> {
-    await this.getOwnedActiveProgram(userId, programId);
+    await this.getOwnedUnarchivedProgram(userId, programId);
 
     const [target] = await this.fetchProgramExercises(
       [programId],
@@ -213,7 +246,7 @@ export class TrainingProgramsService {
     programId: string,
     dto: ReorderProgramExercisesDto,
   ): Promise<TrainingProgramResponse> {
-    await this.getOwnedActiveProgram(userId, programId);
+    await this.getOwnedUnarchivedProgram(userId, programId);
 
     const existing = await this.db
       .select({ id: schema.programExercises.id })
@@ -251,6 +284,20 @@ export class TrainingProgramsService {
   ): Promise<TrainingProgramResponse> {
     await this.getOwnedProgram(userId, programId);
 
+    if (isArchived) {
+      // Archiving also drops active status - an archived program is frozen
+      // from edits, so it can't stay "currently active". Reactivating
+      // (unarchiving) does NOT restore it; the user re-activates explicitly.
+      await this.db
+        .delete(schema.userActivePrograms)
+        .where(
+          and(
+            eq(schema.userActivePrograms.userId, userId),
+            eq(schema.userActivePrograms.trainingProgramId, programId),
+          ),
+        );
+    }
+
     const [updated] = await this.db
       .update(schema.trainingPrograms)
       .set({ isArchived, updatedAt: new Date() })
@@ -258,7 +305,12 @@ export class TrainingProgramsService {
       .returning();
 
     const exerciseRows = await this.fetchProgramExercises([programId]);
-    return toTrainingProgramResponse(updated, exerciseRows);
+    const activeIds = await this.getActiveProgramIds(userId, [programId]);
+    return toTrainingProgramResponse(
+      updated,
+      exerciseRows,
+      activeIds.has(programId),
+    );
   }
 
   async archive(userId: string, programId: string) {
@@ -267,5 +319,42 @@ export class TrainingProgramsService {
 
   async reactivate(userId: string, programId: string) {
     return this.setArchived(userId, programId, false);
+  }
+
+  async activate(
+    userId: string,
+    programId: string,
+  ): Promise<TrainingProgramResponse> {
+    await this.getOwnedUnarchivedProgram(userId, programId);
+
+    await this.db
+      .insert(schema.userActivePrograms)
+      .values({ userId, trainingProgramId: programId })
+      .onConflictDoNothing({
+        target: [
+          schema.userActivePrograms.userId,
+          schema.userActivePrograms.trainingProgramId,
+        ],
+      });
+
+    return this.findOne(userId, programId);
+  }
+
+  async deactivate(
+    userId: string,
+    programId: string,
+  ): Promise<TrainingProgramResponse> {
+    await this.getOwnedProgram(userId, programId);
+
+    await this.db
+      .delete(schema.userActivePrograms)
+      .where(
+        and(
+          eq(schema.userActivePrograms.userId, userId),
+          eq(schema.userActivePrograms.trainingProgramId, programId),
+        ),
+      );
+
+    return this.findOne(userId, programId);
   }
 }

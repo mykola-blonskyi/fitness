@@ -27,7 +27,7 @@ export class TrainingProgramsController {
     private readonly trainingProgramsService: TrainingProgramsService,
   ) {}
 
-  // Returns both active and archived programs - the frontend splits them
+  // Returns both archived and unarchived programs - the frontend splits them
   // into sections so a user can find something to reactivate.
   @Get()
   async list(
@@ -105,5 +105,22 @@ export class TrainingProgramsController {
     @Param('id') id: string,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.reactivate(identity.hubUserId, id);
+  }
+
+  // isActive is independent of isArchived - see schema.ts's trainingPrograms.
+  @Patch(':id/activate')
+  async activate(
+    @CurrentUser() identity: Identity,
+    @Param('id') id: string,
+  ): Promise<TrainingProgramResponse> {
+    return this.trainingProgramsService.activate(identity.hubUserId, id);
+  }
+
+  @Patch(':id/deactivate')
+  async deactivate(
+    @CurrentUser() identity: Identity,
+    @Param('id') id: string,
+  ): Promise<TrainingProgramResponse> {
+    return this.trainingProgramsService.deactivate(identity.hubUserId, id);
   }
 }
