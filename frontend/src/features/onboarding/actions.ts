@@ -1,6 +1,7 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { apiFetch } from '@libs/api-client';
 import {
   userProfileSchema,
@@ -39,9 +40,9 @@ export async function completeOnboarding(
 
   if (result) return result;
 
-  // TODO(FITNESS-11): locale-aware redirect once next-intl lands.
   // Outside submitFormAction's instrumentation callback - redirect() works
   // by throwing, and doing that inside withServerActionInstrumentation
   // would report it to Sentry as a real error.
-  redirect('/en');
+  const locale = await getLocale();
+  redirect({ href: '/', locale });
 }

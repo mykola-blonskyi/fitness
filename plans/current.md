@@ -45,7 +45,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 ## Phase 5 — Polish & deploy
 
-- [ ] next-intl for UI chrome (en/uk/ru/es) (FITNESS-11, not started)
+- [x] next-intl for UI chrome (en/uk/ru/es) (FITNESS-11)
 - [x] PWA manifest + service worker offline caching (FITNESS-12)
 - [x] Generic IndexedDB offline write-queue + sync + offline/syncing/synced indicator, reusable by any feature's write endpoint; wired up to the daily-log weight entry Server Action as the concrete example (FITNESS-13)
 - [x] Coolify/Docker Compose deployment, CI/CD gates (lint, prettier, tests, migration-before-deploy) — live at fitness.blonskyi.dev (FITNESS-8)

@@ -1,19 +1,27 @@
+import { cookies } from 'next/headers';
 import type { MetadataRoute } from 'next';
+import { hasLocale } from 'next-intl';
 import { PWA_THEME_COLOR } from '@shared/constants/pwa';
+import { routing } from '@/i18n/routing';
 
 // Root layout's metadata.manifest also links to this explicitly (see
 // layout.tsx) so <link rel="manifest"> is guaranteed present regardless of
 // this file convention's own head-injection behavior.
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  // cookies() makes this route dynamic (opts out of the default static
+  // caching for metadata files) - needed since start_url must match
+  // whichever locale the user is actually on when they install the PWA.
+  const saved = (await cookies()).get('NEXT_LOCALE')?.value;
+  const locale = hasLocale(routing.locales, saved)
+    ? saved
+    : routing.defaultLocale;
+
   return {
     name: 'Fitness',
     short_name: 'Fitness',
     description:
       'Training, diet, and body-weight tracking — fitness.blonskyi.dev',
-    // TODO(FITNESS-11): once next-intl routing lands, resolve this to the
-    // user's detected/saved locale instead of the hardcoded "en"
-    // placeholder (mirrors the same TODO in src/proxy.ts).
-    start_url: '/en',
+    start_url: `/${locale}`,
     scope: '/',
     display: 'standalone',
     background_color: '#ffffff',
