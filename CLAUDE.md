@@ -19,6 +19,19 @@ Common commands (run from repo root):
 
 The intended stack (Next.js frontend, NestJS backend, Drizzle/Postgres, Redis, MinIO, a Python/FastAPI photo-analysis worker) is documented in `docs/architecture.md` — read that before touching architecture, since key decisions (e.g. NestJS owns the database, not Next.js Server Actions) are already settled in `docs/decisions.md`.
 
+## Code Comments
+
+The global default already applies here (no comments unless the WHY is genuinely non-obvious) — this section exists because that default got over-applied in practice, not because the rule changed. Concretely, on 2026-08-23 five tickets built in parallel each independently wrote a paragraph-style rationale comment on nearly every field/function (schema.ts alone reached 101 comment-lines in 376), which then needed a separate cleanup pass (PRs #26, #27) to fix.
+
+Before writing a comment, ask: would removing it leave a future reader confused? If no, don't write it. In particular:
+
+- Don't narrate the ticket/AC ("per FITNESS-N's acceptance criteria...") — that belongs in the PR description, not the code.
+- Don't restate what the code already says (a well-named field or function doesn't need a sentence repeating its name).
+- Don't explain routine framework/library usage.
+- Do keep: a hidden constraint, a workaround for a specific bug/quirk, or a design decision whose reasoning isn't derivable from the code itself — and keep it to one or two lines, not a paragraph.
+
+When dispatching a subagent to implement a ticket in this repo, restate this constraint explicitly in the prompt — don't assume the subagent will infer it from this file alone.
+
 ## Source of Truth
 
 Before making architectural or implementation decisions, review:
