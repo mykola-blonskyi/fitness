@@ -1,10 +1,12 @@
 import Image from 'next/image';
 import { CreateExerciseForm } from '@features/exercise-catalog';
+import { unapproveExercise } from '@features/admin-exercises/actions';
 import type { Exercise } from '@shared/types/exercise';
 import {
   EXERCISE_CATEGORIES,
   EXERCISE_CATEGORY_LABELS,
 } from '@shared/types/exercise';
+import type { UserProfile } from '@shared/types/user';
 import { apiFetch } from '@libs/api-client';
 
 // Filtering is a plain GET <form> below - no client JS needed. Native
@@ -29,9 +31,10 @@ export default async function ExerciseCatalogPage({
   if (search) query.set('search', search);
   const queryString = query.toString();
 
-  const exercises = await apiFetch<Exercise[]>(
-    `/exercises${queryString ? `?${queryString}` : ''}`,
-  );
+  const [exercises, profile] = await Promise.all([
+    apiFetch<Exercise[]>(`/exercises${queryString ? `?${queryString}` : ''}`),
+    apiFetch<UserProfile>('/users/me'),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-16">
@@ -87,6 +90,7 @@ export default async function ExerciseCatalogPage({
               <th className="py-2 pr-4">Name</th>
               <th className="py-2 pr-4">Category</th>
               <th className="py-2 pr-4">Verified</th>
+              {profile.isAdmin && <th className="py-2 pr-4" />}
             </tr>
           </thead>
           <tbody>
@@ -118,6 +122,20 @@ export default async function ExerciseCatalogPage({
                 <td className="py-2 pr-4">
                   {exercise.isVerified ? 'Yes' : 'No'}
                 </td>
+                {profile.isAdmin && (
+                  <td className="py-2 pr-4">
+                    {exercise.isVerified && (
+                      <form action={unapproveExercise.bind(null, exercise.id)}>
+                        <button
+                          type="submit"
+                          className="text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                        >
+                          Unapprove
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

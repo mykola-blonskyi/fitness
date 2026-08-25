@@ -5,7 +5,7 @@ import { LanguageSwitcher } from '@shared/ui/components/LanguageSwitcher';
 
 interface HeaderProps {
   locale: string;
-  identity: { userId: string; name: string; email: string };
+  identity: { userId: string; name: string; email: string; isAdmin: boolean };
 }
 
 // See docs/decisions.md ADR-007 for why this is a nav menu, not a
@@ -15,7 +15,8 @@ interface HeaderProps {
 // within. Nav items are scoped to only what's actually built today
 // (Diary, Training, Workouts, Exercises, Food, Diet, Settings) - add one line here
 // each time a new section ships its first real page, per ADR-007's
-// Consequences.
+// Consequences. Admin is the one exception - conditionally rendered,
+// not a section every user sees.
 export function Header({ locale, identity }: HeaderProps) {
   const t = useTranslations('Header');
 
@@ -79,6 +80,14 @@ export function Header({ locale, identity }: HeaderProps) {
           >
             {t('nav.settings')}
           </Link>
+          {identity.isAdmin && (
+            <Link
+              href={`/${locale}/admin/exercises`}
+              className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+            >
+              {t('nav.admin')}
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-4">

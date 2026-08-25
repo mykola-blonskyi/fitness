@@ -8,7 +8,8 @@
       "exercises": "Вправи",
       "food": "Їжа",
       "diet": "Раціон",
-      "settings": "Налаштування"
+      "settings": "Налаштування",
+      "admin": "Адміністрування"
     }
   },
   "LanguageSwitcher": {
