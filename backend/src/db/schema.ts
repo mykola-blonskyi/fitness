@@ -183,6 +183,52 @@ export const programExercises = pgTable('program_exercises', {
     .defaultNow(),
 });
 
+// A completed (or in-progress) training session. trainingProgramId is
+// nullable for ad hoc workouts, and title is copied from the program at
+// start time rather than joined live - so later renaming/archiving the
+// program never changes what an already-logged Workout Log displays. No
+// userId column, same as `diets` - ownership is verified by joining
+// through dailyLogId.
+export const workoutLogs = pgTable('workout_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  dailyLogId: uuid('daily_log_id')
+    .notNull()
+    .references(() => dailyLogs.id),
+  trainingProgramId: uuid('training_program_id').references(
+    () => trainingPrograms.id,
+  ),
+  title: text('title').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// One logged set. exerciseId references the Exercise catalog directly,
+// never a Program Exercise row - so removing/reordering a program's
+// exercises can't affect a set already logged against this Exercise.
+// Exactly one of (weight + reps) or durationSeconds is set, depending on
+// the exercise's category - enforced in workout-set-values.ts, same
+// pattern as programExercises' targets, not a DB CHECK constraint.
+export const workoutSets = pgTable('workout_sets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workoutLogId: uuid('workout_log_id')
+    .notNull()
+    .references(() => workoutLogs.id),
+  exerciseId: uuid('exercise_id')
+    .notNull()
+    .references(() => exercises.id),
+  setNumber: integer('set_number').notNull(),
+  weight: numeric('weight'),
+  reps: integer('reps'),
+  durationSeconds: integer('duration_seconds'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // Real tables, not enums: Food Preference needs a stable row id to target
 // polymorphically ("exclude everything in this category"), which a pgEnum
 // can't provide. Rows are fixed and seeded once by seed-food-catalog.ts.
