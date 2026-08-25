@@ -6,6 +6,8 @@ fitness.blonskyi.dev — a fitness-tracking PWA: training programs/logs, a body-
 
 See [[domain-model]] and [[business-rules]] for the domain layer this architecture serves.
 
+Full history and rationale behind these choices: `~/Documents/obsidian-notes/projects_history/fitness/docs/architecture.md`.
+
 ---
 
 ## Goals
@@ -20,13 +22,13 @@ See [[domain-model]] and [[business-rules]] for the domain layer this architectu
 
 ### Frontend
 
-Next.js (App Router), TypeScript, TailwindCSS, ShadCN, next-intl (en/uk/ru/es), TanStack Query, TanStack Virtual, service worker for PWA offline support. Zustand for client-only state that crosses a non-parent-child boundary or must live outside the React tree (e.g. the offline write-queue, FITNESS-13) — see [ADR-008](docs/decisions.md); not adopted preemptively, and not a default for local component state.
+Next.js (App Router), TypeScript, TailwindCSS, ShadCN, next-intl (en/uk/ru/es), TanStack Query, TanStack Virtual, service worker for PWA offline support. Zustand for client-only state that crosses a non-parent-child boundary or must live outside the React tree (e.g. the offline write-queue, FITNESS-13) — see [ADR-008](docs/decisions.md).
 
 Responsibilities:
 
 - All UI rendering and client-side interaction
 - Validates the Hub's shared auth cookie and forwards trusted identity headers to the backend (see Security below) — **no direct database access**, no Server Actions touching Drizzle/Postgres
-- App-wide nav header (see [ADR-007](docs/decisions.md)) — a nav menu scoped to built sections, not a breadcrumb trail, since fitness has several sibling top-level sections a user moves *between* rather than a single hierarchy to track depth within. Renders everywhere except `/onboarding`; locale switching and theme toggling are deliberately not part of it yet
+- App-wide nav header (see [ADR-007](docs/decisions.md)) — a nav menu scoped to built sections, not a breadcrumb trail. Renders everywhere except `/onboarding`; locale switching and theme toggling are not part of it yet
 - Offline: caches active programs/exercises/recent logs for viewing; queues workout-set writes in IndexedDB and flushes them to the API in order once back online
 
 Dependencies:
@@ -62,7 +64,7 @@ Python, FastAPI, OpenCV, MediaPipe, NumPy. Internal-only service, not exposed to
 
 Responsibilities:
 
-- Consumes photo-analysis jobs from a plain Redis list/stream (JSON payload: `{ photoId, objectKey, pose }`) — **not BullMQ**, which has no maintained Python client
+- Consumes photo-analysis jobs from a plain Redis list/stream (JSON payload: `{ photoId, objectKey, pose }`) — see [ADR-003](docs/decisions.md)
 - Reads the photo directly from MinIO using its own service credentials (no presigned URL needed for this internal, service-to-service leg)
 - Pose detection, pose/alignment validation, landmark extraction; writes results back (status + JSON) either directly to Postgres or via a callback to NestJS
 - Auto-retries a job a few times with backoff on transient failure before marking it permanently `failed`
@@ -132,7 +134,7 @@ Photo privacy: the MinIO bucket for progress photos is **private**. No permanent
 
 Error tracking:
 
-Sentry (SaaS, free tier) — see [[decisions]] ADR-006. One Sentry org shared with the user's other `*.blonskyi.dev` pet projects; fitness is its own project within that org. `@sentry/nestjs` on the backend and `@sentry/nextjs` on the frontend (client- and server-side), active in production only — never during local `pnpm dev`, so local testing doesn't consume the shared org's event quota. Only unhandled exceptions and 5xx-class errors are reported; deliberately-thrown 4xx `HttpException`s (validation, 404, 401/403) are not. Events carry only the user's UUID as Sentry `user` context — `sendDefaultPii` is disabled and request bodies are scrubbed, so email, IP, and payload contents (which could include health data like weight or date of birth) never reach the third-party service. Alerting is Sentry's own built-in email notifications; no additional relay (e.g. into the Telegram bot used for uptime alerts) for now. Events are tagged with the deploying commit SHA as the Sentry release, and frontend source maps are uploaded at build time so stack traces resolve to real source, not minified bundle positions. One-off scripts (e.g. `seed-exercises.ts`) are out of scope — they're run interactively and watched, so a crash is already visible without a reporting layer. The Python photo-analysis worker isn't built yet (FITNESS-22/23/24); whether it gets Sentry too is a decision for whenever that work starts.
+Sentry (SaaS, free tier) — see [[decisions]] ADR-006. One Sentry org shared with the user's other `*.blonskyi.dev` pet projects; fitness is its own project within that org. `@sentry/nestjs` on the backend and `@sentry/nextjs` on the frontend (client- and server-side), active in production only — never during local `pnpm dev`, so local testing doesn't consume the shared org's event quota. Only unhandled exceptions and 5xx-class errors are reported; deliberately-thrown 4xx `HttpException`s (validation, 404, 401/403) are not. Events carry only the user's UUID as Sentry `user` context — `sendDefaultPii` is disabled and request bodies are scrubbed, so email, IP, and payload contents (which could include health data like weight or date of birth) never reach the third-party service. Alerting is Sentry's own built-in email notifications. Events are tagged with the deploying commit SHA as the Sentry release, and frontend source maps are uploaded at build time so stack traces resolve to real source, not minified bundle positions. One-off scripts (e.g. `seed-exercises.ts`) are out of scope — they're run interactively and watched, so a crash is already visible without a reporting layer. The Python photo-analysis worker isn't built yet (FITNESS-22/23/24); whether it gets Sentry too is a decision for whenever that work starts.
 
 General log management (structured application logs, aggregation, retention) is intentionally out of scope for now — a separate, deliberate decision when it's actually needed, not bundled into the error-tracking setup above.
 
