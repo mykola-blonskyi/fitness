@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   logWorkoutSetSchema,
   type LogWorkoutSetInput,
@@ -8,7 +9,7 @@ import type { Exercise } from '@shared/types/exercise';
 import { FieldError } from '@shared/ui/components/FieldError';
 import { useZodForm } from '@shared/libs/use-zod-form';
 import { applyFormActionError } from '@shared/libs/apply-form-action-error';
-import { logWorkoutSet } from '@features/workout-logs/actions';
+import { syncedLogWorkoutSet } from '@features/workout-logs/offline';
 
 // Renders only the value fields for the selected exercise's category
 // (cardio -> duration, else weight/reps); the backend re-validates
@@ -21,6 +22,8 @@ export function LogSetForm({
   workoutLogId: string;
   exercises: Exercise[];
 }) {
+  const [queued, setQueued] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -37,13 +40,25 @@ export function LogSetForm({
   const isCardio = selectedExercise?.category === 'cardio';
 
   async function onSubmit(input: LogWorkoutSetInput) {
-    const result = await logWorkoutSet(workoutLogId, {
-      exerciseId: input.exerciseId,
-      ...(isCardio
-        ? { durationSeconds: input.durationSeconds }
-        : { weight: input.weight, reps: input.reps }),
+    setQueued(false);
+    const outcome = await syncedLogWorkoutSet({
+      workoutLogId,
+      input: {
+        exerciseId: input.exerciseId,
+        ...(isCardio
+          ? { durationSeconds: input.durationSeconds }
+          : { weight: input.weight, reps: input.reps }),
+      },
     });
-    if (!applyFormActionError(setError, result)) reset();
+    if (outcome.queued) {
+      // Unlike WeightForm (one value per day), sets are logged back-to-back
+      // through a workout - clearing the form lets the next set be entered
+      // right away instead of over today's queued values.
+      setQueued(true);
+      reset();
+      return;
+    }
+    if (!applyFormActionError(setError, outcome.result)) reset();
   }
 
   if (exercises.length === 0) {
@@ -137,6 +152,12 @@ export function LogSetForm({
       </button>
 
       <FieldError message={errors.root?.message} />
+
+      {queued && (
+        <p className="text-sm text-zinc-500" role="status">
+          Saved offline — will sync automatically once you&apos;re back online.
+        </p>
+      )}
     </form>
   );
 }
