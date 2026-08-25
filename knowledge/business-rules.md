@@ -24,6 +24,22 @@ Why: the grooming note's example explicitly described concurrent programs; the o
 
 ---
 
+## Workout Log history is immune to source Training Program edits
+
+`workout_logs.title` is copied from the Training Program at the moment a workout starts, not joined live, and `workout_sets.exercise_id` references the Exercise catalog directly — never a `program_exercises` row. Neither table has any foreign key into `program_exercises`. So reordering, removing, or retargeting a program's exercises, or archiving the program itself, never changes what an already-logged Workout Log displays — nor would renaming it, if a rename action existed (it doesn't yet; no endpoint currently mutates a Training Program's title).
+
+A Workout Log can only be started from a Training Program that's currently active (`UserActiveProgram`) for the caller — archived or never-activated programs are rejected — but once started, the log is independent of the program's later state.
+
+Why: the same "history is never retroactively altered" requirement `knowledge/glossary.md`'s Workout Log entry already states; a live join through Program Exercise would let the past silently change.
+
+---
+
+## Workout Set weight/reps vs. duration follows the exercise's category
+
+Same pattern as Program Exercise targets (FITNESS-18): a cardio-category Exercise is logged by `duration_seconds`, every other category by `weight` + `reps` together — never both, never neither. Enforced server-side in `workout-set-values.ts`, not a DB CHECK constraint, mirroring `program-exercise-targets.ts`.
+
+---
+
 ## Diet regeneration is always manual
 
 Logging a new weight or changing food/diet preferences never creates a Diet automatically. It only makes a "Regenerate menu" action relevant/visible in the UI — the user must explicitly trigger generation.

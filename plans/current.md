@@ -19,8 +19,8 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 - [x] Exercise catalog (schema + one-time seed import from wger/ExerciseDB + translations) (FITNESS-16)
 - [x] Exercise catalog browse/search + manual creation UI (FITNESS-17)
-- [ ] Training Programs, Program Exercises, multiple concurrent active programs (many-to-many `UserActiveProgram`)
-- [ ] Workout Logs/Sets (the generic offline write-queue + sync + indicator mechanism they'll use is already built, FITNESS-13 — see Phase 5)
+- [x] Training Programs, Program Exercises, multiple concurrent active programs (many-to-many `UserActiveProgram`) (FITNESS-18, FITNESS-19)
+- [x] Workout Logs/Sets, started from an active program or ad hoc, online only (FITNESS-20) — offline queue wiring (FITNESS-13's generic mechanism) not yet connected to this feature, tracked as follow-up
 - [x] Daily Log + weigh-in tracking (FITNESS-14)
 
 ---

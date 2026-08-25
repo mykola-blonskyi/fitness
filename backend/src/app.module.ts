@@ -15,6 +15,7 @@ import { FoodPreferencesModule } from './food-preferences/food-preferences.modul
 import { IdentityGuard } from './identity/identity.guard';
 import { TrainingProgramsModule } from './training-programs/training-programs.module';
 import { UsersModule } from './users/users.module';
+import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UsersModule } from './users/users.module';
     CalorieTargetsModule,
     DietsModule,
     TrainingProgramsModule,
+    WorkoutLogsModule,
   ],
   controllers: [AppController],
   providers: [
