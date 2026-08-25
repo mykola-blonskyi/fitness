@@ -130,4 +130,16 @@ Status: Accepted
 
 FITNESS-30 needed to turn `knowledge/business-rules.md`'s greedy-heuristic description into actual code, which left several concrete choices unmade. Meal count lives on `users.meal_count` (integer, 1–4, default 3) as a stored profile field, not a per-request parameter, editable through the existing `CreateUserDto`/`UpdateUserDto`/`PATCH users/me` pattern. Every meal uses the same four macro-group role slots (protein, carb, `vegetable`, fat), each a fallback chain tried in order until a role has an eligible candidate after Food Preference exclusion (protein `lean_protein → fatty_protein → plant_protein`, carb `complex_carb → simple_carb`, fat `healthy_fat → saturated_fat`); a macro group with zero eligible candidates is skipped for that meal, and only a day with zero candidates across every role fails generation entirely (`UnprocessableEntityException`). The day's calorie target divides evenly across the active meal count, then evenly again across each meal's picked items; tolerance adjustment (~±5%) nudges the largest-calorie items' `weight_grams` first, with protein/carbs/fat moving proportionally rather than being independently corrected. `diets` stores day totals (`total_calories`/`total_protein`/`total_carbs`/`total_fat`) plus a `calculation_metadata` snapshot; `diet_items` stores only `weight_grams`/`meal_type`/`order_index`, with per-item macros derived at read time from the joined Food Item's per-100g values. The algorithm (`diets/greedy-heuristic.ts`) is a pure function with no I/O, mirroring `mifflin-v1.ts`'s split so it's unit-testable without a database. Diet Preferences (vegetarian/vegan/keto/paleo) are a second exclusion source, merged into the same `ExclusionTargets` shape Food Preferences already produce via a table-driven mapping in `diets/diet-preference-exclusions.ts` (vegetarian excludes `meat`/`fish`; vegan additionally excludes `dairy`/`eggs`; keto excludes `grains`/`legumes` plus `complex_carb`/`simple_carb`; paleo excludes `grains`/`legumes`/`dairy`).
 
+---
+
+## ADR-012: next-intl middleware composition and locale cookie lifetime
+
+Date: 2026-08-25
+
+Status: Accepted
+
+next-intl's routing middleware runs first in `proxy.ts`, before Hub auth — a redirect from it (e.g. adding a locale prefix) short-circuits and re-enters on the next request, so auth never reasons about a locale-less path. Auth's final response is a single `NextResponse.next({ request: { headers } })` call carrying both next-intl's `X-NEXT-INTL-LOCALE` and the existing `x-user-id`/`x-user-email` headers — the only shape Next.js forwards to the origin — with `intlResponse`'s cookies copied on separately.
+
+The locale cookie's `maxAge` is set to one year (next-intl defaults to session-only), since "persists across sessions" is an explicit acceptance criterion.
+
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
