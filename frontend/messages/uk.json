@@ -1,0 +1,16 @@
+{
+  "Header": {
+    "brand": "Fitness",
+    "nav": {
+      "diary": "Щоденник",
+      "training": "Тренування",
+      "exercises": "Вправи",
+      "food": "Їжа",
+      "diet": "Раціон",
+      "settings": "Налаштування"
+    }
+  },
+  "LanguageSwitcher": {
+    "label": "Мова"
+  }
+}

@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
+import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ServiceWorkerRegistration } from '@shared/ui/components/ServiceWorkerRegistration';
 import { PWA_THEME_COLOR } from '@shared/constants/pwa';
+import { routing } from '@/i18n/routing';
 import './globals.css';
-
-// Locale list is a placeholder until next-intl lands (FITNESS-11).
-const SUPPORTED_LOCALES = ['en'];
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,7 +35,7 @@ export const viewport: Viewport = {
 };
 
 export async function generateStaticParams() {
-  return SUPPORTED_LOCALES.map((locale) => ({ locale }));
+  return routing.locales.map((locale) => ({ locale }));
 }
 
 // Kept alongside the explicit check below, not as a replacement for it:
@@ -57,7 +56,7 @@ export default async function RootLayout({
 
   // The real fix - works regardless of whether the matched page ends up
   // statically or dynamically rendered, unlike dynamicParams above.
-  if (!SUPPORTED_LOCALES.includes(locale)) {
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
@@ -67,8 +66,10 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <ServiceWorkerRegistration />
-        {children}
+        <NextIntlClientProvider locale={locale}>
+          <ServiceWorkerRegistration />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

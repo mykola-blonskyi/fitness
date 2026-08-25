@@ -3,6 +3,7 @@ packages:
   - frontend
 injectWorkspacePackages: true
 allowBuilds:
+  '@parcel/watcher': true
   '@sentry/cli': true
   '@swc/core': true
   esbuild: true

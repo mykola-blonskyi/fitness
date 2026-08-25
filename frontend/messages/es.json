@@ -1,0 +1,16 @@
+{
+  "Header": {
+    "brand": "Fitness",
+    "nav": {
+      "diary": "Diario",
+      "training": "Entrenamiento",
+      "exercises": "Ejercicios",
+      "food": "Comida",
+      "diet": "Dieta",
+      "settings": "Ajustes"
+    }
+  },
+  "LanguageSwitcher": {
+    "label": "Idioma"
+  }
+}

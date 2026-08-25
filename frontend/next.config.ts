@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
   // Minimal server bundle for the Docker runner stage — see frontend/Dockerfile.
@@ -51,7 +52,9 @@ const nextConfig: NextConfig = {
 // --release. Fall back to a build-time timestamp so uploads don't fail over it.
 const sentryRelease = process.env.SENTRY_RELEASE || `build-${Date.now()}`;
 
-export default withSentryConfig(nextConfig, {
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
+export default withSentryConfig(withNextIntl(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,

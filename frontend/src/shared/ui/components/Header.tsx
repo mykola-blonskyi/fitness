@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { OfflineIndicator } from '@shared/ui/components/OfflineIndicator';
+import { LanguageSwitcher } from '@shared/ui/components/LanguageSwitcher';
 
 interface HeaderProps {
   locale: string;
@@ -15,6 +17,8 @@ interface HeaderProps {
 // each time a new section ships its first real page, per ADR-007's
 // Consequences.
 export function Header({ locale, identity }: HeaderProps) {
+  const t = useTranslations('Header');
+
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
@@ -31,47 +35,48 @@ export function Header({ locale, identity }: HeaderProps) {
             href={`/${locale}`}
             className="text-sm font-semibold text-zinc-900 dark:text-zinc-100"
           >
-            Fitness
+            {t('brand')}
           </Link>
           <Link
             href={`/${locale}/diary`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            Diary
+            {t('nav.diary')}
           </Link>
           <Link
             href={`/${locale}/training`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            Training
+            {t('nav.training')}
           </Link>
           <Link
             href={`/${locale}/exercises`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            Exercises
+            {t('nav.exercises')}
           </Link>
           <Link
             href={`/${locale}/food`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            Food
+            {t('nav.food')}
           </Link>
           <Link
             href={`/${locale}/diet`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            Diet
+            {t('nav.diet')}
           </Link>
           <Link
             href={`/${locale}/settings/profile`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            Settings
+            {t('nav.settings')}
           </Link>
         </nav>
 
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <OfflineIndicator userId={identity.userId} />
           {/* Identity only - no dropdown, no settings link (already in
               nav above), no sign-out (the Hub has no public logout URL
