@@ -1,5 +1,7 @@
 # Business Rules
 
+Full history and rationale for each rule: `~/Documents/obsidian-notes/projects_history/fitness/knowledge/business-rules.md`.
+
 ## Daily Log requires no weigh-in
 
 Progress photos, workout logs, and diets attach to a Daily Log ([[glossary]]) whose `weight` field is nullable. A user can log a workout, upload photos, or generate a diet on a day with no weight recorded.
@@ -12,15 +14,13 @@ Why: the original schema required weight NOT NULL, which would have blocked any 
 
 The weight-trend chart (FITNESS-15) reads `daily_logs` filtered to rows where `weight IS NOT NULL`, ordered by date. Two weigh-ins are connected by a line only when they fall on consecutive calendar days; any missing day(s) between them — no row at all, or a row with `weight` left null — leaves a visible gap instead.
 
-Why: a straight line between two distant weigh-ins would assert a value for the days in between that was never actually recorded — misleading, given how easily a day's weigh-in gets skipped (see "Daily Log requires no weigh-in" above).
+Why: a straight line between two distant weigh-ins would assert a value for days that were never actually recorded.
 
 ---
 
 ## Multiple concurrent active Training Programs
 
 A user may have several Training Programs active at the same time (e.g. Strength + Running + Stretching in parallel). `UserActiveProgram` is a plain many-to-many join, not one-to-one.
-
-Why: the grooming note's example explicitly described concurrent programs; the original schema's one-to-one constraint contradicted it.
 
 ---
 
@@ -30,7 +30,7 @@ Why: the grooming note's example explicitly described concurrent programs; the o
 
 A Workout Log can only be started from a Training Program that's currently active (`UserActiveProgram`) for the caller — archived or never-activated programs are rejected — but once started, the log is independent of the program's later state.
 
-Why: the same "history is never retroactively altered" requirement `knowledge/glossary.md`'s Workout Log entry already states; a live join through Program Exercise would let the past silently change.
+Why: a live join through Program Exercise would let already-logged history silently change.
 
 ---
 
@@ -60,7 +60,7 @@ Why: no extra state (`is_current` flag) to keep in sync; regenerating is just in
 
 For each meal, pick one Food Item per required Food Role, then scale portion size (`weight_grams`) to hit that meal's calorie share; adjust the largest items if the day's total drifts outside tolerance (~±5%) of the target.
 
-Why: this is a recommendation feature, not a medical prescription — "close enough" is the actual requirement. A constraint solver would add real complexity and a new dependency for no meaningful benefit here.
+Why: this is a recommendation feature, not a medical prescription — "close enough" is the actual requirement.
 
 ---
 
@@ -74,7 +74,7 @@ Two Food Items are interchangeable only if they share the same Food Role (e.g. C
 
 `user_food_preferences.target_type` + `target_id` point at a Food Category, Food Subcategory, Food Role, or a specific Food Item. A candidate Food Item is excluded from diet generation if any of its own category/subcategory/role/id matches an active preference's target.
 
-Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut butter, not all nuts") with one mechanism, using real foreign keys instead of fuzzy text matching.
+Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut butter, not all nuts") with one mechanism.
 
 ---
 
@@ -82,7 +82,7 @@ Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut bu
 
 `diet_calculation_algorithms.formula` is a human-readable description for display/audit purposes. The real calculation is versioned backend code (e.g. a `mifflinV1()` function) looked up by `code` — never parsed or evaluated at runtime.
 
-Why: avoids an expression-evaluation dependency/risk surface for a feature that doesn't need runtime flexibility; new algorithm versions are code changes, which is the normal and safer path.
+Why: new algorithm versions should be code changes, not runtime-evaluated expressions.
 
 ---
 
@@ -132,7 +132,7 @@ Why: avoids maintaining a recurring sync job and unattended auto-categorization 
 
 Catalog browse endpoints (Exercise; Food Item will follow the same rule once it's revisited) resolve each item's display name against the caller's own `users.locale` value — read server-side from the authenticated identity, never a `locale` value the client passes in. A translation row missing for that locale falls back to the item's base English `name`.
 
-Why: next-intl route-based locale segments (FITNESS-11) don't exist yet — the current `[locale]` route segment is a hardcoded `en` placeholder (see `frontend/src/app/[locale]/layout.tsx`), not a real locale switcher. Resolving against a stored user preference instead means catalog localization doesn't need to wait for FITNESS-11 to land, and won't need to change again once it does. Food Item's `list()` (`backend/src/food-items/food-items.service.ts`) still takes a `locale` query param tied to the route segment, predating this rule — a known inconsistency to fix when Food Item's browse UI is next touched, not retrofitted speculatively here.
+Why: next-intl route-based locale segments (FITNESS-11) don't exist yet, so resolving against the stored preference means catalog localization doesn't need to wait for or change with that later. Food Item's `list()` still takes a route-tied `locale` param — a known inconsistency, not yet fixed.
 
 ---
 
@@ -140,7 +140,7 @@ Why: next-intl route-based locale segments (FITNESS-11) don't exist yet — the 
 
 Sentry (see [[decisions]] ADR-006) only ever receives a user's UUID as identifying context — never email, IP, or request bodies, even though NestJS trusts an `x-user-email` header it could easily attach. Only unhandled exceptions and 5xx-class errors are reported; a deliberately-thrown 4xx (validation rejection, 404, 401/403) is expected control flow, not a failure, and is never sent.
 
-Why: this app handles real health data (weight, date of birth, goals) — sending more than the minimum needed to correlate "this user hit this bug" to a third-party SaaS should be a deliberate choice, not an SDK default.
+Why: this app handles real health data (weight, date of birth, goals) — sending more than the minimum needed to a third-party SaaS should be a deliberate choice, not an SDK default.
 
 ---
 
