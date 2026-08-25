@@ -341,3 +341,17 @@ FITNESS-30 needed to turn `knowledge/business-rules.md`'s "Diet menu generation 
 ### Consequences
 
 Changing the required-role set or fallback chains is an edit to `diets/diet.types.ts`'s `MEAL_ROLE_CHAINS` plus `greedy-heuristic.spec.ts` — isolated from `diets.service.ts`'s DB-glue code. Because meal count is a stored profile field with no UI to edit it yet (this ticket is backend-only), every user effectively gets the default (3) until a future ticket adds that control to Settings — worth tracking as a follow-up gap, not a blocker for this ticket's backend-only scope.
+
+---
+
+## ADR-012: next-intl middleware composition and locale cookie lifetime
+
+Date: 2026-08-25
+
+Status: Accepted
+
+next-intl's routing middleware runs first in `proxy.ts`, before Hub auth — a redirect from it (e.g. adding a locale prefix) short-circuits and re-enters on the next request, so auth never reasons about a locale-less path. Auth's final response is a single `NextResponse.next({ request: { headers } })` call carrying both next-intl's `X-NEXT-INTL-LOCALE` and the existing `x-user-id`/`x-user-email` headers — the only shape Next.js forwards to the origin — with `intlResponse`'s cookies copied on separately.
+
+The locale cookie's `maxAge` is set to one year (next-intl defaults to session-only), since "persists across sessions" is an explicit acceptance criterion.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

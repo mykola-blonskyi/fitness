@@ -53,7 +53,7 @@ export function Header({ locale, identity }: HeaderProps) {
             href={`/${locale}/workouts`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            Workouts
+            {t('nav.workouts')}
           </Link>
           <Link
             href={`/${locale}/exercises`}
