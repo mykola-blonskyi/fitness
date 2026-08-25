@@ -28,6 +28,7 @@ export interface UserProfile {
   goal: Goal;
   activityLevel: ActivityLevel;
   avatarUrl: string | null;
+  isAdmin: boolean;
   locale: Locale;
   createdAt: string;
   updatedAt: string;

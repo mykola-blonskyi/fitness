@@ -47,9 +47,19 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
+    // NestJS's HttpException body carries a `message` (string or, for
+    // class-validator failures, string[]) - surfaced here so a caller can
+    // show the backend's actual rejection reason instead of a generic
+    // "failed: 409" (e.g. admin-exercises' delete-in-use guard).
+    const body: { message?: string | string[] } | undefined = await res
+      .json()
+      .catch(() => undefined);
+    const message = Array.isArray(body?.message)
+      ? body.message[0]
+      : body?.message;
     throw new ApiError(
       res.status,
-      `API request to ${path} failed: ${res.status}`,
+      message ?? `API request to ${path} failed: ${res.status}`,
     );
   }
 
