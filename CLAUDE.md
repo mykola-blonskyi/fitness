@@ -53,12 +53,14 @@ Update plans when major tasks are completed.
 
 ## Documentation
 
-Project documentation lives in:
+Project documentation lives in `docs/` and `knowledge/`. As of 2026-08-25, full history/rationale lives outside the repo, at `~/Documents/obsidian-notes/projects_history/fitness/` (mirrors `docs/` and `knowledge/`, plus its own `CHANGELOG.md`) — that split exists because in-repo docs were accumulating detailed alternatives-considered/rationale narrative on every decision, growing what every session has to load just to get oriented.
 
-- docs/
-- knowledge/
+When a change touches `docs/` or `knowledge/`:
 
-Keep documentation synchronized with code changes.
+1. Write the full version — rationale, alternatives considered, the "why" — into the mirrored file under `~/Documents/obsidian-notes/projects_history/fitness/`, and add a dated entry to that vault's `CHANGELOG.md` describing what changed and why.
+2. Keep the in-repo file trimmed to the current, final decision only — state what's true now, not how the team got there. No "Alternatives Considered" section, no narrative — that lives in the mirror.
+
+Existing in-repo docs haven't been retroactively trimmed yet (only the mirror + this policy exist so far) — trim opportunistically when you're already touching a file for another reason, not as a standalone sweep unless asked.
 
 ## Reports
 
