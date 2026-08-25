@@ -1,24 +1,10 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
+import { assertValidDate } from '../shared/date';
 import type { DietResponse } from './diet.mapper';
 import { DietsService } from './diets.service';
 import { SwapDietItemDto } from './dto/swap-diet-item.dto';
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function assertValidDate(date: string): void {
-  if (!DATE_RE.test(date)) {
-    throw new BadRequestException('date must be in YYYY-MM-DD format');
-  }
-}
 
 // Every route here operates on the caller's own Diets only, scoped by
 // :date under their own user id from the trusted identity headers.

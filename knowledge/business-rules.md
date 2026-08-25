@@ -26,7 +26,7 @@ Why: the grooming note's example explicitly described concurrent programs; the o
 
 ## Workout Log history is immune to source Training Program edits
 
-`workout_logs.title` is copied from the Training Program at the moment a workout starts, not joined live, and `workout_sets.exercise_id` references the Exercise catalog directly — never a `program_exercises` row. Neither table has any foreign key into `program_exercises`. So reordering, removing, or retargeting a program's exercises, or archiving/renaming the program itself, never changes what an already-logged Workout Log displays.
+`workout_logs.title` is copied from the Training Program at the moment a workout starts, not joined live, and `workout_sets.exercise_id` references the Exercise catalog directly — never a `program_exercises` row. Neither table has any foreign key into `program_exercises`. So reordering, removing, or retargeting a program's exercises, or archiving the program itself, never changes what an already-logged Workout Log displays — nor would renaming it, if a rename action existed (it doesn't yet; no endpoint currently mutates a Training Program's title).
 
 A Workout Log can only be started from a Training Program that's currently active (`UserActiveProgram`) for the caller — archived or never-activated programs are rejected — but once started, the log is independent of the program's later state.
 

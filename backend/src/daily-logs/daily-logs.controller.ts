@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,18 +10,11 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
+import { assertValidDate } from '../shared/date';
 import { SetWeightDto } from './dto/set-weight.dto';
 import { WeightTrendQueryDto } from './dto/weight-trend-query.dto';
 import type { DailyLogResponse, WeightTrendPoint } from './daily-log.mapper';
 import { DailyLogsService } from './daily-logs.service';
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function assertValidDate(date: string): void {
-  if (!DATE_RE.test(date)) {
-    throw new BadRequestException('date must be in YYYY-MM-DD format');
-  }
-}
 
 // Every route here operates on the caller's own Daily Logs only, scoped
 // by :date under their own user id from the trusted identity headers —

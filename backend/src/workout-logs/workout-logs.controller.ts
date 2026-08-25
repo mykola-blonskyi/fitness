@@ -1,13 +1,7 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
+import { assertValidDate } from '../shared/date';
 import { LogWorkoutSetDto } from './dto/log-workout-set.dto';
 import { StartWorkoutLogDto } from './dto/start-workout-log.dto';
 import type {
@@ -15,14 +9,6 @@ import type {
   WorkoutSetResponse,
 } from './workout-log.mapper';
 import { WorkoutLogsService } from './workout-logs.service';
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function assertValidDate(date: string): void {
-  if (!DATE_RE.test(date)) {
-    throw new BadRequestException('date must be in YYYY-MM-DD format');
-  }
-}
 
 // Every route here operates on the caller's own Workout Logs only -
 // ownership is re-checked in the service, never assumed from the URL.
