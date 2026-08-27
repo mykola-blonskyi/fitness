@@ -1,13 +1,12 @@
-import Link from 'next/link';
-import { WeightForm, WeightTrendChart } from '@features/daily-log';
+import { WeightForm, WeightTrend, WeightTrendChart } from '@features/daily-log';
 import {
   dateFromDayIndex,
   dayIndex,
 } from '@features/daily-log/components/WeightTrendChart';
 import type { DailyLog, WeightTrendPoint } from '@features/daily-log/actions';
 import { apiFetch, ApiError } from '@libs/api-client';
+import { WEIGHT_TREND_WINDOWS } from '@shared/constants/daily-log';
 
-const WEIGHT_TREND_WINDOWS = [7, 30, 90] as const;
 type WeightTrendWindow = (typeof WEIGHT_TREND_WINDOWS)[number];
 const DEFAULT_WEIGHT_TREND_WINDOW: WeightTrendWindow = 30;
 
@@ -67,24 +66,7 @@ export default async function DiaryPage({
       <WeightForm date={date} dailyLog={dailyLog} />
 
       <section className="flex w-full flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Weight trend</h2>
-          <div className="flex gap-1">
-            {WEIGHT_TREND_WINDOWS.map((window) => (
-              <Link
-                key={window}
-                href={`/${locale}/diary?days=${window}`}
-                className={
-                  window === windowDays
-                    ? 'bg-foreground text-background rounded px-3 py-1 text-sm'
-                    : 'rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:border-zinc-700 dark:hover:text-zinc-100'
-                }
-              >
-                {window}d
-              </Link>
-            ))}
-          </div>
-        </div>
+        <WeightTrend windowDays={windowDays} locale={locale} />
         <WeightTrendChart
           points={trend}
           windowStart={windowStart}

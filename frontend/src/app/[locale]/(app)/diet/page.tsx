@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@libs/api-client';
 import type { CalorieTarget } from '@features/diet/actions';
+import { AlgorithmInfo, CaloriesInfo, NutritionsInfo } from '@features/diet';
 
 export default async function DietPage({
   params,
@@ -38,41 +39,23 @@ export default async function DietPage({
 
       {target && (
         <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-1">
-            <p className="text-4xl font-semibold">
-              {Math.round(target.calories)}{' '}
-              <span className="text-lg font-normal text-zinc-500">
-                kcal / day
-              </span>
-            </p>
-            <p className="text-sm text-zinc-500">
-              Based on your {target.weighIn.weight}kg weigh-in on{' '}
-              {target.weighIn.date}
-            </p>
-          </div>
+          <CaloriesInfo
+            calories={target.calories}
+            weight={target.weighIn.weight}
+            date={target.weighIn.date}
+          />
 
-          <div className="grid grid-cols-3 gap-4 sm:max-w-md">
-            <div className="flex flex-col gap-1 rounded border border-zinc-200 p-3 dark:border-zinc-800">
-              <span className="text-sm text-zinc-500">Protein</span>
-              <span className="text-lg font-medium">{target.proteinG}g</span>
-            </div>
-            <div className="flex flex-col gap-1 rounded border border-zinc-200 p-3 dark:border-zinc-800">
-              <span className="text-sm text-zinc-500">Carbs</span>
-              <span className="text-lg font-medium">{target.carbsG}g</span>
-            </div>
-            <div className="flex flex-col gap-1 rounded border border-zinc-200 p-3 dark:border-zinc-800">
-              <span className="text-sm text-zinc-500">Fat</span>
-              <span className="text-lg font-medium">{target.fatG}g</span>
-            </div>
-          </div>
+          <NutritionsInfo
+            proteinG={target.proteinG}
+            carbsG={target.carbsG}
+            fatG={target.fatG}
+          />
 
-          <div className="flex flex-col gap-1 border-t border-zinc-200 pt-4 text-sm text-zinc-500 dark:border-zinc-800">
-            <p>
-              Calculated using <strong>{target.algorithm.name}</strong> (
-              {target.algorithm.code})
-            </p>
-            <p>{target.algorithm.description}</p>
-          </div>
+          <AlgorithmInfo
+            name={target.algorithm.name}
+            code={target.algorithm.code}
+            description={target.algorithm.description}
+          />
         </div>
       )}
     </main>
