@@ -40,6 +40,9 @@ export const users = pgTable('users', {
   goal: goalEnum('goal').notNull(),
   activityLevel: activityLevelEnum('activity_level').notNull(),
   avatarUrl: text('avatar_url'),
+  // Single-user personal app - no self-service grant flow. Set directly
+  // in the DB by whoever operates the deployment.
+  isAdmin: boolean('is_admin').notNull().default(false),
   // How many meal slots (breakfast/lunch/dinner/snack, in that fixed
   // order) diet generation splits a day's calorie target across.
   mealCount: integer('meal_count').notNull().default(3),

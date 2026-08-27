@@ -53,7 +53,7 @@ export function WeightForm({
           <input
             id="weight"
             type="number"
-            step="0.1"
+            step="any"
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             {...register('weight', { valueAsNumber: true })}
           />

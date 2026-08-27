@@ -13,6 +13,7 @@ export interface UserResponse {
   goal: string;
   activityLevel: string;
   avatarUrl: string | null;
+  isAdmin: boolean;
   mealCount: number;
   locale: string;
   createdAt: Date;
@@ -44,6 +45,7 @@ export function toUserResponse(user: UserRow): UserResponse {
     goal: user.goal,
     activityLevel: user.activityLevel,
     avatarUrl: user.avatarUrl,
+    isAdmin: user.isAdmin,
     mealCount: user.mealCount,
     locale: user.locale,
     createdAt: user.createdAt,

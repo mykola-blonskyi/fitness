@@ -1,0 +1,22 @@
+import type { ExerciseCategory } from '@shared/types/exercise';
+
+// Mirrors backend/src/admin/exercises/admin-exercise.mapper.ts's
+// AdminExerciseResponse.
+export interface AdminExercise {
+  id: string;
+  name: string;
+  category: ExerciseCategory;
+  imageUrl: string | null;
+  isVerified: boolean;
+  source: string | null;
+  sourceId: string | null;
+  createdAt: string;
+}
+
+// Mirrors backend/src/admin/exercises/admin-exercises.service.ts's
+// AdminExercisePage - generic so other admin cursor-paginated lists can
+// reuse the same shape.
+export interface CursorPage<T> {
+  items: T[];
+  nextCursor: string | null;
+}

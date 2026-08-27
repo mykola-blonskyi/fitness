@@ -41,7 +41,11 @@ export default async function WorkoutLogDetailPage({
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Sets</h2>
-        <WorkoutSetList sets={workoutLog.sets} />
+        <WorkoutSetList
+          workoutLogId={workoutLog.id}
+          sets={workoutLog.sets}
+          exercises={exercises}
+        />
       </section>
 
       <section className="flex flex-col gap-3">
