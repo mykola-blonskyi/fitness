@@ -13,6 +13,7 @@ import { ExercisesModule } from './exercises/exercises.module';
 import { FoodItemsModule } from './food-items/food-items.module';
 import { FoodPreferencesModule } from './food-preferences/food-preferences.module';
 import { IdentityGuard } from './identity/identity.guard';
+import { PhotoSessionsModule } from './photo-sessions/photo-sessions.module';
 import { TrainingProgramsModule } from './training-programs/training-programs.module';
 import { UsersModule } from './users/users.module';
 import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
@@ -32,6 +33,7 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     DietsModule,
     TrainingProgramsModule,
     WorkoutLogsModule,
+    PhotoSessionsModule,
   ],
   controllers: [AppController],
   providers: [

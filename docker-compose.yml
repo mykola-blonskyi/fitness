@@ -20,6 +20,12 @@ services:
       SENTRY_DSN: ${SENTRY_DSN}
       USDA_API_KEY: ${USDA_API_KEY}
       DEEPL_API_KEY: ${DEEPL_API_KEY}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET}
       PORT: 3001
     restart: unless-stopped
     # No ports/domain: stays private on Coolify's network (ADR-001 - the

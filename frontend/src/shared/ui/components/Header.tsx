@@ -13,9 +13,9 @@ interface HeaderProps {
 // sibling top-level sections (Training, Diary, Diet, Photos, Settings)
 // a user needs to move *between*, not a single hierarchy to track depth
 // within. Nav items are scoped to only what's actually built today
-// (Diary, Training, Workouts, Exercises, Food, Diet, Settings) - add one line here
-// each time a new section ships its first real page, per ADR-007's
-// Consequences.
+// (Diary, Photos, Training, Workouts, Exercises, Food, Diet, Settings) - add
+// one line here each time a new section ships its first real page, per
+// ADR-007's Consequences.
 export function Header({ locale, identity }: HeaderProps) {
   const t = useTranslations('Header');
 
@@ -42,6 +42,12 @@ export function Header({ locale, identity }: HeaderProps) {
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
             {t('nav.diary')}
+          </Link>
+          <Link
+            href={`/${locale}/photos`}
+            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            {t('nav.photos')}
           </Link>
           <Link
             href={`/${locale}/training`}
