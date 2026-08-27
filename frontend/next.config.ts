@@ -16,7 +16,9 @@ const nextConfig: NextConfig = {
       '../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**/*',
     ],
   },
-  // The only two external image hosts this app renders (Open Food Facts, wger).
+  // Open Food Facts, wger, and MinIO (progress photos, presigned GET URLs -
+  // see docs/decisions.md ADR-002. No fixed pathname: presigned URLs carry
+  // the bucket name and a per-request signature query string).
   images: {
     remotePatterns: [
       {
@@ -28,6 +30,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'wger.de',
         pathname: '/media/exercise-images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 's3.blonskyi.dev',
       },
     ],
   },

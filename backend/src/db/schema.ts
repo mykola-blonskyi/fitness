@@ -7,10 +7,12 @@ import {
   timestamp,
   pgEnum,
   unique,
+  uniqueIndex,
   boolean,
   integer,
   jsonb,
 } from 'drizzle-orm/pg-core';
+import { eq } from 'drizzle-orm';
 
 export const genderEnum = pgEnum('gender', ['male', 'female']);
 export const goalEnum = pgEnum('goal', [
@@ -420,3 +422,66 @@ export const dietItems = pgTable('diet_items', {
     .notNull()
     .defaultNow(),
 });
+
+export const photoPoseEnum = pgEnum('photo_pose', ['front', 'side', 'back']);
+export const photoAnalysisStatusEnum = pgEnum('photo_analysis_status', [
+  'pending',
+  'processing',
+  'completed',
+  'failed',
+]);
+
+// Groups Progress Photos captured on one occasion. isBaseline's "only one
+// true per user" constraint is a real DB constraint (partial unique index
+// below), not application-level validation - see knowledge/business-rules.md.
+export const photoSessions = pgTable(
+  'photo_sessions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    date: date('date').notNull(),
+    isBaseline: boolean('is_baseline').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('photo_sessions_one_baseline_per_user')
+      .on(table.userId)
+      .where(eq(table.isBaseline, true)),
+  ],
+);
+
+// objectKey is the private MinIO key, never a public URL - see ADR-002.
+// photoSessionId groups this with its front/side/back siblings; dailyLogId
+// links it to the Daily Log it was captured against.
+// poseLandmarks/alignmentData are populated by the Python worker (not yet
+// built - FITNESS-23/24), left null until then.
+export const progressPhotos = pgTable(
+  'progress_photos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    photoSessionId: uuid('photo_session_id')
+      .notNull()
+      .references(() => photoSessions.id),
+    dailyLogId: uuid('daily_log_id')
+      .notNull()
+      .references(() => dailyLogs.id),
+    pose: photoPoseEnum('pose').notNull(),
+    objectKey: text('object_key').notNull().unique(),
+    analysisStatus: photoAnalysisStatusEnum('analysis_status')
+      .notNull()
+      .default('pending'),
+    poseLandmarks: jsonb('pose_landmarks'),
+    alignmentData: jsonb('alignment_data'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [unique().on(table.photoSessionId, table.pose)],
+);

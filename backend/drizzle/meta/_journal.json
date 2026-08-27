@@ -99,6 +99,13 @@
       "when": 1787693765058,
       "tag": "0013_add_users_is_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1787840301518,
+      "tag": "0014_narrow_ultimo",
+      "breakpoints": true
     }
   ]
 }
