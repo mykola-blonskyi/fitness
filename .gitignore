@@ -125,9 +125,9 @@ redis-data/
 # Uploads / Storage
 # ============================================================
 
-uploads/
-storage/
-media/
+/uploads/
+/storage/
+/media/
 
 # ============================================================
 # Temporary

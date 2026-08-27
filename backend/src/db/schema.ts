@@ -458,8 +458,8 @@ export const photoSessions = pgTable(
 );
 
 // objectKey is the private MinIO key, never a public URL - see ADR-002.
-// dailyLogId is the AC-required link ("linked to the current Daily Log");
-// photoSessionId groups it with its front/side/back siblings.
+// photoSessionId groups this with its front/side/back siblings; dailyLogId
+// links it to the Daily Log it was captured against.
 // poseLandmarks/alignmentData are populated by the Python worker (not yet
 // built - FITNESS-23/24), left null until then.
 export const progressPhotos = pgTable(

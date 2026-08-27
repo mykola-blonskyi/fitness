@@ -79,11 +79,10 @@ export class PhotoSessionsService {
     return session;
   }
 
-  // objectKey carries the requesting user's id (see storage.service.ts's
-  // buildObjectKey) - cross-checked here so one user can't confirm a
-  // session using a key generated for another user's upload URL.
+  // Cross-checked so one user can't confirm a session using a key
+  // generated for another user's upload URL.
   private assertOwnedObjectKey(userId: string, objectKey: string): void {
-    if (!objectKey.startsWith(`progress-photos/${userId}/`)) {
+    if (!this.storageService.ownsObjectKey(userId, objectKey)) {
       throw new BadRequestException('Invalid object key');
     }
   }
@@ -110,22 +109,28 @@ export class PhotoSessionsService {
 
     const dailyLog = await this.dailyLogsService.findOrCreate(userId, date);
 
-    const [session] = await this.db
-      .insert(schema.photoSessions)
-      .values({ userId, date })
-      .returning();
+    const { session, insertedPhotos } = await this.db.transaction(
+      async (tx) => {
+        const [session] = await tx
+          .insert(schema.photoSessions)
+          .values({ userId, date })
+          .returning();
 
-    const insertedPhotos = await this.db
-      .insert(schema.progressPhotos)
-      .values(
-        dto.photos.map((photo) => ({
-          photoSessionId: session.id,
-          dailyLogId: dailyLog.id,
-          pose: photo.pose,
-          objectKey: photo.objectKey,
-        })),
-      )
-      .returning();
+        const insertedPhotos = await tx
+          .insert(schema.progressPhotos)
+          .values(
+            dto.photos.map((photo) => ({
+              photoSessionId: session.id,
+              dailyLogId: dailyLog.id,
+              pose: photo.pose,
+              objectKey: photo.objectKey,
+            })),
+          )
+          .returning();
+
+        return { session, insertedPhotos };
+      },
+    );
 
     return toPhotoSessionResponse(session, insertedPhotos);
   }
