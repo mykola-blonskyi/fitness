@@ -1,3 +1,5 @@
+import type { WeightUnit } from '@shared/types/user';
+
 // Mirrors backend/src/calorie-targets/calorie-target.mapper.ts's
 // CalorieTargetResponse. No Server Action here yet (a pure read, same
 // as daily-log/actions.ts's DailyLog type before setWeight/clearWeight
@@ -12,6 +14,7 @@ export interface CalorieTarget {
   };
   weighIn: {
     weight: number;
+    unit: WeightUnit;
     date: string;
   };
   calories: number;

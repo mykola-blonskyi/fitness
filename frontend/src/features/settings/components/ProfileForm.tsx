@@ -28,6 +28,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       goal: profile.goal,
       activityLevel: profile.activityLevel,
       locale: profile.locale,
+      defaultWeightUnit: profile.defaultWeightUnit,
     },
   });
 

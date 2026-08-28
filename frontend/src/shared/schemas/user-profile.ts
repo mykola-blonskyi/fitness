@@ -1,5 +1,11 @@
 import * as z from 'zod';
-import { ACTIVITY_LEVELS, GENDERS, GOALS, LOCALES } from '@shared/types/user';
+import {
+  ACTIVITY_LEVELS,
+  GENDERS,
+  GOALS,
+  LOCALES,
+  WEIGHT_UNITS,
+} from '@shared/types/user';
 
 // Mirrors backend/src/users/dto/create-user.dto.ts by hand — the backend
 // DTO stays authoritative, this is a client-side UX layer only.
@@ -15,6 +21,7 @@ export const userProfileSchema = z.object({
   goal: z.enum(GOALS, 'Select a goal'),
   activityLevel: z.enum(ACTIVITY_LEVELS, 'Select an activity level'),
   locale: z.enum(LOCALES, 'Select a language'),
+  defaultWeightUnit: z.enum(WEIGHT_UNITS, 'Select a weight unit'),
 });
 
 export type UserProfileInput = z.infer<typeof userProfileSchema>;

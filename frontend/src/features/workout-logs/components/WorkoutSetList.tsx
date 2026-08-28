@@ -34,6 +34,7 @@ export function pendingSetsFor(
         exerciseCategory: exercise?.category ?? 'full_body',
         setNumber: 0,
         weight: input.weight ?? null,
+        weightUnit: input.unit ?? null,
         reps: input.reps ?? null,
         durationSeconds: input.durationSeconds ?? null,
       };
@@ -100,7 +101,7 @@ export function WorkoutSetList({
                 <span>
                   {set.durationSeconds != null
                     ? `${set.durationSeconds}s`
-                    : `${set.weight} kg × ${set.reps}`}
+                    : `${set.weight}${set.weightUnit ?? 'kg'} × ${set.reps}`}
                 </span>
                 {pendingIds.has(set.id) && (
                   <span className="text-xs text-zinc-500" role="status">

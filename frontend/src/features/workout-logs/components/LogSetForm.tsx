@@ -6,8 +6,10 @@ import {
   type LogWorkoutSetInput,
 } from '@shared/schemas/workout-log';
 import type { Exercise } from '@shared/types/exercise';
+import { WEIGHT_UNITS, type WeightUnit } from '@shared/types/user';
 import { FieldError } from '@shared/ui/components/FieldError';
 import { useZodForm } from '@shared/libs/use-zod-form';
+import { useLastWeightUnit } from '@shared/libs/use-last-weight-unit';
 import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { syncedLogWorkoutSet } from '@features/workout-logs/offline';
 
@@ -18,11 +20,14 @@ import { syncedLogWorkoutSet } from '@features/workout-logs/offline';
 export function LogSetForm({
   workoutLogId,
   exercises,
+  defaultWeightUnit,
 }: {
   workoutLogId: string;
   exercises: Exercise[];
+  defaultWeightUnit: WeightUnit;
 }) {
   const [queued, setQueued] = useState(false);
+  const [rememberedUnit, rememberUnit] = useLastWeightUnit(defaultWeightUnit);
 
   const {
     register,
@@ -31,7 +36,10 @@ export function LogSetForm({
     watch,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(logWorkoutSetSchema);
+  } = useZodForm(logWorkoutSetSchema, {
+    defaultValues: { unit: rememberedUnit },
+  });
+  const unitField = register('unit');
 
   const selectedExerciseId = watch('exerciseId');
   const selectedExercise = exercises.find(
@@ -47,18 +55,19 @@ export function LogSetForm({
         exerciseId: input.exerciseId,
         ...(isCardio
           ? { durationSeconds: input.durationSeconds }
-          : { weight: input.weight, reps: input.reps }),
+          : { weight: input.weight, unit: input.unit, reps: input.reps }),
       },
     });
+    // Unlike WeightForm (one value per day), sets are logged back-to-back -
+    // clear the form but keep the unit selection for the next set.
     if (outcome.queued) {
-      // Unlike WeightForm (one value per day), sets are logged back-to-back
-      // through a workout - clearing the form lets the next set be entered
-      // right away instead of over today's queued values.
       setQueued(true);
-      reset();
+      reset({ unit: rememberedUnit });
       return;
     }
-    if (!applyFormActionError(setError, outcome.result)) reset();
+    if (!applyFormActionError(setError, outcome.result)) {
+      reset({ unit: rememberedUnit });
+    }
   }
 
   if (exercises.length === 0) {
@@ -115,16 +124,33 @@ export function LogSetForm({
           <div className="flex gap-3">
             <div className="flex flex-1 flex-col gap-1">
               <label htmlFor="weight" className="text-sm font-medium">
-                Weight (kg)
+                Weight
               </label>
-              <input
-                id="weight"
-                type="number"
-                step="any"
-                min={0.1}
-                className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-                {...register('weight', { valueAsNumber: true })}
-              />
+              <div className="flex gap-2">
+                <input
+                  id="weight"
+                  type="number"
+                  step="any"
+                  className="w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  {...register('weight', { valueAsNumber: true })}
+                />
+                <select
+                  id="unit"
+                  aria-label="Weight unit"
+                  className="rounded border border-zinc-300 px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  {...unitField}
+                  onChange={(e) => {
+                    unitField.onChange(e);
+                    rememberUnit(e.target.value as WeightUnit);
+                  }}
+                >
+                  {WEIGHT_UNITS.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <FieldError message={errors.weight?.message} />
             </div>
             <div className="flex flex-1 flex-col gap-1">

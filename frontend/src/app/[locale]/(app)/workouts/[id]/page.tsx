@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { LogSetForm, WorkoutSetList } from '@features/workout-logs';
 import type { Exercise } from '@shared/types/exercise';
 import type { WorkoutLog } from '@shared/types/workout-log';
+import type { UserProfile } from '@shared/types/user';
 import { apiFetch, ApiError } from '@libs/api-client';
 
 export default async function WorkoutLogDetailPage({
@@ -25,6 +26,7 @@ export default async function WorkoutLogDetailPage({
   }
 
   const exercises = await apiFetch<Exercise[]>('/exercises');
+  const profile = await apiFetch<UserProfile>('/users/me');
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-16">
@@ -50,7 +52,11 @@ export default async function WorkoutLogDetailPage({
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Log a set</h2>
-        <LogSetForm workoutLogId={workoutLog.id} exercises={exercises} />
+        <LogSetForm
+          workoutLogId={workoutLog.id}
+          exercises={exercises}
+          defaultWeightUnit={profile.defaultWeightUnit}
+        />
       </section>
     </main>
   );

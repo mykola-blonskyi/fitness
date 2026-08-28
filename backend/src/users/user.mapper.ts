@@ -1,4 +1,5 @@
 import { users } from '../db/schema';
+import type { WeightUnit } from '../shared/weight-unit';
 
 export type UserRow = typeof users.$inferSelect;
 
@@ -16,6 +17,7 @@ export interface UserResponse {
   isAdmin: boolean;
   mealCount: number;
   locale: string;
+  defaultWeightUnit: WeightUnit;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +50,7 @@ export function toUserResponse(user: UserRow): UserResponse {
     isAdmin: user.isAdmin,
     mealCount: user.mealCount,
     locale: user.locale,
+    defaultWeightUnit: user.defaultWeightUnit,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

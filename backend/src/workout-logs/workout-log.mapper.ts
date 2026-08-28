@@ -1,4 +1,5 @@
 import type { ExerciseCategory } from '../exercises/exercise.types';
+import type { WeightUnit } from '../shared/weight-unit';
 
 export interface WorkoutSetRow {
   id: string;
@@ -7,6 +8,7 @@ export interface WorkoutSetRow {
   exerciseCategory: string;
   setNumber: number;
   weight: string | null;
+  weightUnit: WeightUnit | null;
   reps: number | null;
   durationSeconds: number | null;
 }
@@ -18,6 +20,7 @@ export interface WorkoutSetResponse {
   exerciseCategory: ExerciseCategory;
   setNumber: number;
   weight: number | null;
+  weightUnit: WeightUnit | null;
   reps: number | null;
   durationSeconds: number | null;
 }
@@ -30,6 +33,8 @@ export function toWorkoutSetResponse(row: WorkoutSetRow): WorkoutSetResponse {
     exerciseCategory: row.exerciseCategory as ExerciseCategory,
     setNumber: row.setNumber,
     weight: row.weight === null ? null : Number(row.weight),
+    // Pre-dates the weightUnit column - see schema.ts's workoutSets comment.
+    weightUnit: row.weight === null ? null : (row.weightUnit ?? 'kg'),
     reps: row.reps,
     durationSeconds: row.durationSeconds,
   };

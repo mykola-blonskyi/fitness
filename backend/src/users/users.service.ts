@@ -49,6 +49,7 @@ export class UsersService {
         avatarUrl: dto.avatarUrl,
         ...(dto.mealCount !== undefined ? { mealCount: dto.mealCount } : {}),
         locale: dto.locale,
+        defaultWeightUnit: dto.defaultWeightUnit,
       })
       .returning();
 

@@ -27,6 +27,7 @@ export const activityLevelEnum = pgEnum('activity_level', [
   'active',
   'very_active',
 ]);
+export const weightUnitEnum = pgEnum('weight_unit', ['kg', 'lb']);
 
 // id is NOT locally generated — it's always set to the Hub's own user id,
 // so cross-project identity stays aligned.
@@ -51,6 +52,9 @@ export const users = pgTable('users', {
   // layer instead. Deliberately NOT next-intl's route-based locale segment
   // (FITNESS-11 hasn't landed).
   locale: text('locale').notNull().default('en'),
+  defaultWeightUnit: weightUnitEnum('default_weight_unit')
+    .notNull()
+    .default('kg'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -61,7 +65,8 @@ export const users = pgTable('users', {
 
 // weight is nullable by design: no daily activity should require a
 // weigh-in first. The row is created lazily on first write and never
-// deleted - clearing a weight entry just nulls the column.
+// deleted - clearing a weight entry just nulls the column. weightUnit
+// mirrors that nullability; null (pre-dating this column) means kg.
 export const dailyLogs = pgTable(
   'daily_logs',
   {
@@ -71,6 +76,7 @@ export const dailyLogs = pgTable(
       .references(() => users.id),
     date: date('date').notNull(),
     weight: numeric('weight'),
+    weightUnit: weightUnitEnum('weight_unit'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -217,6 +223,8 @@ export const workoutLogs = pgTable('workout_logs', {
 // Exactly one of (weight + reps) or durationSeconds is set, depending on
 // the exercise's category - enforced in workout-set-values.ts, same
 // pattern as programExercises' targets, not a DB CHECK constraint.
+// weightUnit mirrors weight's own nullability; null (pre-dating this
+// column) means kg.
 export const workoutSets = pgTable('workout_sets', {
   id: uuid('id').primaryKey().defaultRandom(),
   workoutLogId: uuid('workout_log_id')
@@ -227,6 +235,7 @@ export const workoutSets = pgTable('workout_sets', {
     .references(() => exercises.id),
   setNumber: integer('set_number').notNull(),
   weight: numeric('weight'),
+  weightUnit: weightUnitEnum('weight_unit'),
   reps: integer('reps'),
   durationSeconds: integer('duration_seconds'),
   createdAt: timestamp('created_at', { withTimezone: true })

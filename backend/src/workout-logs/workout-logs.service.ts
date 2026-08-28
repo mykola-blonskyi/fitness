@@ -84,6 +84,7 @@ export class WorkoutLogsService {
         exerciseId: schema.workoutSets.exerciseId,
         setNumber: schema.workoutSets.setNumber,
         weight: schema.workoutSets.weight,
+        weightUnit: schema.workoutSets.weightUnit,
         reps: schema.workoutSets.reps,
         durationSeconds: schema.workoutSets.durationSeconds,
         exerciseName: schema.exercises.name,
@@ -201,6 +202,7 @@ export class WorkoutLogsService {
         exerciseId: dto.exerciseId,
         setNumber: nextSetNumber,
         weight: values.weight == null ? null : values.weight.toString(),
+        weightUnit: values.weightUnit,
         reps: values.reps,
         durationSeconds: values.durationSeconds,
       })
@@ -213,6 +215,7 @@ export class WorkoutLogsService {
       exerciseCategory: exercise.category,
       setNumber: inserted.setNumber,
       weight: inserted.weight,
+      weightUnit: inserted.weightUnit,
       reps: inserted.reps,
       durationSeconds: inserted.durationSeconds,
     });
