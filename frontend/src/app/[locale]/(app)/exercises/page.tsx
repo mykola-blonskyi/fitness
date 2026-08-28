@@ -4,6 +4,7 @@ import {
   ExercisesSearchForm,
 } from '@features/exercise-catalog';
 import type { Exercise } from '@shared/types/exercise';
+import type { CursorPage } from '@shared/types/admin';
 import type { UserProfile } from '@shared/types/user';
 import { apiFetch } from '@libs/api-client';
 
@@ -29,8 +30,10 @@ export default async function ExerciseCatalogPage({
   if (search) query.set('search', search);
   const queryString = query.toString();
 
-  const [exercises, profile] = await Promise.all([
-    apiFetch<Exercise[]>(`/exercises${queryString ? `?${queryString}` : ''}`),
+  const [firstPage, profile] = await Promise.all([
+    apiFetch<CursorPage<Exercise>>(
+      `/exercises${queryString ? `?${queryString}` : ''}`,
+    ),
     apiFetch<UserProfile>('/users/me'),
   ]);
 
@@ -40,7 +43,13 @@ export default async function ExerciseCatalogPage({
 
       <ExercisesSearchForm category={category} search={search} />
 
-      <ExercisesList exercises={exercises} profile={profile} />
+      <ExercisesList
+        initialItems={firstPage.items}
+        initialCursor={firstPage.nextCursor}
+        category={category}
+        search={search}
+        profile={profile}
+      />
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Add a custom exercise</h2>

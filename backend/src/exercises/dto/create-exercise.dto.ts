@@ -1,8 +1,8 @@
 import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 import { EXERCISE_CATEGORIES } from '../exercise.types';
 
-// source/sourceId/isVerified/imageUrl are left at their schema defaults —
-// only the seed import sets those.
+// source/sourceId/imageUrl are left at their schema defaults — only the
+// seed import sets those.
 export class CreateExerciseDto {
   @IsString()
   @IsNotEmpty()
