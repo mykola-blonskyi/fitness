@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import {
   createExerciseSchema,
   type CreateExerciseInput,
@@ -14,6 +15,7 @@ import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createExercise } from '@features/exercise-catalog/actions';
 
 export function CreateExerciseForm() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -24,7 +26,9 @@ export function CreateExerciseForm() {
 
   async function onSubmit(input: CreateExerciseInput) {
     const result = await createExercise(input);
-    if (!applyFormActionError(setError, result)) reset();
+    if (applyFormActionError(setError, result)) return;
+    reset();
+    router.refresh();
   }
 
   return (
