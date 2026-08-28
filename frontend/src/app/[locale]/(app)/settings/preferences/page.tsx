@@ -7,6 +7,7 @@ import {
 } from '@features/preferences';
 import type { FoodItem, FoodTaxonomy } from '@features/food-catalog/actions';
 import { apiFetch } from '@libs/api-client';
+import type { CursorPage } from '@shared/types/admin';
 import type { DietPreference, FoodPreference } from '@shared/types/preferences';
 
 export default async function PreferencesSettingsPage({
@@ -16,12 +17,14 @@ export default async function PreferencesSettingsPage({
 }) {
   const { locale } = await params;
 
-  const [foodPreferences, dietPreferences, taxonomy, foodItems] =
+  const [foodPreferences, dietPreferences, taxonomy, foodItemPage] =
     await Promise.all([
       apiFetch<FoodPreference[]>('/food-preferences'),
       apiFetch<DietPreference[]>('/diet-preferences'),
       apiFetch<FoodTaxonomy>('/food-items/taxonomy'),
-      apiFetch<FoodItem[]>('/food-items'),
+      // limit=100: the exclusion picker below filters this client-side
+      // and caps its own render at 50 - no need for the picker to paginate.
+      apiFetch<CursorPage<FoodItem>>('/food-items?limit=100'),
     ]);
 
   return (
@@ -40,7 +43,10 @@ export default async function PreferencesSettingsPage({
       <section className="flex w-full max-w-sm flex-col gap-3">
         <h2 className="text-lg font-semibold">Allergies &amp; exclusions</h2>
         <FoodPreferenceList preferences={foodPreferences} />
-        <AddFoodPreferenceForm taxonomy={taxonomy} foodItems={foodItems} />
+        <AddFoodPreferenceForm
+          taxonomy={taxonomy}
+          foodItems={foodItemPage.items}
+        />
       </section>
     </main>
   );

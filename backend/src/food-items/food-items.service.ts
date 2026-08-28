@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, ilike } from 'drizzle-orm';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { and, desc, eq, ilike, lt, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import { decodeCursor, encodeCursor } from '../admin/cursor-pagination';
 import type { CreateFoodItemDto } from './dto/create-food-item.dto';
 import {
   toFoodItemResponse,
@@ -11,6 +12,12 @@ import {
 } from './food-item.mapper';
 
 const DEFAULT_LOCALE = 'en';
+const DEFAULT_LIMIT = 20;
+
+export interface FoodItemPage {
+  items: FoodItemResponse[];
+  nextCursor: string | null;
+}
 
 // Shared column projection for both list() and create()'s post-insert
 // re-select - one place to add a new food_calories column so it can't go
@@ -27,6 +34,7 @@ const foodItemColumns = {
   fatPer100g: schema.foodCalories.fatPer100g,
   isVerified: schema.foodCalories.isVerified,
   imageUrl: schema.foodCalories.imageUrl,
+  createdAt: schema.foodCalories.createdAt,
 };
 
 @Injectable()
@@ -37,13 +45,25 @@ export class FoodItemsService {
   // name resolved to the requested locale - falling back to the English
   // base name when no translation row exists yet (untranslated or the
   // locale itself is 'en', which never gets its own translation row -
-  // see knowledge/domain-model.md).
+  // see knowledge/domain-model.md). Verified-only, cursor-paginated on
+  // (createdAt, id) - same keyset machinery as AdminExercisesService.list().
+  //
+  // Newest-first (unlike the admin queue's oldest-first FIFO): a food
+  // item created via the form below then lands on page 1 right away,
+  // instead of at the tail of the full scroll.
   async list(params: {
     category?: string;
     search?: string;
     locale?: string;
-  }): Promise<FoodItemResponse[]> {
+    cursor?: string;
+    limit?: number;
+  }): Promise<FoodItemPage> {
     const locale = params.locale ?? DEFAULT_LOCALE;
+    const limit = params.limit ?? DEFAULT_LIMIT;
+    const cursor = params.cursor ? decodeCursor(params.cursor) : null;
+    if (params.cursor && !cursor) {
+      throw new BadRequestException('Invalid cursor');
+    }
 
     const rows = await this.db
       .select({
@@ -75,19 +95,46 @@ export class FoodItemsService {
       )
       .where(
         and(
+          eq(schema.foodCalories.isVerified, true),
           params.category
             ? eq(schema.foodCategories.name, params.category)
             : undefined,
           params.search
             ? ilike(schema.foodCalories.name, `%${params.search}%`)
             : undefined,
+          cursor
+            ? or(
+                lt(schema.foodCalories.createdAt, new Date(cursor.createdAt)),
+                and(
+                  eq(schema.foodCalories.createdAt, new Date(cursor.createdAt)),
+                  lt(schema.foodCalories.id, cursor.id),
+                ),
+              )
+            : undefined,
         ),
       )
-      .orderBy(schema.foodCalories.name);
+      .orderBy(
+        desc(schema.foodCalories.createdAt),
+        desc(schema.foodCalories.id),
+      )
+      .limit(limit + 1);
 
-    return rows.map((row) =>
-      toFoodItemResponse({ ...row, name: row.translatedName ?? row.name }),
-    );
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    const last = page[page.length - 1];
+
+    return {
+      items: page.map((row) =>
+        toFoodItemResponse({ ...row, name: row.translatedName ?? row.name }),
+      ),
+      nextCursor:
+        hasMore && last
+          ? encodeCursor({
+              createdAt: last.createdAt.toISOString(),
+              id: last.id,
+            })
+          : null,
+    };
   }
 
   // Powers the browse-by-category picker and the manual-creation form's
@@ -118,10 +165,9 @@ export class FoodItemsService {
     };
   }
 
-  // source/sourceId stay null (unlike seeded rows) and isVerified stays
-  // at its schema default (false) - a manually typed macro value is no
-  // more trustworthy than an imported one until a reviewer confirms it,
-  // same convention as `exercises`.
+  // source/sourceId stay null (unlike seeded rows). isVerified is set
+  // immediately, unlike imported rows - it already has an accountable
+  // author, and must show up in the verified-only browse list right away.
   async create(dto: CreateFoodItemDto): Promise<FoodItemResponse> {
     const [inserted] = await this.db
       .insert(schema.foodCalories)
@@ -134,6 +180,7 @@ export class FoodItemsService {
         proteinPer100g: String(dto.proteinPer100g),
         carbsPer100g: String(dto.carbsPer100g),
         fatPer100g: String(dto.fatPer100g),
+        isVerified: true,
       })
       .returning();
 
