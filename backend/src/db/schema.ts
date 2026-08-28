@@ -439,6 +439,12 @@ export const photoAnalysisStatusEnum = pgEnum('photo_analysis_status', [
   'completed',
   'failed',
 ]);
+export const photoSessionStatusEnum = pgEnum('photo_session_status', [
+  'uploading',
+  'detecting',
+  'needs_review',
+  'confirmed',
+]);
 
 // Groups Progress Photos captured on one occasion. isBaseline's "only one
 // true per user" constraint is a real DB constraint (partial unique index
@@ -452,6 +458,7 @@ export const photoSessions = pgTable(
       .references(() => users.id),
     date: date('date').notNull(),
     isBaseline: boolean('is_baseline').notNull().default(false),
+    status: photoSessionStatusEnum('status').notNull().default('uploading'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -469,8 +476,8 @@ export const photoSessions = pgTable(
 // objectKey is the private MinIO key, never a public URL - see ADR-002.
 // photoSessionId groups this with its front/side/back siblings; dailyLogId
 // links it to the Daily Log it was captured against.
-// poseLandmarks/alignmentData are populated by the Python worker (not yet
-// built - FITNESS-23/24), left null until then.
+// pose is nullable until the owning session reaches `confirmed` (ADR-013) -
+// the `detect` job assigns it, but only a human confirm makes it final.
 export const progressPhotos = pgTable(
   'progress_photos',
   {
@@ -481,7 +488,7 @@ export const progressPhotos = pgTable(
     dailyLogId: uuid('daily_log_id')
       .notNull()
       .references(() => dailyLogs.id),
-    pose: photoPoseEnum('pose').notNull(),
+    pose: photoPoseEnum('pose'),
     objectKey: text('object_key').notNull().unique(),
     analysisStatus: photoAnalysisStatusEnum('analysis_status')
       .notNull()

@@ -64,16 +64,16 @@ Python, FastAPI, OpenCV, MediaPipe, NumPy. Internal-only service, not exposed to
 
 Responsibilities:
 
-- Consumes photo-analysis jobs from a plain Redis list/stream (JSON payload: `{ photoId, objectKey, pose }`) — see [ADR-003](docs/decisions.md)
-- Reads the photo directly from MinIO using its own service credentials (no presigned URL needed for this internal, service-to-service leg)
-- Pose detection, pose/alignment validation, landmark extraction; writes results back (status + JSON) either directly to Postgres or via a callback to NestJS
-- Auto-retries a job a few times with backoff on transient failure before marking it permanently `failed`
+- Consumes two job types from a plain Redis list (`detect`, `analyze-alignment` — see [ADR-013](docs/decisions.md)), each a JSON payload keyed by session/photo id and object key
+- Reads photos directly from MinIO using its own service credentials (no presigned URL needed for this internal, service-to-service leg)
+- Pose detection, pose/alignment validation, landmark extraction; writes results directly to Postgres with its own credentials
+- Auto-retries a job a few times with backoff on transient failure
 
 Dependencies:
 
 - Redis (job source)
 - MinIO (photo read)
-- Postgres or NestJS callback (result write)
+- Postgres (result write)
 
 ---
 
@@ -98,9 +98,11 @@ External systems:
 2. NestJS generates a presigned MinIO PUT URL.
 3. Client uploads the image directly to MinIO (bypasses the app server).
 4. Client confirms upload completion to NestJS.
-5. NestJS creates the `progress_photos` row (`analysis_status = pending`) and pushes a job onto the Redis queue.
-6. The Python worker picks up the job, fetches the image from MinIO directly, runs pose/alignment analysis, writes results back.
-7. Frontend polls/reads `analysis_status`; when reading the photo back, NestJS generates a short-lived presigned GET URL after checking ownership.
+5. NestJS creates the `photo_sessions` (`status = detecting`) and `progress_photos` rows, then pushes a `detect` job onto the Redis queue.
+6. The Python worker picks up the job, fetches the photos from MinIO directly, assigns pose + landmarks, moves the session to `needs_review`.
+7. The user reviews/edits pose and confirms; NestJS moves the session to `confirmed` and pushes an `analyze-alignment` job per photo.
+8. The Python worker runs alignment analysis, writes `progress_photos.analysis_status`/`alignment_data` back.
+9. Frontend polls/reads `analysis_status`; when reading a photo back, NestJS generates a short-lived presigned GET URL after checking ownership.
 
 **Diet generation:** manual trigger only (see [[business-rules]]) → NestJS runs the greedy-heuristic generator against the user's profile, active Diet/Food Preferences, and the Food catalog → writes a new `diets` + `diet_items` row set, linked to the triggering Daily Log.
 

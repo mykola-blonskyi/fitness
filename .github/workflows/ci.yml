@@ -131,6 +131,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter frontend test
 
+  worker-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r worker/requirements-dev.txt
+      - run: python -m pytest worker/tests
+
   frontend-lighthouse-pwa:
     # FITNESS-12 acceptance criteria: "Lighthouse PWA-installability checks
     # pass in CI". Lighthouse 10 dropped the PWA category (and its
@@ -201,6 +211,7 @@ jobs:
       - backend-format
       - backend-typecheck
       - backend-test
+      - worker-test
       - frontend-lint
       - frontend-format
       - frontend-typecheck
