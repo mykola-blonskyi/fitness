@@ -1,11 +1,14 @@
 import Image from 'next/image';
+import { unapproveFoodItem } from '@features/admin-food-items/actions';
 import type { FoodItem } from '@features/food-catalog/actions';
+import type { UserProfile } from '@shared/types/user';
 
 interface FoodListProps {
   items: FoodItem[];
+  profile: UserProfile;
 }
 
-export const FoodList = ({ items }: FoodListProps) => {
+export const FoodList = ({ items, profile }: FoodListProps) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-max text-left text-sm">
@@ -19,6 +22,8 @@ export const FoodList = ({ items }: FoodListProps) => {
             <th className="py-2 pr-4">Protein</th>
             <th className="py-2 pr-4">Carbs</th>
             <th className="py-2 pr-4">Fat</th>
+            <th className="py-2 pr-4">Verified</th>
+            {profile.isAdmin && <th className="py-2 pr-4" />}
           </tr>
         </thead>
         <tbody>
@@ -48,6 +53,21 @@ export const FoodList = ({ items }: FoodListProps) => {
               <td className="py-2 pr-4">{item.proteinPer100g.toFixed(1)}g</td>
               <td className="py-2 pr-4">{item.carbsPer100g.toFixed(1)}g</td>
               <td className="py-2 pr-4">{item.fatPer100g.toFixed(1)}g</td>
+              <td className="py-2 pr-4">{item.isVerified ? 'Yes' : 'No'}</td>
+              {profile.isAdmin && (
+                <td className="py-2 pr-4">
+                  {item.isVerified && (
+                    <form action={unapproveFoodItem.bind(null, item.id)}>
+                      <button
+                        type="submit"
+                        className="text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                      >
+                        Unapprove
+                      </button>
+                    </form>
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
