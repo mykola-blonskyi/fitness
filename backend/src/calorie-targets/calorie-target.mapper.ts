@@ -1,4 +1,5 @@
 import { dietCalculationAlgorithms } from '../db/schema';
+import type { WeightUnit } from '../shared/weight-unit';
 import type { MifflinV1Result } from './algorithms/mifflin-v1';
 
 export type DietCalculationAlgorithmRow =
@@ -13,6 +14,7 @@ export interface CalorieTargetResponse {
   };
   weighIn: {
     weight: number;
+    unit: WeightUnit;
     date: string;
   };
   calories: number;
@@ -23,7 +25,7 @@ export interface CalorieTargetResponse {
 
 export function toCalorieTargetResponse(
   algorithm: DietCalculationAlgorithmRow,
-  weighIn: { weight: number; date: string },
+  weighIn: { weight: number; unit: WeightUnit; date: string },
   result: MifflinV1Result,
 ): CalorieTargetResponse {
   return {

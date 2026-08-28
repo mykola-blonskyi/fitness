@@ -74,6 +74,7 @@ export class DailyLogsController {
       identity.hubUserId,
       date,
       dto.weight,
+      dto.unit,
     );
   }
 

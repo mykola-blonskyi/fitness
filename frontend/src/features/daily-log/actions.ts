@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import { weightSchema, type WeightInput } from '@shared/schemas/weight';
+import type { WeightUnit } from '@shared/types/user';
 import {
   submitFormAction,
   type FormActionError,
@@ -13,6 +14,7 @@ export interface DailyLog {
   id: string;
   date: string;
   weight: number | null;
+  weightUnit: WeightUnit | null;
   createdAt: string;
   updatedAt: string;
 }

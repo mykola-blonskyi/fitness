@@ -1,4 +1,5 @@
 import { dailyLogs } from '../db/schema';
+import type { WeightUnit } from '../shared/weight-unit';
 
 export type DailyLogRow = typeof dailyLogs.$inferSelect;
 
@@ -6,6 +7,7 @@ export interface DailyLogResponse {
   id: string;
   date: string;
   weight: number | null;
+  weightUnit: WeightUnit | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +17,8 @@ export function toDailyLogResponse(row: DailyLogRow): DailyLogResponse {
     id: row.id,
     date: row.date,
     weight: row.weight === null ? null : Number(row.weight),
+    // Pre-dates the weightUnit column - see schema.ts's dailyLogs comment.
+    weightUnit: row.weight === null ? null : (row.weightUnit ?? 'kg'),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

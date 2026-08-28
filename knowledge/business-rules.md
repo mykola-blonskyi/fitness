@@ -163,3 +163,11 @@ Why: this app handles real health data (weight, date of birth, goals) — sendin
 The service worker caches active programs/exercises/recent logs for offline viewing, and lets the user log workout sets while offline. Writes queue in IndexedDB and flush to the NestJS API in order once connectivity returns. No conflict resolution is needed since workout sets are append-only, never concurrently edited.
 
 Why: "gym usage without internet" only holds if the core action (logging a set) works with no signal, not just viewing cached data.
+
+---
+
+## Logged weight keeps its own entry unit; only Mifflin input is normalized
+
+A body-weight entry (`daily_logs.weight`) and a workout set's weight (`workout_sets.weight`) each carry their own `weight_unit` (`kg`/`lb`), set once at write time from `users.default_weight_unit` or a per-entry override, and never converted afterward — viewing or re-submitting an entry always shows its original unit. Rows predating the `weight_unit` column, and any row where it's left `null`, are treated as `kg`.
+
+The one exception is the calorie-target calculation's Mifflin input, which needs a single unit to do the math — `calorie-targets.service.ts` converts the latest weigh-in to kg for that formula input only, via `shared/weight-unit.ts`'s `toKg()`; the stored row and the API's own `weighIn.weight`/`weighIn.unit` fields stay unconverted. Broader read-time conversion (the weight-trend chart, a user-facing display-unit toggle) is FITNESS-48, not yet built.

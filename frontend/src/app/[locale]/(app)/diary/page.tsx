@@ -6,6 +6,7 @@ import {
 import type { DailyLog, WeightTrendPoint } from '@features/daily-log/actions';
 import { apiFetch, ApiError } from '@libs/api-client';
 import { WEIGHT_TREND_WINDOWS } from '@shared/constants/daily-log';
+import type { UserProfile } from '@shared/types/user';
 
 type WeightTrendWindow = (typeof WEIGHT_TREND_WINDOWS)[number];
 const DEFAULT_WEIGHT_TREND_WINDOW: WeightTrendWindow = 30;
@@ -59,11 +60,16 @@ export default async function DiaryPage({
   const trend = await apiFetch<WeightTrendPoint[]>(
     `/daily-logs/weight-trend?days=${windowDays}`,
   );
+  const profile = await apiFetch<UserProfile>('/users/me');
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-4 py-16">
       <h1 className="text-2xl font-semibold">Diary — {date}</h1>
-      <WeightForm date={date} dailyLog={dailyLog} />
+      <WeightForm
+        date={date}
+        dailyLog={dailyLog}
+        defaultWeightUnit={profile.defaultWeightUnit}
+      />
 
       <section className="flex w-full flex-col gap-4">
         <WeightTrend windowDays={windowDays} locale={locale} />
