@@ -1,18 +1,23 @@
-import type { photoAnalysisStatusEnum, photoPoseEnum } from '../db/schema';
+import type {
+  photoAnalysisStatusEnum,
+  photoPoseEnum,
+  photoSessionStatusEnum,
+} from '../db/schema';
 
 type PhotoPose = (typeof photoPoseEnum.enumValues)[number];
 type AnalysisStatus = (typeof photoAnalysisStatusEnum.enumValues)[number];
+type PhotoSessionStatus = (typeof photoSessionStatusEnum.enumValues)[number];
 
 export interface ProgressPhotoRow {
   id: string;
-  pose: PhotoPose;
+  pose: PhotoPose | null;
   analysisStatus: AnalysisStatus;
   createdAt: Date;
 }
 
 export interface ProgressPhotoResponse {
   id: string;
-  pose: PhotoPose;
+  pose: PhotoPose | null;
   analysisStatus: AnalysisStatus;
   createdAt: Date;
 }
@@ -32,6 +37,7 @@ export interface PhotoSessionRow {
   id: string;
   date: string;
   isBaseline: boolean;
+  status: PhotoSessionStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +46,7 @@ export interface PhotoSessionResponse {
   id: string;
   date: string;
   isBaseline: boolean;
+  status: PhotoSessionStatus;
   createdAt: Date;
   updatedAt: Date;
   photos: ProgressPhotoResponse[];
@@ -53,6 +60,7 @@ export function toPhotoSessionResponse(
     id: row.id,
     date: row.date,
     isBaseline: row.isBaseline,
+    status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     photos: photoRows.map(toProgressPhotoResponse),

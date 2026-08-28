@@ -10,6 +10,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { DailyLogsService } from '../daily-logs/daily-logs.service';
+import { PhotoAnalysisQueueService } from '../photo-analysis-queue/photo-analysis-queue.service';
 import { StorageService } from '../storage/storage.service';
 import { isUniqueViolation } from '../shared/db-errors';
 import type { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
@@ -35,6 +36,7 @@ export class PhotoSessionsService {
     @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
     private readonly dailyLogsService: DailyLogsService,
     private readonly storageService: StorageService,
+    private readonly photoAnalysisQueueService: PhotoAnalysisQueueService,
   ) {}
 
   async requestUploadUrl(
@@ -109,11 +111,13 @@ export class PhotoSessionsService {
 
     const dailyLog = await this.dailyLogsService.findOrCreate(userId, date);
 
+    // Photos are already verified present in storage by this point, so the
+    // session skips straight past `uploading` - see ADR-013.
     const { session, insertedPhotos } = await this.db.transaction(
       async (tx) => {
         const [session] = await tx
           .insert(schema.photoSessions)
-          .values({ userId, date })
+          .values({ userId, date, status: 'detecting' })
           .returning();
 
         const insertedPhotos = await tx
@@ -130,6 +134,14 @@ export class PhotoSessionsService {
 
         return { session, insertedPhotos };
       },
+    );
+
+    await this.photoAnalysisQueueService.pushDetectJob(
+      session.id,
+      insertedPhotos.map((photo) => ({
+        photoId: photo.id,
+        objectKey: photo.objectKey,
+      })),
     );
 
     return toPhotoSessionResponse(session, insertedPhotos);

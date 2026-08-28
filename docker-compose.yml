@@ -8,7 +8,11 @@
 #
 # Every ${VAR} below is supplied by Coolify's own per-resource environment
 # variable panel at deploy time - never a committed .env file. See
-# backend/.env.example and frontend/.env.example for what each one means.
+# backend/.env.example, frontend/.env.example, and worker/.env.example for
+# what each one means. WORKER_MINIO_ACCESS_KEY/WORKER_MINIO_SECRET_KEY are
+# deliberately separate Coolify variables from the backend's MINIO_* pair -
+# see knowledge/business-rules.md "Python worker accesses MinIO directly,
+# not via presigned URLs".
 
 services:
   backend:
@@ -26,6 +30,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET}
+      REDIS_URL: ${REDIS_URL}
       PORT: 3001
     restart: unless-stopped
     # No ports/domain: stays private on Coolify's network (ADR-001 - the
@@ -41,6 +46,39 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
+      MINIO_ACCESS_KEY: ${WORKER_MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${WORKER_MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+    restart: unless-stopped
+    # Internal-only, same as backend - no ports/domain (docs/architecture.md
+    # "Photo Analysis Worker").
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').getcode() == 200 or exit(1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Cross-language photo-analysis job queue (ADR-003) - no persistence
+    # needed, a lost stub job can just be re-uploaded.
 
   frontend:
     build:
