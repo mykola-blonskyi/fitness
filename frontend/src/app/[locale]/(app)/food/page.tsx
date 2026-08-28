@@ -4,6 +4,7 @@ import {
   FoodSearchForm,
 } from '@features/food-catalog';
 import type { FoodItem, FoodTaxonomy } from '@features/food-catalog/actions';
+import type { UserProfile } from '@shared/types/user';
 import { apiFetch } from '@libs/api-client';
 
 // Filtering is a plain GET <form> below - no client JS needed. Native
@@ -24,9 +25,10 @@ export default async function FoodCatalogPage({
   if (category) query.set('category', category);
   if (search) query.set('search', search);
 
-  const [items, taxonomy] = await Promise.all([
+  const [items, taxonomy, profile] = await Promise.all([
     apiFetch<FoodItem[]>(`/food-items?${query.toString()}`),
     apiFetch<FoodTaxonomy>('/food-items/taxonomy'),
+    apiFetch<UserProfile>('/users/me'),
   ]);
 
   return (
@@ -35,7 +37,7 @@ export default async function FoodCatalogPage({
 
       <FoodSearchForm taxonomy={taxonomy} category={category} search={search} />
 
-      <FoodList items={items} />
+      <FoodList items={items} profile={profile} />
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Add a custom food item</h2>
