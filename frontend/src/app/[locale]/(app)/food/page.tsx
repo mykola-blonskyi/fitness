@@ -3,6 +3,7 @@ import {
   FoodList,
   FoodSearchForm,
 } from '@features/food-catalog';
+import type { CursorPage } from '@shared/types/admin';
 import type { FoodItem, FoodTaxonomy } from '@features/food-catalog/actions';
 import { apiFetch } from '@libs/api-client';
 
@@ -24,8 +25,8 @@ export default async function FoodCatalogPage({
   if (category) query.set('category', category);
   if (search) query.set('search', search);
 
-  const [items, taxonomy] = await Promise.all([
-    apiFetch<FoodItem[]>(`/food-items?${query.toString()}`),
+  const [firstPage, taxonomy] = await Promise.all([
+    apiFetch<CursorPage<FoodItem>>(`/food-items?${query.toString()}`),
     apiFetch<FoodTaxonomy>('/food-items/taxonomy'),
   ]);
 
@@ -35,7 +36,14 @@ export default async function FoodCatalogPage({
 
       <FoodSearchForm taxonomy={taxonomy} category={category} search={search} />
 
-      <FoodList items={items} />
+      <FoodList
+        key={`${category ?? ''}:${search ?? ''}`}
+        items={firstPage.items}
+        nextCursor={firstPage.nextCursor}
+        category={category}
+        search={search}
+        locale={locale}
+      />
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Add a custom food item</h2>

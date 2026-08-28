@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
 import { ListFoodItemsDto } from './dto/list-food-items.dto';
 import type { FoodItemResponse, TaxonomyResponse } from './food-item.mapper';
-import { FoodItemsService } from './food-items.service';
+import { FoodItemsService, type FoodItemPage } from './food-items.service';
 
 // The catalog itself is shared/global reference data, same as
 // `exercises` - not scoped to the caller's own rows the way daily-logs
@@ -13,7 +13,7 @@ export class FoodItemsController {
   constructor(private readonly foodItemsService: FoodItemsService) {}
 
   @Get()
-  async list(@Query() query: ListFoodItemsDto): Promise<FoodItemResponse[]> {
+  async list(@Query() query: ListFoodItemsDto): Promise<FoodItemPage> {
     return this.foodItemsService.list(query);
   }
 
