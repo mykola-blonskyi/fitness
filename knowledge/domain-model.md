@@ -54,11 +54,12 @@ Relationships:
 
 Responsibilities:
 
-Groups Progress Photos captured together on one occasion; tracks whether this occasion is the user's baseline reference point.
+Groups Progress Photos captured together on one occasion; owns the joint pose-detection/review lifecycle for those photos (see ADR-013); tracks whether this occasion is the user's baseline reference point.
 
 Fields:
 
-- user_id, date, is_baseline (only one true per user, enforced by unique partial index)
+- user_id, date, is_baseline (only one true per user, enforced by unique partial index; settable only once `status = confirmed`)
+- status (uploading/detecting/needs_review/confirmed)
 
 Relationships:
 
@@ -71,14 +72,14 @@ Relationships:
 
 Responsibilities:
 
-A single tagged image with async ML analysis results.
+A single tagged image. Pose is machine-suggested then human-confirmed (session-level, see ADR-013); alignment analysis is async ML output scoped to one photo.
 
 Fields:
 
-- pose (front/side/back)
+- pose (front/side/back, nullable until the owning Photo Session is `confirmed`)
 - image location (private MinIO object key — see Business Rules: photo access)
-- analysis_status (pending/processing/completed/failed)
-- pose_landmarks, alignment_data (JSON, populated by the Python worker)
+- analysis_status (pending/processing/completed/failed) — the post-confirm alignment-analysis stage only, not the pose-detection stage
+- pose_landmarks (JSON; computed once during the detection stage, reused by alignment analysis rather than recomputed), alignment_data (JSON, populated by the Python worker)
 
 Relationships:
 

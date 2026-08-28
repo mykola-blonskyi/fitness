@@ -88,7 +88,21 @@ Why: new algorithm versions should be code changes, not runtime-evaluated expres
 
 ## Photo analysis failure handling: auto-retry then give up
 
-The Python worker automatically retries a failed analysis job a few times with backoff before marking `progress_photos.analysis_status = 'failed'` permanently. No further automatic retries after that; the UI can offer a manual retry.
+The Python worker automatically retries a failed job a few times with backoff before marking it permanently failed. No further automatic retries after that; the UI can offer a manual retry. Applies independently to each of the two queue job types (see "Photo pose is machine-suggested, then confirmed" below) — a `detect` job failing (e.g. MinIO read error) and an `analyze-alignment` job failing are separate, separately-retried events.
+
+---
+
+## Photo pose is machine-suggested, then confirmed
+
+Uploading a Photo Session no longer means labeling each photo's pose. A `detect` queue job classifies front/side/back for all of a session's photos jointly (one assignment maximizing total confidence across all three, never per-photo in isolation), moving the session to `needs_review`. The user reviews and can edit any of the three before confirming; only once the session is `confirmed` does `progress_photos.pose` count as final, alignment analysis (FITNESS-24/ADR-013's `analyze-alignment` job) run, or the session become eligible for baseline.
+
+Why: these feed health-trend comparisons — a silently-wrong pose label is worse than asking for one confirm tap. See ADR-013.
+
+---
+
+## Ambiguous pose detection needs manual assignment, not retry
+
+A low-confidence or ambiguous `detect` result is a distinct `needs_review` outcome, not `failed`. Retrying the same heuristic against the same photo produces the same ambiguous result — automatic retry only makes sense for transient technical failures (worker crash, MinIO read error), never for "the geometry heuristic genuinely can't tell." Resolution is always a manual pose assignment in the review step, never a retry button.
 
 ---
 

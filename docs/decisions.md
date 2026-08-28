@@ -143,3 +143,15 @@ next-intl's routing middleware runs first in `proxy.ts`, before Hub auth — a r
 The locale cookie's `maxAge` is set to one year (next-intl defaults to session-only), since "persists across sessions" is an explicit acceptance criterion.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-013: Progress photo pose is auto-detected then human-confirmed, not user-labeled at upload
+
+Date: 2026-08-28
+
+Status: Accepted
+
+Uploading a Photo Session no longer requires the user to label which of the three images is front/side/back — a single multi-select input replaces the three separately-labeled inputs. Pose is instead classified by a geometry heuristic over MediaPipe Pose Landmarker output (no separate trained model), solved as a joint assignment across all photos in the session at once (maximizing total confidence, no pose used twice) rather than per-photo independently. Classification runs as its own queue job (`detect`), separate from the alignment-analysis job (`analyze-alignment`, FITNESS-24) — alignment checks are pose-specific, so they can't run until pose is confirmed, and landmarks computed during detection are passed forward rather than re-extracted. Photo Session carries its own status (`uploading → detecting → needs_review → confirmed`), distinct from each Progress Photo's `analysis_status` (which continues to mean only the post-confirm alignment stage); a low-confidence/ambiguous detection is a distinct `needs_review` outcome rather than reusing `failed`, since re-running the same heuristic on the same photo can't change the result — only manual reassignment resolves it. A session can only be marked baseline once `confirmed`.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
