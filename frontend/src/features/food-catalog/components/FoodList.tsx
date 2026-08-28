@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { unapproveFoodItem } from '@features/admin-food-items/actions';
 import { listFoodItems, type FoodItem } from '@features/food-catalog/actions';
+import type { UserProfile } from '@shared/types/user';
 
 const ROW_HEIGHT = 64;
 
@@ -13,6 +15,7 @@ interface FoodListProps {
   category?: string;
   search?: string;
   locale: string;
+  profile: UserProfile;
 }
 
 export const FoodList = ({
@@ -21,6 +24,7 @@ export const FoodList = ({
   category,
   search,
   locale,
+  profile,
 }: FoodListProps) => {
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
@@ -116,6 +120,17 @@ export const FoodList = ({
                 <span>{item.carbsPer100g.toFixed(1)}g C</span>
                 <span>{item.fatPer100g.toFixed(1)}g F</span>
               </div>
+
+              {profile.isAdmin && item.isVerified && (
+                <form action={unapproveFoodItem.bind(null, item.id)}>
+                  <button
+                    type="submit"
+                    className="shrink-0 text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                  >
+                    Unapprove
+                  </button>
+                </form>
+              )}
             </div>
           );
         })}

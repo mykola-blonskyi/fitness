@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AdminExercisesModule } from './admin/exercises/admin-exercises.module';
+import { AdminFoodItemsModule } from './admin/food-items/admin-food-items.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CalorieTargetsModule } from './calorie-targets/calorie-targets.module';
@@ -36,6 +37,7 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     WorkoutLogsModule,
     PhotoSessionsModule,
     AdminExercisesModule,
+    AdminFoodItemsModule,
   ],
   controllers: [AppController],
   providers: [

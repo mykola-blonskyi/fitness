@@ -5,6 +5,7 @@ import {
 } from '@features/food-catalog';
 import type { CursorPage } from '@shared/types/admin';
 import type { FoodItem, FoodTaxonomy } from '@features/food-catalog/actions';
+import type { UserProfile } from '@shared/types/user';
 import { apiFetch } from '@libs/api-client';
 
 // Filtering is a plain GET <form> below - no client JS needed. Native
@@ -25,9 +26,10 @@ export default async function FoodCatalogPage({
   if (category) query.set('category', category);
   if (search) query.set('search', search);
 
-  const [firstPage, taxonomy] = await Promise.all([
+  const [firstPage, taxonomy, profile] = await Promise.all([
     apiFetch<CursorPage<FoodItem>>(`/food-items?${query.toString()}`),
     apiFetch<FoodTaxonomy>('/food-items/taxonomy'),
+    apiFetch<UserProfile>('/users/me'),
   ]);
 
   return (
@@ -43,6 +45,7 @@ export default async function FoodCatalogPage({
         category={category}
         search={search}
         locale={locale}
+        profile={profile}
       />
 
       <div className="flex flex-col gap-3">

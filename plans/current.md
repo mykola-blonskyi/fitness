@@ -36,7 +36,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 ## Phase 4 — Photo progress tracking
 
-- [ ] Presigned upload flow (Photo Session, Progress Photo, private MinIO bucket + presigned GET on read)
+- [x] Presigned upload flow (Photo Session, Progress Photo, private MinIO bucket + presigned GET on read) (FITNESS-22)
 - [ ] Redis job queue (plain list/stream, JSON payload — not BullMQ, see ADR-003) between NestJS and the Python worker
 - [ ] Python/FastAPI worker: MediaPipe pose analysis, own MinIO credentials, auto-retry-then-fail
 - [ ] Progress gallery grouped by date, baseline comparison

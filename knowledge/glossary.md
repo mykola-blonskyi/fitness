@@ -12,11 +12,11 @@ The act of recording body weight on a Daily Log. Optional per day — a user can
 
 ### Photo Session
 
-A single photo-capture event for a user on a date (`photo_sessions`), grouping up to three Progress Photos (front/side/back) taken together. A Photo Session may be marked as the **baseline** — the reference point future comparisons are measured against. Only one baseline session may exist per user at a time.
+A single photo-capture event for a user on a date (`photo_sessions`), grouping up to three Progress Photos (front/side/back) taken together. Goes through a review status (`uploading` → `detecting` → `needs_review` → `confirmed`) before its photos' poses count as final — see ADR-013 and [[business-rules]] "Photo pose is machine-suggested, then confirmed". A Photo Session may be marked as the **baseline** — the reference point future comparisons are measured against — only once `confirmed`. Only one baseline session may exist per user at a time.
 
 ### Progress Photo
 
-A single image (`progress_photos`) belonging to one Photo Session, tagged with a pose (front/side/back) and carrying async analysis results (landmarks, alignment data, status). Also links directly to its Daily Log (kept alongside the Photo Session link by explicit decision, even though both encode the same day).
+A single image (`progress_photos`) belonging to one Photo Session, tagged with a pose (front/side/back) — machine-suggested via joint classification across the session's photos, editable and finalized only when the user confirms the session — and carrying async alignment-analysis results (landmarks, alignment data, status) once confirmed. `pose_landmarks` is an unrelated ML-output field (MediaPipe skeletal keypoints), not a second name for pose. Also links directly to its Daily Log (kept alongside the Photo Session link by explicit decision, even though both encode the same day).
 
 ### Training Program
 
