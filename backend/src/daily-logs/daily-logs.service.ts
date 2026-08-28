@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gte, isNotNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import { assertRealisticWeight, type WeightUnit } from '../shared/weight-unit';
 import {
   DailyLogResponse,
   WeightTrendPoint,
@@ -67,13 +68,20 @@ export class DailyLogsService {
     userId: string,
     date: string,
     weight: number,
+    unit: WeightUnit,
   ): Promise<DailyLogResponse> {
+    assertRealisticWeight(weight, unit);
+
     const [row] = await this.db
       .insert(schema.dailyLogs)
-      .values({ userId, date, weight: weight.toString() })
+      .values({ userId, date, weight: weight.toString(), weightUnit: unit })
       .onConflictDoUpdate({
         target: [schema.dailyLogs.userId, schema.dailyLogs.date],
-        set: { weight: weight.toString(), updatedAt: new Date() },
+        set: {
+          weight: weight.toString(),
+          weightUnit: unit,
+          updatedAt: new Date(),
+        },
       })
       .returning();
 
@@ -93,7 +101,7 @@ export class DailyLogsService {
 
     const [row] = await this.db
       .update(schema.dailyLogs)
-      .set({ weight: null, updatedAt: new Date() })
+      .set({ weight: null, weightUnit: null, updatedAt: new Date() })
       .where(
         and(
           eq(schema.dailyLogs.userId, userId),

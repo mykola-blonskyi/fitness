@@ -1,4 +1,5 @@
 import type { ExerciseCategory } from './exercise';
+import type { WeightUnit } from './user';
 
 // Mirrors backend/src/workout-logs/workout-log.mapper.ts's WorkoutSetResponse.
 export interface WorkoutSet {
@@ -8,6 +9,7 @@ export interface WorkoutSet {
   exerciseCategory: ExerciseCategory;
   setNumber: number;
   weight: number | null;
+  weightUnit: WeightUnit | null;
   reps: number | null;
   durationSeconds: number | null;
 }

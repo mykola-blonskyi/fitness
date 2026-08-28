@@ -1,6 +1,12 @@
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 import type { UserProfileInput } from '@shared/schemas/user-profile';
-import { ACTIVITY_LEVELS, GENDERS, GOALS, LOCALES } from '@shared/types/user';
+import {
+  ACTIVITY_LEVELS,
+  GENDERS,
+  GOALS,
+  LOCALES,
+  WEIGHT_UNITS,
+} from '@shared/types/user';
 import { FieldError } from '@shared/ui/components/FieldError';
 
 const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
@@ -26,8 +32,13 @@ const LOCALE_LABELS: Record<(typeof LOCALES)[number], string> = {
   es: 'Español',
 };
 
+const WEIGHT_UNIT_LABELS: Record<(typeof WEIGHT_UNITS)[number], string> = {
+  kg: 'Kilograms (kg)',
+  lb: 'Pounds (lb)',
+};
+
 // Shared by OnboardingForm and ProfileForm - both edit the same
-// UserProfileInput shape via the same seven fields, differing only in
+// UserProfileInput shape via the same fields, differing only in
 // whether react-hook-form already has a real defaultValue for the
 // selects. Onboarding starts blank and needs a disabled placeholder
 // option for gender/goal/activityLevel (no sensible default exists);
@@ -175,6 +186,25 @@ export function ProfileFields({
           ))}
         </select>
         <FieldError message={errors.locale?.message} />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="defaultWeightUnit" className="text-sm font-medium">
+          Preferred weight unit
+        </label>
+        <select
+          id="defaultWeightUnit"
+          defaultValue={showPlaceholder ? 'kg' : undefined}
+          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('defaultWeightUnit')}
+        >
+          {WEIGHT_UNITS.map((u) => (
+            <option key={u} value={u}>
+              {WEIGHT_UNIT_LABELS[u]}
+            </option>
+          ))}
+        </select>
+        <FieldError message={errors.defaultWeightUnit?.message} />
       </div>
     </>
   );

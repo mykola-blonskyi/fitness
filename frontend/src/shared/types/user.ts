@@ -10,11 +10,14 @@ export const ACTIVITY_LEVELS = [
 // Matches backend/src/users/dto/create-user.dto.ts's LOCALES. Deliberately
 // not next-intl's route-based locale segment - FITNESS-11 hasn't landed yet.
 export const LOCALES = ['en', 'uk', 'ru', 'es'] as const;
+// Matches backend/src/shared/weight-unit.ts's WEIGHT_UNITS.
+export const WEIGHT_UNITS = ['kg', 'lb'] as const;
 
 export type Gender = (typeof GENDERS)[number];
 export type Goal = (typeof GOALS)[number];
 export type ActivityLevel = (typeof ACTIVITY_LEVELS)[number];
 export type Locale = (typeof LOCALES)[number];
+export type WeightUnit = (typeof WEIGHT_UNITS)[number];
 
 // Mirrors backend/src/users/user.mapper.ts's UserResponse.
 export interface UserProfile {
@@ -30,6 +33,7 @@ export interface UserProfile {
   avatarUrl: string | null;
   isAdmin: boolean;
   locale: Locale;
+  defaultWeightUnit: WeightUnit;
   createdAt: string;
   updatedAt: string;
 }

@@ -4,7 +4,7 @@ import type { Identity } from '../identity/identity.types';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { ListExercisesDto } from './dto/list-exercises.dto';
 import type { ExerciseResponse } from './exercise.mapper';
-import { ExercisesService } from './exercises.service';
+import { ExercisesService, type ExercisePage } from './exercises.service';
 
 // list() takes @CurrentUser() only to resolve the caller's stored locale
 // preference - the catalog itself is shared/global reference data.
@@ -16,7 +16,7 @@ export class ExercisesController {
   async list(
     @CurrentUser() identity: Identity,
     @Query() query: ListExercisesDto,
-  ): Promise<ExerciseResponse[]> {
+  ): Promise<ExercisePage> {
     return this.exercisesService.list(identity.hubUserId, query);
   }
 

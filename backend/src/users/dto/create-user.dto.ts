@@ -10,6 +10,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { WEIGHT_UNITS, type WeightUnit } from '../../shared/weight-unit';
 
 const GENDERS = ['male', 'female'] as const;
 const GOALS = ['weight_loss', 'maintenance', 'muscle_gain'] as const;
@@ -67,4 +68,9 @@ export class CreateUserDto {
   @IsOptional()
   @IsIn(LOCALES)
   locale?: (typeof LOCALES)[number];
+
+  // Optional - the schema default ('kg') applies when omitted.
+  @IsOptional()
+  @IsIn(WEIGHT_UNITS)
+  defaultWeightUnit?: WeightUnit;
 }

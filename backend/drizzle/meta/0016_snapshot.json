@@ -1,6 +1,6 @@
 {
-  "id": "41f777a3-ab09-4017-9d11-9f3b50202035",
-  "prevId": "d6aabc4e-1d4c-44e2-8147-16fe4b2ed7ac",
+  "id": "a27f0606-6943-4675-902c-e5eb7a8f1be4",
+  "prevId": "41f777a3-ab09-4017-9d11-9f3b50202035",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -978,6 +978,14 @@
           "notNull": true,
           "default": false
         },
+        "status": {
+          "name": "status",
+          "type": "photo_session_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'uploading'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1150,7 +1158,7 @@
           "type": "photo_pose",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "object_key": {
           "name": "object_key",
@@ -1776,6 +1784,16 @@
         "front",
         "side",
         "back"
+      ]
+    },
+    "public.photo_session_status": {
+      "name": "photo_session_status",
+      "schema": "public",
+      "values": [
+        "uploading",
+        "detecting",
+        "needs_review",
+        "confirmed"
       ]
     },
     "public.weight_unit": {
