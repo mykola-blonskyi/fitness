@@ -4,7 +4,7 @@ import { firstFieldErrors } from '@shared/schemas/zod-errors';
 
 describe('weightSchema', () => {
   it('accepts a valid weight', () => {
-    const result = weightSchema.safeParse({ weight: 72.5 });
+    const result = weightSchema.safeParse({ weight: 72.5, unit: 'kg' });
     expect(result.success).toBe(true);
   });
 
@@ -26,7 +26,7 @@ describe('weightSchema', () => {
 
 describe('firstFieldErrors', () => {
   it('maps a schema failure to one message per field', () => {
-    const result = weightSchema.safeParse({ weight: -5 });
+    const result = weightSchema.safeParse({ weight: -5, unit: 'kg' });
     if (result.success) throw new Error('expected failure');
     const errors = firstFieldErrors(result.error);
     expect(Object.keys(errors)).toEqual(['weight']);

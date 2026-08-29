@@ -40,8 +40,12 @@ describe('logWorkoutSetSchema', () => {
 
   it('accepts weight/reps for a non-cardio exercise', () => {
     expect(
-      logWorkoutSetSchema.safeParse({ exerciseId, weight: 60, reps: 10 })
-        .success,
+      logWorkoutSetSchema.safeParse({
+        exerciseId,
+        weight: 60,
+        unit: 'kg',
+        reps: 10,
+      }).success,
     ).toBe(true);
   });
 
