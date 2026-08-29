@@ -4,7 +4,11 @@ import {
   PHOTO_ANALYSIS_QUEUE_KEY,
   REDIS_CLIENT,
 } from './photo-analysis-queue.constants';
-import type { DetectJob, DetectJobPhoto } from './photo-analysis-queue.types';
+import type {
+  AnalyzeAlignmentJob,
+  DetectJob,
+  DetectJobPhoto,
+} from './photo-analysis-queue.types';
 
 @Injectable()
 export class PhotoAnalysisQueueService {
@@ -15,6 +19,17 @@ export class PhotoAnalysisQueueService {
     photos: DetectJobPhoto[],
   ): Promise<void> {
     const job: DetectJob = { type: 'detect', sessionId, photos };
-    await this.redis.lpush(PHOTO_ANALYSIS_QUEUE_KEY, JSON.stringify(job));
+    await this.push(job);
+  }
+
+  async pushAnalyzeAlignmentJob(
+    photo: Omit<AnalyzeAlignmentJob, 'type'>,
+  ): Promise<void> {
+    const job: AnalyzeAlignmentJob = { type: 'analyze-alignment', ...photo };
+    await this.push(job);
+  }
+
+  private push(job: DetectJob | AnalyzeAlignmentJob): Promise<number> {
+    return this.redis.lpush(PHOTO_ANALYSIS_QUEUE_KEY, JSON.stringify(job));
   }
 }

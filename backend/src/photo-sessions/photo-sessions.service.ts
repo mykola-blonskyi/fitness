@@ -14,6 +14,8 @@ import { PhotoAnalysisQueueService } from '../photo-analysis-queue/photo-analysi
 import { StorageService } from '../storage/storage.service';
 import { isUniqueViolation } from '../shared/db-errors';
 import type { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
+import type { ConfirmReviewDto } from './dto/confirm-review.dto';
+import { resolveReviewAssignment } from './review-assignment';
 import {
   toPhotoSessionResponse,
   type PhotoSessionResponse,
@@ -142,6 +144,57 @@ export class PhotoSessionsService {
     return toPhotoSessionResponse(session, insertedPhotos);
   }
 
+  // Confirms a needs_review session's pose assignments (machine-suggested
+  // or user-edited), then kicks off the pose-specific alignment stage.
+  async confirmReview(
+    userId: string,
+    id: string,
+    dto: ConfirmReviewDto,
+  ): Promise<PhotoSessionResponse> {
+    const session = await this.findOwnedSession(userId, id);
+    if (session.status !== 'needs_review') {
+      throw new BadRequestException('This session is not awaiting pose review');
+    }
+
+    const photos = await this.db
+      .select({
+        id: schema.progressPhotos.id,
+        objectKey: schema.progressPhotos.objectKey,
+      })
+      .from(schema.progressPhotos)
+      .where(eq(schema.progressPhotos.photoSessionId, id));
+
+    const assignments = resolveReviewAssignment(
+      photos.map((photo) => photo.id),
+      dto.photos,
+    );
+
+    const updated = await this.db.transaction(async (tx) => {
+      for (const photo of photos) {
+        await tx
+          .update(schema.progressPhotos)
+          .set({ pose: assignments.get(photo.id)!, analysisStatus: 'pending' })
+          .where(eq(schema.progressPhotos.id, photo.id));
+      }
+      const [row] = await tx
+        .update(schema.photoSessions)
+        .set({ status: 'confirmed', updatedAt: new Date() })
+        .where(eq(schema.photoSessions.id, id))
+        .returning();
+      return row;
+    });
+
+    for (const photo of photos) {
+      await this.photoAnalysisQueueService.pushAnalyzeAlignmentJob({
+        photoId: photo.id,
+        objectKey: photo.objectKey,
+        pose: assignments.get(photo.id)!,
+      });
+    }
+
+    return toPhotoSessionResponse(updated, await this.fetchPhotos([id]));
+  }
+
   async list(userId: string): Promise<PhotoSessionResponse[]> {
     const sessions = await this.db.query.photoSessions.findMany({
       where: eq(schema.photoSessions.userId, userId),
@@ -168,7 +221,12 @@ export class PhotoSessionsService {
   }
 
   async setBaseline(userId: string, id: string): Promise<PhotoSessionResponse> {
-    await this.findOwnedSession(userId, id);
+    const session = await this.findOwnedSession(userId, id);
+    if (session.status !== 'confirmed') {
+      throw new BadRequestException(
+        "Confirm the session's poses before marking it as baseline",
+      );
+    }
 
     let updated: typeof schema.photoSessions.$inferSelect;
     try {
