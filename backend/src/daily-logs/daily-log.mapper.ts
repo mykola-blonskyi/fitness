@@ -33,3 +33,11 @@ export interface WeightTrendPoint {
   date: string;
   weight: number;
 }
+
+// Every point is converted to `unit` (the profile's current default) so
+// the chart's axis stays consistent even when the underlying weigh-ins
+// were logged in different units - see FITNESS-48.
+export interface WeightTrendResponse {
+  unit: WeightUnit;
+  points: WeightTrendPoint[];
+}

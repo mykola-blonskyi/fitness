@@ -40,6 +40,7 @@ export function connectedPairs(
 
 interface WeightTrendChartProps {
   points: WeightTrendPoint[];
+  unit: string;
   windowStart: string;
   windowEnd: string;
   windowDays: number;
@@ -47,6 +48,7 @@ interface WeightTrendChartProps {
 
 export function WeightTrendChart({
   points,
+  unit,
   windowStart,
   windowEnd,
   windowDays,
@@ -103,7 +105,7 @@ export function WeightTrendChart({
       role="img"
       aria-label={`Weight trend over the last ${windowDays} days: ${points.length} weigh-in${
         points.length === 1 ? '' : 's'
-      }, ranging from ${minWeight}kg to ${maxWeight}kg, most recent ${latest.weight}kg on ${latest.date}.`}
+      }, ranging from ${minWeight}${unit} to ${maxWeight}${unit}, most recent ${latest.weight}${unit} on ${latest.date}.`}
     >
       {gridlineWeights.map((weight) => (
         <g key={weight}>
@@ -150,7 +152,7 @@ export function WeightTrendChart({
           stroke="var(--background)"
           strokeWidth={2}
         >
-          <title>{`${point.date}: ${point.weight}kg`}</title>
+          <title>{`${point.date}: ${point.weight}${unit}`}</title>
         </circle>
       ))}
 
@@ -160,7 +162,8 @@ export function WeightTrendChart({
         textAnchor="end"
         className="fill-zinc-900 text-xs font-medium dark:fill-zinc-100"
       >
-        {latest.weight}kg
+        {latest.weight}
+        {unit}
       </text>
     </svg>
   );

@@ -3,12 +3,21 @@ import { and, asc, desc, eq, gte, isNotNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
-import { assertRealisticWeight, type WeightUnit } from '../shared/weight-unit';
+import {
+  assertRealisticWeight,
+  convertWeight,
+  type WeightUnit,
+} from '../shared/weight-unit';
 import {
   DailyLogResponse,
-  WeightTrendPoint,
+  WeightTrendResponse,
   toDailyLogResponse,
 } from './daily-log.mapper';
+
+// Trims the float tail a unit conversion leaves behind (e.g.
+// 160 lb -> 72.574...kg) without touching the precision of an entry that
+// needed no conversion.
+const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 @Injectable()
 export class DailyLogsService {
@@ -118,7 +127,7 @@ export class DailyLogsService {
   async getWeightTrend(
     userId: string,
     days: number,
-  ): Promise<WeightTrendPoint[]> {
+  ): Promise<WeightTrendResponse> {
     const today = new Date();
     const since = new Date(
       Date.UTC(
@@ -129,21 +138,33 @@ export class DailyLogsService {
     );
     const sinceDate = since.toISOString().slice(0, 10);
 
-    const rows = await this.db.query.dailyLogs.findMany({
-      where: and(
-        eq(schema.dailyLogs.userId, userId),
-        isNotNull(schema.dailyLogs.weight),
-        gte(schema.dailyLogs.date, sinceDate),
-      ),
-      orderBy: asc(schema.dailyLogs.date),
-    });
+    const [user, rows] = await Promise.all([
+      this.db.query.users.findFirst({
+        where: eq(schema.users.id, userId),
+        columns: { defaultWeightUnit: true },
+      }),
+      this.db.query.dailyLogs.findMany({
+        where: and(
+          eq(schema.dailyLogs.userId, userId),
+          isNotNull(schema.dailyLogs.weight),
+          gte(schema.dailyLogs.date, sinceDate),
+        ),
+        orderBy: asc(schema.dailyLogs.date),
+      }),
+    ]);
 
-    // weight is non-null by construction of the WHERE clause above - the
-    // schema still types it nullable, hence the assertion rather than a
-    // redundant runtime check.
-    return rows.map((row) => ({
-      date: row.date,
-      weight: Number(row.weight!),
-    }));
+    const unit: WeightUnit = user?.defaultWeightUnit ?? 'kg';
+
+    return {
+      unit,
+      // weight is non-null by construction of the WHERE clause above - the
+      // schema still types it nullable, hence the assertion.
+      points: rows.map((row) => ({
+        date: row.date,
+        weight: round2(
+          convertWeight(Number(row.weight!), row.weightUnit ?? 'kg', unit),
+        ),
+      })),
+    };
   }
 }

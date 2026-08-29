@@ -13,7 +13,7 @@ import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
 import { SetWeightDto } from './dto/set-weight.dto';
 import { WeightTrendQueryDto } from './dto/weight-trend-query.dto';
-import type { DailyLogResponse, WeightTrendPoint } from './daily-log.mapper';
+import type { DailyLogResponse, WeightTrendResponse } from './daily-log.mapper';
 import { DailyLogsService } from './daily-logs.service';
 
 // Every route here operates on the caller's own Daily Logs only, scoped
@@ -30,7 +30,7 @@ export class DailyLogsController {
   async getWeightTrend(
     @CurrentUser() identity: Identity,
     @Query() query: WeightTrendQueryDto,
-  ): Promise<WeightTrendPoint[]> {
+  ): Promise<WeightTrendResponse> {
     return this.dailyLogsService.getWeightTrend(identity.hubUserId, query.days);
   }
 
