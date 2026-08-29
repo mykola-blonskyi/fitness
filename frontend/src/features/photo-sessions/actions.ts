@@ -67,6 +67,24 @@ export async function confirmPhotoSession(
   );
 }
 
+export async function confirmReview(
+  sessionId: string,
+  assignments: { photoId: string; pose: PhotoPose }[],
+): Promise<PhotoSession> {
+  return Sentry.withServerActionInstrumentation(
+    'confirmReview',
+    {},
+    async () => {
+      const session = await apiFetch<PhotoSession>(
+        `/photo-sessions/${sessionId}/review`,
+        { method: 'PATCH', body: JSON.stringify({ photos: assignments }) },
+      );
+      revalidatePath('/[locale]/photos', 'page');
+      return session;
+    },
+  );
+}
+
 // void return, not the updated session - bound directly into a <form
 // action> (see PhotoSessionList.tsx), which requires void|Promise<void>.
 export async function setBaseline(id: string): Promise<void> {
