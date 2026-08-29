@@ -14,7 +14,6 @@ import { PhotoAnalysisQueueService } from '../photo-analysis-queue/photo-analysi
 import { StorageService } from '../storage/storage.service';
 import { isUniqueViolation } from '../shared/db-errors';
 import type { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
-import type { RequestUploadUrlDto } from './dto/request-upload-url.dto';
 import {
   toPhotoSessionResponse,
   type PhotoSessionResponse,
@@ -39,11 +38,8 @@ export class PhotoSessionsService {
     private readonly photoAnalysisQueueService: PhotoAnalysisQueueService,
   ) {}
 
-  async requestUploadUrl(
-    userId: string,
-    dto: RequestUploadUrlDto,
-  ): Promise<UploadUrlResponse> {
-    const objectKey = this.storageService.buildObjectKey(userId, dto.pose);
+  async requestUploadUrl(userId: string): Promise<UploadUrlResponse> {
+    const objectKey = this.storageService.buildObjectKey(userId);
     const uploadUrl = await this.storageService.getUploadUrl(objectKey);
     return { objectKey, uploadUrl };
   }
@@ -94,17 +90,17 @@ export class PhotoSessionsService {
     date: string,
     dto: ConfirmPhotoSessionDto,
   ): Promise<PhotoSessionResponse> {
-    const poses = dto.photos.map((photo) => photo.pose);
-    if (new Set(poses).size !== poses.length) {
-      throw new BadRequestException('Each pose may only appear once');
+    const objectKeys = dto.photos.map((photo) => photo.objectKey);
+    if (new Set(objectKeys).size !== objectKeys.length) {
+      throw new BadRequestException('Each photo may only appear once');
     }
 
-    for (const photo of dto.photos) {
-      this.assertOwnedObjectKey(userId, photo.objectKey);
-      const uploaded = await this.storageService.objectExists(photo.objectKey);
+    for (const objectKey of objectKeys) {
+      this.assertOwnedObjectKey(userId, objectKey);
+      const uploaded = await this.storageService.objectExists(objectKey);
       if (!uploaded) {
         throw new BadRequestException(
-          `Photo for pose '${photo.pose}' was not found in storage - upload may have failed`,
+          'A photo was not found in storage - upload may have failed',
         );
       }
     }
@@ -123,11 +119,10 @@ export class PhotoSessionsService {
         const insertedPhotos = await tx
           .insert(schema.progressPhotos)
           .values(
-            dto.photos.map((photo) => ({
+            objectKeys.map((objectKey) => ({
               photoSessionId: session.id,
               dailyLogId: dailyLog.id,
-              pose: photo.pose,
-              objectKey: photo.objectKey,
+              objectKey,
             })),
           )
           .returning();

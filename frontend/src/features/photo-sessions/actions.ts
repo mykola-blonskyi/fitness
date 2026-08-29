@@ -6,10 +6,15 @@ import { apiFetch } from '@libs/api-client';
 
 export type PhotoPose = 'front' | 'side' | 'back';
 export type AnalysisStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type PhotoSessionStatus =
+  | 'uploading'
+  | 'detecting'
+  | 'needs_review'
+  | 'confirmed';
 
 export interface ProgressPhoto {
   id: string;
-  pose: PhotoPose;
+  pose: PhotoPose | null;
   analysisStatus: AnalysisStatus;
   createdAt: string;
 }
@@ -18,6 +23,7 @@ export interface PhotoSession {
   id: string;
   date: string;
   isBaseline: boolean;
+  status: PhotoSessionStatus;
   createdAt: string;
   updatedAt: string;
   photos: ProgressPhoto[];
@@ -26,23 +32,24 @@ export interface PhotoSession {
 // Two-leg upload (docs/architecture.md's "Photo upload + analysis" data
 // flow): this only mints the PUT URL - the browser uploads the file
 // bytes directly to MinIO itself, never through this server.
-export async function requestUploadUrl(
-  pose: PhotoPose,
-): Promise<{ objectKey: string; uploadUrl: string }> {
+export async function requestUploadUrl(): Promise<{
+  objectKey: string;
+  uploadUrl: string;
+}> {
   return Sentry.withServerActionInstrumentation(
     'requestUploadUrl',
     {},
     async () =>
       apiFetch<{ objectKey: string; uploadUrl: string }>(
         `/photo-sessions/upload-url`,
-        { method: 'POST', body: JSON.stringify({ pose }) },
+        { method: 'POST' },
       ),
   );
 }
 
 export async function confirmPhotoSession(
   date: string,
-  photos: { pose: PhotoPose; objectKey: string }[],
+  objectKeys: string[],
 ): Promise<PhotoSession> {
   return Sentry.withServerActionInstrumentation(
     'confirmPhotoSession',
@@ -50,7 +57,9 @@ export async function confirmPhotoSession(
     async () => {
       const session = await apiFetch<PhotoSession>(`/photo-sessions/${date}`, {
         method: 'POST',
-        body: JSON.stringify({ photos }),
+        body: JSON.stringify({
+          photos: objectKeys.map((objectKey) => ({ objectKey })),
+        }),
       });
       revalidatePath('/[locale]/photos', 'page');
       return session;

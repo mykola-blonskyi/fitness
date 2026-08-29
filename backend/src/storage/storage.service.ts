@@ -24,8 +24,8 @@ export class StorageService {
     });
   }
 
-  buildObjectKey(userId: string, pose: string): string {
-    return `progress-photos/${userId}/${randomUUID()}-${pose}`;
+  buildObjectKey(userId: string): string {
+    return `progress-photos/${userId}/${randomUUID()}`;
   }
 
   ownsObjectKey(userId: string, objectKey: string): boolean {

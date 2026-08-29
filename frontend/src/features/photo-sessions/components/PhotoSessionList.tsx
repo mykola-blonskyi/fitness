@@ -12,6 +12,10 @@ const POSE_LABELS: Record<PhotoPose, string> = {
   back: 'Back',
 };
 
+function poseLabel(pose: PhotoPose | null): string {
+  return pose ? POSE_LABELS[pose] : 'Unassigned';
+}
+
 async function fetchViewUrl(photoId: string): Promise<string | null> {
   try {
     const { url } = await apiFetch<{ url: string }>(
@@ -53,20 +57,27 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
     <li className="flex flex-col gap-2 border-b border-zinc-200 pb-6 dark:border-zinc-800">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{session.date}</span>
-        {session.isBaseline ? (
-          <span className="rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-            Baseline
-          </span>
-        ) : (
-          <form action={setBaseline.bind(null, session.id)}>
-            <button
-              type="submit"
-              className="text-xs text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
-            >
-              Mark as baseline
-            </button>
-          </form>
-        )}
+        <div className="flex items-center gap-2">
+          {session.status === 'needs_review' && (
+            <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+              Needs review
+            </span>
+          )}
+          {session.isBaseline ? (
+            <span className="rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+              Baseline
+            </span>
+          ) : (
+            <form action={setBaseline.bind(null, session.id)}>
+              <button
+                type="submit"
+                className="text-xs text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+              >
+                Mark as baseline
+              </button>
+            </form>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-3">
@@ -75,7 +86,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
             {url ? (
               <Image
                 src={url}
-                alt={`${POSE_LABELS[photo.pose]} progress photo`}
+                alt={`${poseLabel(photo.pose)} progress photo`}
                 width={96}
                 height={96}
                 className="size-24 rounded-md object-cover"
@@ -87,7 +98,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
               />
             )}
             <span className="text-xs text-zinc-500">
-              {POSE_LABELS[photo.pose]}
+              {poseLabel(photo.pose)}
             </span>
           </div>
         ))}
