@@ -3,6 +3,7 @@ import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
 import { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
+import { ConfirmReviewDto } from './dto/confirm-review.dto';
 import type { PhotoSessionResponse } from './photo-session.mapper';
 import {
   PhotoSessionsService,
@@ -50,6 +51,15 @@ export class PhotoSessionsController {
     @Param('id') id: string,
   ): Promise<PhotoSessionResponse> {
     return this.photoSessionsService.findOne(identity.hubUserId, id);
+  }
+
+  @Patch(':id/review')
+  async confirmReview(
+    @CurrentUser() identity: Identity,
+    @Param('id') id: string,
+    @Body() dto: ConfirmReviewDto,
+  ): Promise<PhotoSessionResponse> {
+    return this.photoSessionsService.confirmReview(identity.hubUserId, id, dto);
   }
 
   @Patch(':id/baseline')

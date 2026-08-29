@@ -195,3 +195,6 @@ id_ed25519
 # Husky's regenerated internal helper scripts (recreated by `pnpm install`
 # via the root "prepare" script) - only .husky/pre-commit itself is tracked.
 .husky/_
+
+# local worker test venv
+worker/.venv-test/

@@ -41,3 +41,27 @@ def write_detect_result(session_id: str, results: list[StubPoseResult]) -> None:
                 (session_id,),
             )
         conn.commit()
+
+
+def set_analysis_status(photo_id: str, status: str) -> None:
+    with psycopg.connect(config.DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE progress_photos SET analysis_status = %s WHERE id = %s",
+                (status, photo_id),
+            )
+        conn.commit()
+
+
+def write_alignment_result(photo_id: str, alignment_data: dict) -> None:
+    with psycopg.connect(config.DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE progress_photos
+                SET alignment_data = %s, analysis_status = 'completed'
+                WHERE id = %s
+                """,
+                (json.dumps(alignment_data), photo_id),
+            )
+        conn.commit()

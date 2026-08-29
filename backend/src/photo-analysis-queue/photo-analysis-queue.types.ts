@@ -8,3 +8,10 @@ export interface DetectJob {
   sessionId: string;
   photos: DetectJobPhoto[];
 }
+
+export interface AnalyzeAlignmentJob {
+  type: 'analyze-alignment';
+  photoId: string;
+  objectKey: string;
+  pose: 'front' | 'side' | 'back';
+}
