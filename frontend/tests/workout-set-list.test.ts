@@ -48,6 +48,7 @@ describe('pendingSetsFor', () => {
         exerciseCategory: 'chest',
         setNumber: 0,
         weight: 60,
+        weightUnit: null,
         reps: 10,
         durationSeconds: null,
       },

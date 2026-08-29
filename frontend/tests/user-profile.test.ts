@@ -9,6 +9,7 @@ const valid = {
   goal: 'weight_loss',
   activityLevel: 'sedentary',
   locale: 'en',
+  defaultWeightUnit: 'kg',
 };
 
 describe('userProfileSchema', () => {
