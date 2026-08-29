@@ -3,7 +3,6 @@ import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
 import { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
-import { RequestUploadUrlDto } from './dto/request-upload-url.dto';
 import type { PhotoSessionResponse } from './photo-session.mapper';
 import {
   PhotoSessionsService,
@@ -23,9 +22,8 @@ export class PhotoSessionsController {
   @Post('upload-url')
   async requestUploadUrl(
     @CurrentUser() identity: Identity,
-    @Body() dto: RequestUploadUrlDto,
   ): Promise<UploadUrlResponse> {
-    return this.photoSessionsService.requestUploadUrl(identity.hubUserId, dto);
+    return this.photoSessionsService.requestUploadUrl(identity.hubUserId);
   }
 
   @Get()

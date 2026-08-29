@@ -2,24 +2,19 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
-  IsIn,
   IsNotEmpty,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { PHOTO_POSES, type PhotoPose } from '../photo-session.types';
 
 export class ConfirmPhotoDto {
-  @IsIn(PHOTO_POSES)
-  pose: PhotoPose;
-
   @IsString()
   @IsNotEmpty()
   objectKey: string;
 }
 
-// Duplicate poses within the array (e.g. two 'front' entries) can't be
-// caught by a per-item decorator - rejected in the service instead.
+// Pose is no longer supplied at upload (ADR-013) - the `detect` job
+// assigns it and the review step confirms it.
 export class ConfirmPhotoSessionDto {
   @ValidateNested({ each: true })
   @Type(() => ConfirmPhotoDto)
