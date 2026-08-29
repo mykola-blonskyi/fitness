@@ -3,20 +3,9 @@ import json
 import psycopg
 
 from . import config
-from .pose_stub import StubPoseResult
 
 
-def fetch_poses(photo_ids: list[str]) -> dict[str, str | None]:
-    with psycopg.connect(config.DATABASE_URL) as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id, pose FROM progress_photos WHERE id = ANY(%s)",
-                (photo_ids,),
-            )
-            return dict(cur.fetchall())
-
-
-def write_detect_result(session_id: str, results: list[StubPoseResult]) -> None:
+def write_detect_result(session_id: str, results: list[dict]) -> None:
     with psycopg.connect(config.DATABASE_URL) as conn:
         with conn.cursor() as cur:
             for result in results:
@@ -41,6 +30,21 @@ def write_detect_result(session_id: str, results: list[StubPoseResult]) -> None:
                 (session_id,),
             )
         conn.commit()
+
+
+def fetch_landmarks(photo_id: str) -> list | None:
+    with psycopg.connect(config.DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT pose_landmarks FROM progress_photos WHERE id = %s",
+                (photo_id,),
+            )
+            row = cur.fetchone()
+    if not row or row[0] is None:
+        return None
+    # psycopg decodes jsonb to a Python object already; tolerate a raw
+    # string too.
+    return row[0] if isinstance(row[0], list) else json.loads(row[0])
 
 
 def set_analysis_status(photo_id: str, status: str) -> None:

@@ -138,6 +138,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      # MediaPipe/OpenCV shared libs - same ones the worker Dockerfile installs.
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
       - run: pip install -r worker/requirements-dev.txt
       - run: python -m pytest worker/tests
 
