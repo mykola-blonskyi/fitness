@@ -5,7 +5,7 @@ import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { DailyLogsService } from '../daily-logs/daily-logs.service';
 import { UsersService } from '../users/users.service';
-import { toKg } from '../shared/weight-unit';
+import { convertWeight } from '../shared/weight-unit';
 import { CALORIE_ALGORITHMS } from './algorithm-registry';
 import type { MifflinV1Input } from './algorithms/mifflin-v1';
 import {
@@ -52,7 +52,7 @@ export class CalorieTargetsService {
     }
 
     const input: MifflinV1Input = {
-      weightKg: toKg(weighIn.weight, weighIn.weightUnit),
+      weightKg: convertWeight(weighIn.weight, weighIn.weightUnit, 'kg'),
       heightCm: user.height,
       age: user.age,
       gender: user.gender as MifflinV1Input['gender'],

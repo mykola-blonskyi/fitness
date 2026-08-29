@@ -14,9 +14,15 @@ export function assertRealisticWeight(weight: number, unit: WeightUnit): void {
   }
 }
 
-// Only for internal calculations that need kg (calorie-targets' Mifflin
-// input) - logged entries themselves always keep their own original unit,
-// never converted (see knowledge/business-rules.md).
-export function toKg(weight: number, unit: WeightUnit): number {
-  return unit === 'kg' ? weight : weight / LB_PER_KG;
+// The single weight-conversion implementation in the codebase. Logged
+// entries keep their own original unit and are never rewritten - this is
+// only for read paths that need one consistent unit (the trend chart's
+// axis, the calorie formula's kg input). See knowledge/business-rules.md.
+export function convertWeight(
+  value: number,
+  from: WeightUnit,
+  to: WeightUnit,
+): number {
+  if (from === to) return value;
+  return from === 'kg' ? value * LB_PER_KG : value / LB_PER_KG;
 }

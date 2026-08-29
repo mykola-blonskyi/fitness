@@ -3,7 +3,7 @@ import {
   dateFromDayIndex,
   dayIndex,
 } from '@features/daily-log/components/WeightTrendChart';
-import type { DailyLog, WeightTrendPoint } from '@features/daily-log/actions';
+import type { DailyLog, WeightTrendResponse } from '@features/daily-log/actions';
 import { apiFetch, ApiError } from '@libs/api-client';
 import { WEIGHT_TREND_WINDOWS } from '@shared/constants/daily-log';
 import type { UserProfile } from '@shared/types/user';
@@ -57,7 +57,7 @@ export default async function DiaryPage({
     dailyLog = null;
   }
 
-  const trend = await apiFetch<WeightTrendPoint[]>(
+  const trend = await apiFetch<WeightTrendResponse>(
     `/daily-logs/weight-trend?days=${windowDays}`,
   );
   const profile = await apiFetch<UserProfile>('/users/me');
@@ -74,7 +74,8 @@ export default async function DiaryPage({
       <section className="flex w-full flex-col gap-4">
         <WeightTrend windowDays={windowDays} locale={locale} />
         <WeightTrendChart
-          points={trend}
+          points={trend.points}
+          unit={trend.unit}
           windowStart={windowStart}
           windowEnd={date}
           windowDays={windowDays}

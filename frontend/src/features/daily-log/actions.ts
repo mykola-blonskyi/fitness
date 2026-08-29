@@ -27,6 +27,12 @@ export interface WeightTrendPoint {
   weight: number;
 }
 
+// Every point is already converted to `unit` server-side (FITNESS-48).
+export interface WeightTrendResponse {
+  unit: WeightUnit;
+  points: WeightTrendPoint[];
+}
+
 export type WeightFormState = FormActionError<WeightInput>;
 
 export async function setWeight(
