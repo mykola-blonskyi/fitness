@@ -30,7 +30,11 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET}
-      REDIS_URL: ${REDIS_URL}
+      # Literal, not ${REDIS_URL}: Coolify also runs its own `coolify-redis`
+      # (password-protected) aliased `redis` on the shared network, so the
+      # bare hostname `redis` round-robins between the two. `photo-queue-redis`
+      # is unambiguous. Drop the REDIS_URL var from Coolify's env panel.
+      REDIS_URL: redis://photo-queue-redis:6379
       PORT: 3001
     restart: unless-stopped
     # No ports/domain: stays private on Coolify's network (ADR-001 - the
@@ -53,7 +57,8 @@ services:
       dockerfile: worker/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      # See the backend service's REDIS_URL note.
+      REDIS_URL: redis://photo-queue-redis:6379
       MINIO_ENDPOINT: ${MINIO_ENDPOINT}
       MINIO_PORT: ${MINIO_PORT}
       MINIO_USE_SSL: ${MINIO_USE_SSL}
@@ -74,7 +79,10 @@ services:
       retries: 3
       start_period: 15s
 
-  redis:
+  # Named photo-queue-redis, not redis: Coolify attaches every service to
+  # its shared proxy network, where `coolify-redis` already answers to
+  # `redis` - a bare `redis` hostname resolves to either one at random.
+  photo-queue-redis:
     image: redis:7-alpine
     restart: unless-stopped
     # Cross-language photo-analysis job queue (ADR-003) - no persistence
