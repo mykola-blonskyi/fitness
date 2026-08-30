@@ -4,7 +4,10 @@ import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
 import { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
 import { ConfirmReviewDto } from './dto/confirm-review.dto';
-import type { PhotoSessionResponse } from './photo-session.mapper';
+import type {
+  PhotoSessionResponse,
+  ProgressPhotoResponse,
+} from './photo-session.mapper';
 import {
   PhotoSessionsService,
   type PhotoViewUrlResponse,
@@ -43,6 +46,14 @@ export class PhotoSessionsController {
       identity.hubUserId,
       photoId,
     );
+  }
+
+  @Post('photos/:photoId/retry-analysis')
+  async retryAnalysis(
+    @CurrentUser() identity: Identity,
+    @Param('photoId') photoId: string,
+  ): Promise<ProgressPhotoResponse> {
+    return this.photoSessionsService.retryAnalysis(identity.hubUserId, photoId);
   }
 
   @Get(':id')

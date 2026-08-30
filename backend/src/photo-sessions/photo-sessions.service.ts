@@ -18,9 +18,12 @@ import type { ConfirmReviewDto } from './dto/confirm-review.dto';
 import { resolveReviewAssignment } from './review-assignment';
 import {
   toPhotoSessionResponse,
+  toProgressPhotoResponse,
   type PhotoSessionResponse,
+  type ProgressPhotoResponse,
   type ProgressPhotoRow,
 } from './photo-session.mapper';
+import { assertRetryableAnalysis } from './retry-analysis';
 
 export interface UploadUrlResponse {
   objectKey: string;
@@ -57,6 +60,7 @@ export class PhotoSessionsService {
         photoSessionId: schema.progressPhotos.photoSessionId,
         pose: schema.progressPhotos.pose,
         analysisStatus: schema.progressPhotos.analysisStatus,
+        alignmentData: schema.progressPhotos.alignmentData,
         createdAt: schema.progressPhotos.createdAt,
       })
       .from(schema.progressPhotos)
@@ -271,5 +275,48 @@ export class PhotoSessionsService {
 
     const url = await this.storageService.getReadUrl(row.objectKey);
     return { url };
+  }
+
+  async retryAnalysis(
+    userId: string,
+    photoId: string,
+  ): Promise<ProgressPhotoResponse> {
+    const [row] = await this.db
+      .select({
+        id: schema.progressPhotos.id,
+        objectKey: schema.progressPhotos.objectKey,
+        pose: schema.progressPhotos.pose,
+        analysisStatus: schema.progressPhotos.analysisStatus,
+        sessionStatus: schema.photoSessions.status,
+      })
+      .from(schema.progressPhotos)
+      .innerJoin(
+        schema.photoSessions,
+        eq(schema.photoSessions.id, schema.progressPhotos.photoSessionId),
+      )
+      .where(
+        and(
+          eq(schema.progressPhotos.id, photoId),
+          eq(schema.photoSessions.userId, userId),
+        ),
+      );
+    if (!row) {
+      throw new NotFoundException('Progress photo not found');
+    }
+    assertRetryableAnalysis(row.analysisStatus, row.sessionStatus);
+
+    const [updated] = await this.db
+      .update(schema.progressPhotos)
+      .set({ analysisStatus: 'pending' })
+      .where(eq(schema.progressPhotos.id, photoId))
+      .returning();
+
+    await this.photoAnalysisQueueService.pushAnalyzeAlignmentJob({
+      photoId: row.id,
+      objectKey: row.objectKey,
+      pose: row.pose!,
+    });
+
+    return toProgressPhotoResponse(updated);
   }
 }

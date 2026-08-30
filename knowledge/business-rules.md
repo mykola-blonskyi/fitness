@@ -88,7 +88,9 @@ Why: new algorithm versions should be code changes, not runtime-evaluated expres
 
 ## Photo analysis failure handling: auto-retry then give up
 
-The Python worker automatically retries a failed job a few times with backoff before marking it permanently failed. No further automatic retries after that; the UI can offer a manual retry. Applies independently to each of the two queue job types (see "Photo pose is machine-suggested, then confirmed" below) — a `detect` job failing (e.g. MinIO read error) and an `analyze-alignment` job failing are separate, separately-retried events.
+The Python worker automatically retries a failed job a few times with backoff before marking it permanently failed. No further automatic retries after that; the UI offers a manual retry that re-enqueues the job. Applies independently to each of the two queue job types (see "Photo pose is machine-suggested, then confirmed" below) — a `detect` job failing (e.g. MinIO read error) and an `analyze-alignment` job failing are separate, separately-retried events.
+
+A transient failure (DB/queue/storage blip) is what the backoff retries are for. A permanent failure — `analyze-alignment` finding no usable detection landmarks — skips the retry loop and marks the photo `failed` at once, since re-running the same check on the same stored landmarks cannot change the outcome. Only a manual retry (or fixing the upstream `detect` result) resolves it.
 
 ---
 

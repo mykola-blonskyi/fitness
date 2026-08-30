@@ -12,6 +12,7 @@ export interface ProgressPhotoRow {
   id: string;
   pose: PhotoPose | null;
   analysisStatus: AnalysisStatus;
+  alignmentData: unknown;
   createdAt: Date;
 }
 
@@ -19,6 +20,7 @@ export interface ProgressPhotoResponse {
   id: string;
   pose: PhotoPose | null;
   analysisStatus: AnalysisStatus;
+  alignmentData: unknown;
   createdAt: Date;
 }
 
@@ -29,6 +31,7 @@ export function toProgressPhotoResponse(
     id: row.id,
     pose: row.pose,
     analysisStatus: row.analysisStatus,
+    alignmentData: row.alignmentData,
     createdAt: row.createdAt,
   };
 }

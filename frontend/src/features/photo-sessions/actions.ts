@@ -16,6 +16,7 @@ export interface ProgressPhoto {
   id: string;
   pose: PhotoPose | null;
   analysisStatus: AnalysisStatus;
+  alignmentData?: unknown;
   createdAt: string;
 }
 
@@ -81,6 +82,20 @@ export async function confirmReview(
       );
       revalidatePath('/[locale]/photos', 'page');
       return session;
+    },
+  );
+}
+
+export async function retryPhotoAnalysis(photoId: string): Promise<void> {
+  return Sentry.withServerActionInstrumentation(
+    'retryPhotoAnalysis',
+    {},
+    async () => {
+      await apiFetch<ProgressPhoto>(
+        `/photo-sessions/photos/${photoId}/retry-analysis`,
+        { method: 'POST' },
+      );
+      revalidatePath('/[locale]/photos', 'page');
     },
   );
 }
