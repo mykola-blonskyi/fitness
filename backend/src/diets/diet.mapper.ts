@@ -17,6 +17,7 @@ export interface DietItemWithFoodRow {
   foodItemId: string;
   foodItemName: string;
   foodItemImageUrl: string | null;
+  foodItemRole: string;
   caloriesPer100g: string;
   proteinPer100g: string;
   carbsPer100g: string;
@@ -32,6 +33,7 @@ export interface DietItemResponse {
     id: string;
     name: string;
     imageUrl: string | null;
+    role: string;
   };
   calories: number;
   proteinG: number;
@@ -65,6 +67,7 @@ function toDietItemResponse(row: DietItemWithFoodRow): DietItemResponse {
       id: row.foodItemId,
       name: row.foodItemName,
       imageUrl: row.foodItemImageUrl,
+      role: row.foodItemRole,
     },
     calories: Math.round(Number(row.caloriesPer100g) * factor),
     proteinG: Math.round(Number(row.proteinPer100g) * factor),

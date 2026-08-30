@@ -54,6 +54,7 @@ export class FoodItemsService {
   async list(params: {
     category?: string;
     search?: string;
+    role?: string;
     locale?: string;
     cursor?: string;
     limit?: number;
@@ -99,6 +100,7 @@ export class FoodItemsService {
           params.category
             ? eq(schema.foodCategories.name, params.category)
             : undefined,
+          params.role ? eq(schema.foodRoles.name, params.role) : undefined,
           params.search
             ? ilike(schema.foodCalories.name, `%${params.search}%`)
             : undefined,
