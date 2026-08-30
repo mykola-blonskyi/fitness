@@ -5,7 +5,9 @@ import {
   type PhotoPose,
   type PhotoSession,
 } from '@features/photo-sessions/actions';
+import { analysisStatusLabel } from '@features/photo-sessions/analysis-status';
 import { PhotoSessionReview } from './PhotoSessionReview';
+import { RetryAnalysisButton } from './RetryAnalysisButton';
 
 const POSE_LABELS: Record<PhotoPose, string> = {
   front: 'Front',
@@ -113,6 +115,22 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
               <span className="text-xs text-zinc-500">
                 {poseLabel(photo.pose)}
               </span>
+              {session.status === 'confirmed' && (
+                <>
+                  <span
+                    className={`text-xs ${
+                      photo.analysisStatus === 'failed'
+                        ? 'text-amber-700 dark:text-amber-300'
+                        : 'text-zinc-400'
+                    }`}
+                  >
+                    {analysisStatusLabel(photo.analysisStatus)}
+                  </span>
+                  {photo.analysisStatus === 'failed' && (
+                    <RetryAnalysisButton photoId={photo.id} />
+                  )}
+                </>
+              )}
             </div>
           ))}
         </div>

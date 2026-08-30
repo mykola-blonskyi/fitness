@@ -10,6 +10,7 @@ from .analyze_alignment_job import (
     process_analyze_alignment_job,
 )
 from .detect_job import process_detect_job
+from .errors import PermanentJobError
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,9 @@ def _process_with_retry(job: dict) -> None:
         try:
             handler(job)
             return
+        except PermanentJobError:
+            logger.exception("job cannot be retried, failing immediately: %s", job)
+            break
         except Exception:
             logger.exception(
                 "job attempt %d/%d failed for %s",
@@ -42,10 +46,13 @@ def _process_with_retry(job: dict) -> None:
             )
             if attempt < config.JOB_MAX_ATTEMPTS:
                 time.sleep(config.JOB_RETRY_BACKOFF_SECONDS * attempt)
+    else:
+        logger.error(
+            "job permanently failed after %d attempts: %s",
+            config.JOB_MAX_ATTEMPTS,
+            job,
+        )
 
-    logger.error(
-        "job permanently failed after %d attempts: %s", config.JOB_MAX_ATTEMPTS, job
-    )
     failure_handler = JOB_FAILURE_HANDLERS.get(job.get("type"))
     if failure_handler is not None:
         try:

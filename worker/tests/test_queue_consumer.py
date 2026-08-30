@@ -37,7 +37,7 @@ def test_transient_failure_is_retried_then_succeeds(monkeypatch):
     assert len(attempts) == 2
 
 
-def test_permanent_failure_invokes_the_failure_hook(monkeypatch):
+def test_exhausted_retries_invoke_the_failure_hook(monkeypatch):
     monkeypatch.setattr(queue_consumer.time, "sleep", lambda _seconds: None)
     failed = []
     monkeypatch.setitem(
@@ -53,6 +53,32 @@ def test_permanent_failure_invokes_the_failure_hook(monkeypatch):
     queue_consumer._process_with_retry(job)
 
     assert failed == [job]
+
+
+def test_permanent_job_error_skips_retry_and_fails_once(monkeypatch):
+    slept = []
+    monkeypatch.setattr(
+        queue_consumer.time, "sleep", lambda seconds: slept.append(seconds)
+    )
+    attempts, failed = [], []
+
+    def handler(job):
+        attempts.append(job)
+        raise queue_consumer.PermanentJobError("bad landmarks")
+
+    monkeypatch.setitem(queue_consumer.JOB_HANDLERS, "analyze-alignment", handler)
+    monkeypatch.setitem(
+        queue_consumer.JOB_FAILURE_HANDLERS,
+        "analyze-alignment",
+        lambda job: failed.append(job),
+    )
+
+    job = {"type": "analyze-alignment", "photoId": "p1"}
+    queue_consumer._process_with_retry(job)
+
+    assert len(attempts) == 1
+    assert failed == [job]
+    assert slept == []
 
 
 def test_detect_has_no_failure_hook(monkeypatch):

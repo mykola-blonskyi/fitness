@@ -38,7 +38,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 - [x] Presigned upload flow (Photo Session, Progress Photo, private MinIO bucket + presigned GET on read) (FITNESS-22)
 - [x] Redis job queue (plain list, JSON payload — not BullMQ, see ADR-003) between NestJS and the Python worker (FITNESS-23)
-- [ ] Python/FastAPI worker: MediaPipe pose analysis, own MinIO credentials, auto-retry-then-fail (skeleton + stub detection done via FITNESS-23; real MediaPipe classification not yet built)
+- [ ] Python/FastAPI worker: MediaPipe pose analysis, own MinIO credentials, auto-retry-then-fail (skeleton + stub via FITNESS-23; real `detect` classification via FITNESS-49; real pose-specific `analyze-alignment` + permanent-vs-transient retry semantics + manual retry endpoint/UI via FITNESS-24; progress gallery still pending)
 - [ ] Progress gallery grouped by date, baseline comparison
 
 ---
