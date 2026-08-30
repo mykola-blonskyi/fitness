@@ -26,11 +26,18 @@ import {
   type DietResponse,
 } from './diet.mapper';
 import { MEAL_ROLE_CHAINS, type FoodCandidate } from './diet.types';
-import { generateDietItems } from './greedy-heuristic';
+import { generateDietItems, gramsForCalories } from './greedy-heuristic';
+import { eligibleReplacements, isPreferenceExcluded } from './swap-candidates';
 
 // Same registered code calorie-targets.service.ts looks up, so the two
 // services' targets can never drift apart.
 const ALGORITHM_CODE = 'mifflin_v1';
+
+function defaultPick<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+type FoodItemRow = typeof schema.foodCalories.$inferSelect;
 
 @Injectable()
 export class DietsService {
@@ -309,11 +316,69 @@ export class DietsService {
     return row.diet;
   }
 
+  private async resolveExplicitReplacement(
+    foodItemId: string,
+    currentFoodItem: FoodItemRow,
+    exclusions: ExclusionTargets,
+  ): Promise<FoodItemRow> {
+    const replacement = await this.db.query.foodCalories.findFirst({
+      where: eq(schema.foodCalories.id, foodItemId),
+    });
+    if (!replacement) {
+      throw new NotFoundException('Food item not found');
+    }
+    if (replacement.roleId !== currentFoodItem.roleId) {
+      throw new BadRequestException(
+        'Replacement must share the same Food Role as the item being swapped',
+      );
+    }
+    // gramsForCalories divides by this - a 0-calorie item can't be portioned.
+    if (Number(replacement.caloriesPer100g) <= 0) {
+      throw new UnprocessableEntityException(
+        'That food item has no calories and cannot be portioned into a menu',
+      );
+    }
+    if (isPreferenceExcluded(replacement, exclusions)) {
+      throw new UnprocessableEntityException(
+        'This replacement violates an active food preference',
+      );
+    }
+    return replacement;
+  }
+
+  private async pickRerollReplacement(
+    currentFoodItem: FoodItemRow,
+    exclusions: ExclusionTargets,
+    pickRandom: <T>(items: T[]) => T,
+  ): Promise<FoodItemRow> {
+    const sameRoleRows = await this.db.query.foodCalories.findMany({
+      where: and(
+        eq(schema.foodCalories.roleId, currentFoodItem.roleId),
+        eq(schema.foodCalories.isVerified, true),
+      ),
+    });
+    const candidates = eligibleReplacements(
+      // 0-calorie items can't be portion-scaled - same exclusion generate makes.
+      sameRoleRows.filter((row) => Number(row.caloriesPer100g) > 0),
+      currentFoodItem.id,
+      exclusions,
+    );
+    if (candidates.length === 0) {
+      throw new UnprocessableEntityException(
+        'No other food item in this role matches your preferences',
+      );
+    }
+    return pickRandom(candidates);
+  }
+
+  // Omitted foodItemId = reroll (random same-Role candidate); either way
+  // the replacement's grams are rescaled to hold calories - ADR-011.
   async swapItem(
     userId: string,
     dietId: string,
     itemId: string,
-    foodItemId: string,
+    foodItemId?: string,
+    pickRandom: <T>(items: T[]) => T = defaultPick,
   ): Promise<DietResponse> {
     const diet = await this.findOwnedDiet(userId, dietId);
 
@@ -327,44 +392,40 @@ export class DietsService {
       throw new NotFoundException('Diet item not found');
     }
 
-    const [currentFoodItem, replacementFoodItem] = await Promise.all([
-      this.db.query.foodCalories.findFirst({
-        where: eq(schema.foodCalories.id, dietItem.foodItemId),
-      }),
-      this.db.query.foodCalories.findFirst({
-        where: eq(schema.foodCalories.id, foodItemId),
-      }),
-    ]);
-    if (!replacementFoodItem) {
-      throw new NotFoundException('Food item not found');
-    }
+    const currentFoodItem = await this.db.query.foodCalories.findFirst({
+      where: eq(schema.foodCalories.id, dietItem.foodItemId),
+    });
     // Unreachable in practice - dietItem.foodItemId is a not-null FK.
     if (!currentFoodItem) {
       throw new NotFoundException('Original food item not found');
     }
 
-    if (replacementFoodItem.roleId !== currentFoodItem.roleId) {
-      throw new BadRequestException(
-        'Replacement must share the same Food Role as the item being swapped',
-      );
-    }
-
     const { exclusions } = await this.resolveExclusions(userId);
-    const violatesPreference =
-      exclusions.food_item.has(replacementFoodItem.id) ||
-      exclusions.category.has(replacementFoodItem.categoryId) ||
-      exclusions.subcategory.has(replacementFoodItem.subcategoryId) ||
-      exclusions.role.has(replacementFoodItem.roleId);
-    if (violatesPreference) {
-      throw new UnprocessableEntityException(
-        'This replacement violates an active food preference',
-      );
-    }
+
+    const replacement = foodItemId
+      ? await this.resolveExplicitReplacement(
+          foodItemId,
+          currentFoodItem,
+          exclusions,
+        )
+      : await this.pickRerollReplacement(
+          currentFoodItem,
+          exclusions,
+          pickRandom,
+        );
+
+    const swappedKcal =
+      (Number(currentFoodItem.caloriesPer100g) * Number(dietItem.weightGrams)) /
+      100;
+    const newGrams = gramsForCalories(
+      { caloriesPer100g: Number(replacement.caloriesPer100g) },
+      swappedKcal,
+    );
 
     const updatedDiet = await this.db.transaction(async (tx) => {
       await tx
         .update(schema.dietItems)
-        .set({ foodItemId: replacementFoodItem.id })
+        .set({ foodItemId: replacement.id, weightGrams: newGrams.toString() })
         .where(eq(schema.dietItems.id, dietItem.id));
 
       // Re-derives totals from every item rather than adjusting by the
@@ -434,6 +495,7 @@ export class DietsService {
         foodItemId: schema.foodCalories.id,
         foodItemName: schema.foodCalories.name,
         foodItemImageUrl: schema.foodCalories.imageUrl,
+        foodItemRole: schema.foodRoles.name,
         caloriesPer100g: schema.foodCalories.caloriesPer100g,
         proteinPer100g: schema.foodCalories.proteinPer100g,
         carbsPer100g: schema.foodCalories.carbsPer100g,
@@ -443,6 +505,10 @@ export class DietsService {
       .innerJoin(
         schema.foodCalories,
         eq(schema.foodCalories.id, schema.dietItems.foodItemId),
+      )
+      .innerJoin(
+        schema.foodRoles,
+        eq(schema.foodRoles.id, schema.foodCalories.roleId),
       )
       .where(eq(schema.dietItems.dietId, dietRow.id))
       .orderBy(schema.dietItems.mealType, schema.dietItems.orderIndex);

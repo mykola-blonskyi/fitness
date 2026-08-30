@@ -33,7 +33,10 @@ function caloriesForGrams(candidate: FoodCandidate, grams: number): number {
   return (candidate.caloriesPer100g * grams) / 100;
 }
 
-function gramsForCalories(candidate: FoodCandidate, calories: number): number {
+export function gramsForCalories(
+  candidate: Pick<FoodCandidate, 'caloriesPer100g'>,
+  calories: number,
+): number {
   return Math.max(
     MIN_WEIGHT_GRAMS,
     Math.round((calories / candidate.caloriesPer100g) * 100),

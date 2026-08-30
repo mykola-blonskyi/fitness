@@ -1,0 +1,113 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { FieldError } from '@shared/ui/components/FieldError';
+import { listSwapCandidates, swapDietItem } from '@features/diet/actions';
+import type { FoodItem } from '@features/food-catalog/actions';
+
+export function SwapPicker({
+  dietId,
+  itemId,
+  role,
+  currentFoodItemId,
+  onDone,
+}: {
+  dietId: string;
+  itemId: string;
+  role: string;
+  currentFoodItemId: string;
+  onDone: () => void;
+}) {
+  const { locale } = useParams<{ locale: string }>();
+  const [search, setSearch] = useState('');
+  const [candidates, setCandidates] = useState<FoodItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>();
+
+  useEffect(() => {
+    let cancelled = false;
+    const handle = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const items = await listSwapCandidates(
+          role,
+          search || undefined,
+          locale,
+        );
+        if (!cancelled) {
+          setCandidates(items.filter((item) => item.id !== currentFoodItemId));
+        }
+      } catch {
+        if (!cancelled) setError("Couldn't load food items — try again.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [role, search, currentFoodItemId, locale]);
+
+  async function onSelect(foodItemId: string) {
+    setError(undefined);
+    setSubmittingId(foodItemId);
+    try {
+      const result = await swapDietItem(dietId, itemId, foodItemId);
+      if (result.ok) {
+        onDone();
+        return;
+      }
+      setError(result.error);
+    } catch {
+      setError('Something went wrong — try again.');
+    }
+    setSubmittingId(null);
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-2 rounded border border-zinc-200 p-3 sm:w-72 dark:border-zinc-800">
+      <label className="sr-only" htmlFor={`swap-search-${itemId}`}>
+        Search {role.replace(/_/g, ' ')} food items
+      </label>
+      <input
+        id={`swap-search-${itemId}`}
+        type="search"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        placeholder="Search…"
+        className="rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
+      />
+
+      {isLoading && <p className="text-xs text-zinc-500">Loading…</p>}
+
+      {!isLoading && candidates.length === 0 && (
+        <p className="text-xs text-zinc-500">
+          No other food items in this role.
+        </p>
+      )}
+
+      <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
+        {candidates.map((candidate) => (
+          <li key={candidate.id}>
+            <button
+              type="button"
+              onClick={() => onSelect(candidate.id)}
+              disabled={submittingId !== null}
+              className="flex w-full flex-col rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-800"
+            >
+              <span>{candidate.name}</span>
+              <span className="text-xs text-zinc-500">
+                {candidate.caloriesPer100g} kcal / 100g
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <FieldError message={error} />
+    </div>
+  );
+}

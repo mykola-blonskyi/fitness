@@ -62,6 +62,8 @@ For each meal, pick one Food Item per required Food Role, then scale portion siz
 
 Why: this is a recommendation feature, not a medical prescription — "close enough" is the actual requirement.
 
+A single-item swap or reroll holds that item's calorie contribution — the replacement's `weight_grams` is rescaled so the day total stays within tolerance. A full regenerate re-runs generation from scratch and does not preserve prior swaps.
+
 ---
 
 ## Food Replacement and diet generation are role-based

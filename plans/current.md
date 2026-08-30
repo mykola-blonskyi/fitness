@@ -31,6 +31,8 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - [x] Polymorphic Food Preferences (category/subcategory/role/food_item targets) + Diet Preferences (FITNESS-29)
 - [x] Diet Calculation Algorithm registry (versioned code, `formula` field is documentation only) (FITNESS-26)
 - [x] Greedy-heuristic diet generator, manual regeneration trigger, current-diet resolution by `created_at` (FITNESS-30)
+- [x] Food Item swap (same-Role) on a generated Diet (FITNESS-31)
+- [x] Diet menu UI (generate/regenerate, meal-grouped menu) + hold-calories swap/reroll (FITNESS-52)
 
 ---
 

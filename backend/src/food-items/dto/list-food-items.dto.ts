@@ -15,6 +15,10 @@ export class ListFoodItemsDto {
   search?: string;
 
   @IsOptional()
+  @IsString()
+  role?: string;
+
+  @IsOptional()
   @IsIn(LOCALES)
   locale?: (typeof LOCALES)[number];
 

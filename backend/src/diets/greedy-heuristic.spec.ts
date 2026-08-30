@@ -1,4 +1,4 @@
-import { generateDietItems } from './greedy-heuristic';
+import { generateDietItems, gramsForCalories } from './greedy-heuristic';
 import type { FoodCandidate } from './diet.types';
 
 const leanProtein: FoodCandidate = {
@@ -172,5 +172,16 @@ describe('generateDietItems', () => {
     });
 
     expect(result.items[0].foodItemId).toBe(alt.id);
+  });
+});
+
+describe('gramsForCalories', () => {
+  it('scales grams so the candidate hits the requested calories', () => {
+    // 165 kcal/100g -> 330 kcal needs 200g.
+    expect(gramsForCalories(leanProtein, 330)).toBe(200);
+  });
+
+  it('clamps to MIN_WEIGHT_GRAMS when the requested calories round to zero', () => {
+    expect(gramsForCalories(healthyFat, 1)).toBe(1);
   });
 });

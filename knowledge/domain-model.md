@@ -215,7 +215,7 @@ One food entry within a generated Diet.
 
 Fields:
 
-- weight_grams, meal_type (breakfast/lunch/dinner/snack), order_index
+- weight_grams (can change after generation via swap/reroll, which rescale it to hold the item's calorie contribution), meal_type (breakfast/lunch/dinner/snack), order_index
 
 Relationships:
 
