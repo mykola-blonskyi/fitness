@@ -18,6 +18,7 @@ import {
   FOOD_PREFERENCE_TARGET_TYPES,
   type ExclusionTargets,
   type FoodPreferenceTargetType,
+  type FoodPreferenceType,
 } from './food-preference.types';
 
 @Injectable()
@@ -81,7 +82,8 @@ export class FoodPreferencesService {
   // target structured entities, not free text". Grouped by targetType so
   // the caller can do one exclusion check per Food Item column
   // (category/subcategory/role/id) instead of scanning every preference
-  // row per candidate.
+  // row per candidate. Excludes type='favorite' rows - those are the
+  // opposite polarity, see getFavoriteFoodItemIds.
   async getExclusionTargets(userId: string): Promise<ExclusionTargets> {
     const rows = await this.db
       .select({
@@ -89,7 +91,12 @@ export class FoodPreferencesService {
         targetId: schema.foodPreferences.targetId,
       })
       .from(schema.foodPreferences)
-      .where(eq(schema.foodPreferences.userId, userId));
+      .where(
+        and(
+          eq(schema.foodPreferences.userId, userId),
+          inArray(schema.foodPreferences.type, ['allergy', 'exclude'] as const),
+        ),
+      );
 
     const result = Object.fromEntries(
       FOOD_PREFERENCE_TARGET_TYPES.map((targetType) => [
@@ -103,6 +110,23 @@ export class FoodPreferencesService {
     }
 
     return result;
+  }
+
+  // Used by diets.service.ts to restrict a generation role-slot to only
+  // the user's favorited items when any exist for that role - see
+  // ADR-014. Always targetType='food_item' (enforced in create()), so
+  // no grouping by targetType is needed here unlike getExclusionTargets.
+  async getFavoriteFoodItemIds(userId: string): Promise<Set<string>> {
+    const rows = await this.db
+      .select({ targetId: schema.foodPreferences.targetId })
+      .from(schema.foodPreferences)
+      .where(
+        and(
+          eq(schema.foodPreferences.userId, userId),
+          eq(schema.foodPreferences.type, 'favorite'),
+        ),
+      );
+    return new Set(rows.map((row) => row.targetId));
   }
 
   async list(userId: string): Promise<FoodPreferenceResponse[]> {
@@ -151,6 +175,35 @@ export class FoodPreferencesService {
       throw new BadRequestException(
         `No ${dto.targetType} found with id ${dto.targetId}`,
       );
+    }
+
+    if (dto.type === 'favorite' && dto.targetType !== 'food_item') {
+      throw new BadRequestException(
+        'Favorites can only target a specific Food Item',
+      );
+    }
+
+    // Same Food Item can't be both favorited and excluded/allergied at
+    // once (ADR-014) - only checked for targetType='food_item' since
+    // that's the only type favorite ever uses.
+    if (dto.targetType === 'food_item') {
+      const opposingTypes: FoodPreferenceType[] =
+        dto.type === 'favorite' ? ['allergy', 'exclude'] : ['favorite'];
+      const conflict = await this.db.query.foodPreferences.findFirst({
+        where: and(
+          eq(schema.foodPreferences.userId, userId),
+          eq(schema.foodPreferences.targetType, 'food_item'),
+          eq(schema.foodPreferences.targetId, dto.targetId),
+          inArray(schema.foodPreferences.type, opposingTypes),
+        ),
+      });
+      if (conflict) {
+        throw new ConflictException(
+          dto.type === 'favorite'
+            ? 'This Food Item is already excluded or an allergy - remove that first to favorite it'
+            : 'This Food Item is already a favorite - remove that first to exclude it',
+        );
+      }
     }
 
     const existing = await this.db.query.foodPreferences.findFirst({
