@@ -50,6 +50,9 @@ describe('generateDietItems', () => {
   it('splits the target evenly across mealCount and lands within +-5% tolerance', () => {
     const result = generateDietItems({
       targetCalories: 2000,
+      targetProteinG: 150,
+      targetCarbsG: 224,
+      targetFatG: 56,
       mealCount: 4,
       candidatesByRole: balancedCandidates(),
     });
@@ -62,6 +65,9 @@ describe('generateDietItems', () => {
   it('produces one item per required role for every meal slot used', () => {
     const result = generateDietItems({
       targetCalories: 1800,
+      targetProteinG: 140,
+      targetCarbsG: 180,
+      targetFatG: 50,
       mealCount: 3,
       candidatesByRole: balancedCandidates(),
     });
@@ -87,6 +93,9 @@ describe('generateDietItems', () => {
 
     const result = generateDietItems({
       targetCalories: 2000,
+      targetProteinG: 150,
+      targetCarbsG: 200,
+      targetFatG: 60,
       mealCount: 1,
       candidatesByRole: candidates,
     });
@@ -109,6 +118,9 @@ describe('generateDietItems', () => {
 
     const result = generateDietItems({
       targetCalories: 1500,
+      targetProteinG: 100,
+      targetCarbsG: 180,
+      targetFatG: 40,
       mealCount: 2,
       candidatesByRole: candidates,
     });
@@ -121,7 +133,7 @@ describe('generateDietItems', () => {
     // A very low target with coarse-calorie candidates forces the initial
     // per-item gram rounding (min 1g) to overshoot the target well beyond
     // 5% before adjustment - see greedy-heuristic.ts's comment on this
-    // pass for why it targets the largest items first.
+    // pass for why it targets carb/fat/vegetable items first.
     const coarse: FoodCandidate = {
       id: 'coarse-1',
       caloriesPer100g: 400,
@@ -138,6 +150,9 @@ describe('generateDietItems', () => {
 
     const result = generateDietItems({
       targetCalories: 40,
+      targetProteinG: 0.1,
+      targetCarbsG: 0.1,
+      targetFatG: 0.1,
       mealCount: 1,
       candidatesByRole: candidates,
     });
@@ -149,6 +164,9 @@ describe('generateDietItems', () => {
   it('returns an empty, zeroed result when there are no candidates at all', () => {
     const result = generateDietItems({
       targetCalories: 1500,
+      targetProteinG: 110,
+      targetCarbsG: 180,
+      targetFatG: 50,
       mealCount: 3,
       candidatesByRole: new Map(),
     });
@@ -166,12 +184,60 @@ describe('generateDietItems', () => {
 
     const result = generateDietItems({
       targetCalories: 500,
+      targetProteinG: 40,
+      targetCarbsG: 0,
+      targetFatG: 0,
       mealCount: 1,
       candidatesByRole: candidates,
       pickRandom: (items) => items[items.length - 1],
     });
 
     expect(result.items[0].foodItemId).toBe(alt.id);
+  });
+
+  it('sizes portions off macro-gram targets so a high-protein target lands within tolerance on protein, carbs, and fat too', () => {
+    // Near-pure-macro candidates isolate the sizing formula from real-food
+    // cross-contamination (e.g. a protein source's incidental fat content),
+    // which is what greedy-heuristic.ts's correction pass - calorie-only,
+    // non-protein items first - is not designed to correct for.
+    const proteinIsolate: FoodCandidate = {
+      id: 'protein-isolate-1',
+      caloriesPer100g: 100,
+      proteinPer100g: 25,
+      carbsPer100g: 0,
+      fatPer100g: 0,
+    };
+    const carbIsolate: FoodCandidate = {
+      id: 'carb-isolate-1',
+      caloriesPer100g: 100,
+      proteinPer100g: 0,
+      carbsPer100g: 25,
+      fatPer100g: 0,
+    };
+    const candidates = new Map([
+      ['lean_protein', [proteinIsolate]],
+      ['complex_carb', [carbIsolate]],
+      ['healthy_fat', [healthyFat]],
+    ]);
+
+    // Protein-heavy split (36% of calories from protein) reproducing the
+    // reported bug: the old even-calorie-split sizing left protein at
+    // roughly half its target while calories stayed in tolerance.
+    const result = generateDietItems({
+      targetCalories: 2240,
+      targetProteinG: 200,
+      targetCarbsG: 180,
+      targetFatG: 80,
+      mealCount: 3,
+      candidatesByRole: candidates,
+    });
+
+    const drift = (value: number, target: number) =>
+      Math.abs(value - target) / target;
+    expect(drift(result.totalCalories, 2240)).toBeLessThanOrEqual(0.05);
+    expect(drift(result.totalProtein, 200)).toBeLessThanOrEqual(0.05);
+    expect(drift(result.totalCarbs, 180)).toBeLessThanOrEqual(0.05);
+    expect(drift(result.totalFat, 80)).toBeLessThanOrEqual(0.05);
   });
 });
 
