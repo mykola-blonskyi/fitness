@@ -159,3 +159,15 @@ Uploading a Photo Session no longer requires the user to label which of the thre
 Alignment analysis (2026-08-30, FITNESS-24): `analyze-alignment` validates pose-specific geometry from the stored detection landmarks (common: subject-in-frame, centered, upright; front: shoulders/hips level, facing camera; side: true profile, body vertical; back: shoulders level, face hidden). Missing or too-few landmarks is a permanent failure — it skips the retry loop and marks the photo `failed` on the first attempt; transient failures (DB/queue/storage) still retry with backoff. A `failed` photo on a `confirmed` session can be manually re-enqueued (`POST /photo-sessions/photos/:photoId/retry-analysis`).
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-014: Favorite Food Items narrow generation per-role, as a hard filter not a weighted boost
+
+Date: 2026-08-31
+
+Status: Accepted
+
+`favorite` is a third `food_preference_type` (alongside `allergy`/`exclude`), always targeting a specific Food Item — never a Category/Subcategory/Role, since favoriting a whole taxonomy node wouldn't disambiguate anything a generation role-slot needs. During generation, each role-slot restricts to only the user's favorited, otherwise-eligible items when any exist for that role; a role with none falls back to its full eligible pool, identical to generation with no favorites at all. Implemented as `restrictToFavorites()`, a pure function layered after the existing exclusion-filtered `candidatesByRole` — `greedy-heuristic.ts`'s picking/chain-fallback logic and `swapItem()` are both untouched, so a role favorited only in a fallback chain member (e.g. `fatty_protein` but not `lean_protein`) resolves correctly for free via the chain's existing empty-role fallthrough. The same Food Item can never be both favorited and excluded/allergied at once — rejected at creation, symmetric both directions. `swapItem()`'s replacement picker deliberately does not apply this restriction — a swap should still offer every eligible same-Role item, not just favorites.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
