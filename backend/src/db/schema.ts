@@ -314,6 +314,10 @@ export const foodCalorieTranslations = pgTable(
 export const foodPreferenceTypeEnum = pgEnum('food_preference_type', [
   'allergy',
   'exclude',
+  // Unlike allergy/exclude, only ever targets a specific food_item (see
+  // FoodPreferencesService.create) - favoriting a whole category/role
+  // wouldn't disambiguate anything a generation role-slot needs.
+  'favorite',
 ]);
 export const foodPreferenceTargetTypeEnum = pgEnum(
   'food_preference_target_type',

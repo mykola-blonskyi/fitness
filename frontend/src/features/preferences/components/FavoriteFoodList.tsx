@@ -1,19 +1,11 @@
 import type { FoodPreference } from '@shared/types/preferences';
 import { removeFoodPreference } from '@features/preferences/actions';
 
-const TYPE_LABELS: Record<FoodPreference['type'], string> = {
-  allergy: 'Allergy',
-  exclude: 'Exclude',
-  favorite: 'Favorite',
-};
-
-interface FoodPreferenceListProps {
+interface FavoriteFoodListProps {
   preferences: FoodPreference[];
 }
 
-export const FoodPreferenceList = ({
-  preferences,
-}: FoodPreferenceListProps) => {
+export const FavoriteFoodList = ({ preferences }: FavoriteFoodListProps) => {
   return (
     <ul className="flex flex-col gap-2">
       {preferences.map((preference) => (
@@ -21,10 +13,7 @@ export const FoodPreferenceList = ({
           key={preference.id}
           className="flex items-center justify-between rounded border border-zinc-200 px-3 py-2 dark:border-zinc-800"
         >
-          <span className="text-sm">
-            {TYPE_LABELS[preference.type]} &middot;{' '}
-            {preference.targetName ?? 'Unknown'}
-          </span>
+          <span className="text-sm">{preference.targetName ?? 'Unknown'}</span>
           <form action={removeFoodPreference.bind(null, preference.id)}>
             <button
               type="submit"
@@ -36,9 +25,7 @@ export const FoodPreferenceList = ({
         </li>
       ))}
       {preferences.length === 0 && (
-        <p className="text-sm text-zinc-500">
-          No allergies or exclusions declared.
-        </p>
+        <p className="text-sm text-zinc-500">No favorite food items yet.</p>
       )}
     </ul>
   );

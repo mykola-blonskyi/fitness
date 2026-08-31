@@ -74,9 +74,19 @@ Two Food Items are interchangeable only if they share the same Food Role (e.g. C
 
 ## Food Preferences target structured entities, not free text
 
-`user_food_preferences.target_type` + `target_id` point at a Food Category, Food Subcategory, Food Role, or a specific Food Item. A candidate Food Item is excluded from diet generation if any of its own category/subcategory/role/id matches an active preference's target.
+`user_food_preferences.target_type` + `target_id` point at a Food Category, Food Subcategory, Food Role, or a specific Food Item. A candidate Food Item is excluded from diet generation if any of its own category/subcategory/role/id matches an active allergy or exclude preference's target.
 
 Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut butter, not all nuts") with one mechanism.
+
+---
+
+## Favorited Food Items narrow diet generation, per role
+
+A Food Preference of type `favorite` always targets a specific Food Item, never a Category/Subcategory/Role. For each role-slot generation fills, if the user has favorited any eligible (non-excluded) Food Item belonging to that role, only their favorited item(s) for that role are candidates; if they've favorited nothing in that role, every eligible Food Item for that role remains a candidate, unchanged from generation without any favorites. A role with no favorites of its own still falls back to the full pool even if the user has favorites elsewhere (e.g. favoriting a protein doesn't restrict which vegetable gets picked).
+
+The same Food Item can never be both favorited and excluded/allergied at once — adding either is rejected while the other is active for that item.
+
+Why: lets a user say "always use this specific chicken breast, not a random lean protein" without having to exclude every other lean protein by hand, while leaving every role they haven't expressed an opinion on exactly as randomized as before.
 
 ---
 

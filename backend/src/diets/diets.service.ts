@@ -20,6 +20,7 @@ import {
   categoryNamesExcludedBy,
   roleNamesExcludedBy,
 } from './diet-preference-exclusions';
+import { restrictToFavorites } from './favorite-restriction';
 import {
   toDietResponse,
   type DietItemWithFoodRow,
@@ -185,6 +186,21 @@ export class DietsService {
     return { exclusions, roleIdByName: taxonomyIds.roleIdByName };
   }
 
+  // Favorites only ever narrow generate()'s own candidate pool (ADR-014)
+  // - swapItem() deliberately doesn't call this, a swap picker should
+  // still offer every eligible same-Role item, not just favorites.
+  private async findGenerationCandidatesByRole(
+    userId: string,
+    exclusions: ExclusionTargets,
+    roleIdByName: Map<string, string>,
+  ): Promise<Map<string, FoodCandidate[]>> {
+    const [candidatesByRole, favoriteFoodItemIds] = await Promise.all([
+      this.findCandidatesByRole(exclusions, roleIdByName),
+      this.foodPreferencesService.getFavoriteFoodItemIds(userId),
+    ]);
+    return restrictToFavorites(candidatesByRole, favoriteFoodItemIds);
+  }
+
   private async getAlgorithm() {
     const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
       where: eq(schema.dietCalculationAlgorithms.code, ALGORITHM_CODE),
@@ -210,7 +226,8 @@ export class DietsService {
     const dailyLog = await this.dailyLogsService.findOrCreate(userId, date);
 
     const { exclusions, roleIdByName } = await this.resolveExclusions(userId);
-    const candidatesByRole = await this.findCandidatesByRole(
+    const candidatesByRole = await this.findGenerationCandidatesByRole(
+      userId,
       exclusions,
       roleIdByName,
     );

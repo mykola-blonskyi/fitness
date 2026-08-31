@@ -2,8 +2,10 @@ import { SettingsNav } from '@features/settings';
 import {
   AddDietPreferenceForm,
   AddFoodPreferenceForm,
+  AddFavoriteFoodForm,
   DietPreferenceList,
   FoodPreferenceList,
+  FavoriteFoodList,
 } from '@features/preferences';
 import type { FoodItem, FoodTaxonomy } from '@features/food-catalog/actions';
 import { apiFetch } from '@libs/api-client';
@@ -27,6 +29,13 @@ export default async function PreferencesSettingsPage({
       apiFetch<CursorPage<FoodItem>>('/food-items?limit=100'),
     ]);
 
+  const exclusionPreferences = foodPreferences.filter(
+    (p) => p.type !== 'favorite',
+  );
+  const favoritePreferences = foodPreferences.filter(
+    (p) => p.type === 'favorite',
+  );
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-8 px-4 py-16">
       <SettingsNav locale={locale} active="preferences" />
@@ -42,11 +51,17 @@ export default async function PreferencesSettingsPage({
 
       <section className="flex w-full max-w-sm flex-col gap-3">
         <h2 className="text-lg font-semibold">Allergies &amp; exclusions</h2>
-        <FoodPreferenceList preferences={foodPreferences} />
+        <FoodPreferenceList preferences={exclusionPreferences} />
         <AddFoodPreferenceForm
           taxonomy={taxonomy}
           foodItems={foodItemPage.items}
         />
+      </section>
+
+      <section className="flex w-full max-w-sm flex-col gap-3">
+        <h2 className="text-lg font-semibold">Favorite food items</h2>
+        <FavoriteFoodList preferences={favoritePreferences} />
+        <AddFavoriteFoodForm foodItems={foodItemPage.items} />
       </section>
     </main>
   );
