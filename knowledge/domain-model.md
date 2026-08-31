@@ -281,11 +281,11 @@ Relationships:
 
 Responsibilities:
 
-A user's allergy or exclusion, targeting a taxonomy node or a specific Food Item — see Business Rules and [[glossary]] "Food Preference".
+A user's allergy, exclusion, or favorite, targeting a taxonomy node or a specific Food Item — see Business Rules and [[glossary]] "Food Preference".
 
 Fields:
 
-- type (allergy/exclude)
+- type (allergy/exclude/favorite) — favorite always has target_type=food_item
 - target_type (category/subcategory/role/food_item)
 - target_id (polymorphic FK)
 

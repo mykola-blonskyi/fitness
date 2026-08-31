@@ -14,6 +14,7 @@ import {
   submitFormAction,
   type FormActionError,
 } from '@shared/libs/form-action';
+import { firstFieldErrors } from '@shared/schemas/zod-errors';
 
 const PREFERENCES_PAGE = '/[locale]/settings/preferences';
 
@@ -23,21 +24,36 @@ export type CreateFoodPreferenceState =
 export async function createFoodPreference(
   input: CreateFoodPreferenceInput,
 ): Promise<CreateFoodPreferenceState> {
-  // No `formData` option - see features/onboarding/actions.ts for why.
-  return submitFormAction({
-    name: 'createFoodPreference',
-    schema: createFoodPreferenceSchema,
-    input,
-    errorMessage: "Couldn't save that preference — try again.",
-    async mutate(parsed) {
-      await apiFetch<FoodPreference>('/food-preferences', {
-        method: 'POST',
-        body: JSON.stringify(parsed),
-      });
-      revalidatePath(PREFERENCES_PAGE, 'page');
-      return {};
+  // Not submitFormAction - a favorite/exclude conflict needs its 409
+  // message surfaced verbatim, same pattern as deleteFoodItem/deleteExercise.
+  return Sentry.withServerActionInstrumentation(
+    'createFoodPreference',
+    {},
+    async () => {
+      const parsed = createFoodPreferenceSchema.safeParse(input);
+      if (!parsed.success) {
+        return {
+          fieldErrors: firstFieldErrors(parsed.error) as Partial<
+            Record<keyof CreateFoodPreferenceInput, string>
+          >,
+        };
+      }
+
+      try {
+        await apiFetch<FoodPreference>('/food-preferences', {
+          method: 'POST',
+          body: JSON.stringify(parsed.data),
+        });
+        revalidatePath(PREFERENCES_PAGE, 'page');
+        return {};
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 409) {
+          return { error: err.message };
+        }
+        return { error: "Couldn't save that preference — try again." };
+      }
     },
-  });
+  );
 }
 
 export async function removeFoodPreference(id: string): Promise<void> {

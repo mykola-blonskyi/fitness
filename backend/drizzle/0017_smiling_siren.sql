@@ -1,0 +1,1 @@
+ALTER TYPE "public"."food_preference_type" ADD VALUE 'favorite';

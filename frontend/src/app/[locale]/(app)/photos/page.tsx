@@ -2,10 +2,7 @@ import Link from 'next/link';
 import { PhotoSessionList, PhotoUploadForm } from '@features/photo-sessions';
 import type { PhotoSession } from '@features/photo-sessions/actions';
 import { apiFetch } from '@libs/api-client';
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+import { todayIso } from '@libs/date';
 
 export default async function PhotosPage({
   params,

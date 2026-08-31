@@ -44,7 +44,7 @@ The nutritional role a Food Item plays (e.g. `lean_protein`, `complex_carb`, `he
 
 ### Food Preference
 
-A user's allergy or exclusion (`user_food_preferences`), targeting either a whole taxonomy node (Category, Subcategory, or Role) or a single Food Item, via a polymorphic `target_type`/`target_id` pair. Not free text — always a structured reference.
+A user's allergy, exclusion, or favorite (`user_food_preferences`), targeting either a whole taxonomy node (Category, Subcategory, or Role) or a single Food Item, via a polymorphic `target_type`/`target_id` pair. Not free text — always a structured reference. **Favorite** is the one exception to the polymorphic targeting: it always targets a specific Food Item, never a Category/Subcategory/Role — see [[business-rules]] "Favorited Food Items narrow diet generation, per role" and ADR-014. The same Food Item can never be both favorited and excluded/allergied at once.
 
 ### Hub
 

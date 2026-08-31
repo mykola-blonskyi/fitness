@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { apiFetch, ApiError } from '@libs/api-client';
+import { fetchOr404 } from '@libs/api-client';
 import type { CalorieTarget, DietResponse } from '@features/diet/actions';
 import { dietDate } from '@features/diet/date';
 import {
@@ -9,19 +9,6 @@ import {
   GenerateMenuCta,
   NutritionsInfo,
 } from '@features/diet';
-
-// 404 is the expected "nothing yet" signal for both fetches (no weigh-in,
-// no Diet generated) - anything else is a real error and propagates.
-async function fetchOr404<T>(path: string): Promise<T | null> {
-  try {
-    return await apiFetch<T>(path);
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) {
-      return null;
-    }
-    throw err;
-  }
-}
 
 export default async function DietPage({
   params,
