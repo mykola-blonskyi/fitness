@@ -2,10 +2,7 @@ import { StartWorkoutForm, WorkoutLogList } from '@features/workout-logs';
 import type { WorkoutLog } from '@shared/types/workout-log';
 import type { TrainingProgram } from '@shared/types/training-program';
 import { apiFetch } from '@libs/api-client';
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+import { todayIso } from '@libs/date';
 
 export default async function WorkoutsPage({
   params,

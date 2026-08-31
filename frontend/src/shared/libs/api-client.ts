@@ -65,3 +65,17 @@ export async function apiFetch<T>(
 
   return res.json() as Promise<T>;
 }
+
+// 404 is the expected "nothing yet" signal for the many endpoints backed
+// by an optional row (a day's weigh-in, its Diet, its calorie target) -
+// anything else is a real error and propagates.
+export async function fetchOr404<T>(path: string): Promise<T | null> {
+  try {
+    return await apiFetch<T>(path);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) {
+      return null;
+    }
+    throw err;
+  }
+}
