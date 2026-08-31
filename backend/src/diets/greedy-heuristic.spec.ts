@@ -239,6 +239,70 @@ describe('generateDietItems', () => {
     expect(drift(result.totalCarbs, 180)).toBeLessThanOrEqual(0.05);
     expect(drift(result.totalFat, 80)).toBeLessThanOrEqual(0.05);
   });
+
+  it('round-robins mealType past 4, numbering repeats as later occurrences', () => {
+    const result = generateDietItems({
+      targetCalories: 3000,
+      targetProteinG: 200,
+      targetCarbsG: 300,
+      targetFatG: 80,
+      mealCount: 6,
+      candidatesByRole: balancedCandidates(),
+    });
+
+    const slots = result.items
+      .filter((item) => item.orderIndex === 0)
+      .map((item) => ({
+        mealType: item.mealType,
+        mealOccurrence: item.mealOccurrence,
+      }));
+    expect(slots).toEqual([
+      { mealType: 'breakfast', mealOccurrence: 1 },
+      { mealType: 'lunch', mealOccurrence: 1 },
+      { mealType: 'dinner', mealOccurrence: 1 },
+      { mealType: 'snack', mealOccurrence: 1 },
+      { mealType: 'breakfast', mealOccurrence: 2 },
+      { mealType: 'lunch', mealOccurrence: 2 },
+    ]);
+  });
+
+  it('avoids repeating the same dish across occurrences of the same mealType when another candidate exists', () => {
+    const alt: FoodCandidate = { ...leanProtein, id: 'lean-protein-alt' };
+    const candidates = new Map([['lean_protein', [leanProtein, alt]]]);
+
+    const result = generateDietItems({
+      targetCalories: 1000,
+      targetProteinG: 80,
+      targetCarbsG: 0,
+      targetFatG: 0,
+      mealCount: 8, // two breakfast occurrences
+      candidatesByRole: candidates,
+      pickRandom: (items) => items[0],
+    });
+
+    const breakfastFoodIds = result.items
+      .filter((item) => item.mealType === 'breakfast')
+      .map((item) => item.foodItemId);
+    expect(breakfastFoodIds).toEqual([leanProtein.id, alt.id]);
+  });
+
+  it('falls back to repeating a dish when it is the only eligible candidate', () => {
+    const candidates = new Map([['lean_protein', [leanProtein]]]);
+
+    const result = generateDietItems({
+      targetCalories: 1000,
+      targetProteinG: 80,
+      targetCarbsG: 0,
+      targetFatG: 0,
+      mealCount: 8,
+      candidatesByRole: candidates,
+    });
+
+    const breakfastFoodIds = result.items
+      .filter((item) => item.mealType === 'breakfast')
+      .map((item) => item.foodItemId);
+    expect(breakfastFoodIds).toEqual([leanProtein.id, leanProtein.id]);
+  });
 });
 
 describe('gramsForCalories', () => {

@@ -1,5 +1,3 @@
-// Diet generation always takes the first N of this order for a user's
-// configured mealCount.
 export const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 export type MealType = (typeof MEAL_TYPES)[number];
 
@@ -13,6 +11,34 @@ export const MEAL_ROLE_CHAINS: readonly (readonly string[])[] = [
   ['healthy_fat', 'saturated_fat'],
 ];
 
+export interface MealSlot {
+  mealType: MealType;
+  // 1-based, per mealType - a slot's 2nd occurrence of 'breakfast' in a
+  // day is {mealType: 'breakfast', occurrence: 2}, distinct from the
+  // first. See ADR-015.
+  occurrence: number;
+}
+
+// mealCount can exceed MEAL_TYPES.length (ADR-015) - once it does, this
+// round-robins through MEAL_TYPES again rather than inventing a 5th meal
+// type, so every slot still has a real name (e.g. "second lunch", not
+// "meal 5").
+export function mealSlotsForCount(mealCount: number): MealSlot[] {
+  const occurrenceByType: Record<MealType, number> = {
+    breakfast: 0,
+    lunch: 0,
+    dinner: 0,
+    snack: 0,
+  };
+  const slots: MealSlot[] = [];
+  for (let i = 0; i < mealCount; i++) {
+    const mealType = MEAL_TYPES[i % MEAL_TYPES.length];
+    occurrenceByType[mealType] += 1;
+    slots.push({ mealType, occurrence: occurrenceByType[mealType] });
+  }
+  return slots;
+}
+
 export interface FoodCandidate {
   id: string;
   caloriesPer100g: number;
@@ -23,6 +49,7 @@ export interface FoodCandidate {
 
 export interface GeneratedDietItem {
   mealType: MealType;
+  mealOccurrence: number;
   foodItemId: string;
   weightGrams: number;
   orderIndex: number;

@@ -1,13 +1,15 @@
-// Greedy-heuristic diet generator - see docs/decisions.md ADR-011. For each
-// meal, picks one Food Item per required Food Role, sizes protein/carb/fat
-// role-slots off their macro-gram target and the candidate's per-100g macro
-// density, sizes the vegetable role-slot off the meal's calorie share, then
-// adjusts non-protein items if the day's total drifts outside tolerance.
-// Pure function, no I/O - testable without a database.
+// Greedy-heuristic diet generator - see docs/decisions.md ADR-011 and
+// ADR-015. For each meal slot (mealCount can repeat mealTypes past 4, see
+// mealSlotsForCount), picks one Food Item per required Food Role, sizes
+// protein/carb/fat role-slots off their macro-gram target and the
+// candidate's per-100g macro density, sizes the vegetable role-slot off
+// the meal's calorie share, then adjusts non-protein items if the day's
+// total drifts outside tolerance. Pure function, no I/O - testable
+// without a database.
 
 import {
   MEAL_ROLE_CHAINS,
-  MEAL_TYPES,
+  mealSlotsForCount,
   type FoodCandidate,
   type GeneratedDiet,
   type GeneratedDietItem,
@@ -28,7 +30,7 @@ export interface GreedyHeuristicInput {
   targetProteinG: number;
   targetCarbsG: number;
   targetFatG: number;
-  // 1-4, validated at the point mealCount is set; not re-validated here.
+  // 1-20, validated at the point mealCount is set; not re-validated here.
   mealCount: number;
   candidatesByRole: Map<string, FoodCandidate[]>;
   // Injectable so tests can pick deterministically; defaults to random.
@@ -80,6 +82,7 @@ function macroTotals(
 
 interface WorkingItem {
   mealType: MealType;
+  occurrence: number;
   orderIndex: number;
   candidate: FoodCandidate;
   chainIndex: number;
@@ -88,25 +91,35 @@ interface WorkingItem {
 
 export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
   const pick = input.pickRandom ?? defaultPick;
-  const mealTypes: MealType[] = [...MEAL_TYPES].slice(0, input.mealCount);
-  const mealCalorieTarget = input.targetCalories / mealTypes.length;
-  const mealProteinTarget = input.targetProteinG / mealTypes.length;
-  const mealCarbTarget = input.targetCarbsG / mealTypes.length;
-  const mealFatTarget = input.targetFatG / mealTypes.length;
+  const slots = mealSlotsForCount(input.mealCount);
+  const mealCalorieTarget = input.targetCalories / slots.length;
+  const mealProteinTarget = input.targetProteinG / slots.length;
+  const mealCarbTarget = input.targetCarbsG / slots.length;
+  const mealFatTarget = input.targetFatG / slots.length;
 
   const items: WorkingItem[] = [];
+  // A repeated occurrence of the same mealType (ADR-015) avoids repeating
+  // a dish it already used earlier that day for that mealType, as long as
+  // another eligible candidate exists for the role - falls back to
+  // repeating when it's the only eligible option.
+  const usedIdsByMealType = new Map<MealType, Set<string>>();
 
-  for (const mealType of mealTypes) {
+  for (const slot of slots) {
+    const usedIds = usedIdsByMealType.get(slot.mealType) ?? new Set<string>();
     const picks: { chainIndex: number; candidate: FoodCandidate }[] = [];
     MEAL_ROLE_CHAINS.forEach((chain, chainIndex) => {
       for (const role of chain) {
         const candidates = input.candidatesByRole.get(role);
         if (candidates && candidates.length > 0) {
-          picks.push({ chainIndex, candidate: pick(candidates) });
+          const unused = candidates.filter((c) => !usedIds.has(c.id));
+          const chosen = pick(unused.length > 0 ? unused : candidates);
+          picks.push({ chainIndex, candidate: chosen });
+          usedIds.add(chosen.id);
           break;
         }
       }
     });
+    usedIdsByMealType.set(slot.mealType, usedIds);
     if (picks.length === 0) continue;
 
     picks.forEach(({ chainIndex, candidate }, orderIndex) => {
@@ -130,7 +143,14 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
             mealCalorieTarget / picks.length,
           );
       }
-      items.push({ mealType, orderIndex, candidate, chainIndex, weightGrams });
+      items.push({
+        mealType: slot.mealType,
+        occurrence: slot.occurrence,
+        orderIndex,
+        candidate,
+        chainIndex,
+        weightGrams,
+      });
     });
   }
 
@@ -192,6 +212,7 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
 
   const generatedItems: GeneratedDietItem[] = items.map((item) => ({
     mealType: item.mealType,
+    mealOccurrence: item.occurrence,
     foodItemId: item.candidate.id,
     weightGrams: item.weightGrams,
     orderIndex: item.orderIndex,
