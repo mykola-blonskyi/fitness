@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PhotoSessionList, PhotoUploadForm } from '@features/photo-sessions';
 import type { PhotoSession } from '@features/photo-sessions/actions';
 import { apiFetch } from '@libs/api-client';
@@ -6,7 +7,12 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default async function PhotosPage() {
+export default async function PhotosPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   const date = todayIso();
   const sessions = await apiFetch<PhotoSession[]>('/photo-sessions');
 
@@ -16,7 +22,15 @@ export default async function PhotosPage() {
       <PhotoUploadForm date={date} />
 
       <section className="flex w-full flex-col gap-4">
-        <h2 className="text-lg font-medium">History</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium">History</h2>
+          <Link
+            href={`/${locale}/photos/gallery`}
+            className="text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+          >
+            View gallery
+          </Link>
+        </div>
         <PhotoSessionList sessions={sessions} />
       </section>
     </main>

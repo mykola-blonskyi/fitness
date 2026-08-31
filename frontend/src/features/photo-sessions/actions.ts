@@ -7,10 +7,7 @@ import { apiFetch } from '@libs/api-client';
 export type PhotoPose = 'front' | 'side' | 'back';
 export type AnalysisStatus = 'pending' | 'processing' | 'completed' | 'failed';
 export type PhotoSessionStatus =
-  | 'uploading'
-  | 'detecting'
-  | 'needs_review'
-  | 'confirmed';
+  'uploading' | 'detecting' | 'needs_review' | 'confirmed';
 
 export interface ProgressPhoto {
   id: string;
@@ -109,4 +106,18 @@ export async function setBaseline(id: string): Promise<void> {
     });
     revalidatePath('/[locale]/photos', 'page');
   });
+}
+
+export async function deletePhotoSession(id: string): Promise<void> {
+  return Sentry.withServerActionInstrumentation(
+    'deletePhotoSession',
+    {},
+    async () => {
+      await apiFetch<PhotoSession>(`/photo-sessions/${id}`, {
+        method: 'DELETE',
+      });
+      revalidatePath('/[locale]/photos', 'page');
+      revalidatePath('/[locale]/photos/gallery', 'page');
+    },
+  );
 }

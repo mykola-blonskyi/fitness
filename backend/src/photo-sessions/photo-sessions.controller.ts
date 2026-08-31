@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
@@ -79,6 +87,14 @@ export class PhotoSessionsController {
     @Param('id') id: string,
   ): Promise<PhotoSessionResponse> {
     return this.photoSessionsService.setBaseline(identity.hubUserId, id);
+  }
+
+  @Delete(':id')
+  async remove(
+    @CurrentUser() identity: Identity,
+    @Param('id') id: string,
+  ): Promise<PhotoSessionResponse> {
+    return this.photoSessionsService.remove(identity.hubUserId, id);
   }
 
   @Post(':date')

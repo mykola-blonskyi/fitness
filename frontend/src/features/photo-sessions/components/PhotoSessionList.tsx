@@ -1,11 +1,11 @@
 import Image from 'next/image';
-import { apiFetch } from '@libs/api-client';
 import {
   setBaseline,
   type PhotoPose,
   type PhotoSession,
 } from '@features/photo-sessions/actions';
 import { analysisStatusLabel } from '@features/photo-sessions/analysis-status';
+import { fetchPhotoViewUrl } from '@features/photo-sessions/photo-view-url';
 import { PhotoSessionReview } from './PhotoSessionReview';
 import { RetryAnalysisButton } from './RetryAnalysisButton';
 
@@ -17,17 +17,6 @@ const POSE_LABELS: Record<PhotoPose, string> = {
 
 function poseLabel(pose: PhotoPose | null): string {
   return pose ? POSE_LABELS[pose] : 'Unassigned';
-}
-
-async function fetchViewUrl(photoId: string): Promise<string | null> {
-  try {
-    const { url } = await apiFetch<{ url: string }>(
-      `/photo-sessions/photos/${photoId}/view`,
-    );
-    return url;
-  } catch {
-    return null;
-  }
 }
 
 export async function PhotoSessionList({
@@ -52,7 +41,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
   const photosWithUrls = await Promise.all(
     session.photos.map(async (photo) => ({
       photo,
-      url: await fetchViewUrl(photo.id),
+      url: await fetchPhotoViewUrl(photo.id),
     })),
   );
 
