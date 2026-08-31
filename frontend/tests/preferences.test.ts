@@ -17,6 +17,16 @@ describe('createFoodPreferenceSchema', () => {
     ).toBe(true);
   });
 
+  it('accepts a favorite food preference', () => {
+    expect(
+      createFoodPreferenceSchema.safeParse({
+        type: 'favorite',
+        targetType: 'food_item',
+        targetId: '11111111-1111-4111-8111-111111111111',
+      }).success,
+    ).toBe(true);
+  });
+
   it('rejects an invalid type', () => {
     const result = createFoodPreferenceSchema.safeParse({
       ...validFoodPreference,

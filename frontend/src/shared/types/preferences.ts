@@ -1,6 +1,10 @@
 // Mirrors backend/src/food-preferences/food-preference.types.ts and
 // backend/src/diet-preferences/diet-preference.types.ts.
-export const FOOD_PREFERENCE_TYPES = ['allergy', 'exclude'] as const;
+export const FOOD_PREFERENCE_TYPES = [
+  'allergy',
+  'exclude',
+  'favorite',
+] as const;
 export type FoodPreferenceType = (typeof FOOD_PREFERENCE_TYPES)[number];
 
 export const FOOD_PREFERENCE_TARGET_TYPES = [
