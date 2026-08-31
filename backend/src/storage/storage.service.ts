@@ -59,4 +59,8 @@ export class StorageService {
       return false;
     }
   }
+
+  removeObject(objectKey: string): Promise<void> {
+    return this.client.removeObject(this.bucket, objectKey);
+  }
 }

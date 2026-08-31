@@ -319,4 +319,42 @@ export class PhotoSessionsService {
 
     return toProgressPhotoResponse(updated);
   }
+
+  // DB rows are deleted first (schema.ts has no ON DELETE CASCADE, so both
+  // tables are cleared explicitly, same as every other delete here) - MinIO
+  // cleanup runs after and is best-effort per photo, so one object failing
+  // to delete can never leave a DB row pointing at storage that's gone.
+  async remove(userId: string, id: string): Promise<PhotoSessionResponse> {
+    const session = await this.findOwnedSession(userId, id);
+    const photos = await this.db
+      .select({
+        id: schema.progressPhotos.id,
+        pose: schema.progressPhotos.pose,
+        analysisStatus: schema.progressPhotos.analysisStatus,
+        alignmentData: schema.progressPhotos.alignmentData,
+        createdAt: schema.progressPhotos.createdAt,
+        objectKey: schema.progressPhotos.objectKey,
+      })
+      .from(schema.progressPhotos)
+      .where(eq(schema.progressPhotos.photoSessionId, id));
+
+    await this.db.transaction(async (tx) => {
+      await tx
+        .delete(schema.progressPhotos)
+        .where(eq(schema.progressPhotos.photoSessionId, id));
+      await tx
+        .delete(schema.photoSessions)
+        .where(eq(schema.photoSessions.id, id));
+    });
+
+    await Promise.all(
+      photos.map((photo) =>
+        this.storageService
+          .removeObject(photo.objectKey)
+          .catch(() => undefined),
+      ),
+    );
+
+    return toPhotoSessionResponse(session, photos);
+  }
 }
