@@ -27,6 +27,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       height: profile.height,
       goal: profile.goal,
       activityLevel: profile.activityLevel,
+      mealCount: profile.mealCount,
       locale: profile.locale,
       defaultWeightUnit: profile.defaultWeightUnit,
     },

@@ -4,6 +4,7 @@ import {
   GENDERS,
   GOALS,
   LOCALES,
+  MEAL_COUNTS,
   WEIGHT_UNITS,
 } from '@shared/types/user';
 
@@ -20,6 +21,11 @@ export const userProfileSchema = z.object({
     .max(300, 'Height must be at most 300cm'),
   goal: z.enum(GOALS, 'Select a goal'),
   activityLevel: z.enum(ACTIVITY_LEVELS, 'Select an activity level'),
+  mealCount: z
+    .number('Select how many meals per day')
+    .int()
+    .min(MEAL_COUNTS[0])
+    .max(MEAL_COUNTS[MEAL_COUNTS.length - 1]),
   locale: z.enum(LOCALES, 'Select a language'),
   defaultWeightUnit: z.enum(WEIGHT_UNITS, 'Select a weight unit'),
 });
