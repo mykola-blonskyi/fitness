@@ -3,17 +3,17 @@ import {
   dateFromDayIndex,
   dayIndex,
 } from '@features/daily-log/components/WeightTrendChart';
-import type { DailyLog, WeightTrendResponse } from '@features/daily-log/actions';
-import { apiFetch, ApiError } from '@libs/api-client';
+import type {
+  DailyLog,
+  WeightTrendResponse,
+} from '@features/daily-log/actions';
+import { apiFetch, fetchOr404 } from '@libs/api-client';
+import { todayIso } from '@libs/date';
 import { WEIGHT_TREND_WINDOWS } from '@shared/constants/daily-log';
 import type { UserProfile } from '@shared/types/user';
 
 type WeightTrendWindow = (typeof WEIGHT_TREND_WINDOWS)[number];
 const DEFAULT_WEIGHT_TREND_WINDOW: WeightTrendWindow = 30;
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 // Built on the same dayIndex()/dateFromDayIndex() pair the chart uses to
 // position points - one definition of "one day" for the whole feature,
@@ -45,17 +45,7 @@ export default async function DiaryPage({
   const date = todayIso();
   const windowStart = windowStartIso(date, windowDays);
 
-  let dailyLog: DailyLog | null = null;
-  try {
-    dailyLog = await apiFetch<DailyLog>(`/daily-logs/${date}`);
-  } catch (err) {
-    // No Daily Log for today yet is expected, not an error — anything
-    // else (auth failure, backend down) should surface as a real error.
-    if (!(err instanceof ApiError && err.status === 404)) {
-      throw err;
-    }
-    dailyLog = null;
-  }
+  const dailyLog = await fetchOr404<DailyLog>(`/daily-logs/${date}`);
 
   const trend = await apiFetch<WeightTrendResponse>(
     `/daily-logs/weight-trend?days=${windowDays}`,
