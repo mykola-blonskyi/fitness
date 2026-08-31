@@ -225,6 +225,9 @@ export class DietsService {
 
     const generated = generateDietItems({
       targetCalories: target.calories,
+      targetProteinG: target.proteinG,
+      targetCarbsG: target.carbsG,
+      targetFatG: target.fatG,
       mealCount: user.mealCount,
       candidatesByRole,
     });

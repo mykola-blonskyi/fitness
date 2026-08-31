@@ -132,6 +132,8 @@ FITNESS-30 needed to turn `knowledge/business-rules.md`'s greedy-heuristic descr
 
 Correction (2026-08-30, FITNESS-52): a single-item swap or reroll now holds calories — the replacement's `weight_grams` is rescaled so its calorie contribution matches the item it replaces (was: keep the original grams). An omitted `foodItemId` on the swap route means reroll: the backend picks a random valid same-Role candidate. A full regenerate still re-runs generation into a new Diet row and does not preserve swaps.
 
+Correction (2026-08-31, FITNESS-54): portion sizing for protein/carb/fat role-slots is now driven by that macro's per-meal gram target divided by the candidate's per-100g density, not an even calorie split — protein/carbs/fat no longer just move proportionally with calorie corrections (a real diet had landed at roughly half its protein target this way). The `vegetable` role slot is unchanged. The ±5% calorie-tolerance correction pass still runs afterward, but now only adjusts carb/fat/vegetable items, in that preference order, so it can't undo the protein accuracy the sizing pass just achieved.
+
 ---
 
 ## ADR-012: next-intl middleware composition and locale cookie lifetime
