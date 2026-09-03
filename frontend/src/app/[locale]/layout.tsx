@@ -68,7 +68,7 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale}>
-          <IntlErrorBoundaryProvider>
+          <IntlErrorBoundaryProvider locale={locale}>
             <ServiceWorkerRegistration />
             {children}
           </IntlErrorBoundaryProvider>
