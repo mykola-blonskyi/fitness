@@ -54,13 +54,16 @@ export async function listFoodItems(params: {
 export async function createFoodItem(
   input: CreateFoodItemInput,
 ): Promise<CreateFoodItemFormState> {
-  const t = await getTranslations('Validation');
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Food.errors'),
+  ]);
   // No `formData` option - see features/onboarding/actions.ts for why.
   return submitFormAction({
     name: 'createFoodItem',
-    schema: createFoodItemSchema(t),
+    schema: createFoodItemSchema(tv),
     input,
-    errorMessage: "Couldn't add that food item — try again.",
+    errorMessage: t('addFailed'),
     async mutate(parsed) {
       await apiFetch<FoodItem>('/food-items', {
         method: 'POST',

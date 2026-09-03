@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { unapproveFoodItem } from '@features/admin-food-items/actions';
 import { listFoodItems, type FoodItem } from '@features/food-catalog/actions';
@@ -26,6 +27,7 @@ export const FoodList = ({
   locale,
   profile,
 }: FoodListProps) => {
+  const t = useTranslations('Food.list');
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -64,11 +66,7 @@ export const FoodList = ({
   }, [lastVirtualItem?.index, items.length, cursor, loadingMore]);
 
   if (items.length === 0) {
-    return (
-      <p className="py-6 text-sm text-zinc-500">
-        No food items match this filter.
-      </p>
-    );
+    return <p className="py-6 text-sm text-zinc-500">{t('empty')}</p>;
   }
 
   return (
@@ -127,7 +125,7 @@ export const FoodList = ({
                     type="submit"
                     className="shrink-0 text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
                   >
-                    Unapprove
+                    {t('unapprove')}
                   </button>
                 </form>
               )}
@@ -136,7 +134,9 @@ export const FoodList = ({
         })}
       </div>
       {loadingMore && (
-        <p className="py-3 text-center text-sm text-zinc-500">Loading more…</p>
+        <p className="py-3 text-center text-sm text-zinc-500">
+          {t('loadingMore')}
+        </p>
       )}
     </div>
   );
