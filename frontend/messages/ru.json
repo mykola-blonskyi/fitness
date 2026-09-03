@@ -16,7 +16,7 @@
     },
     "weightTrendChart": {
       "empty": "За последние {days} дней взвешивания не проводились.",
-      "ariaLabel": "Динамика веса за последние {days} дней: {count, plural, one {# взвешивание} other {# взвешивания}}, начиная с {min}{unit} и заканчивая {max}{unit}, а также самый последний {latest}{unit} на {date}.",
+      "ariaLabel": "Динамика веса за последние {days} дней: {count, plural, one {# взвешивание} other {# взвешивания}}, начиная с {min}{unit} и заканчивая {max}{unit}, а также самые последние версии {latest}{unit} на {date}.",
       "pointTitle": "{date}: {weight}{unit}"
     },
     "errors": {
@@ -233,8 +233,8 @@
       "error": "Не удалось удалить — попробуйте ещё раз."
     },
     "gallery": {
-      "photoCount": "{count, plural, one {# фотография} other {# фотографии}}",
-      "pendingReviewNotice": "{count, plural, one {# сессия все еще требует} other {# сессии по-прежнему требуют}} пройти проверку на странице «Фотографии», прежде чем они появятся здесь.",
+      "photoCount": "{count, plural, one {# фото} other {# фотографии}}",
+      "pendingReviewNotice": "{count, plural, one {# сессия по-прежнему требует} other {# сессии по-прежнему требуют}} пройти проверку на странице «Фотографии», прежде чем они появятся здесь.",
       "emptyNoConfirmed": "Пока нет подтверждённых сессий — подтвердите позы для фотосессии на странице «Фото», чтобы они отобразились здесь.",
       "coverAlt": "Фотография на обложке сессии"
     },
@@ -458,7 +458,7 @@
     },
     "training": {
       "label": "Обучение",
-      "activeProgramCount": "{count, plural, one {# активная программа} other {# действующие программы}}",
+      "activeProgramCount": "{count, plural, one {# активная программа} other {# активные программы}}",
       "empty": "Активных программ нет",
       "cta": "Создать программу"
     },
@@ -466,13 +466,13 @@
       "label": "Тренировка",
       "startedToday": "Началось сегодня",
       "last": "Последний: {date}",
-      "setsLogged": "{count, plural, one {# набор} other {# наборы}} зарегистрирован",
+      "setsLogged": "{count, plural, one {# набор} other {# наборы}} зарегистрировано",
       "empty": "Тренировок пока нет",
       "cta": "Начать тренировку"
     },
     "photos": {
       "label": "Фотографии",
-      "needsReview": "{count, plural, one {# потребности} other {# нужно}} обзор",
+      "needsReview": "{count, plural, one {# требуется отзыв} other {# требуются отзывы}}",
       "allCaughtUp": "Всё в норме"
     }
   },

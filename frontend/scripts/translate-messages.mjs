@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-// One-off script: translates messages/en.json into a target locale via
-// DeepL, filling in messages/<locale>.json. Keys that already have a
-// non-empty translation are left untouched, so a re-run only fills gaps.
-//
+// Fills messages/<locale>.json from messages/en.json via DeepL; a key
+// with an existing non-empty value is left alone, so re-runs only fill gaps.
 // Usage: node scripts/translate-messages.mjs <uk|ru|es>
 
 import fs from 'node:fs';
@@ -23,13 +21,9 @@ function loadDeeplApiKey() {
   return match[1].trim();
 }
 
-// Same request shape as backend/src/scripts/seed-food-catalog.ts's
-// translate() - free-tier keys (":fx" suffix) must hit the api-free host,
-// and a 429 gets a growing backoff on top of the fixed inter-call delay
-// applied by translateWithDelay below. source_lang is pinned to EN since
-// a short, placeholder-heavy phrase (e.g. "Set {number}") is otherwise
-// sometimes auto-detected as a different language, which can make DeepL
-// return an empty translation for some target locales.
+// Same request shape as seed-food-catalog.ts's translate(). source_lang
+// is pinned to EN - a short phrase like "Set {number}" can otherwise get
+// auto-detected as a different language, which makes DeepL return "".
 async function translate(text, targetLocale, apiKey, attempts = 5) {
   const host = apiKey.endsWith(':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
   for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -60,13 +54,9 @@ async function translate(text, targetLocale, apiKey, attempts = 5) {
 
 const DEEPL_CALL_DELAY_MS = 250;
 
-// Replaces each {placeholder} with a positional sentinel token before
-// sending to DeepL, then swaps the sentinels back for the original
-// {name} afterwards - DeepL's plain-text mode otherwise "translates" the
-// token too (e.g. {date} -> {дата}). Sentinels are plain alphanumeric
-// words (QPH0Q, QPH1Q, ...), not curly-brace or XML-tag syntax - both of
-// those were tried first and each had a target-locale-specific case
-// where DeepL returned an empty translation for a short phrase.
+// Swaps each {placeholder} for a plain-word sentinel before translating
+// and back afterwards - DeepL's plain-text mode otherwise translates the
+// token too (e.g. {date} -> {дата}).
 async function translateWithDelay(text, targetLocale, apiKey) {
   const names = [];
   const wrapped = text.replace(/\{(\w+)\}/g, (_, name) => {
@@ -83,20 +73,39 @@ async function translateWithDelay(text, targetLocale, apiKey) {
 }
 
 // Matches this repo's one ICU shape: an optional prefix/suffix around a
-// `{var, plural, one {...} other {...}}` block (see messages/en.json).
-// Only the prose is sent to DeepL - the plural syntax itself, and the
-// leading "#" count placeholder in each branch, are never touched, so a
-// translated message still parses as valid ICU and still shows the number.
+// `{var, plural, one {...} other {...}}` block - only the prose inside
+// gets translated, so the result still parses as valid ICU.
 const PLURAL_RE =
   /^(.*)\{(\w+),\s*plural,\s*one\s*\{([^{}]*)\}\s*other\s*\{([^{}]*)\}\}(.*)$/s;
 
-async function translatePluralBranch(text, targetLocale, apiKey) {
-  const hashMatch = text.match(/^#\s*(.*)$/);
-  if (!hashMatch) return translateWithDelay(text, targetLocale, apiKey);
-  const rest = hashMatch[1];
-  if (!rest) return '#';
-  const translatedRest = await translateWithDelay(rest, targetLocale, apiKey);
-  return `# ${translatedRest}`;
+// Translates the "one" and "other" branches in a single call (joined by
+// a separator DeepL leaves alone) rather than two independent ones -
+// otherwise it can pick a different word for the same noun in each
+// branch (e.g. "review" vs "reviews" translated inconsistently).
+async function translatePluralBranches(
+  oneText,
+  otherText,
+  targetLocale,
+  apiKey,
+) {
+  const oneMatch = oneText.match(/^#\s*(.*)$/);
+  const otherMatch = otherText.match(/^#\s*(.*)$/);
+  const oneRest = oneMatch ? oneMatch[1] : oneText;
+  const otherRest = otherMatch ? otherMatch[1] : otherText;
+  if (!oneRest && !otherRest) return { one: '#', other: '#' };
+
+  const translated = await translateWithDelay(
+    `${oneRest} ||| ${otherRest}`,
+    targetLocale,
+    apiKey,
+  );
+  const [translatedOneRest = '', translatedOtherRest = ''] = translated
+    .split('|||')
+    .map((s) => s.trim());
+  return {
+    one: oneMatch ? `# ${translatedOneRest}` : translatedOneRest,
+    other: otherMatch ? `# ${translatedOtherRest}` : translatedOtherRest,
+  };
 }
 
 async function translateValue(text, targetLocale, apiKey) {
@@ -109,24 +118,15 @@ async function translateValue(text, targetLocale, apiKey) {
     const translatedSuffix = suffix
       ? await translateWithDelay(suffix, targetLocale, apiKey)
       : '';
-    const translatedOne = await translatePluralBranch(
-      oneText,
-      targetLocale,
-      apiKey,
-    );
-    const translatedOther = await translatePluralBranch(
-      otherText,
-      targetLocale,
-      apiKey,
-    );
+    const { one: translatedOne, other: translatedOther } =
+      await translatePluralBranches(oneText, otherText, targetLocale, apiKey);
     return `${translatedPrefix}{${varName}, plural, one {${translatedOne}} other {${translatedOther}}}${translatedSuffix}`;
   }
   return translateWithDelay(text, targetLocale, apiKey);
 }
 
-// Sanity check that translateWithDelay's sentinel round-trip actually
-// restored every placeholder, so a mismatch is visible in the script's
-// output instead of silently shipping a broken interpolation.
+// Confirms translateWithDelay's sentinel round-trip restored every
+// placeholder, instead of silently shipping a broken interpolation.
 function placeholderNames(text) {
   return [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 }

@@ -16,7 +16,7 @@
     },
     "weightTrendChart": {
       "empty": "No se han realizado pesajes en los últimos {days} días.",
-      "ariaLabel": "Evolución del peso durante los últimos {days} días: {count, plural, one {# pesaje} other {# pesajes}}, que van desde {min}{unit} hasta {max}{unit}, y el más reciente, {latest}{unit}, en {date}.",
+      "ariaLabel": "Evolución del peso en los últimos {days} días: {count, plural, one {# pesaje} other {# pesajes}}, que van desde {min}{unit} hasta {max}{unit}, siendo {latest}{unit} el más reciente en {date}.",
       "pointTitle": "{date}: {weight}{unit}"
     },
     "errors": {
@@ -234,7 +234,7 @@
     },
     "gallery": {
       "photoCount": "{count, plural, one {# foto} other {# fotos}}",
-      "pendingReviewNotice": "{count, plural, one {# La sesión aún necesita} other {# las sesiones aún necesitan}} revisarse en la página «Fotos» antes de que puedan aparecer aquí.",
+      "pendingReviewNotice": "{count, plural, one {# la sesión aún necesita} other {# las sesiones aún necesitan}} revisarse en la página «Fotos» antes de que puedan aparecer aquí.",
       "emptyNoConfirmed": "Aún no hay sesiones confirmadas: confirma las poses de una sesión fotográfica en la página «Fotos» para que aparezca aquí.",
       "coverAlt": "Foto de portada de la sesión"
     },
@@ -458,7 +458,7 @@
     },
     "training": {
       "label": "Formación",
-      "activeProgramCount": "{count, plural, one {# programa activo} other {# programas en curso}}",
+      "activeProgramCount": "{count, plural, one {# programa activo} other {# programas activos}}",
       "empty": "No hay programas activos",
       "cta": "Crear un programa"
     },
@@ -472,7 +472,7 @@
     },
     "photos": {
       "label": "Fotos",
-      "needsReview": "{count, plural, one {# necesidades} other {# necesidad}} reseña",
+      "needsReview": "{count, plural, one {# Se necesita una reseña} other {# Se necesitan reseñas}}",
       "allCaughtUp": "Ya estoy al día"
     }
   },

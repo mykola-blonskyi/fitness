@@ -233,8 +233,8 @@
       "error": "Не вдалося видалити — спробуйте ще раз."
     },
     "gallery": {
-      "photoCount": "{count, plural, one {# фотографія} other {# фотографії}}",
-      "pendingReviewNotice": "{count, plural, one {# сесія ще потребує} other {# сесії все ще потрібно}} переглянути на сторінці «Фотографії», перш ніж вони з’являться тут.",
+      "photoCount": "{count, plural, one {# фото} other {# фотографії}}",
+      "pendingReviewNotice": "{count, plural, one {# сесія все ще потребує} other {# сесії все ще потребують}} переглянути на сторінці «Фотографії», перш ніж вони з’являться тут.",
       "emptyNoConfirmed": "Поки що немає підтверджених сесій — підтвердьте пози для фотосесії на сторінці «Фото», щоб вони з’явилися тут.",
       "coverAlt": "Фото на обкладинці сесії"
     },
@@ -458,7 +458,7 @@
     },
     "training": {
       "label": "Навчання",
-      "activeProgramCount": "{count, plural, one {# активна програма} other {# діючі програми}}",
+      "activeProgramCount": "{count, plural, one {# активна програма} other {# активні програми}}",
       "empty": "Активних програм немає",
       "cta": "Створити програму"
     },
@@ -472,7 +472,7 @@
     },
     "photos": {
       "label": "Фотографії",
-      "needsReview": "{count, plural, one {# потреби} other {# потрібно}} огляд",
+      "needsReview": "{count, plural, one {# потрібні відгуки} other {# потрібні відгуки}}",
       "allCaughtUp": "Все в порядку"
     }
   },
