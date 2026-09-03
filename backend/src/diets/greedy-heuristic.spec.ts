@@ -150,9 +150,9 @@ describe('generateDietItems', () => {
 
     const result = generateDietItems({
       targetCalories: 40,
-      targetProteinG: 0.1,
-      targetCarbsG: 0.1,
-      targetFatG: 0.1,
+      targetProteinG: 1,
+      targetCarbsG: 1,
+      targetFatG: 1,
       mealCount: 1,
       candidatesByRole: candidates,
     });
@@ -302,6 +302,157 @@ describe('generateDietItems', () => {
       .filter((item) => item.mealType === 'breakfast')
       .map((item) => item.foodItemId);
     expect(breakfastFoodIds).toEqual([leanProtein.id, leanProtein.id]);
+  });
+
+  it('skips a role with zero macro density instead of force-including it at a meaningless portion', () => {
+    const zeroCarbCandidate: FoodCandidate = {
+      id: 'zero-carb-1',
+      caloriesPer100g: 200,
+      proteinPer100g: 0,
+      carbsPer100g: 0,
+      fatPer100g: 0,
+    };
+    const candidates = new Map([
+      ['lean_protein', [leanProtein]],
+      ['complex_carb', [zeroCarbCandidate]],
+      ['healthy_fat', [healthyFat]],
+    ]);
+
+    const result = generateDietItems({
+      targetCalories: 500,
+      targetProteinG: 40,
+      targetCarbsG: 50,
+      targetFatG: 15,
+      mealCount: 1,
+      candidatesByRole: candidates,
+    });
+
+    expect(
+      result.items.some((item) => item.foodItemId === zeroCarbCandidate.id),
+    ).toBe(false);
+    expect(
+      result.items.some((item) => item.foodItemId === leanProtein.id),
+    ).toBe(true);
+  });
+
+  it('skips a role whose computed portion would round below the minimum-gram floor', () => {
+    const tinyCarbShare: FoodCandidate = {
+      id: 'tiny-carb-share-1',
+      caloriesPer100g: 200,
+      proteinPer100g: 0,
+      carbsPer100g: 100,
+      fatPer100g: 0,
+    };
+    const candidates = new Map([
+      ['lean_protein', [leanProtein]],
+      ['complex_carb', [tinyCarbShare]],
+      ['healthy_fat', [healthyFat]],
+    ]);
+
+    // mealCarbTarget = 0.001g -> raw grams = 0.001, rounds to 0.
+    const result = generateDietItems({
+      targetCalories: 500,
+      targetProteinG: 40,
+      targetCarbsG: 0.001,
+      targetFatG: 15,
+      mealCount: 1,
+      candidatesByRole: candidates,
+    });
+
+    expect(
+      result.items.some((item) => item.foodItemId === tinyCarbShare.id),
+    ).toBe(false);
+  });
+
+  it('regression: a calorie-dense candidate against many small per-meal macro shares no longer blows the day past its calorie/macro ceiling', () => {
+    // mealCount=10 gives every meal a small carb share; calorieDenseLowCarb's
+    // low carb density needs ~400g to hit it, ballooning that one item to
+    // 12x the meal's calorie budget - shaped after a production incident.
+    const proteinIsolate: FoodCandidate = {
+      id: 'protein-isolate-2',
+      caloriesPer100g: 100,
+      proteinPer100g: 25,
+      carbsPer100g: 0,
+      fatPer100g: 0,
+    };
+    const calorieDenseLowCarb: FoodCandidate = {
+      id: 'calorie-dense-low-carb-1',
+      caloriesPer100g: 600,
+      proteinPer100g: 0,
+      carbsPer100g: 5,
+      fatPer100g: 0,
+    };
+    const candidates = new Map([
+      ['lean_protein', [proteinIsolate]],
+      ['complex_carb', [calorieDenseLowCarb]],
+      ['healthy_fat', [healthyFat]],
+    ]);
+
+    const result = generateDietItems({
+      targetCalories: 2000,
+      targetProteinG: 150,
+      targetCarbsG: 200,
+      targetFatG: 50,
+      mealCount: 10,
+      candidatesByRole: candidates,
+    });
+
+    // Carbs land well under their own 5%-short floor here - see
+    // shrinkTowardDelta's comment for why that's accepted over breaching
+    // the (hard) calorie ceiling.
+    expect(result.totalCalories).toBeLessThanOrEqual(2000);
+    expect(result.totalProtein).toBeLessThanOrEqual(150);
+    expect(result.totalCarbs).toBeLessThanOrEqual(200);
+    expect(result.totalFat).toBeLessThanOrEqual(50);
+    expect(result.items.every((item) => item.weightGrams >= 1)).toBe(true);
+  });
+
+  it('caps how much a single item can grow to close a shortfall, rather than letting it absorb all of it alone', () => {
+    const proteinIsolate: FoodCandidate = {
+      id: 'protein-isolate-3',
+      caloriesPer100g: 100,
+      proteinPer100g: 25,
+      carbsPer100g: 0,
+      fatPer100g: 0,
+    };
+    const carbIsolate: FoodCandidate = {
+      id: 'carb-isolate-2',
+      caloriesPer100g: 100,
+      proteinPer100g: 0,
+      carbsPer100g: 50,
+      fatPer100g: 0,
+    };
+    const fatIsolate: FoodCandidate = { ...healthyFat, id: 'fat-isolate-2' };
+    const pureCalorieVegetable: FoodCandidate = {
+      id: 'pure-calorie-vegetable-1',
+      caloriesPer100g: 100,
+      proteinPer100g: 0,
+      carbsPer100g: 0,
+      fatPer100g: 0,
+    };
+    const candidates = new Map([
+      ['lean_protein', [proteinIsolate]],
+      ['complex_carb', [carbIsolate]],
+      ['healthy_fat', [fatIsolate]],
+      ['vegetable', [pureCalorieVegetable]],
+    ]);
+
+    // Vegetable starts at 500g/500kcal (a quarter of the 2000kcal budget);
+    // fully closing the shortfall alone would need ~1985g, but the cap
+    // holds it to double its starting weight.
+    const result = generateDietItems({
+      targetCalories: 2000,
+      targetProteinG: 1,
+      targetCarbsG: 1,
+      targetFatG: 1,
+      mealCount: 1,
+      candidatesByRole: candidates,
+    });
+
+    const vegItem = result.items.find(
+      (item) => item.foodItemId === pureCalorieVegetable.id,
+    );
+    expect(vegItem?.weightGrams).toBe(1000);
   });
 });
 

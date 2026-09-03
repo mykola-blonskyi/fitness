@@ -54,12 +54,11 @@ export class CreateUserDto {
 
   // Optional - schema defaults to 3 (breakfast/lunch/dinner) when omitted,
   // see db/schema.ts's users.mealCount comment. Past 4, mealTypeEnum's
-  // slots repeat round-robin as later occurrences (ADR-015) - 20 is a
-  // generous sanity bound, not a real constraint.
+  // slots repeat round-robin as later occurrences (ADR-015).
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(20)
+  @Max(6)
   mealCount?: number;
 
   // Optional - the schema default ('en') applies when omitted, so

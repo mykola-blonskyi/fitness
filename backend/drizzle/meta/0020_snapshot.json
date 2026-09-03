@@ -1,6 +1,6 @@
 {
-  "id": "a9331740-a27d-4ced-80ae-323f3f1abdbf",
-  "prevId": "90e1dd22-3028-42f7-b12f-15d87384e7f4",
+  "id": "36616616-73fe-445b-9374-3bff73b33de4",
+  "prevId": "a9331740-a27d-4ced-80ae-323f3f1abdbf",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -311,8 +311,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "daily_log_id": {
-          "name": "daily_log_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -363,31 +363,31 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "diets_daily_log_id_daily_logs_id_fk": {
-          "name": "diets_daily_log_id_daily_logs_id_fk",
+        "diets_user_id_users_id_fk": {
+          "name": "diets_user_id_users_id_fk",
           "tableFrom": "diets",
+          "tableTo": "users",
           "columnsFrom": [
-            "daily_log_id"
+            "user_id"
           ],
-          "tableTo": "daily_logs",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "diets_algorithm_id_diet_calculation_algorithms_id_fk": {
           "name": "diets_algorithm_id_diet_calculation_algorithms_id_fk",
           "tableFrom": "diets",
+          "tableTo": "diet_calculation_algorithms",
           "columnsFrom": [
             "algorithm_id"
           ],
-          "tableTo": "diet_calculation_algorithms",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},

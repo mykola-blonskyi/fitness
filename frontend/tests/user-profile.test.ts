@@ -65,12 +65,12 @@ describe('userProfileSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it.each([0, 21])('rejects an out-of-range meal count (%s)', (mealCount) => {
+  it.each([0, 7])('rejects an out-of-range meal count (%s)', (mealCount) => {
     const result = schema.safeParse({ ...valid, mealCount });
     expect(result.success).toBe(false);
   });
 
-  it.each([1, 20])('accepts meal count at the boundary (%s)', (mealCount) => {
+  it.each([1, 6])('accepts meal count at the boundary (%s)', (mealCount) => {
     const result = schema.safeParse({ ...valid, mealCount });
     expect(result.success).toBe(true);
   });
