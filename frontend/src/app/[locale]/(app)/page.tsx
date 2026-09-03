@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch, fetchOr404 } from '@libs/api-client';
 import { todayIso } from '@libs/date';
 import type { DailyLog } from '@features/daily-log/actions';
@@ -43,6 +44,7 @@ export default async function Home({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations('Home');
   const today = todayIso();
 
   const [
@@ -73,66 +75,73 @@ export default async function Home({
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">Home</h1>
+      <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <DashboardCard href={`/${locale}/diary`} label="Weight">
+        <DashboardCard href={`/${locale}/diary`} label={t('weight.label')}>
           {latestWeighIn ? (
             <>
               <CardStat>
-                {latestWeighIn.weight} {latestWeighIn.weightUnit}
+                {t('weight.value', {
+                  weight: latestWeighIn.weight ?? '',
+                  unit: latestWeighIn.weightUnit ?? '',
+                })}
               </CardStat>
-              <CardHint>last {latestWeighIn.date}</CardHint>
+              <CardHint>
+                {t('weight.last', { date: latestWeighIn.date })}
+              </CardHint>
             </>
           ) : (
             <>
-              <CardHint>No weigh-ins yet</CardHint>
-              <CardHint>Log your weight</CardHint>
+              <CardHint>{t('weight.empty')}</CardHint>
+              <CardHint>{t('weight.cta')}</CardHint>
             </>
           )}
         </DashboardCard>
 
-        <DashboardCard href={`/${locale}/diary`} label="Diary">
+        <DashboardCard href={`/${locale}/diary`} label={t('diary.label')}>
           {todayLog ? (
-            <CardStat>Logged today</CardStat>
+            <CardStat>{t('diary.loggedToday')}</CardStat>
           ) : (
             <>
-              <CardHint>Not logged today</CardHint>
-              <CardHint>Log today</CardHint>
+              <CardHint>{t('diary.notLoggedToday')}</CardHint>
+              <CardHint>{t('diary.cta')}</CardHint>
             </>
           )}
         </DashboardCard>
 
-        <DashboardCard href={`/${locale}/diet`} label="Diet">
+        <DashboardCard href={`/${locale}/diet`} label={t('diet.label')}>
           {!calorieTarget && (
             <>
-              <CardHint>No calorie target yet</CardHint>
-              <CardHint>Log today&apos;s weight</CardHint>
+              <CardHint>{t('diet.noTarget')}</CardHint>
+              <CardHint>{t('diet.noTargetCta')}</CardHint>
             </>
           )}
           {calorieTarget && !diet && (
             <>
-              <CardHint>Target set, no menu yet</CardHint>
-              <CardHint>Generate today&apos;s diet</CardHint>
+              <CardHint>{t('diet.targetNoMenu')}</CardHint>
+              <CardHint>{t('diet.targetNoMenuCta')}</CardHint>
             </>
           )}
           {calorieTarget && diet && (
             <CardStat>
-              {diet.totalCalories} / {calorieTarget.calories} kcal today
+              {t('diet.value', {
+                total: diet.totalCalories,
+                target: calorieTarget.calories,
+              })}
             </CardStat>
           )}
         </DashboardCard>
 
-        <DashboardCard href={`/${locale}/training`} label="Training">
+        <DashboardCard href={`/${locale}/training`} label={t('training.label')}>
           {activeProgramCount > 0 ? (
             <CardStat>
-              {activeProgramCount} active program
-              {activeProgramCount === 1 ? '' : 's'}
+              {t('training.activeProgramCount', { count: activeProgramCount })}
             </CardStat>
           ) : (
             <>
-              <CardHint>No active programs</CardHint>
-              <CardHint>Create a program</CardHint>
+              <CardHint>{t('training.empty')}</CardHint>
+              <CardHint>{t('training.cta')}</CardHint>
             </>
           )}
         </DashboardCard>
@@ -143,38 +152,38 @@ export default async function Home({
               ? `/${locale}/workouts/${latestWorkout.id}`
               : `/${locale}/workouts`
           }
-          label="Workout"
+          label={t('workout.label')}
         >
           {latestWorkout ? (
             <>
               <CardStat>
                 {latestWorkout.date === today
-                  ? 'Started today'
-                  : `Last: ${latestWorkout.date}`}
+                  ? t('workout.startedToday')
+                  : t('workout.last', { date: latestWorkout.date })}
               </CardStat>
               <CardHint>
-                {latestWorkout.sets.length}{' '}
-                {latestWorkout.sets.length === 1 ? 'set' : 'sets'} logged
+                {t('workout.setsLogged', {
+                  count: latestWorkout.sets.length,
+                })}
               </CardHint>
             </>
           ) : (
             <>
-              <CardHint>No workouts yet</CardHint>
-              <CardHint>Start a workout</CardHint>
+              <CardHint>{t('workout.empty')}</CardHint>
+              <CardHint>{t('workout.cta')}</CardHint>
             </>
           )}
         </DashboardCard>
 
-        <DashboardCard href={`/${locale}/photos`} label="Photos">
+        <DashboardCard href={`/${locale}/photos`} label={t('photos.label')}>
           {needsReviewCount > 0 ? (
             <span className="flex items-center gap-2">
               <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                {needsReviewCount} {needsReviewCount === 1 ? 'needs' : 'need'}{' '}
-                review
+                {t('photos.needsReview', { count: needsReviewCount })}
               </span>
             </span>
           ) : (
-            <CardHint>All caught up</CardHint>
+            <CardHint>{t('photos.allCaughtUp')}</CardHint>
           )}
         </DashboardCard>
       </div>
