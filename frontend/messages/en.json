@@ -501,6 +501,12 @@
       "very_active": "Very active"
     },
     "mealsPerDay": "Meals per day",
+    "mealTypes": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
     "language": "Language",
     "weightUnit": "Preferred weight unit",
     "weightUnitOptions": {

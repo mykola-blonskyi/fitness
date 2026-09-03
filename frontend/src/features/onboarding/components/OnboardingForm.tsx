@@ -13,6 +13,7 @@ import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { completeOnboarding } from '@features/onboarding/actions';
 
 export function OnboardingForm() {
+  const t = useTranslations('Onboarding');
   const tv = useTranslations('Validation');
   const schema = useMemo(() => userProfileSchema(tv), [tv]);
   const {
@@ -42,7 +43,7 @@ export function OnboardingForm() {
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Saving…' : 'Complete profile'}
+        {isSubmitting ? t('saving') : t('submit')}
       </button>
     </form>
   );

@@ -1,4 +1,7 @@
+'use client';
+
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 import type { UserProfileInput } from '@shared/schemas/user-profile';
 import {
   ACTIVITY_LEVELS,
@@ -8,22 +11,8 @@ import {
   MEAL_COUNTS,
   WEIGHT_UNITS,
 } from '@shared/types/user';
-import { MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '@shared/types/meal';
+import { MEAL_TYPE_ORDER } from '@shared/types/meal';
 import { FieldError } from '@shared/ui/components/FieldError';
-
-const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
-  weight_loss: 'Weight loss',
-  maintenance: 'Maintenance',
-  muscle_gain: 'Muscle gain',
-};
-
-const ACTIVITY_LABELS: Record<(typeof ACTIVITY_LEVELS)[number], string> = {
-  sedentary: 'Sedentary',
-  light: 'Light',
-  moderate: 'Moderate',
-  active: 'Active',
-  very_active: 'Very active',
-};
 
 // Native names, not English translations - a user looking for their own
 // language should be able to find it without already reading English.
@@ -34,14 +23,12 @@ const LOCALE_LABELS: Record<(typeof LOCALES)[number], string> = {
   es: 'Español',
 };
 
-const WEIGHT_UNIT_LABELS: Record<(typeof WEIGHT_UNITS)[number], string> = {
-  kg: 'Kilograms (kg)',
-  lb: 'Pounds (lb)',
-};
-
 // Mirrors backend/src/diets/diet.types.ts's mealSlotsForCount round-robin
 // (ADR-015), so the option text stays truthful about what generation does.
-function mealCountBreakdown(count: number): string {
+function mealCountBreakdown(
+  count: number,
+  tMealTypes: (key: (typeof MEAL_TYPE_ORDER)[number]) => string,
+): string {
   const occurrences: Record<(typeof MEAL_TYPE_ORDER)[number], number> = {
     breakfast: 0,
     lunch: 0,
@@ -52,7 +39,7 @@ function mealCountBreakdown(count: number): string {
     occurrences[MEAL_TYPE_ORDER[i % MEAL_TYPE_ORDER.length]] += 1;
   }
   return MEAL_TYPE_ORDER.filter((type) => occurrences[type] > 0)
-    .map((type) => `${occurrences[type]} ${MEAL_TYPE_LABELS[type]}`)
+    .map((type) => `${occurrences[type]} ${tMealTypes(type)}`)
     .join(', ');
 }
 
@@ -76,11 +63,12 @@ export function ProfileFields({
   errors: FieldErrors<UserProfileInput>;
   showPlaceholder?: boolean;
 }) {
+  const t = useTranslations('ProfileFields');
   return (
     <>
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className="text-sm font-medium">
-          Name
+          {t('name')}
         </label>
         <input
           id="name"
@@ -93,7 +81,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="gender" className="text-sm font-medium">
-          Gender
+          {t('gender')}
         </label>
         <select
           id="gender"
@@ -103,12 +91,12 @@ export function ProfileFields({
         >
           {showPlaceholder && (
             <option value="" disabled>
-              Select…
+              {t('selectPlaceholder')}
             </option>
           )}
           {GENDERS.map((g) => (
             <option key={g} value={g}>
-              {g === 'male' ? 'Male' : 'Female'}
+              {t(`genderOptions.${g}`)}
             </option>
           ))}
         </select>
@@ -117,7 +105,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="dateOfBirth" className="text-sm font-medium">
-          Date of birth
+          {t('dateOfBirth')}
         </label>
         <input
           id="dateOfBirth"
@@ -130,7 +118,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="height" className="text-sm font-medium">
-          Height (cm)
+          {t('height')}
         </label>
         <input
           id="height"
@@ -143,7 +131,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="goal" className="text-sm font-medium">
-          Goal
+          {t('goal')}
         </label>
         <select
           id="goal"
@@ -153,12 +141,12 @@ export function ProfileFields({
         >
           {showPlaceholder && (
             <option value="" disabled>
-              Select…
+              {t('selectPlaceholder')}
             </option>
           )}
           {GOALS.map((g) => (
             <option key={g} value={g}>
-              {GOAL_LABELS[g]}
+              {t(`goalOptions.${g}`)}
             </option>
           ))}
         </select>
@@ -167,7 +155,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="activityLevel" className="text-sm font-medium">
-          Activity level
+          {t('activityLevel')}
         </label>
         <select
           id="activityLevel"
@@ -177,12 +165,12 @@ export function ProfileFields({
         >
           {showPlaceholder && (
             <option value="" disabled>
-              Select…
+              {t('selectPlaceholder')}
             </option>
           )}
           {ACTIVITY_LEVELS.map((a) => (
             <option key={a} value={a}>
-              {ACTIVITY_LABELS[a]}
+              {t(`activityOptions.${a}`)}
             </option>
           ))}
         </select>
@@ -191,7 +179,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="mealCount" className="text-sm font-medium">
-          Meals per day
+          {t('mealsPerDay')}
         </label>
         <select
           id="mealCount"
@@ -201,7 +189,7 @@ export function ProfileFields({
         >
           {MEAL_COUNTS.map((n) => (
             <option key={n} value={n}>
-              {n} — {mealCountBreakdown(n)}
+              {n} — {mealCountBreakdown(n, (type) => t(`mealTypes.${type}`))}
             </option>
           ))}
         </select>
@@ -210,7 +198,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="locale" className="text-sm font-medium">
-          Language
+          {t('language')}
         </label>
         <select
           id="locale"
@@ -229,7 +217,7 @@ export function ProfileFields({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="defaultWeightUnit" className="text-sm font-medium">
-          Preferred weight unit
+          {t('weightUnit')}
         </label>
         <select
           id="defaultWeightUnit"
@@ -239,7 +227,7 @@ export function ProfileFields({
         >
           {WEIGHT_UNITS.map((u) => (
             <option key={u} value={u}>
-              {WEIGHT_UNIT_LABELS[u]}
+              {t(`weightUnitOptions.${u}`)}
             </option>
           ))}
         </select>

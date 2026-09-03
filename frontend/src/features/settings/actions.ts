@@ -20,15 +20,17 @@ export type UpdateProfileState = FormActionError<UserProfileInput> & {
 export async function updateProfile(
   input: UserProfileInput,
 ): Promise<UpdateProfileState> {
-  const t = await getTranslations('Validation');
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Settings.errors'),
+  ]);
   // No `formData` option - see the identical comment in
   // features/onboarding/actions.ts for why.
   return submitFormAction({
     name: 'updateProfile',
-    schema: userProfileSchema(t),
+    schema: userProfileSchema(tv),
     input,
-    errorMessage:
-      "Couldn't save your profile — check your inputs and try again.",
+    errorMessage: t('saveFailed'),
     async mutate(parsed) {
       await apiFetch<UserProfile>('/users/me', {
         method: 'PATCH',
