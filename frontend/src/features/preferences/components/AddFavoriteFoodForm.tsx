@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   createFoodPreferenceSchema,
   type CreateFoodPreferenceInput,
@@ -15,13 +16,16 @@ export function AddFavoriteFoodForm({
 }: {
   foodItems: { id: string; name: string }[];
 }) {
+  const t = useTranslations('Preferences.addFavoriteForm');
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createFoodPreferenceSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm<CreateFoodPreferenceInput>(createFoodPreferenceSchema, {
+  } = useZodForm<CreateFoodPreferenceInput>(schema, {
     defaultValues: { type: 'favorite', targetType: 'food_item', targetId: '' },
   });
 
@@ -50,25 +54,25 @@ export function AddFavoriteFoodForm({
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="favoriteFoodItemSearch" className="text-sm font-medium">
-          Search food items
+          {t('searchLabel')}
         </label>
         <input
           id="favoriteFoodItemSearch"
           type="search"
           value={foodItemSearch}
           onChange={(e) => setFoodItemSearch(e.target.value)}
-          placeholder="Food name…"
+          placeholder={t('searchPlaceholder')}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
         />
         <label htmlFor="favoriteTargetId" className="text-sm font-medium">
-          Food item
+          {t('itemLabel')}
         </label>
         <select
           id="favoriteTargetId"
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('targetId')}
         >
-          <option value="">Select a food item</option>
+          <option value="">{t('selectPlaceholder')}</option>
           {filteredFoodItems.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
@@ -83,7 +87,7 @@ export function AddFavoriteFoodForm({
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Adding…' : 'Add favorite'}
+        {isSubmitting ? t('adding') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />

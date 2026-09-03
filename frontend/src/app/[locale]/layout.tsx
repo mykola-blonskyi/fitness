@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { ServiceWorkerRegistration } from '@shared/ui/components/ServiceWorkerRegistration';
 import { PWA_THEME_COLOR } from '@shared/constants/pwa';
 import { routing } from '@/i18n/routing';
+import { IntlErrorBoundaryProvider } from '@/i18n/IntlErrorBoundaryProvider';
 import './globals.css';
 
 const geistSans = Geist({
@@ -67,8 +68,10 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale}>
-          <ServiceWorkerRegistration />
-          {children}
+          <IntlErrorBoundaryProvider>
+            <ServiceWorkerRegistration />
+            {children}
+          </IntlErrorBoundaryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

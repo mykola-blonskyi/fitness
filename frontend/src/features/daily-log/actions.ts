@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import { weightSchema, type WeightInput } from '@shared/schemas/weight';
@@ -39,14 +40,19 @@ export async function setWeight(
   date: string,
   input: WeightInput,
 ): Promise<WeightFormState> {
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Diary.errors'),
+  ]);
+
   // No `formData` option - see features/onboarding/actions.ts for why
   // (this one carries a weight value, ADR-006's own named example of
   // health data that must never reach Sentry).
   return submitFormAction({
     name: 'setWeight',
-    schema: weightSchema,
+    schema: weightSchema(tv),
     input,
-    errorMessage: "Couldn't save your weight — try again.",
+    errorMessage: t('saveFailed'),
     async mutate(parsed) {
       await apiFetch<DailyLog>(`/daily-logs/${date}/weight`, {
         method: 'PUT',

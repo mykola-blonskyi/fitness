@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useOfflineQueueStore } from '@shared/offline/offline-queue-store';
 import type { QueuedWrite } from '@shared/offline/types';
 import type { Exercise } from '@shared/types/exercise';
@@ -50,6 +51,7 @@ export function WorkoutSetList({
   sets: WorkoutSet[];
   exercises: Exercise[];
 }) {
+  const t = useTranslations('Workouts.setList');
   // Reads straight from the offline write-queue (not local component
   // state) so a set logged offline shows up here immediately.
   const pendingSets = useOfflineQueueStore((state) =>
@@ -74,7 +76,7 @@ export function WorkoutSetList({
   }, [pendingSets.length, router]);
 
   if (allSets.length === 0) {
-    return <p className="text-sm text-zinc-500">No sets logged yet.</p>;
+    return <p className="text-sm text-zinc-500">{t('noSetsYet')}</p>;
   }
 
   const byExercise = new Map<string, WorkoutSet[]>();
@@ -96,7 +98,9 @@ export function WorkoutSetList({
                 className="flex items-center justify-between gap-3 rounded border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
               >
                 <span className="text-zinc-500">
-                  {pendingIds.has(set.id) ? 'Set —' : `Set ${set.setNumber}`}
+                  {pendingIds.has(set.id)
+                    ? t('setPending')
+                    : t('setNumber', { number: set.setNumber })}
                 </span>
                 <span>
                   {set.durationSeconds != null
@@ -105,7 +109,7 @@ export function WorkoutSetList({
                 </span>
                 {pendingIds.has(set.id) && (
                   <span className="text-xs text-zinc-500" role="status">
-                    Queued offline
+                    {t('queuedOffline')}
                   </span>
                 )}
               </li>

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import {
@@ -27,12 +28,16 @@ export type CreateTrainingProgramState =
 export async function createTrainingProgram(
   input: CreateTrainingProgramInput,
 ): Promise<CreateTrainingProgramState> {
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Training.errors'),
+  ]);
   // No `formData` option - see features/onboarding/actions.ts for why.
   return submitFormAction({
     name: 'createTrainingProgram',
-    schema: createTrainingProgramSchema,
+    schema: createTrainingProgramSchema(tv),
     input,
-    errorMessage: "Couldn't create that program — try again.",
+    errorMessage: t('createFailed'),
     async mutate(parsed) {
       await apiFetch<TrainingProgram>('/training-programs', {
         method: 'POST',
@@ -50,11 +55,15 @@ export async function addProgramExercise(
   programId: string,
   input: AddProgramExerciseInput,
 ): Promise<AddProgramExerciseState> {
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Training.errors'),
+  ]);
   return submitFormAction({
     name: 'addProgramExercise',
-    schema: addProgramExerciseSchema,
+    schema: addProgramExerciseSchema(tv),
     input,
-    errorMessage: "Couldn't add that exercise — try again.",
+    errorMessage: t('addExerciseFailed'),
     async mutate(parsed) {
       await apiFetch<ProgramExercise>(
         `/training-programs/${programId}/exercises`,

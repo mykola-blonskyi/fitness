@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   addProgramExerciseSchema,
   type AddProgramExerciseInput,
@@ -20,6 +22,9 @@ export function AddProgramExerciseForm({
   programId: string;
   exercises: Exercise[];
 }) {
+  const t = useTranslations('Training.addExerciseForm');
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => addProgramExerciseSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
@@ -27,7 +32,7 @@ export function AddProgramExerciseForm({
     watch,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(addProgramExerciseSchema);
+  } = useZodForm(schema);
 
   const selectedExerciseId = watch('exerciseId');
   const selectedExercise = exercises.find(
@@ -46,11 +51,7 @@ export function AddProgramExerciseForm({
   }
 
   if (exercises.length === 0) {
-    return (
-      <p className="text-sm text-zinc-500">
-        No exercises in the catalog yet — add one on the Exercises page first.
-      </p>
-    );
+    return <p className="text-sm text-zinc-500">{t('noExercisesInCatalog')}</p>;
   }
 
   return (
@@ -60,7 +61,7 @@ export function AddProgramExerciseForm({
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="exerciseId" className="text-sm font-medium">
-          Exercise
+          {t('exerciseLabel')}
         </label>
         <select
           id="exerciseId"
@@ -69,7 +70,7 @@ export function AddProgramExerciseForm({
           {...register('exerciseId')}
         >
           <option value="" disabled>
-            Select an exercise
+            {t('selectPlaceholder')}
           </option>
           {exercises.map((exercise) => (
             <option key={exercise.id} value={exercise.id}>
@@ -87,7 +88,7 @@ export function AddProgramExerciseForm({
               htmlFor="targetDurationSeconds"
               className="text-sm font-medium"
             >
-              Target duration (seconds)
+              {t('targetDurationLabel')}
             </label>
             <input
               id="targetDurationSeconds"
@@ -102,7 +103,7 @@ export function AddProgramExerciseForm({
           <div className="flex gap-3">
             <div className="flex flex-1 flex-col gap-1">
               <label htmlFor="targetSets" className="text-sm font-medium">
-                Target sets
+                {t('targetSetsLabel')}
               </label>
               <input
                 id="targetSets"
@@ -115,7 +116,7 @@ export function AddProgramExerciseForm({
             </div>
             <div className="flex flex-1 flex-col gap-1">
               <label htmlFor="targetReps" className="text-sm font-medium">
-                Target reps
+                {t('targetRepsLabel')}
               </label>
               <input
                 id="targetReps"
@@ -134,7 +135,7 @@ export function AddProgramExerciseForm({
         disabled={isSubmitting || !selectedExercise}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Adding…' : 'Add exercise'}
+        {isSubmitting ? t('adding') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />

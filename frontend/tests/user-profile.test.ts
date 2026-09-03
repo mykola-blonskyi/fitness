@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { userProfileSchema } from '@shared/schemas/user-profile';
+import { testTranslator } from './setup/test-translator';
+
+const schema = userProfileSchema(testTranslator);
 
 const valid = {
   name: 'Verify Test',
@@ -15,16 +18,16 @@ const valid = {
 
 describe('userProfileSchema', () => {
   it('accepts a fully valid profile', () => {
-    expect(userProfileSchema.safeParse(valid).success).toBe(true);
+    expect(schema.safeParse(valid).success).toBe(true);
   });
 
   it('rejects an empty name', () => {
-    const result = userProfileSchema.safeParse({ ...valid, name: '' });
+    const result = schema.safeParse({ ...valid, name: '' });
     expect(result.success).toBe(false);
   });
 
   it('rejects an invalid gender', () => {
-    const result = userProfileSchema.safeParse({
+    const result = schema.safeParse({
       ...valid,
       gender: 'other',
     });
@@ -34,28 +37,28 @@ describe('userProfileSchema', () => {
   it.each(['1990-6-15', '1990-01-32', 'not-a-date'])(
     'rejects a malformed date of birth (%s)',
     (dateOfBirth) => {
-      const result = userProfileSchema.safeParse({ ...valid, dateOfBirth });
+      const result = schema.safeParse({ ...valid, dateOfBirth });
       expect(result.success).toBe(false);
     },
   );
 
   it.each([29, 301])('rejects an out-of-range height (%s)', (height) => {
-    const result = userProfileSchema.safeParse({ ...valid, height });
+    const result = schema.safeParse({ ...valid, height });
     expect(result.success).toBe(false);
   });
 
   it.each([30, 300])('accepts height at the boundary (%s)', (height) => {
-    const result = userProfileSchema.safeParse({ ...valid, height });
+    const result = schema.safeParse({ ...valid, height });
     expect(result.success).toBe(true);
   });
 
   it('rejects an invalid goal', () => {
-    const result = userProfileSchema.safeParse({ ...valid, goal: 'bulk' });
+    const result = schema.safeParse({ ...valid, goal: 'bulk' });
     expect(result.success).toBe(false);
   });
 
   it('rejects an invalid activity level', () => {
-    const result = userProfileSchema.safeParse({
+    const result = schema.safeParse({
       ...valid,
       activityLevel: 'extreme',
     });
@@ -63,22 +66,22 @@ describe('userProfileSchema', () => {
   });
 
   it.each([0, 21])('rejects an out-of-range meal count (%s)', (mealCount) => {
-    const result = userProfileSchema.safeParse({ ...valid, mealCount });
+    const result = schema.safeParse({ ...valid, mealCount });
     expect(result.success).toBe(false);
   });
 
   it.each([1, 20])('accepts meal count at the boundary (%s)', (mealCount) => {
-    const result = userProfileSchema.safeParse({ ...valid, mealCount });
+    const result = schema.safeParse({ ...valid, mealCount });
     expect(result.success).toBe(true);
   });
 
   it('rejects a non-integer meal count', () => {
-    const result = userProfileSchema.safeParse({ ...valid, mealCount: 2.5 });
+    const result = schema.safeParse({ ...valid, mealCount: 2.5 });
     expect(result.success).toBe(false);
   });
 
   it('rejects an invalid locale', () => {
-    const result = userProfileSchema.safeParse({
+    const result = schema.safeParse({
       ...valid,
       locale: 'fr',
     });

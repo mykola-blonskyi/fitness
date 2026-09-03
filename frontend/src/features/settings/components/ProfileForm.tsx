@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   userProfileSchema,
   type UserProfileInput,
@@ -14,12 +15,15 @@ import { updateProfile } from '@features/settings/actions';
 
 export function ProfileForm({ profile }: { profile: UserProfile }) {
   const [saved, setSaved] = useState(false);
+  const t = useTranslations('Settings.profileForm');
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => userProfileSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm<UserProfileInput>(userProfileSchema, {
+  } = useZodForm<UserProfileInput>(schema, {
     defaultValues: {
       name: profile.name,
       gender: profile.gender,
@@ -45,7 +49,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       className="flex w-full max-w-sm flex-col gap-4"
     >
       <p className="text-sm text-zinc-500">
-        {profile.email} &middot; {profile.age} years old
+        {t('emailAge', { email: profile.email, age: profile.age })}
       </p>
 
       <ProfileFields register={register} errors={errors} />
@@ -53,7 +57,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       <FieldError message={errors.root?.message} />
       {saved && !errors.root && (
         <p className="text-sm text-green-600" role="status">
-          Saved.
+          {t('saved')}
         </p>
       )}
 
@@ -62,7 +66,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Saving…' : 'Save changes'}
+        {isSubmitting ? t('saving') : t('submit')}
       </button>
     </form>
   );

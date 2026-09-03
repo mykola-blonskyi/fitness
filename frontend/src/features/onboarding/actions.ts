@@ -1,6 +1,6 @@
 'use server';
 
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { apiFetch } from '@libs/api-client';
 import {
@@ -23,12 +23,15 @@ export async function completeOnboarding(
   // profile's name/date of birth/height into Sentry (ADR-006 explicitly
   // forbids this, and it happens on the transaction pipeline, which
   // sentry-shared.ts's beforeSend never even sees - only beforeSendTransaction does).
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Onboarding.errors'),
+  ]);
   const result = await submitFormAction({
     name: 'completeOnboarding',
-    schema: userProfileSchema,
+    schema: userProfileSchema(tv),
     input,
-    errorMessage:
-      "Couldn't save your profile — check your inputs and try again.",
+    errorMessage: t('saveFailed'),
     async mutate(parsed) {
       await apiFetch<UserProfile>('/users/me', {
         method: 'POST',

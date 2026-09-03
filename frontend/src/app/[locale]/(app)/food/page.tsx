@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import {
   CreateFoodItemForm,
   FoodList,
@@ -21,6 +22,7 @@ export default async function FoodCatalogPage({
 }) {
   const { locale } = await params;
   const { category, search } = await searchParams;
+  const t = await getTranslations('Food');
 
   const query = new URLSearchParams({ locale });
   if (category) query.set('category', category);
@@ -34,7 +36,7 @@ export default async function FoodCatalogPage({
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">Food Catalog</h1>
+      <h1 className="text-2xl font-semibold">{t('pageTitle')}</h1>
 
       <FoodSearchForm taxonomy={taxonomy} category={category} search={search} />
 
@@ -49,7 +51,7 @@ export default async function FoodCatalogPage({
       />
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Add a custom food item</h2>
+        <h2 className="text-lg font-semibold">{t('addCustomHeading')}</h2>
         <CreateFoodItemForm taxonomy={taxonomy} />
       </div>
     </main>

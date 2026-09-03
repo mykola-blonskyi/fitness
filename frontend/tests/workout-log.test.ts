@@ -3,24 +3,27 @@ import {
   logWorkoutSetSchema,
   startWorkoutLogSchema,
 } from '@shared/schemas/workout-log';
+import { testTranslator } from './setup/test-translator';
+
+const startSchema = startWorkoutLogSchema();
+const logSetSchema = logWorkoutSetSchema(testTranslator);
 
 describe('startWorkoutLogSchema', () => {
   const trainingProgramId = '11111111-1111-4111-8111-111111111111';
 
   it('accepts an empty body (ad hoc, no title)', () => {
-    expect(startWorkoutLogSchema.safeParse({}).success).toBe(true);
+    expect(startSchema.safeParse({}).success).toBe(true);
   });
 
   it('accepts an empty-string trainingProgramId (the "ad hoc" select option)', () => {
     expect(
-      startWorkoutLogSchema.safeParse({ trainingProgramId: '', title: '' })
-        .success,
+      startSchema.safeParse({ trainingProgramId: '', title: '' }).success,
     ).toBe(true);
   });
 
   it('accepts a real trainingProgramId and title', () => {
     expect(
-      startWorkoutLogSchema.safeParse({
+      startSchema.safeParse({
         trainingProgramId,
         title: 'Push day',
       }).success,
@@ -29,8 +32,7 @@ describe('startWorkoutLogSchema', () => {
 
   it('rejects a non-uuid trainingProgramId', () => {
     expect(
-      startWorkoutLogSchema.safeParse({ trainingProgramId: 'not-a-uuid' })
-        .success,
+      startSchema.safeParse({ trainingProgramId: 'not-a-uuid' }).success,
     ).toBe(false);
   });
 });
@@ -40,7 +42,7 @@ describe('logWorkoutSetSchema', () => {
 
   it('accepts weight/reps for a non-cardio exercise', () => {
     expect(
-      logWorkoutSetSchema.safeParse({
+      logSetSchema.safeParse({
         exerciseId,
         weight: 60,
         unit: 'kg',
@@ -51,24 +53,23 @@ describe('logWorkoutSetSchema', () => {
 
   it('accepts a duration for a cardio exercise', () => {
     expect(
-      logWorkoutSetSchema.safeParse({ exerciseId, durationSeconds: 300 })
-        .success,
+      logSetSchema.safeParse({ exerciseId, durationSeconds: 300 }).success,
     ).toBe(true);
   });
 
   it('rejects weight without reps', () => {
-    expect(
-      logWorkoutSetSchema.safeParse({ exerciseId, weight: 60 }).success,
-    ).toBe(false);
+    expect(logSetSchema.safeParse({ exerciseId, weight: 60 }).success).toBe(
+      false,
+    );
   });
 
   it('rejects reps without weight', () => {
-    expect(
-      logWorkoutSetSchema.safeParse({ exerciseId, reps: 10 }).success,
-    ).toBe(false);
+    expect(logSetSchema.safeParse({ exerciseId, reps: 10 }).success).toBe(
+      false,
+    );
   });
 
   it('rejects neither weight/reps nor a duration', () => {
-    expect(logWorkoutSetSchema.safeParse({ exerciseId }).success).toBe(false);
+    expect(logSetSchema.safeParse({ exerciseId }).success).toBe(false);
   });
 });

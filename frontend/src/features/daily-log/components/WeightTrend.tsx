@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { WEIGHT_TREND_WINDOWS } from '@shared/constants/daily-log';
 import Link from 'next/link';
 
@@ -6,10 +7,12 @@ interface WeightTrendProps {
   windowDays: number;
 }
 
-export const WeightTrend = ({ locale, windowDays }: WeightTrendProps) => {
+export const WeightTrend = async ({ locale, windowDays }: WeightTrendProps) => {
+  const t = await getTranslations('Diary.weightTrend');
+
   return (
     <div className="flex items-center justify-between">
-      <h2 className="text-lg font-medium">Weight trend</h2>
+      <h2 className="text-lg font-medium">{t('heading')}</h2>
       <div className="flex gap-1">
         {WEIGHT_TREND_WINDOWS.map((window) => (
           <Link
@@ -21,7 +24,7 @@ export const WeightTrend = ({ locale, windowDays }: WeightTrendProps) => {
                 : 'rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:border-zinc-700 dark:hover:text-zinc-100'
             }
           >
-            {window}d
+            {t('window', { days: window })}
           </Link>
         ))}
       </div>

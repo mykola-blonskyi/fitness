@@ -1,6 +1,7 @@
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { renderWithIntl } from './setup/render-with-intl';
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -94,7 +95,7 @@ beforeEach(() => {
 
 describe('DietMenu', () => {
   it('renders day totals and groups items by meal in enum order', () => {
-    render(<DietMenu diet={diet} />);
+    renderWithIntl(<DietMenu diet={diet} />);
 
     expect(screen.getByText('1800')).toBeInTheDocument();
     expect(
@@ -122,7 +123,7 @@ describe('DietMenu', () => {
         }),
       ],
     };
-    render(<DietMenu diet={dietWithRepeat} />);
+    renderWithIntl(<DietMenu diet={dietWithRepeat} />);
 
     const headings = screen
       .getAllByRole('heading', { level: 2 })
@@ -134,7 +135,7 @@ describe('DietMenu', () => {
   it('reroll calls swapDietItem with only the diet and item id', async () => {
     const user = userEvent.setup();
     swapDietItem.mockResolvedValue({ ok: true, diet });
-    render(<DietMenu diet={diet} />);
+    renderWithIntl(<DietMenu diet={diet} />);
 
     const breakfastRow = screen.getByText('Oats').closest('li') as HTMLElement;
     await user.click(
@@ -148,7 +149,7 @@ describe('DietMenu', () => {
   it('picking a candidate in the swap picker calls swapDietItem with the food id', async () => {
     const user = userEvent.setup();
     swapDietItem.mockResolvedValue({ ok: true, diet });
-    render(<DietMenu diet={diet} />);
+    renderWithIntl(<DietMenu diet={diet} />);
 
     const dinnerRow = screen.getByText('Salmon').closest('li') as HTMLElement;
     await user.click(
@@ -164,7 +165,7 @@ describe('DietMenu', () => {
   it('regenerate confirms before calling generateDiet', async () => {
     const user = userEvent.setup();
     generateDiet.mockResolvedValue({ ok: true, diet });
-    render(<DietMenu diet={diet} />);
+    renderWithIntl(<DietMenu diet={diet} />);
 
     await user.click(screen.getByRole('button', { name: /^regenerate$/i }));
     expect(generateDiet).not.toHaveBeenCalled();

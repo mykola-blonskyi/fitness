@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@libs/api-client';
 import {
   createFoodItemSchema,
@@ -53,12 +54,16 @@ export async function listFoodItems(params: {
 export async function createFoodItem(
   input: CreateFoodItemInput,
 ): Promise<CreateFoodItemFormState> {
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Food.errors'),
+  ]);
   // No `formData` option - see features/onboarding/actions.ts for why.
   return submitFormAction({
     name: 'createFoodItem',
-    schema: createFoodItemSchema,
+    schema: createFoodItemSchema(tv),
     input,
-    errorMessage: "Couldn't add that food item — try again.",
+    errorMessage: t('addFailed'),
     async mutate(parsed) {
       await apiFetch<FoodItem>('/food-items', {
         method: 'POST',

@@ -3,6 +3,10 @@ import {
   createDietPreferenceSchema,
   createFoodPreferenceSchema,
 } from '@shared/schemas/preferences';
+import { testTranslator } from './setup/test-translator';
+
+const foodPreferenceSchema = createFoodPreferenceSchema(testTranslator);
+const dietPreferenceSchema = createDietPreferenceSchema(testTranslator);
 
 const validFoodPreference = {
   type: 'exclude',
@@ -12,14 +16,14 @@ const validFoodPreference = {
 
 describe('createFoodPreferenceSchema', () => {
   it('accepts a fully valid food preference', () => {
-    expect(
-      createFoodPreferenceSchema.safeParse(validFoodPreference).success,
-    ).toBe(true);
+    expect(foodPreferenceSchema.safeParse(validFoodPreference).success).toBe(
+      true,
+    );
   });
 
   it('accepts a favorite food preference', () => {
     expect(
-      createFoodPreferenceSchema.safeParse({
+      foodPreferenceSchema.safeParse({
         type: 'favorite',
         targetType: 'food_item',
         targetId: '11111111-1111-4111-8111-111111111111',
@@ -28,7 +32,7 @@ describe('createFoodPreferenceSchema', () => {
   });
 
   it('rejects an invalid type', () => {
-    const result = createFoodPreferenceSchema.safeParse({
+    const result = foodPreferenceSchema.safeParse({
       ...validFoodPreference,
       type: 'dislike',
     });
@@ -36,7 +40,7 @@ describe('createFoodPreferenceSchema', () => {
   });
 
   it('rejects an invalid targetType', () => {
-    const result = createFoodPreferenceSchema.safeParse({
+    const result = foodPreferenceSchema.safeParse({
       ...validFoodPreference,
       targetType: 'ingredient',
     });
@@ -44,7 +48,7 @@ describe('createFoodPreferenceSchema', () => {
   });
 
   it('rejects a non-uuid targetId', () => {
-    const result = createFoodPreferenceSchema.safeParse({
+    const result = foodPreferenceSchema.safeParse({
       ...validFoodPreference,
       targetId: 'not-a-uuid',
     });
@@ -56,14 +60,12 @@ describe('createDietPreferenceSchema', () => {
   it.each(['vegetarian', 'vegan', 'keto', 'paleo'])(
     'accepts %s as a diet type',
     (dietType) => {
-      expect(createDietPreferenceSchema.safeParse({ dietType }).success).toBe(
-        true,
-      );
+      expect(dietPreferenceSchema.safeParse({ dietType }).success).toBe(true);
     },
   );
 
   it('rejects an invalid diet type', () => {
-    const result = createDietPreferenceSchema.safeParse({
+    const result = dietPreferenceSchema.safeParse({
       dietType: 'carnivore',
     });
     expect(result.success).toBe(false);

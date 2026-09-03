@@ -1,5 +1,6 @@
 'use server';
 
+import { getTranslations } from 'next-intl/server';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import type { AdminExercise, CursorPage } from '@shared/types/admin';
@@ -30,7 +31,8 @@ export async function approveExercise(id: string): Promise<AdminActionResult> {
         await apiFetch(`/admin/exercises/${id}/approve`, { method: 'POST' });
         return {};
       } catch {
-        return { error: "Couldn't approve this exercise — try again." };
+        const t = await getTranslations('Admin.errors');
+        return { error: t('approveExerciseFailed') };
       }
     },
   );
@@ -49,7 +51,8 @@ export async function unapproveExercise(
         await apiFetch(`/admin/exercises/${id}/unapprove`, { method: 'POST' });
         return {};
       } catch {
-        return { error: "Couldn't unapprove this exercise — try again." };
+        const t = await getTranslations('Admin.errors');
+        return { error: t('unapproveExerciseFailed') };
       }
     },
   );
@@ -67,7 +70,8 @@ export async function deleteExercise(id: string): Promise<AdminActionResult> {
         if (err instanceof ApiError && err.status === 409) {
           return { error: err.message };
         }
-        return { error: "Couldn't delete this exercise — try again." };
+        const t = await getTranslations('Admin.errors');
+        return { error: t('deleteExerciseFailed') };
       }
     },
   );

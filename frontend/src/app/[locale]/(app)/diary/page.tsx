@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { WeightForm, WeightTrend, WeightTrendChart } from '@features/daily-log';
 import {
   dateFromDayIndex,
@@ -45,6 +46,7 @@ export default async function DiaryPage({
   const date = todayIso();
   const windowStart = windowStartIso(date, windowDays);
 
+  const t = await getTranslations('Diary');
   const dailyLog = await fetchOr404<DailyLog>(`/daily-logs/${date}`);
 
   const trend = await apiFetch<WeightTrendResponse>(
@@ -54,7 +56,7 @@ export default async function DiaryPage({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">Diary — {date}</h1>
+      <h1 className="text-2xl font-semibold">{t('title', { date })}</h1>
       <WeightForm
         date={date}
         dailyLog={dailyLog}

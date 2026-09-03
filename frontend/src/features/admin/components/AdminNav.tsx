@@ -1,31 +1,30 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
-const TABS = [
-  { key: 'exercises', label: 'Exercises' },
-  { key: 'food', label: 'Food' },
-] as const;
+const TAB_KEYS = ['exercises', 'food'] as const;
 
 // Same pattern as features/settings/components/SettingsNav.tsx.
-export function AdminNav({
+export async function AdminNav({
   locale,
   active,
 }: {
   locale: string;
-  active: (typeof TABS)[number]['key'];
+  active: (typeof TAB_KEYS)[number];
 }) {
+  const t = await getTranslations('Admin.nav');
   return (
     <nav className="flex w-full max-w-sm gap-4 border-b border-zinc-200 pb-2 dark:border-zinc-800">
-      {TABS.map((tab) => (
+      {TAB_KEYS.map((key) => (
         <Link
-          key={tab.key}
-          href={`/${locale}/admin/${tab.key}`}
+          key={key}
+          href={`/${locale}/admin/${key}`}
           className={
-            tab.key === active
+            key === active
               ? 'text-sm font-semibold text-zinc-900 dark:text-zinc-100'
               : 'text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100'
           }
         >
-          {tab.label}
+          {t(key)}
         </Link>
       ))}
     </nav>

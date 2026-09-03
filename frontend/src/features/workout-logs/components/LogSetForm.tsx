@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   logWorkoutSetSchema,
   type LogWorkoutSetInput,
@@ -28,6 +29,9 @@ export function LogSetForm({
 }) {
   const [queued, setQueued] = useState(false);
   const [rememberedUnit, rememberUnit] = useLastWeightUnit(defaultWeightUnit);
+  const t = useTranslations('Workouts.logSetForm');
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => logWorkoutSetSchema(tv), [tv]);
 
   const {
     register,
@@ -36,7 +40,7 @@ export function LogSetForm({
     watch,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(logWorkoutSetSchema, {
+  } = useZodForm(schema, {
     defaultValues: { unit: rememberedUnit },
   });
   const unitField = register('unit');
@@ -71,11 +75,7 @@ export function LogSetForm({
   }
 
   if (exercises.length === 0) {
-    return (
-      <p className="text-sm text-zinc-500">
-        No exercises in the catalog yet — add one on the Exercises page first.
-      </p>
-    );
+    return <p className="text-sm text-zinc-500">{t('noExercisesInCatalog')}</p>;
   }
 
   return (
@@ -85,7 +85,7 @@ export function LogSetForm({
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="exerciseId" className="text-sm font-medium">
-          Exercise
+          {t('exerciseLabel')}
         </label>
         <select
           id="exerciseId"
@@ -94,7 +94,7 @@ export function LogSetForm({
           {...register('exerciseId')}
         >
           <option value="" disabled>
-            Select an exercise
+            {t('selectPlaceholder')}
           </option>
           {exercises.map((exercise) => (
             <option key={exercise.id} value={exercise.id}>
@@ -109,7 +109,7 @@ export function LogSetForm({
         (isCardio ? (
           <div className="flex flex-col gap-1">
             <label htmlFor="durationSeconds" className="text-sm font-medium">
-              Duration (seconds)
+              {t('durationLabel')}
             </label>
             <input
               id="durationSeconds"
@@ -124,7 +124,7 @@ export function LogSetForm({
           <div className="flex gap-3">
             <div className="flex flex-1 flex-col gap-1">
               <label htmlFor="weight" className="text-sm font-medium">
-                Weight
+                {t('weightLabel')}
               </label>
               <div className="flex gap-2">
                 <input
@@ -136,7 +136,7 @@ export function LogSetForm({
                 />
                 <select
                   id="unit"
-                  aria-label="Weight unit"
+                  aria-label={t('unitAriaLabel')}
                   className="rounded border border-zinc-300 px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900"
                   {...unitField}
                   onChange={(e) => {
@@ -155,7 +155,7 @@ export function LogSetForm({
             </div>
             <div className="flex flex-1 flex-col gap-1">
               <label htmlFor="reps" className="text-sm font-medium">
-                Reps
+                {t('repsLabel')}
               </label>
               <input
                 id="reps"
@@ -174,14 +174,14 @@ export function LogSetForm({
         disabled={isSubmitting || !selectedExercise}
         className="bg-foreground text-background flex h-11 items-center justify-center rounded px-4 disabled:opacity-50"
       >
-        {isSubmitting ? 'Logging…' : 'Log set'}
+        {isSubmitting ? t('logging') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />
 
       {queued && (
         <p className="text-sm text-zinc-500" role="status">
-          Saved offline — will sync automatically once you&apos;re back online.
+          {t('savedOffline')}
         </p>
       )}
     </form>

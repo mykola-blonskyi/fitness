@@ -1,4 +1,4 @@
-import { EXERCISE_CATEGORY_LABELS } from '@shared/types/exercise';
+import { getTranslations } from 'next-intl/server';
 import type { ProgramExercise } from '@shared/types/training-program';
 import {
   moveProgramExercise,
@@ -8,7 +8,7 @@ import {
 // Server component using plain <form action> bindings, no client JS -
 // same convention as settings/preferences and daily-log's clearWeight.
 // Buttons meet the 44px touch-target minimum with 8px+ gaps.
-export function ProgramExerciseRow({
+export async function ProgramExerciseRow({
   programId,
   exercise,
   isFirst,
@@ -21,6 +21,8 @@ export function ProgramExerciseRow({
   isLast: boolean;
   disabled: boolean;
 }) {
+  const t = await getTranslations('Training.exerciseRow');
+  const tc = await getTranslations('ExerciseCategories');
   const target =
     exercise.exerciseCategory === 'cardio'
       ? `${exercise.targetDurationSeconds ?? '—'}s`
@@ -31,8 +33,7 @@ export function ProgramExerciseRow({
       <div className="flex flex-col">
         <span className="text-sm font-medium">{exercise.exerciseName}</span>
         <span className="text-sm text-zinc-500">
-          {EXERCISE_CATEGORY_LABELS[exercise.exerciseCategory]} &middot;{' '}
-          {target}
+          {tc(exercise.exerciseCategory)} &middot; {target}
         </span>
       </div>
 
@@ -43,7 +44,7 @@ export function ProgramExerciseRow({
           <button
             type="submit"
             disabled={disabled || isFirst}
-            aria-label={`Move ${exercise.exerciseName} up`}
+            aria-label={t('moveUp', { name: exercise.exerciseName })}
             className="flex size-11 items-center justify-center rounded border border-zinc-300 text-zinc-600 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-900"
           >
             &uarr;
@@ -60,7 +61,7 @@ export function ProgramExerciseRow({
           <button
             type="submit"
             disabled={disabled || isLast}
-            aria-label={`Move ${exercise.exerciseName} down`}
+            aria-label={t('moveDown', { name: exercise.exerciseName })}
             className="flex size-11 items-center justify-center rounded border border-zinc-300 text-zinc-600 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-900"
           >
             &darr;
@@ -70,10 +71,10 @@ export function ProgramExerciseRow({
           <button
             type="submit"
             disabled={disabled}
-            aria-label={`Remove ${exercise.exerciseName}`}
+            aria-label={t('removeAria', { name: exercise.exerciseName })}
             className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm text-zinc-500 transition-colors hover:text-zinc-900 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:hover:text-zinc-100"
           >
-            Remove
+            {t('remove')}
           </button>
         </form>
       </div>

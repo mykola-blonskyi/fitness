@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   createFoodItemSchema,
   type CreateFoodItemInput,
@@ -17,13 +19,16 @@ import {
 // Macros (a typo or a field rename in one would fail here, not silently
 // render an unregistered input).
 const MACRO_FIELDS = [
-  { name: 'caloriesPer100g', label: 'Calories (per 100g)' },
-  { name: 'proteinPer100g', label: 'Protein (g per 100g)' },
-  { name: 'carbsPer100g', label: 'Carbs (g per 100g)' },
-  { name: 'fatPer100g', label: 'Fat (g per 100g)' },
-] as const satisfies { name: keyof Macros; label: string }[];
+  { name: 'caloriesPer100g', labelKey: 'caloriesLabel' },
+  { name: 'proteinPer100g', labelKey: 'proteinLabel' },
+  { name: 'carbsPer100g', labelKey: 'carbsLabel' },
+  { name: 'fatPer100g', labelKey: 'fatLabel' },
+] as const satisfies { name: keyof Macros; labelKey: string }[];
 
 export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
+  const t = useTranslations('Food.createForm');
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createFoodItemSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
@@ -31,7 +36,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(createFoodItemSchema);
+  } = useZodForm(schema);
 
   // Subcategory options are scoped to whichever category is currently
   // selected - the fixed taxonomy makes categoryId -> subcategories a
@@ -53,7 +58,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className="text-sm font-medium">
-          Name
+          {t('nameLabel')}
         </label>
         <input
           id="name"
@@ -65,14 +70,14 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="categoryId" className="text-sm font-medium">
-          Category
+          {t('categoryLabel')}
         </label>
         <select
           id="categoryId"
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('categoryId')}
         >
-          <option value="">Select a category</option>
+          <option value="">{t('selectCategoryPlaceholder')}</option>
           {taxonomy.categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -84,7 +89,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="subcategoryId" className="text-sm font-medium">
-          Subcategory
+          {t('subcategoryLabel')}
         </label>
         <select
           id="subcategoryId"
@@ -92,7 +97,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
           className="rounded border border-zinc-300 px-3 py-2 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('subcategoryId')}
         >
-          <option value="">Select a subcategory</option>
+          <option value="">{t('selectSubcategoryPlaceholder')}</option>
           {subcategories.map((subcategory) => (
             <option key={subcategory.id} value={subcategory.id}>
               {subcategory.name}
@@ -104,14 +109,14 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="roleId" className="text-sm font-medium">
-          Role
+          {t('roleLabel')}
         </label>
         <select
           id="roleId"
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('roleId')}
         >
-          <option value="">Select a role</option>
+          <option value="">{t('selectRolePlaceholder')}</option>
           {taxonomy.roles.map((role) => (
             <option key={role.id} value={role.id}>
               {role.name}
@@ -122,10 +127,10 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {MACRO_FIELDS.map(({ name, label }) => (
+        {MACRO_FIELDS.map(({ name, labelKey }) => (
           <div key={name} className="flex flex-col gap-1">
             <label htmlFor={name} className="text-sm font-medium">
-              {label}
+              {t(labelKey)}
             </label>
             <input
               id={name}
@@ -144,7 +149,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Adding…' : 'Add food item'}
+        {isSubmitting ? t('adding') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />

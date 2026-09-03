@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { weightSchema, type WeightInput } from '@shared/schemas/weight';
 import { WEIGHT_UNITS, type WeightUnit } from '@shared/types/user';
 import { FieldError } from '@shared/ui/components/FieldError';
@@ -22,6 +23,9 @@ export function WeightForm({
   // Set (not replaced) when a submit gets queued instead of saved
   // immediately (FITNESS-13) - cleared on the next submit attempt so it
   // never lingers past a subsequent successful/errored save.
+  const t = useTranslations('Diary.weightForm');
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => weightSchema(tv), [tv]);
   const [queued, setQueued] = useState(false);
 
   // Falls back to the session/profile default only when today has no
@@ -33,7 +37,7 @@ export function WeightForm({
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm<WeightInput>(weightSchema, {
+  } = useZodForm<WeightInput>(schema, {
     defaultValues: {
       weight: dailyLog?.weight ?? undefined,
       unit: dailyLog?.weightUnit ?? rememberedUnit,
@@ -60,7 +64,7 @@ export function WeightForm({
       <form onSubmit={handleSubmit(onSubmit)} className="flex items-end gap-2">
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="weight" className="text-sm font-medium">
-            Weight today
+            {t('label')}
           </label>
           <div className="flex gap-2">
             <input
@@ -72,7 +76,7 @@ export function WeightForm({
             />
             <select
               id="unit"
-              aria-label="Weight unit"
+              aria-label={t('unitAriaLabel')}
               className="rounded border border-zinc-300 px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900"
               {...unitField}
               onChange={(e) => {
@@ -95,10 +99,10 @@ export function WeightForm({
           className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
         >
           {isSubmitting
-            ? 'Saving…'
+            ? t('saving')
             : dailyLog?.weight != null
-              ? 'Update'
-              : 'Log'}
+              ? t('update')
+              : t('log')}
         </button>
       </form>
 
@@ -106,7 +110,7 @@ export function WeightForm({
 
       {queued && (
         <p className="text-sm text-zinc-500" role="status">
-          Saved offline — will sync automatically once you&apos;re back online.
+          {t('savedOffline')}
         </p>
       )}
 
@@ -116,7 +120,7 @@ export function WeightForm({
             type="submit"
             className="text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
           >
-            Remove today&apos;s weigh-in
+            {t('remove')}
           </button>
         </form>
       )}

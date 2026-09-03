@@ -1,31 +1,22 @@
 import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 import {
   setBaseline,
   type PhotoPose,
   type PhotoSession,
 } from '@features/photo-sessions/actions';
-import { analysisStatusLabel } from '@features/photo-sessions/analysis-status';
 import { fetchPhotoViewUrl } from '@features/photo-sessions/photo-view-url';
 import { PhotoSessionReview } from './PhotoSessionReview';
 import { RetryAnalysisButton } from './RetryAnalysisButton';
-
-const POSE_LABELS: Record<PhotoPose, string> = {
-  front: 'Front',
-  side: 'Side',
-  back: 'Back',
-};
-
-function poseLabel(pose: PhotoPose | null): string {
-  return pose ? POSE_LABELS[pose] : 'Unassigned';
-}
 
 export async function PhotoSessionList({
   sessions,
 }: {
   sessions: PhotoSession[];
 }) {
+  const t = await getTranslations('PhotoSessions');
   if (sessions.length === 0) {
-    return <p className="text-sm text-zinc-500">No progress photos yet.</p>;
+    return <p className="text-sm text-zinc-500">{t('list.empty')}</p>;
   }
 
   return (
@@ -38,12 +29,18 @@ export async function PhotoSessionList({
 }
 
 async function PhotoSessionRow({ session }: { session: PhotoSession }) {
-  const photosWithUrls = await Promise.all(
-    session.photos.map(async (photo) => ({
-      photo,
-      url: await fetchPhotoViewUrl(photo.id),
-    })),
-  );
+  const [t, tPoses, tAnalysis, photosWithUrls] = await Promise.all([
+    getTranslations('PhotoSessions.list'),
+    getTranslations('PhotoSessions.poses'),
+    getTranslations('PhotoSessions.analysisStatus'),
+    Promise.all(
+      session.photos.map(async (photo) => ({
+        photo,
+        url: await fetchPhotoViewUrl(photo.id),
+      })),
+    ),
+  ]);
+  const poseLabel = (pose: PhotoPose | null) => tPoses(pose ?? 'unassigned');
 
   return (
     <li className="flex flex-col gap-3 border-b border-zinc-200 pb-6 dark:border-zinc-800">
@@ -52,13 +49,13 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
           <span className="text-sm font-medium">{session.date}</span>
           {session.status === 'needs_review' && (
             <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-              Needs review
+              {t('needsReview')}
             </span>
           )}
         </div>
         {session.isBaseline ? (
           <span className="rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-            Baseline
+            {t('baseline')}
           </span>
         ) : (
           session.status === 'confirmed' && (
@@ -67,7 +64,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
                 type="submit"
                 className="text-xs text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
               >
-                Mark as baseline
+                {t('markBaseline')}
               </button>
             </form>
           )
@@ -90,7 +87,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
               {url ? (
                 <Image
                   src={url}
-                  alt={`${poseLabel(photo.pose)} progress photo`}
+                  alt={t('photoAlt', { pose: poseLabel(photo.pose) })}
                   width={96}
                   height={96}
                   className="size-24 rounded-md object-cover"
@@ -113,7 +110,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
                         : 'text-zinc-400'
                     }`}
                   >
-                    {analysisStatusLabel(photo.analysisStatus)}
+                    {tAnalysis(photo.analysisStatus)}
                   </span>
                   {photo.analysisStatus === 'failed' && (
                     <RetryAnalysisButton photoId={photo.id} />

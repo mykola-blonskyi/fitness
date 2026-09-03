@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@libs/api-client';
 import {
   startWorkoutLogSchema,
@@ -27,11 +28,12 @@ export async function startWorkoutLog(
 ): Promise<StartWorkoutLogState | undefined> {
   let created: WorkoutLog | undefined;
 
+  const t = await getTranslations('Workouts.errors');
   const result = await submitFormAction({
     name: 'startWorkoutLog',
-    schema: startWorkoutLogSchema,
+    schema: startWorkoutLogSchema(),
     input,
-    errorMessage: "Couldn't start a workout — try again.",
+    errorMessage: t('startFailed'),
     async mutate(parsed) {
       created = await apiFetch<WorkoutLog>(`/workout-logs/${date}`, {
         method: 'POST',
@@ -55,11 +57,15 @@ export async function logWorkoutSet(
   workoutLogId: string,
   input: LogWorkoutSetInput,
 ): Promise<LogWorkoutSetState> {
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Workouts.errors'),
+  ]);
   return submitFormAction({
     name: 'logWorkoutSet',
-    schema: logWorkoutSetSchema,
+    schema: logWorkoutSetSchema(tv),
     input,
-    errorMessage: "Couldn't log that set — try again.",
+    errorMessage: t('logFailed'),
     async mutate(parsed) {
       await apiFetch<WorkoutSet>(`/workout-logs/${workoutLogId}/sets`, {
         method: 'POST',

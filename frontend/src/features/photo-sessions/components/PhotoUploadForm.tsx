@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { FieldError } from '@shared/ui/components/FieldError';
 import {
   confirmPhotoSession,
@@ -11,6 +12,7 @@ import {
 const MAX_PHOTOS = 3;
 
 export function PhotoUploadForm({ date }: { date: string }) {
+  const t = useTranslations('PhotoSessions.uploadForm');
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -20,7 +22,7 @@ export function PhotoUploadForm({ date }: { date: string }) {
   function onFilesSelected(event: ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(event.target.files ?? []);
     if (selected.length > MAX_PHOTOS) {
-      setError(`Pick at most ${MAX_PHOTOS} photos`);
+      setError(t('maxPhotosError', { max: MAX_PHOTOS }));
       setFiles([]);
       event.target.value = '';
       return;
@@ -32,7 +34,7 @@ export function PhotoUploadForm({ date }: { date: string }) {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (files.length === 0) {
-      setError('Select at least one photo');
+      setError(t('selectAtLeastOne'));
       return;
     }
 
@@ -56,7 +58,7 @@ export function PhotoUploadForm({ date }: { date: string }) {
       if (inputRef.current) inputRef.current.value = '';
       router.refresh();
     } catch {
-      setError("Couldn't upload your photos — try again.");
+      setError(t('uploadError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -66,7 +68,7 @@ export function PhotoUploadForm({ date }: { date: string }) {
     <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4">
       <div className="flex flex-col gap-1">
         <label htmlFor="photos" className="text-sm font-medium">
-          Photos (up to {MAX_PHOTOS})
+          {t('photosLabel', { max: MAX_PHOTOS })}
         </label>
         <input
           ref={inputRef}
@@ -77,9 +79,7 @@ export function PhotoUploadForm({ date }: { date: string }) {
           onChange={onFilesSelected}
           className="text-sm file:mr-3 file:rounded file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-zinc-800"
         />
-        <p className="text-xs text-zinc-500">
-          Front, side, and back — we&apos;ll sort out which is which.
-        </p>
+        <p className="text-xs text-zinc-500">{t('photosHint')}</p>
       </div>
 
       <button
@@ -87,7 +87,7 @@ export function PhotoUploadForm({ date }: { date: string }) {
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Uploading…' : 'Upload session'}
+        {isSubmitting ? t('uploading') : t('submit')}
       </button>
 
       <FieldError message={error} />

@@ -1,14 +1,13 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   createExerciseSchema,
   type CreateExerciseInput,
 } from '@shared/schemas/exercise';
-import {
-  EXERCISE_CATEGORIES,
-  EXERCISE_CATEGORY_LABELS,
-} from '@shared/types/exercise';
+import { EXERCISE_CATEGORIES } from '@shared/types/exercise';
 import { FieldError } from '@shared/ui/components/FieldError';
 import { useZodForm } from '@shared/libs/use-zod-form';
 import { applyFormActionError } from '@shared/libs/apply-form-action-error';
@@ -16,13 +15,17 @@ import { createExercise } from '@features/exercise-catalog/actions';
 
 export function CreateExerciseForm() {
   const router = useRouter();
+  const t = useTranslations('Exercises.createForm');
+  const tc = useTranslations('ExerciseCategories');
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createExerciseSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(createExerciseSchema);
+  } = useZodForm(schema);
 
   async function onSubmit(input: CreateExerciseInput) {
     const result = await createExercise(input);
@@ -38,7 +41,7 @@ export function CreateExerciseForm() {
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className="text-sm font-medium">
-          Name
+          {t('nameLabel')}
         </label>
         <input
           id="name"
@@ -50,7 +53,7 @@ export function CreateExerciseForm() {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="category" className="text-sm font-medium">
-          Category
+          {t('categoryLabel')}
         </label>
         <select
           id="category"
@@ -59,11 +62,11 @@ export function CreateExerciseForm() {
           {...register('category')}
         >
           <option value="" disabled>
-            Select a category
+            {t('selectPlaceholder')}
           </option>
           {EXERCISE_CATEGORIES.map((category) => (
             <option key={category} value={category}>
-              {EXERCISE_CATEGORY_LABELS[category]}
+              {tc(category)}
             </option>
           ))}
         </select>
@@ -75,7 +78,7 @@ export function CreateExerciseForm() {
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Adding…' : 'Add exercise'}
+        {isSubmitting ? t('adding') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />

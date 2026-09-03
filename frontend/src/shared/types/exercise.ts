@@ -16,17 +16,8 @@ export const EXERCISE_CATEGORIES = [
 
 export type ExerciseCategory = (typeof EXERCISE_CATEGORIES)[number];
 
-export const EXERCISE_CATEGORY_LABELS: Record<ExerciseCategory, string> = {
-  chest: 'Chest',
-  back: 'Back',
-  shoulders: 'Shoulders',
-  biceps: 'Biceps',
-  triceps: 'Triceps',
-  legs: 'Legs',
-  core: 'Core',
-  cardio: 'Cardio',
-  full_body: 'Full body',
-};
+// Display labels live in messages/*.json under ExerciseCategories, not
+// here - see components using useTranslations/getTranslations('ExerciseCategories').
 
 // Mirrors backend/src/exercises/exercise.mapper.ts's ExerciseResponse.
 export interface Exercise {
