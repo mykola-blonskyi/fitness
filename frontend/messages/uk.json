@@ -1,4 +1,580 @@
 {
+  "Diary": {
+    "title": "Щоденник — {date}",
+    "weightForm": {
+      "label": "Вага на сьогодні",
+      "unitAriaLabel": "Одиниця виміру ваги",
+      "saving": "Збереження…",
+      "update": "Оновлення",
+      "log": "Журнал",
+      "savedOffline": "Збережено в автономному режимі — синхронізується автоматично, щойно ви знову підключитеся до Інтернету.",
+      "remove": "Скасувати сьогоднішнє зважування"
+    },
+    "weightTrend": {
+      "heading": "Динаміка ваги",
+      "window": "{days}d"
+    },
+    "weightTrendChart": {
+      "empty": "За останні {days} днів зважування не проводилося.",
+      "ariaLabel": "Динаміка ваги за останні {days} днів: {count, plural, one {# зважування} other {# зважування}}, від {min}{unit} до {max}{unit}, а найновіший — {latest}{unit} на {date}.",
+      "pointTitle": "{date}: {weight}{unit}"
+    },
+    "errors": {
+      "saveFailed": "Не вдалося зберегти вагу — спробуйте ще раз."
+    }
+  },
+  "Diet": {
+    "page": {
+      "title": "Дієта",
+      "noTargetYet": "Запишіть сьогоднішню вагу у свій <diary>щоденник</diary>, щоб дізнатися свої щоденні норми споживання калорій та макроелементів."
+    },
+    "perDay": "ккал/день",
+    "macroSummary": "Білок {protein}g · Вуглеводи {carbs}g · Жири {fat}g",
+    "mealTypes": {
+      "breakfast": "Сніданок",
+      "lunch": "Обід",
+      "dinner": "Вечеря",
+      "snack": "Закуска"
+    },
+    "itemSummary": "{weight} г · {calories} ккал · {protein}P / {carbs}C / {fat}F",
+    "algorithmInfo": {
+      "calculatedUsing": "Розраховано за допомогою <strong>{name}</strong> ({code})"
+    },
+    "caloriesInfo": {
+      "basedOn": "На основі ваших даних зважування {weight}{unit} на {date}"
+    },
+    "nutritionsInfo": {
+      "protein": "Білок",
+      "carbs": "Вуглеводи",
+      "fat": "Жир"
+    },
+    "itemActions": {
+      "rerolling": "Повторний запуск…",
+      "reroll": "Повторний запуск",
+      "swap": "Обмін"
+    },
+    "generateMenuCta": {
+      "generating": "Створення…",
+      "generate": "Створити меню",
+      "needsWeighIn": "Спочатку введіть сьогоднішню вагу, щоб отримати орієнтовну кількість калорій."
+    },
+    "regenerateButton": {
+      "regenerate": "Відновити",
+      "confirmMessage": "Це створює нове меню та скасовує всі заміни.",
+      "regenerating": "Відновлення…",
+      "regenerateMenu": "Оновити меню",
+      "cancel": "Скасувати"
+    },
+    "generateError": {
+      "reviewPreferences": "Перегляньте свої налаштування"
+    },
+    "swapPicker": {
+      "searchLabel": "Пошук продуктів харчування з кодом {role}",
+      "searchPlaceholder": "Пошук…",
+      "loading": "Завантаження…",
+      "loadError": "Не вдалося завантажити продукти харчування — спробуйте ще раз.",
+      "empty": "Інших продуктів харчування, що виконують цю функцію, немає.",
+      "caloriesPer100g": "{calories} ккал / 100 г"
+    },
+    "errors": {
+      "generic": "Сталася помилка — спробуйте ще раз."
+    }
+  },
+  "ExerciseCategories": {
+    "chest": "Груди",
+    "back": "Назад",
+    "shoulders": "Плечі",
+    "biceps": "Біцепс",
+    "triceps": "Трицепс",
+    "legs": "Ноги",
+    "core": "Ядро",
+    "cardio": "Кардіо",
+    "full_body": "Усе тіло"
+  },
+  "Training": {
+    "pageTitle": "Навчальні програми",
+    "backLink": "Навчальні програми",
+    "newProgramHeading": "Нова програма",
+    "programsHeading": "Програми",
+    "noPrograms": "Поки що програм немає.",
+    "exerciseCount": "{count, plural, one {# вправа} other {# вправи}}",
+    "deactivate": "Вимкнути",
+    "activate": "Активувати",
+    "archive": "Архів",
+    "archivedHeading": "Архів",
+    "reactivate": "Поновити",
+    "activeBadge": "Активний",
+    "createForm": {
+      "titleLabel": "Назва",
+      "titlePlaceholder": "наприклад: «Push/Pull/Legs»",
+      "creating": "Створюється…",
+      "submit": "Створити програму"
+    },
+    "archivedNote": "Ця програма архівується — активуйте її знову, щоб внести зміни.",
+    "noExercisesYet": "Вправ поки що немає. Додайте одну нижче.",
+    "addExerciseHeading": "Додати вправу",
+    "exerciseRow": {
+      "moveUp": "Перемістити {name} вгору",
+      "moveDown": "Перемістити {name} вниз",
+      "remove": "Видалити",
+      "removeAria": "Видалити {name}"
+    },
+    "addExerciseForm": {
+      "noExercisesInCatalog": "У каталозі поки що немає вправ — спочатку додайте одну на сторінці «Вправи».",
+      "exerciseLabel": "Вправи",
+      "selectPlaceholder": "Виберіть вправу",
+      "targetDurationLabel": "Цільова тривалість (секунди)",
+      "targetSetsLabel": "Набори цілей",
+      "targetRepsLabel": "Представники компанії Target",
+      "adding": "Додається…",
+      "submit": "Додати вправу"
+    },
+    "errors": {
+      "createFailed": "Не вдалося створити цю програму — спробуйте ще раз.",
+      "addExerciseFailed": "Не вдалося додати цю вправу — спробуйте ще раз."
+    }
+  },
+  "Workouts": {
+    "pageTitle": "Тренування",
+    "startHeading": "Почати тренування",
+    "pastHeading": "Минулі тренування",
+    "noWorkoutsYet": "Тренувань ще не занесено.",
+    "setsLoggedCount": "{count, plural, one {# набір} other {# набори}} зареєстровано",
+    "backLink": "Тренування",
+    "setsHeading": "Набори",
+    "logSetHeading": "Зареєструвати набір",
+    "startForm": {
+      "trainingProgramLabel": "Навчальна програма",
+      "adHoc": "Ad hoc (без програми)",
+      "titleLabel": "Назва (не обов’язково)",
+      "titlePlaceholder": "наприклад, день «Push»",
+      "starting": "Починаємо…",
+      "submit": "Почати тренування"
+    },
+    "logSetForm": {
+      "noExercisesInCatalog": "У каталозі поки що немає вправ — спочатку додайте одну на сторінці «Вправи».",
+      "exerciseLabel": "Вправи",
+      "selectPlaceholder": "Виберіть вправу",
+      "durationLabel": "Тривалість (секунди)",
+      "weightLabel": "Вага",
+      "unitAriaLabel": "Одиниця вимірювання маси",
+      "repsLabel": "Представники",
+      "logging": "Запис…",
+      "submit": "Набір колод",
+      "savedOffline": "Збережено в автономному режимі — синхронізується автоматично, щойно з’явиться підключення до Інтернету."
+    },
+    "setList": {
+      "noSetsYet": "Поки що не зареєстровано жодного набору.",
+      "setNumber": "Набір {number}",
+      "setPending": "Набір —",
+      "queuedOffline": "У черзі в автономному режимі"
+    },
+    "errors": {
+      "startFailed": "Не вдалося розпочати тренування — спробуйте ще раз.",
+      "logFailed": "Не вдалося зареєструвати цей набір — спробуйте ще раз."
+    }
+  },
+  "PhotoSessions": {
+    "pageTitle": "Фотографії ходу робіт",
+    "historyHeading": "Історія",
+    "viewGallery": "Переглянути галерею",
+    "galleryHeading": "Галерея",
+    "galleryBackLink": "Фотографії",
+    "poses": {
+      "front": "Передня частина",
+      "side": "Бічна сторона",
+      "back": "Назад",
+      "unassigned": "Непризначено"
+    },
+    "analysisStatus": {
+      "pending": "Аналізується…",
+      "processing": "Аналізується…",
+      "completed": "Проаналізовано",
+      "failed": "Аналіз не вдався"
+    },
+    "uploadForm": {
+      "maxPhotosError": "Виберіть не більше ніж {max} фотографій",
+      "selectAtLeastOne": "Виберіть принаймні одне фото",
+      "uploadError": "Не вдалося завантажити ваші фотографії — спробуйте ще раз.",
+      "photosLabel": "Фотографії (до {max})",
+      "photosHint": "Спереду, збоку та ззаду — ми розберемося, що є чим.",
+      "uploading": "Завантаження…",
+      "submit": "Сесія завантаження"
+    },
+    "list": {
+      "empty": "Фотографій процесу поки що немає.",
+      "needsReview": "Потрібно перевірити",
+      "baseline": "Вихідні дані",
+      "markBaseline": "Позначити як базову лінію",
+      "photoAlt": "Фотографія ходу робіт над {pose}"
+    },
+    "review": {
+      "guessHint": "Ми спробували вгадати, яке фото є яким — виправте помилки, а потім підтвердіть.",
+      "poseSrLabel": "Позуй для цієї фотографії",
+      "choosePlaceholder": "Виберіть…",
+      "duplicatePoseError": "Для кожної фотографії потрібна своя поза.",
+      "confirming": "Підтверджується…",
+      "submit": "Підтвердити пози",
+      "saveError": "Не вдалося зберегти пози — спробуйте ще раз.",
+      "altText": "Фотографія процесу роботи, що очікує на затвердження пози"
+    },
+    "retry": {
+      "retrying": "Повторюю спробу…",
+      "submit": "Спробувати ще раз",
+      "error": "Не вдалося повторити спробу — спробуйте ще раз."
+    },
+    "delete": {
+      "submit": "Видалити",
+      "confirmBaseline": "Видалити базову сесію?",
+      "confirmPlain": "Видалити?",
+      "confirming": "Видалення…",
+      "confirm": "Підтвердити",
+      "cancel": "Скасувати",
+      "error": "Не вдалося видалити — спробуйте ще раз."
+    },
+    "gallery": {
+      "photoCount": "{count, plural, one {# фотографія} other {# фотографії}}",
+      "pendingReviewNotice": "{count, plural, one {# сесія ще потребує} other {# сесії все ще потрібно}} переглянути на сторінці «Фотографії», перш ніж вони з’являться тут.",
+      "emptyNoConfirmed": "Поки що немає підтверджених сесій — підтвердьте пози для фотосесії на сторінці «Фото», щоб вони з’явилися тут.",
+      "coverAlt": "Фото на обкладинці сесії"
+    },
+    "comparison": {
+      "noBaseline": "Базовий сеанс ще не встановлено — позначте підтверджений сеанс як базовий на сторінці «Фотографії», щоб порівнювати результати з ним.",
+      "isBaseline": "Це ваша базова сесія.",
+      "baselineHeading": "Базовий рівень · {date}"
+    }
+  },
+  "Exercises": {
+    "pageTitle": "Каталог вправ",
+    "addCustomHeading": "Додати власну вправу",
+    "list": {
+      "empty": "За цим фільтром не знайдено жодних вправ.",
+      "unapprove": "Відхилити",
+      "loadingMore": "Завантажується ще…"
+    },
+    "searchForm": {
+      "categoryLabel": "Категорія",
+      "allCategories": "Усі категорії",
+      "searchLabel": "Пошук",
+      "searchPlaceholder": "Назва вправи…",
+      "submit": "Фільтр"
+    },
+    "createForm": {
+      "nameLabel": "Ім'я",
+      "categoryLabel": "Категорія",
+      "selectPlaceholder": "Виберіть категорію",
+      "adding": "Додається…",
+      "submit": "Додати вправу"
+    },
+    "errors": {
+      "addFailed": "Не вдалося додати цю вправу — спробуйте ще раз."
+    }
+  },
+  "Food": {
+    "pageTitle": "Каталог продуктів харчування",
+    "addCustomHeading": "Додати власний продукт харчування",
+    "list": {
+      "empty": "За цим фільтром не знайдено жодних продуктів харчування.",
+      "unapprove": "Відхилити",
+      "loadingMore": "Завантажується ще…"
+    },
+    "searchForm": {
+      "categoryLabel": "Категорія",
+      "allCategories": "Усі категорії",
+      "searchLabel": "Пошук",
+      "searchPlaceholder": "Назва страви…",
+      "submit": "Фільтр"
+    },
+    "createForm": {
+      "nameLabel": "Ім'я",
+      "categoryLabel": "Категорія",
+      "selectCategoryPlaceholder": "Виберіть категорію",
+      "subcategoryLabel": "Підкатегорія",
+      "selectSubcategoryPlaceholder": "Виберіть підкатегорію",
+      "roleLabel": "Роль",
+      "selectRolePlaceholder": "Виберіть посаду",
+      "caloriesLabel": "Калорії (на 100 г)",
+      "proteinLabel": "Білок (г на 100 г)",
+      "carbsLabel": "Вуглеводи (г на 100 г)",
+      "fatLabel": "Жир (г на 100 г)",
+      "adding": "Додається…",
+      "submit": "Додати продукт харчування"
+    },
+    "errors": {
+      "addFailed": "Не вдалося додати цей продукт — спробуйте ще раз."
+    }
+  },
+  "Preferences": {
+    "pageTitle": "Налаштування",
+    "dietTypeHeading": "Тип дієти",
+    "allergiesHeading": "Алергії та обмеження",
+    "favoritesHeading": "Улюблені страви",
+    "dietTypes": {
+      "vegetarian": "Вегетаріанський",
+      "vegan": "Веганський",
+      "keto": "Кето",
+      "paleo": "Палео"
+    },
+    "typeLabels": {
+      "allergy": "Алергія",
+      "exclude": "Виключити",
+      "favorite": "Улюблені"
+    },
+    "dietList": {
+      "empty": "Тип дієти не вказано.",
+      "remove": "Видалити"
+    },
+    "foodList": {
+      "empty": "Алергій або протипоказань не зафіксовано.",
+      "remove": "Видалити",
+      "unknown": "Невідомо"
+    },
+    "favoriteList": {
+      "empty": "Поки що немає улюблених страв.",
+      "remove": "Видалити",
+      "unknown": "Невідомо"
+    },
+    "addDietForm": {
+      "label": "Тип дієти",
+      "placeholder": "Виберіть тип дієти",
+      "adding": "Додається…",
+      "submit": "Додати"
+    },
+    "addFavoriteForm": {
+      "searchLabel": "Пошук продуктів харчування",
+      "searchPlaceholder": "Назва страви…",
+      "itemLabel": "Продукт харчування",
+      "selectPlaceholder": "Виберіть продукт харчування",
+      "adding": "Додається…",
+      "submit": "Додати до обраного"
+    },
+    "addFoodForm": {
+      "typeLabel": "Тип",
+      "selectTypePlaceholder": "Виберіть тип",
+      "allergy": "Алергія",
+      "exclude": "Виключити",
+      "targetTypeLabel": "Стосується",
+      "selectTargetTypePlaceholder": "Виберіть цільову аудиторію",
+      "targetCategory": "Ціла категорія",
+      "targetSubcategory": "Підкатегорія",
+      "targetRole": "Роль",
+      "targetFoodItem": "Конкретний харчовий продукт",
+      "categoryLabel": "Категорія",
+      "selectCategoryPlaceholder": "Виберіть категорію",
+      "subcategoryLabel": "Підкатегорія",
+      "selectSubcategoryPlaceholder": "Виберіть підкатегорію",
+      "roleLabel": "Роль",
+      "selectRolePlaceholder": "Виберіть роль",
+      "searchLabel": "Пошук продуктів харчування",
+      "searchPlaceholder": "Назва страви…",
+      "itemLabel": "Продукт харчування",
+      "selectFoodItemPlaceholder": "Виберіть продукт харчування",
+      "adding": "Додається…",
+      "submit": "Додати налаштування"
+    },
+    "errors": {
+      "foodSaveFailed": "Не вдалося зберегти це налаштування — спробуйте ще раз.",
+      "dietSaveFailed": "Не вдалося зберегти ці налаштування дієти — спробуйте ще раз."
+    }
+  },
+  "Settings": {
+    "nav": {
+      "profile": "Профіль",
+      "preferences": "Налаштування"
+    },
+    "profilePage": {
+      "title": "Профіль"
+    },
+    "profileForm": {
+      "emailAge": "{email} · {age} років",
+      "saved": "Збережено.",
+      "saving": "Зберігання…",
+      "submit": "Зберегти зміни"
+    },
+    "errors": {
+      "saveFailed": "Не вдалося зберегти ваш профіль — перевірте введені дані та спробуйте ще раз."
+    }
+  },
+  "Onboarding": {
+    "title": "Заповніть свій профіль",
+    "subtitle": "Декілька деталей, щоб ми могли розрахувати ваші цільові показники.",
+    "saving": "Зберігається…",
+    "submit": "Повний профіль",
+    "errors": {
+      "saveFailed": "Не вдалося зберегти ваш профіль — перевірте введені дані та спробуйте ще раз."
+    }
+  },
+  "Admin": {
+    "nav": {
+      "exercises": "Вправи",
+      "food": "Харчування"
+    },
+    "exercisesPage": {
+      "title": "Неперевірені вправи"
+    },
+    "foodPage": {
+      "title": "Неперевірені харчові продукти"
+    },
+    "queue": {
+      "empty": "Немає чого переглядати — черга порожня.",
+      "confirmDelete": "Видалити?",
+      "approve": "Затвердити",
+      "delete": "Видалити",
+      "confirm": "Підтвердити",
+      "cancel": "Скасувати",
+      "loadingMore": "Завантажується ще…",
+      "manualSource": "посібник"
+    },
+    "errors": {
+      "approveExerciseFailed": "Не вдалося затвердити це завдання — спробуйте ще раз.",
+      "unapproveExerciseFailed": "Не вдалося скасувати схвалення цього завдання — спробуйте ще раз.",
+      "deleteExerciseFailed": "Не вдалося видалити це завдання — спробуйте ще раз.",
+      "approveFoodFailed": "Не вдалося затвердити цей продукт харчування — спробуйте ще раз.",
+      "deleteFoodFailed": "Не вдалося видалити цей продукт — спробуйте ще раз."
+    }
+  },
+  "Home": {
+    "title": "Головна",
+    "weight": {
+      "label": "Вага",
+      "value": "{weight} {unit}",
+      "last": "останній {date}",
+      "empty": "Зважування ще не проводилося",
+      "cta": "Запишіть свою вагу"
+    },
+    "diary": {
+      "label": "Щоденник",
+      "loggedToday": "Зареєстровано сьогодні",
+      "notLoggedToday": "Сьогодні не входив у систему",
+      "cta": "Зареєструватися сьогодні"
+    },
+    "diet": {
+      "label": "Дієта",
+      "noTarget": "Поки що немає цільового показника калорійності",
+      "noTargetCta": "Запиши сьогоднішню вагу",
+      "targetNoMenu": "Ціль визначена, меню ще немає",
+      "targetNoMenuCta": "Скласти раціон на сьогодні",
+      "value": "{total} / {target} ккал сьогодні"
+    },
+    "training": {
+      "label": "Навчання",
+      "activeProgramCount": "{count, plural, one {# активна програма} other {# діючі програми}}",
+      "empty": "Активних програм немає",
+      "cta": "Створити програму"
+    },
+    "workout": {
+      "label": "Тренування",
+      "startedToday": "Почалося сьогодні",
+      "last": "Останній: {date}",
+      "setsLogged": "{count, plural, one {# набір} other {# набори}} зареєстровано",
+      "empty": "Тренувань поки що немає",
+      "cta": "Почати тренування"
+    },
+    "photos": {
+      "label": "Фотографії",
+      "needsReview": "{count, plural, one {# потреби} other {# потрібно}} огляд",
+      "allCaughtUp": "Все в порядку"
+    }
+  },
+  "ProfileFields": {
+    "name": "Ім'я",
+    "gender": "Гендер",
+    "genderOptions": {
+      "male": "Чоловік",
+      "female": "Жінка"
+    },
+    "selectPlaceholder": "Вибрати…",
+    "dateOfBirth": "Дата народження",
+    "height": "Зріст (см)",
+    "goal": "Мета",
+    "goalOptions": {
+      "weight_loss": "Схуднення",
+      "maintenance": "Технічне обслуговування",
+      "muscle_gain": "Набір м’язової маси"
+    },
+    "activityLevel": "Рівень активності",
+    "activityOptions": {
+      "sedentary": "Сидячий спосіб життя",
+      "light": "Світло",
+      "moderate": "Помірний",
+      "active": "Активний",
+      "very_active": "Дуже активний"
+    },
+    "mealsPerDay": "Кількість прийомів їжі на день",
+    "mealTypes": {
+      "breakfast": "Сніданок",
+      "lunch": "Обід",
+      "dinner": "Вечеря",
+      "snack": "Закуска"
+    },
+    "language": "Мова",
+    "weightUnit": "Бажана одиниця вимірювання ваги",
+    "weightUnitOptions": {
+      "kg": "Кілограми (кг)",
+      "lb": "Фунти (lb)"
+    }
+  },
+  "OfflineIndicator": {
+    "offline": "Офлайн",
+    "syncing": "Синхронізація…",
+    "synced": "Синхронізовано"
+  },
+  "Validation": {
+    "exercise": {
+      "nameRequired": "Ім'я вводиться обов'язково",
+      "categoryRequired": "Виберіть категорію"
+    },
+    "foodItem": {
+      "nameRequired": "Ім'я вводиться обов'язково",
+      "categoryRequired": "Виберіть категорію",
+      "subcategoryRequired": "Виберіть підкатегорію",
+      "roleRequired": "Оберіть роль",
+      "macroMin": "Повинно дорівнювати 0 або більшому числу"
+    },
+    "foodPreference": {
+      "typeRequired": "Виберіть тип",
+      "targetTypeRequired": "Виберіть, на що орієнтуватися",
+      "targetRequired": "Виберіть ціль"
+    },
+    "dietPreference": {
+      "dietTypeRequired": "Виберіть тип дієти"
+    },
+    "trainingProgram": {
+      "titleRequired": "Заголовок є обов’язковим"
+    },
+    "programExercise": {
+      "exerciseRequired": "Виберіть вправу",
+      "targetMin": "Повинно бути не менше 1",
+      "targetSetsRequired": "Необхідно задати набори цілей",
+      "targetRepsRequired": "Необхідно вказати кількість представників"
+    },
+    "userProfile": {
+      "nameRequired": "Ім’я вводити обов’язково",
+      "genderRequired": "Виберіть стать",
+      "dateInvalid": "Введіть дійсну дату",
+      "heightMin": "Висота повинна становити не менше 30 см",
+      "heightMax": "Висота повинна становити не більше 300 см",
+      "goalRequired": "Виберіть мету",
+      "activityLevelRequired": "Виберіть рівень активності",
+      "mealCountRequired": "Виберіть, скільки разів на день ви хочете харчуватися",
+      "localeRequired": "Виберіть мову",
+      "weightUnitRequired": "Виберіть одиницю виміру ваги"
+    },
+    "weight": {
+      "mustBePositive": "Вага повинна бути більшою за 0",
+      "maxExceeded": "Вага повинна становити не більше {maxKg}кг ({maxLb}фунтів)"
+    },
+    "workoutSet": {
+      "exerciseRequired": "Виберіть вправу",
+      "weightMin": "Повинно бути більше 0",
+      "repsMin": "Повинно бути не менше 1",
+      "durationMin": "Повинно бути не менше 1",
+      "weightRequired": "Необхідно вказати вагу",
+      "weightMaxExceeded": "Вага не повинна перевищувати {maxKg}кг ({maxLb}фунтів)",
+      "unitRequired": "Одиниця виміру є обов’язковою",
+      "repsRequired": "Потрібні представники"
+    }
+  },
   "Header": {
     "brand": "Fitness",
     "nav": {

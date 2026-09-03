@@ -1,4 +1,580 @@
 {
+  "Diary": {
+    "title": "Дневник — {date}",
+    "weightForm": {
+      "label": "Вес на сегодня",
+      "unitAriaLabel": "Единица измерения веса",
+      "saving": "Сохранение…",
+      "update": "Обновление",
+      "log": "Журнал",
+      "savedOffline": "Сохранено в автономном режиме — синхронизируется автоматически, как только вы снова подключитесь к Интернету.",
+      "remove": "Отменить сегодняшнее взвешивание"
+    },
+    "weightTrend": {
+      "heading": "Динамика веса",
+      "window": "{days}d"
+    },
+    "weightTrendChart": {
+      "empty": "За последние {days} дней взвешивания не проводились.",
+      "ariaLabel": "Динамика веса за последние {days} дней: {count, plural, one {# взвешивание} other {# взвешивания}}, начиная с {min}{unit} и заканчивая {max}{unit}, а также самый последний {latest}{unit} на {date}.",
+      "pointTitle": "{date}: {weight}{unit}"
+    },
+    "errors": {
+      "saveFailed": "Не удалось сохранить ваш вес — попробуйте ещё раз."
+    }
+  },
+  "Diet": {
+    "page": {
+      "title": "Диета",
+      "noTargetYet": "Запишите сегодняшний вес в свой <diary>Дневник</diary>, чтобы увидеть свои ежедневные целевые показатели по калориям и макроэлементам."
+    },
+    "perDay": "ккал/день",
+    "macroSummary": "Белок {protein}g · Углеводы {carbs}g · Жиры {fat}g",
+    "mealTypes": {
+      "breakfast": "Завтрак",
+      "lunch": "Обед",
+      "dinner": "Ужин",
+      "snack": "Закуска"
+    },
+    "itemSummary": "{weight} г · {calories} ккал · {protein}P / {carbs}C / {fat}F",
+    "algorithmInfo": {
+      "calculatedUsing": "Рассчитано с использованием <strong>{name}</strong> ({code})"
+    },
+    "caloriesInfo": {
+      "basedOn": "На основании результатов взвешивания {weight}{unit} на {date}"
+    },
+    "nutritionsInfo": {
+      "protein": "Белок",
+      "carbs": "Углеводы",
+      "fat": "Жир"
+    },
+    "itemActions": {
+      "rerolling": "Повторный бросок…",
+      "reroll": "Повторный бросок",
+      "swap": "Обмен"
+    },
+    "generateMenuCta": {
+      "generating": "Генерируется…",
+      "generate": "Создать меню",
+      "needsWeighIn": "Сначала введите сегодняшний вес, чтобы получить рекомендуемое количество калорий."
+    },
+    "regenerateButton": {
+      "regenerate": "Восстановить",
+      "confirmMessage": "При этом создаётся новое меню, а все предыдущие замены отбрасываются.",
+      "regenerating": "Восстановление…",
+      "regenerateMenu": "Обновить меню",
+      "cancel": "Отменить"
+    },
+    "generateError": {
+      "reviewPreferences": "Проверьте свои настройки"
+    },
+    "swapPicker": {
+      "searchLabel": "Поиск продуктов питания с кодом {role}",
+      "searchPlaceholder": "Поиск…",
+      "loading": "Загрузка…",
+      "loadError": "Не удалось загрузить продукты — попробуйте ещё раз.",
+      "empty": "Других продуктов питания в этой роли нет.",
+      "caloriesPer100g": "{calories} ккал / 100 г"
+    },
+    "errors": {
+      "generic": "Произошла ошибка — попробуйте ещё раз."
+    }
+  },
+  "ExerciseCategories": {
+    "chest": "Грудь",
+    "back": "Назад",
+    "shoulders": "Плечи",
+    "biceps": "Бицепс",
+    "triceps": "Трицепс",
+    "legs": "Ноги",
+    "core": "Ядро",
+    "cardio": "Кардио",
+    "full_body": "Вся фигура"
+  },
+  "Training": {
+    "pageTitle": "Учебные программы",
+    "backLink": "Учебные программы",
+    "newProgramHeading": "Новая программа",
+    "programsHeading": "Программы",
+    "noPrograms": "Пока нет программ.",
+    "exerciseCount": "{count, plural, one {# упражнение} other {# упражнения}}",
+    "deactivate": "Отключить",
+    "activate": "Активировать",
+    "archive": "Архив",
+    "archivedHeading": "Архив",
+    "reactivate": "Восстановить действие",
+    "activeBadge": "Активный",
+    "createForm": {
+      "titleLabel": "Название",
+      "titlePlaceholder": "например, «Толчок/Тяга/Ноги»",
+      "creating": "Создание…",
+      "submit": "Создать программу"
+    },
+    "archivedNote": "Эта программа заархивирована — возобновите её работу, чтобы внести изменения.",
+    "noExercisesYet": "Упражнений пока нет. Добавьте одно ниже.",
+    "addExerciseHeading": "Добавить упражнение",
+    "exerciseRow": {
+      "moveUp": "Сдвинуть {name} вверх",
+      "moveDown": "Сдвиньте {name} вниз",
+      "remove": "Удалить",
+      "removeAria": "Удалить {name}"
+    },
+    "addExerciseForm": {
+      "noExercisesInCatalog": "В каталоге пока нет упражнений — сначала добавьте одно на странице «Упражнения».",
+      "exerciseLabel": "Упражнение",
+      "selectPlaceholder": "Выберите упражнение",
+      "targetDurationLabel": "Целевая продолжительность (секунды)",
+      "targetSetsLabel": "Наборы целей",
+      "targetRepsLabel": "Представители компании Target",
+      "adding": "Добавляется…",
+      "submit": "Добавить упражнение"
+    },
+    "errors": {
+      "createFailed": "Не удалось создать эту программу — попробуйте ещё раз.",
+      "addExerciseFailed": "Не удалось добавить это упражнение — попробуйте ещё раз."
+    }
+  },
+  "Workouts": {
+    "pageTitle": "Тренировки",
+    "startHeading": "Начать тренировку",
+    "pastHeading": "Прошлые тренировки",
+    "noWorkoutsYet": "Тренировок пока не зарегистрировано.",
+    "setsLoggedCount": "{count, plural, one {# набор} other {# наборы}} зарегистрирован",
+    "backLink": "Тренировки",
+    "setsHeading": "Наборы",
+    "logSetHeading": "Зарегистрировать набор",
+    "startForm": {
+      "trainingProgramLabel": "Учебная программа",
+      "adHoc": "По обстоятельствам (без программы)",
+      "titleLabel": "Название (необязательно)",
+      "titlePlaceholder": "например, день «Push»",
+      "starting": "Начинаем…",
+      "submit": "Начать тренировку"
+    },
+    "logSetForm": {
+      "noExercisesInCatalog": "В каталоге пока нет упражнений — сначала добавьте одно на странице «Упражнения».",
+      "exerciseLabel": "Упражнение",
+      "selectPlaceholder": "Выберите упражнение",
+      "durationLabel": "Продолжительность (секунды)",
+      "weightLabel": "Вес",
+      "unitAriaLabel": "Единица измерения веса",
+      "repsLabel": "Представители",
+      "logging": "Запись в журнал…",
+      "submit": "Набор бревен",
+      "savedOffline": "Сохранено в автономном режиме — синхронизируется автоматически, как только вы снова подключитесь к Интернету."
+    },
+    "setList": {
+      "noSetsYet": "Пока не зарегистрировано ни одного набора.",
+      "setNumber": "Набор {number}",
+      "setPending": "Набор —",
+      "queuedOffline": "В очереди в автономном режиме"
+    },
+    "errors": {
+      "startFailed": "Не удалось начать тренировку — попробуйте ещё раз.",
+      "logFailed": "Не удалось зарегистрировать этот сет — попробуйте ещё раз."
+    }
+  },
+  "PhotoSessions": {
+    "pageTitle": "Фотографии хода работ",
+    "historyHeading": "История",
+    "viewGallery": "Посмотреть галерею",
+    "galleryHeading": "Галерея",
+    "galleryBackLink": "Фотографии",
+    "poses": {
+      "front": "Передняя часть",
+      "side": "Боковая часть",
+      "back": "Назад",
+      "unassigned": "Неназначенный"
+    },
+    "analysisStatus": {
+      "pending": "Анализ…",
+      "processing": "Анализ…",
+      "completed": "Проанализировано",
+      "failed": "Анализ завершился неудачей"
+    },
+    "uploadForm": {
+      "maxPhotosError": "Выберите не более {max} фотографий",
+      "selectAtLeastOne": "Выберите хотя бы одну фотографию",
+      "uploadError": "Не удалось загрузить ваши фотографии — попробуйте ещё раз.",
+      "photosLabel": "Фотографии (до {max})",
+      "photosHint": "Спереди, сбоку и сзади — мы разберемся, что к чему.",
+      "uploading": "Загрузка…",
+      "submit": "Сеанс загрузки"
+    },
+    "list": {
+      "empty": "Фотографий хода работ пока нет.",
+      "needsReview": "Требует проверки",
+      "baseline": "Исходные данные",
+      "markBaseline": "Пометить как базовый вариант",
+      "photoAlt": "Фотография хода работ по проекту {pose}"
+    },
+    "review": {
+      "guessHint": "Мы определили, какая фотография какая — исправьте все ошибки, а затем подтвердите.",
+      "poseSrLabel": "Попозируйте для этой фотографии",
+      "choosePlaceholder": "Выберите…",
+      "duplicatePoseError": "Для каждой фотографии нужна своя поза.",
+      "confirming": "Подтверждается…",
+      "submit": "Подтвердить позы",
+      "saveError": "Не удалось сохранить позы — попробуйте ещё раз.",
+      "altText": "Фотография хода работ, ожидающая проверки позы"
+    },
+    "retry": {
+      "retrying": "Повторная попытка…",
+      "submit": "Повторить попытку",
+      "error": "Не удалось повторить попытку — попробуйте ещё раз."
+    },
+    "delete": {
+      "submit": "Удалить",
+      "confirmBaseline": "Удалить базовую сессию?",
+      "confirmPlain": "Удалить?",
+      "confirming": "Удаление…",
+      "confirm": "Подтвердить",
+      "cancel": "Отменить",
+      "error": "Не удалось удалить — попробуйте ещё раз."
+    },
+    "gallery": {
+      "photoCount": "{count, plural, one {# фотография} other {# фотографии}}",
+      "pendingReviewNotice": "{count, plural, one {# сессия все еще требует} other {# сессии по-прежнему требуют}} пройти проверку на странице «Фотографии», прежде чем они появятся здесь.",
+      "emptyNoConfirmed": "Пока нет подтверждённых сессий — подтвердите позы для фотосессии на странице «Фото», чтобы они отобразились здесь.",
+      "coverAlt": "Фотография на обложке сессии"
+    },
+    "comparison": {
+      "noBaseline": "Базовый сеанс ещё не установлен — отметьте подтверждённый сеанс как базовый на странице «Фотографии», чтобы проводить с ним сравнение.",
+      "isBaseline": "Это ваша базовая тренировка.",
+      "baselineHeading": "Исходные данные · {date}"
+    }
+  },
+  "Exercises": {
+    "pageTitle": "Каталог упражнений",
+    "addCustomHeading": "Добавить собственное упражнение",
+    "list": {
+      "empty": "По данному фильтру не найдено ни одного упражнения.",
+      "unapprove": "Отклонить",
+      "loadingMore": "Загрузка продолжается…"
+    },
+    "searchForm": {
+      "categoryLabel": "Категория",
+      "allCategories": "Все категории",
+      "searchLabel": "Поиск",
+      "searchPlaceholder": "Название упражнения…",
+      "submit": "Фильтр"
+    },
+    "createForm": {
+      "nameLabel": "Имя",
+      "categoryLabel": "Категория",
+      "selectPlaceholder": "Выберите категорию",
+      "adding": "Добавляется…",
+      "submit": "Добавить упражнение"
+    },
+    "errors": {
+      "addFailed": "Не удалось добавить это упражнение — попробуйте ещё раз."
+    }
+  },
+  "Food": {
+    "pageTitle": "Каталог продуктов питания",
+    "addCustomHeading": "Добавить собственное блюдо",
+    "list": {
+      "empty": "По данному фильтру не найдено ни одного продукта питания.",
+      "unapprove": "Отклонить",
+      "loadingMore": "Загрузка продолжится…"
+    },
+    "searchForm": {
+      "categoryLabel": "Категория",
+      "allCategories": "Все категории",
+      "searchLabel": "Поиск",
+      "searchPlaceholder": "Название блюда…",
+      "submit": "Фильтр"
+    },
+    "createForm": {
+      "nameLabel": "Имя",
+      "categoryLabel": "Категория",
+      "selectCategoryPlaceholder": "Выберите категорию",
+      "subcategoryLabel": "Подкатегория",
+      "selectSubcategoryPlaceholder": "Выберите подкатегорию",
+      "roleLabel": "Роль",
+      "selectRolePlaceholder": "Выберите роль",
+      "caloriesLabel": "Калории (на 100 г)",
+      "proteinLabel": "Белок (г на 100 г)",
+      "carbsLabel": "Углеводы (г на 100 г)",
+      "fatLabel": "Жир (г на 100 г)",
+      "adding": "Добавляется…",
+      "submit": "Добавить продукт"
+    },
+    "errors": {
+      "addFailed": "Не удалось добавить этот продукт — попробуйте ещё раз."
+    }
+  },
+  "Preferences": {
+    "pageTitle": "Настройки",
+    "dietTypeHeading": "Тип диеты",
+    "allergiesHeading": "Аллергии и ограничения",
+    "favoritesHeading": "Любимые продукты",
+    "dietTypes": {
+      "vegetarian": "Вегетарианский",
+      "vegan": "Веганский",
+      "keto": "Кето",
+      "paleo": "Палео"
+    },
+    "typeLabels": {
+      "allergy": "Аллергия",
+      "exclude": "Исключить",
+      "favorite": "Избранное"
+    },
+    "dietList": {
+      "empty": "Тип диеты не указан.",
+      "remove": "Удалить"
+    },
+    "foodList": {
+      "empty": "Аллергий или противопоказаний не указано.",
+      "remove": "Удалить",
+      "unknown": "Неизвестно"
+    },
+    "favoriteList": {
+      "empty": "Пока нет любимых блюд.",
+      "remove": "Удалить",
+      "unknown": "Неизвестно"
+    },
+    "addDietForm": {
+      "label": "Тип диеты",
+      "placeholder": "Выберите тип диеты",
+      "adding": "Добавляется…",
+      "submit": "Добавить"
+    },
+    "addFavoriteForm": {
+      "searchLabel": "Поиск продуктов питания",
+      "searchPlaceholder": "Название блюда…",
+      "itemLabel": "Продукт питания",
+      "selectPlaceholder": "Выберите продукт питания",
+      "adding": "Добавляется…",
+      "submit": "Добавить в избранное"
+    },
+    "addFoodForm": {
+      "typeLabel": "Тип",
+      "selectTypePlaceholder": "Выберите тип",
+      "allergy": "Аллергия",
+      "exclude": "Исключить",
+      "targetTypeLabel": "Применимо к",
+      "selectTargetTypePlaceholder": "Выберите целевую аудиторию",
+      "targetCategory": "Целая категория",
+      "targetSubcategory": "Подкатегория",
+      "targetRole": "Роль",
+      "targetFoodItem": "Конкретный продукт питания",
+      "categoryLabel": "Категория",
+      "selectCategoryPlaceholder": "Выберите категорию",
+      "subcategoryLabel": "Подкатегория",
+      "selectSubcategoryPlaceholder": "Выберите подкатегорию",
+      "roleLabel": "Роль",
+      "selectRolePlaceholder": "Выберите роль",
+      "searchLabel": "Поиск продуктов питания",
+      "searchPlaceholder": "Название блюда…",
+      "itemLabel": "Продукт питания",
+      "selectFoodItemPlaceholder": "Выберите продукт питания",
+      "adding": "Добавляется…",
+      "submit": "Добавить настройку"
+    },
+    "errors": {
+      "foodSaveFailed": "Не удалось сохранить этот параметр — попробуйте ещё раз.",
+      "dietSaveFailed": "Не удалось сохранить этот выбор диеты — попробуйте ещё раз."
+    }
+  },
+  "Settings": {
+    "nav": {
+      "profile": "Профиль",
+      "preferences": "Настройки"
+    },
+    "profilePage": {
+      "title": "Профиль"
+    },
+    "profileForm": {
+      "emailAge": "{email} · {age} лет",
+      "saved": "Сохранено.",
+      "saving": "Сохранение…",
+      "submit": "Сохранить изменения"
+    },
+    "errors": {
+      "saveFailed": "Не удалось сохранить ваш профиль — проверьте введенные данные и попробуйте ещё раз."
+    }
+  },
+  "Onboarding": {
+    "title": "Заполните свой профиль",
+    "subtitle": "Несколько сведений, которые помогут нам рассчитать ваши целевые показатели.",
+    "saving": "Сохранение…",
+    "submit": "Полный профиль",
+    "errors": {
+      "saveFailed": "Не удалось сохранить ваш профиль — проверьте введенные данные и попробуйте ещё раз."
+    }
+  },
+  "Admin": {
+    "nav": {
+      "exercises": "Упражнения",
+      "food": "Еда"
+    },
+    "exercisesPage": {
+      "title": "Непроверенные упражнения"
+    },
+    "foodPage": {
+      "title": "Непроверенные продукты питания"
+    },
+    "queue": {
+      "empty": "Нет ничего для проверки — очередь пуста.",
+      "confirmDelete": "Удалить?",
+      "approve": "Утвердить",
+      "delete": "Удалить",
+      "confirm": "Подтвердить",
+      "cancel": "Отменить",
+      "loadingMore": "Загрузка продолжается…",
+      "manualSource": "руководство"
+    },
+    "errors": {
+      "approveExerciseFailed": "Не удалось одобрить это задание — попробуйте ещё раз.",
+      "unapproveExerciseFailed": "Не удалось отклонить это задание — попробуйте ещё раз.",
+      "deleteExerciseFailed": "Не удалось удалить это упражнение — попробуйте ещё раз.",
+      "approveFoodFailed": "Не удалось одобрить этот продукт — попробуйте ещё раз.",
+      "deleteFoodFailed": "Не удалось удалить этот продукт — попробуйте ещё раз."
+    }
+  },
+  "Home": {
+    "title": "Главная",
+    "weight": {
+      "label": "Вес",
+      "value": "{weight} {unit}",
+      "last": "последний {date}",
+      "empty": "Взвешивания пока не проводились",
+      "cta": "Записывайте свой вес"
+    },
+    "diary": {
+      "label": "Дневник",
+      "loggedToday": "Зарегистрировано сегодня",
+      "notLoggedToday": "Сегодня не заходили",
+      "cta": "Запись за сегодня"
+    },
+    "diet": {
+      "label": "Диета",
+      "noTarget": "Пока нет целевого показателя калорий",
+      "noTargetCta": "Запишите сегодняшний вес",
+      "targetNoMenu": "Цель поставлена, меню пока нет",
+      "targetNoMenuCta": "Составить рацион на сегодня",
+      "value": "{total} / {target} ккал на сегодня"
+    },
+    "training": {
+      "label": "Обучение",
+      "activeProgramCount": "{count, plural, one {# активная программа} other {# действующие программы}}",
+      "empty": "Активных программ нет",
+      "cta": "Создать программу"
+    },
+    "workout": {
+      "label": "Тренировка",
+      "startedToday": "Началось сегодня",
+      "last": "Последний: {date}",
+      "setsLogged": "{count, plural, one {# набор} other {# наборы}} зарегистрирован",
+      "empty": "Тренировок пока нет",
+      "cta": "Начать тренировку"
+    },
+    "photos": {
+      "label": "Фотографии",
+      "needsReview": "{count, plural, one {# потребности} other {# нужно}} обзор",
+      "allCaughtUp": "Всё в норме"
+    }
+  },
+  "ProfileFields": {
+    "name": "Имя",
+    "gender": "Гендер",
+    "genderOptions": {
+      "male": "Мужчина",
+      "female": "Женский"
+    },
+    "selectPlaceholder": "Выбрать…",
+    "dateOfBirth": "Дата рождения",
+    "height": "Рост (см)",
+    "goal": "Цель",
+    "goalOptions": {
+      "weight_loss": "Похудение",
+      "maintenance": "Техническое обслуживание",
+      "muscle_gain": "Набор мышечной массы"
+    },
+    "activityLevel": "Уровень активности",
+    "activityOptions": {
+      "sedentary": "Сидячий образ жизни",
+      "light": "Свет",
+      "moderate": "Умеренный",
+      "active": "Активный",
+      "very_active": "Очень активный"
+    },
+    "mealsPerDay": "Количество приемов пищи в день",
+    "mealTypes": {
+      "breakfast": "Завтрак",
+      "lunch": "Обед",
+      "dinner": "Ужин",
+      "snack": "Закуска"
+    },
+    "language": "Язык",
+    "weightUnit": "Предпочтительная единица измерения веса",
+    "weightUnitOptions": {
+      "kg": "Килограммы (кг)",
+      "lb": "Фунты (фунт)"
+    }
+  },
+  "OfflineIndicator": {
+    "offline": "В автономном режиме",
+    "syncing": "Синхронизация…",
+    "synced": "Синхронизировано"
+  },
+  "Validation": {
+    "exercise": {
+      "nameRequired": "Имя является обязательным полем",
+      "categoryRequired": "Выберите категорию"
+    },
+    "foodItem": {
+      "nameRequired": "Имя указать обязательно",
+      "categoryRequired": "Выберите категорию",
+      "subcategoryRequired": "Выберите подкатегорию",
+      "roleRequired": "Выберите роль",
+      "macroMin": "Должно быть равно 0 или больше"
+    },
+    "foodPreference": {
+      "typeRequired": "Выберите тип",
+      "targetTypeRequired": "Выберите целевую аудиторию",
+      "targetRequired": "Выберите цель"
+    },
+    "dietPreference": {
+      "dietTypeRequired": "Выберите тип диеты"
+    },
+    "trainingProgram": {
+      "titleRequired": "Название является обязательным полем"
+    },
+    "programExercise": {
+      "exerciseRequired": "Выберите упражнение",
+      "targetMin": "Должно быть не менее 1",
+      "targetSetsRequired": "Требуется набор целей",
+      "targetRepsRequired": "Требуется указать количество представителей"
+    },
+    "userProfile": {
+      "nameRequired": "Имя является обязательным полем",
+      "genderRequired": "Выберите пол",
+      "dateInvalid": "Введите действительную дату",
+      "heightMin": "Высота должна составлять не менее 30 см",
+      "heightMax": "Высота не должна превышать 300 см",
+      "goalRequired": "Выберите цель",
+      "activityLevelRequired": "Выберите уровень активности",
+      "mealCountRequired": "Выберите количество приёмов пищи в день",
+      "localeRequired": "Выберите язык",
+      "weightUnitRequired": "Выберите единицу измерения веса"
+    },
+    "weight": {
+      "mustBePositive": "Вес должен быть больше 0",
+      "maxExceeded": "Вес не должен превышать {maxKg} кг ({maxLb} фунтов)"
+    },
+    "workoutSet": {
+      "exerciseRequired": "Выберите упражнение",
+      "weightMin": "Должно быть больше 0",
+      "repsMin": "Должно быть не менее 1",
+      "durationMin": "Должно быть не менее 1",
+      "weightRequired": "Необходимо указать вес",
+      "weightMaxExceeded": "Вес не должен превышать {maxKg} кг ({maxLb} фунтов)",
+      "unitRequired": "Единица измерения обязательна",
+      "repsRequired": "Требуется представитель"
+    }
+  },
   "Header": {
     "brand": "Fitness",
     "nav": {
