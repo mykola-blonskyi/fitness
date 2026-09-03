@@ -418,8 +418,10 @@ export const diets = pgTable('diets', {
     .defaultNow(),
 });
 
-// orderIndex is scoped within its own mealType (0-based), not across the
-// whole Diet.
+// orderIndex is scoped within its own (mealType, mealOccurrence) pair
+// (0-based), not across the whole Diet. mealOccurrence (1-based) tells
+// apart repeated same-day occurrences of the same mealType once
+// mealCount exceeds mealTypeEnum's 4 values - see ADR-015.
 export const dietItems = pgTable('diet_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   dietId: uuid('diet_id')
@@ -429,6 +431,7 @@ export const dietItems = pgTable('diet_items', {
     .notNull()
     .references(() => foodCalories.id),
   mealType: mealTypeEnum('meal_type').notNull(),
+  mealOccurrence: integer('meal_occurrence').notNull().default(1),
   weightGrams: numeric('weight_grams').notNull(),
   orderIndex: integer('order_index').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })

@@ -8,6 +8,7 @@ const valid = {
   height: 180,
   goal: 'weight_loss',
   activityLevel: 'sedentary',
+  mealCount: 3,
   locale: 'en',
   defaultWeightUnit: 'kg',
 };
@@ -58,6 +59,21 @@ describe('userProfileSchema', () => {
       ...valid,
       activityLevel: 'extreme',
     });
+    expect(result.success).toBe(false);
+  });
+
+  it.each([0, 21])('rejects an out-of-range meal count (%s)', (mealCount) => {
+    const result = userProfileSchema.safeParse({ ...valid, mealCount });
+    expect(result.success).toBe(false);
+  });
+
+  it.each([1, 20])('accepts meal count at the boundary (%s)', (mealCount) => {
+    const result = userProfileSchema.safeParse({ ...valid, mealCount });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a non-integer meal count', () => {
+    const result = userProfileSchema.safeParse({ ...valid, mealCount: 2.5 });
     expect(result.success).toBe(false);
   });
 

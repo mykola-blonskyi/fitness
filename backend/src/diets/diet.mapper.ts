@@ -12,6 +12,7 @@ export type DietCalculationAlgorithmRow =
 export interface DietItemWithFoodRow {
   id: string;
   mealType: string;
+  mealOccurrence: number;
   orderIndex: number;
   weightGrams: string;
   foodItemId: string;
@@ -27,6 +28,7 @@ export interface DietItemWithFoodRow {
 export interface DietItemResponse {
   id: string;
   mealType: string;
+  mealOccurrence: number;
   orderIndex: number;
   weightGrams: number;
   foodItem: {
@@ -61,6 +63,7 @@ function toDietItemResponse(row: DietItemWithFoodRow): DietItemResponse {
   return {
     id: row.id,
     mealType: row.mealType,
+    mealOccurrence: row.mealOccurrence,
     orderIndex: row.orderIndex,
     weightGrams: grams,
     foodItem: {

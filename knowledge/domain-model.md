@@ -18,7 +18,7 @@ Fields:
 - goal (weight_loss/maintenance/muscle_gain)
 - activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation
 - avatar_url
-- meal_count (1-4, default 3) — how many meal slots (breakfast/lunch/dinner/snack, in that order) diet generation splits a day's calorie target across
+- meal_count (1-20, default 3) — how many meal slots diet generation splits a day's calorie target across; past 4, meal types (breakfast/lunch/dinner/snack) repeat round-robin rather than a 5th type existing (see [[business-rules]] and ADR-015)
 - locale (en/uk/ru/es, default en) — the user's stored UI locale preference, set at onboarding and editable in Settings; catalog browse endpoints resolve translated display names against it (see [[business-rules]])
 
 Relationships:
@@ -215,7 +215,7 @@ One food entry within a generated Diet.
 
 Fields:
 
-- weight_grams (can change after generation via swap/reroll, which rescale it to hold the item's calorie contribution), meal_type (breakfast/lunch/dinner/snack), order_index
+- weight_grams (can change after generation via swap/reroll, which rescale it to hold the item's calorie contribution), meal_type (breakfast/lunch/dinner/snack), meal_occurrence (1-based, tells apart repeated same-day occurrences of the same meal_type once meal_count exceeds 4 — see ADR-015), order_index (scoped within its (meal_type, meal_occurrence) pair)
 
 Relationships:
 

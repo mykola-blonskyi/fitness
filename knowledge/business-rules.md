@@ -64,6 +64,8 @@ Why: this is a recommendation feature, not a medical prescription — "close eno
 
 A single-item swap or reroll holds that item's calorie contribution — the replacement's `weight_grams` is rescaled so the day total stays within tolerance. A full regenerate re-runs generation from scratch and does not preserve prior swaps.
 
+`meal_count` (1-20) can exceed the 4 named meal types — past 4, types repeat round-robin (breakfast/lunch/dinner/snack/breakfast/lunch/...), distinguished by `diet_items.meal_occurrence`. A repeated occurrence prefers a Food Item not already used earlier that day for that meal type, falling back to a repeat only when no other eligible candidate exists for the role. See ADR-015.
+
 ---
 
 ## Food Replacement and diet generation are role-based

@@ -5,8 +5,10 @@ import {
   GENDERS,
   GOALS,
   LOCALES,
+  MEAL_COUNTS,
   WEIGHT_UNITS,
 } from '@shared/types/user';
+import { MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '@shared/types/meal';
 import { FieldError } from '@shared/ui/components/FieldError';
 
 const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
@@ -37,6 +39,23 @@ const WEIGHT_UNIT_LABELS: Record<(typeof WEIGHT_UNITS)[number], string> = {
   lb: 'Pounds (lb)',
 };
 
+// Mirrors backend/src/diets/diet.types.ts's mealSlotsForCount round-robin
+// (ADR-015), so the option text stays truthful about what generation does.
+function mealCountBreakdown(count: number): string {
+  const occurrences: Record<(typeof MEAL_TYPE_ORDER)[number], number> = {
+    breakfast: 0,
+    lunch: 0,
+    dinner: 0,
+    snack: 0,
+  };
+  for (let i = 0; i < count; i++) {
+    occurrences[MEAL_TYPE_ORDER[i % MEAL_TYPE_ORDER.length]] += 1;
+  }
+  return MEAL_TYPE_ORDER.filter((type) => occurrences[type] > 0)
+    .map((type) => `${occurrences[type]} ${MEAL_TYPE_LABELS[type]}`)
+    .join(', ');
+}
+
 // Shared by OnboardingForm and ProfileForm - both edit the same
 // UserProfileInput shape via the same fields, differing only in
 // whether react-hook-form already has a real defaultValue for the
@@ -44,9 +63,10 @@ const WEIGHT_UNIT_LABELS: Record<(typeof WEIGHT_UNITS)[number], string> = {
 // option for gender/goal/activityLevel (no sensible default exists);
 // Profile always opens with the existing profile's values (set via
 // useForm's own defaultValues), so a placeholder would be wrong there.
-// locale never uses the placeholder pattern, in either form - 'en' is a
-// legitimate default (see schema.ts's users.locale comment), so the
-// select always opens on a real, valid selection.
+// locale, defaultWeightUnit, and mealCount never use the placeholder
+// pattern, in either form - each has a legitimate schema default (see
+// schema.ts's users columns), so those selects always open on a real,
+// valid selection.
 export function ProfileFields({
   register,
   errors,
@@ -167,6 +187,25 @@ export function ProfileFields({
           ))}
         </select>
         <FieldError message={errors.activityLevel?.message} />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="mealCount" className="text-sm font-medium">
+          Meals per day
+        </label>
+        <select
+          id="mealCount"
+          defaultValue={showPlaceholder ? 3 : undefined}
+          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          {...register('mealCount', { valueAsNumber: true })}
+        >
+          {MEAL_COUNTS.map((n) => (
+            <option key={n} value={n}>
+              {n} — {mealCountBreakdown(n)}
+            </option>
+          ))}
+        </select>
+        <FieldError message={errors.mealCount?.message} />
       </div>
 
       <div className="flex flex-col gap-1">

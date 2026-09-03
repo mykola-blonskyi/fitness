@@ -12,12 +12,19 @@ export const ACTIVITY_LEVELS = [
 export const LOCALES = ['en', 'uk', 'ru', 'es'] as const;
 // Matches backend/src/shared/weight-unit.ts's WEIGHT_UNITS.
 export const WEIGHT_UNITS = ['kg', 'lb'] as const;
+// Matches backend/src/users/dto/create-user.dto.ts's mealCount bounds
+// (1-20, default 3). Past 4, mealTypeEnum's slots repeat round-robin as
+// later occurrences - see ADR-015.
+export const MEAL_COUNTS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+] as const;
 
 export type Gender = (typeof GENDERS)[number];
 export type Goal = (typeof GOALS)[number];
 export type ActivityLevel = (typeof ACTIVITY_LEVELS)[number];
 export type Locale = (typeof LOCALES)[number];
 export type WeightUnit = (typeof WEIGHT_UNITS)[number];
+export type MealCount = (typeof MEAL_COUNTS)[number];
 
 // Mirrors backend/src/users/user.mapper.ts's UserResponse.
 export interface UserProfile {
@@ -30,6 +37,7 @@ export interface UserProfile {
   gender: Gender;
   goal: Goal;
   activityLevel: ActivityLevel;
+  mealCount: MealCount;
   avatarUrl: string | null;
   isAdmin: boolean;
   locale: Locale;

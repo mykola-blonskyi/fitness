@@ -173,3 +173,15 @@ Status: Accepted
 `favorite` is a third `food_preference_type` (alongside `allergy`/`exclude`), always targeting a specific Food Item — never a Category/Subcategory/Role, since favoriting a whole taxonomy node wouldn't disambiguate anything a generation role-slot needs. During generation, each role-slot restricts to only the user's favorited, otherwise-eligible items when any exist for that role; a role with none falls back to its full eligible pool, identical to generation with no favorites at all. Implemented as `restrictToFavorites()`, a pure function layered after the existing exclusion-filtered `candidatesByRole` — `greedy-heuristic.ts`'s picking/chain-fallback logic and `swapItem()` are both untouched, so a role favorited only in a fallback chain member (e.g. `fatty_protein` but not `lean_protein`) resolves correctly for free via the chain's existing empty-role fallthrough. The same Food Item can never be both favorited and excluded/allergied at once — rejected at creation, symmetric both directions. `swapItem()`'s replacement picker deliberately does not apply this restriction — a swap should still offer every eligible same-Role item, not just favorites.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-015: meal_count past 4 repeats meal types via a stored occurrence column
+
+Date: 2026-09-03
+
+Status: Accepted
+
+`users.meal_count` was capped at 4 because `meal_type` is a fixed 4-value enum (breakfast/lunch/dinner/snack) and generation picked one slot per type. The user wanted counts up to ~14-20 without losing the named-meal-type UI. Chosen design: keep the 4-value enum, raise `meal_count`'s bound to 1-20, and add `diet_items.meal_occurrence` (integer, default 1) — `mealSlotsForCount(mealCount)` (`diets/diet.types.ts`) round-robins through the 4 types so count 6 produces breakfast/lunch/dinner/snack/breakfast(2)/lunch(2). `order_index` is scoped within its `(meal_type, meal_occurrence)` pair, not the whole diet. Within a repeated occurrence of the same meal type, `greedy-heuristic.ts` avoids repeating a dish already used earlier that day for that meal type when another eligible candidate exists for the role, falling back to a repeat only when it's the only option. The frontend groups diet items by `(mealType, occurrence)` and labels repeats "Breakfast 2" etc.; the meal-count select computes each option's breakdown (e.g. "6 — 2 Breakfast, 2 Lunch, 1 Dinner, 1 Snack") instead of a hardcoded label table.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

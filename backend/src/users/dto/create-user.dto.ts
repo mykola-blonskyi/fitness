@@ -53,13 +53,13 @@ export class CreateUserDto {
   avatarUrl?: string;
 
   // Optional - schema defaults to 3 (breakfast/lunch/dinner) when omitted,
-  // see db/schema.ts's users.mealCount comment. Bounded to the fixed
-  // mealTypeEnum's 4 slots (FITNESS-30's diets/greedy-heuristic.ts always
-  // takes the first N of breakfast/lunch/dinner/snack).
+  // see db/schema.ts's users.mealCount comment. Past 4, mealTypeEnum's
+  // slots repeat round-robin as later occurrences (ADR-015) - 20 is a
+  // generous sanity bound, not a real constraint.
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(4)
+  @Max(20)
   mealCount?: number;
 
   // Optional - the schema default ('en') applies when omitted, so
