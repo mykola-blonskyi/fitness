@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@libs/api-client';
 import {
   startWorkoutLogSchema,
@@ -29,7 +30,7 @@ export async function startWorkoutLog(
 
   const result = await submitFormAction({
     name: 'startWorkoutLog',
-    schema: startWorkoutLogSchema,
+    schema: startWorkoutLogSchema(),
     input,
     errorMessage: "Couldn't start a workout — try again.",
     async mutate(parsed) {
@@ -55,9 +56,10 @@ export async function logWorkoutSet(
   workoutLogId: string,
   input: LogWorkoutSetInput,
 ): Promise<LogWorkoutSetState> {
+  const t = await getTranslations('Validation');
   return submitFormAction({
     name: 'logWorkoutSet',
-    schema: logWorkoutSetSchema,
+    schema: logWorkoutSetSchema(t),
     input,
     errorMessage: "Couldn't log that set — try again.",
     async mutate(parsed) {

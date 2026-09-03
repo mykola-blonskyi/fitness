@@ -14,13 +14,10 @@ export function weightSchema(t: ValidationTranslator) {
       weight: z.number().min(0.1, t('weight.mustBePositive')),
       unit: z.enum(WEIGHT_UNITS),
     })
-    .refine(
-      (data) => data.weight <= (data.unit === 'kg' ? MAX_KG : MAX_LB),
-      {
-        message: t('weight.maxExceeded', { maxKg: MAX_KG, maxLb: MAX_LB }),
-        path: ['weight'],
-      },
-    );
+    .refine((data) => data.weight <= (data.unit === 'kg' ? MAX_KG : MAX_LB), {
+      message: t('weight.maxExceeded', { maxKg: MAX_KG, maxLb: MAX_LB }),
+      path: ['weight'],
+    });
 }
 
 export type WeightInput = z.infer<ReturnType<typeof weightSchema>>;

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   userProfileSchema,
   type UserProfileInput,
@@ -14,12 +15,14 @@ import { updateProfile } from '@features/settings/actions';
 
 export function ProfileForm({ profile }: { profile: UserProfile }) {
   const [saved, setSaved] = useState(false);
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => userProfileSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm<UserProfileInput>(userProfileSchema, {
+  } = useZodForm<UserProfileInput>(schema, {
     defaultValues: {
       name: profile.name,
       gender: profile.gender,

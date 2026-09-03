@@ -161,7 +161,9 @@ export async function WeightTrendChart({
           stroke="var(--background)"
           strokeWidth={2}
         >
-          <title>{t('pointTitle', { date: point.date, weight: point.weight, unit })}</title>
+          <title>
+            {t('pointTitle', { date: point.date, weight: point.weight, unit })}
+          </title>
         </circle>
       ))}
 

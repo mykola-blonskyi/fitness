@@ -1,6 +1,8 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   createExerciseSchema,
   type CreateExerciseInput,
@@ -16,13 +18,15 @@ import { createExercise } from '@features/exercise-catalog/actions';
 
 export function CreateExerciseForm() {
   const router = useRouter();
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createExerciseSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(createExerciseSchema);
+  } = useZodForm(schema);
 
   async function onSubmit(input: CreateExerciseInput) {
     const result = await createExercise(input);

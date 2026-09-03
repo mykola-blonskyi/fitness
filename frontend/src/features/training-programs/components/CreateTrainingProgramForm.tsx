@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   createTrainingProgramSchema,
   type CreateTrainingProgramInput,
@@ -10,13 +12,15 @@ import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createTrainingProgram } from '@features/training-programs/actions';
 
 export function CreateTrainingProgramForm() {
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createTrainingProgramSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(createTrainingProgramSchema);
+  } = useZodForm(schema);
 
   async function onSubmit(input: CreateTrainingProgramInput) {
     const result = await createTrainingProgram(input);

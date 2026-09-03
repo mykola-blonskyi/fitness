@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import {
@@ -30,7 +31,8 @@ export async function createFoodPreference(
     'createFoodPreference',
     {},
     async () => {
-      const parsed = createFoodPreferenceSchema.safeParse(input);
+      const t = await getTranslations('Validation');
+      const parsed = createFoodPreferenceSchema(t).safeParse(input);
       if (!parsed.success) {
         return {
           fieldErrors: firstFieldErrors(parsed.error) as Partial<
@@ -84,9 +86,10 @@ export type CreateDietPreferenceState =
 export async function createDietPreference(
   input: CreateDietPreferenceInput,
 ): Promise<CreateDietPreferenceState> {
+  const t = await getTranslations('Validation');
   return submitFormAction({
     name: 'createDietPreference',
-    schema: createDietPreferenceSchema,
+    schema: createDietPreferenceSchema(t),
     input,
     errorMessage: "Couldn't save that diet preference — try again.",
     async mutate(parsed) {

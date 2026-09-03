@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   logWorkoutSetSchema,
   type LogWorkoutSetInput,
@@ -28,6 +29,8 @@ export function LogSetForm({
 }) {
   const [queued, setQueued] = useState(false);
   const [rememberedUnit, rememberUnit] = useLastWeightUnit(defaultWeightUnit);
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => logWorkoutSetSchema(tv), [tv]);
 
   const {
     register,
@@ -36,7 +39,7 @@ export function LogSetForm({
     watch,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(logWorkoutSetSchema, {
+  } = useZodForm(schema, {
     defaultValues: { unit: rememberedUnit },
   });
   const unitField = register('unit');

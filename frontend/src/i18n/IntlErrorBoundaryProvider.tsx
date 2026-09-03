@@ -7,7 +7,11 @@ import { IntlErrorCode, NextIntlClientProvider } from 'next-intl';
 // to NextIntlClientProvider directly from a Server Component - this
 // nested 'use client' provider is next-intl's documented workaround; it
 // inherits locale/messages from the outer NextIntlClientProvider.
-export function IntlErrorBoundaryProvider({ children }: { children: ReactNode }) {
+export function IntlErrorBoundaryProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
     <NextIntlClientProvider
       onError={(error) => {

@@ -48,7 +48,10 @@ export function logWorkoutSetSchema(t: ValidationTranslator) {
         ctx.addIssue({
           code: 'custom',
           path: ['weight'],
-          message: t('workoutSet.weightMaxExceeded', { maxKg: MAX_KG, maxLb: MAX_LB }),
+          message: t('workoutSet.weightMaxExceeded', {
+            maxKg: MAX_KG,
+            maxLb: MAX_LB,
+          }),
         });
       }
       if (data.unit == null) {

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import {
@@ -27,10 +28,11 @@ export type CreateTrainingProgramState =
 export async function createTrainingProgram(
   input: CreateTrainingProgramInput,
 ): Promise<CreateTrainingProgramState> {
+  const t = await getTranslations('Validation');
   // No `formData` option - see features/onboarding/actions.ts for why.
   return submitFormAction({
     name: 'createTrainingProgram',
-    schema: createTrainingProgramSchema,
+    schema: createTrainingProgramSchema(t),
     input,
     errorMessage: "Couldn't create that program — try again.",
     async mutate(parsed) {
@@ -50,9 +52,10 @@ export async function addProgramExercise(
   programId: string,
   input: AddProgramExerciseInput,
 ): Promise<AddProgramExerciseState> {
+  const t = await getTranslations('Validation');
   return submitFormAction({
     name: 'addProgramExercise',
-    schema: addProgramExerciseSchema,
+    schema: addProgramExerciseSchema(t),
     input,
     errorMessage: "Couldn't add that exercise — try again.",
     async mutate(parsed) {

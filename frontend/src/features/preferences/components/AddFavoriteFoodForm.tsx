@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   createFoodPreferenceSchema,
   type CreateFoodPreferenceInput,
@@ -15,13 +16,15 @@ export function AddFavoriteFoodForm({
 }: {
   foodItems: { id: string; name: string }[];
 }) {
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createFoodPreferenceSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm<CreateFoodPreferenceInput>(createFoodPreferenceSchema, {
+  } = useZodForm<CreateFoodPreferenceInput>(schema, {
     defaultValues: { type: 'favorite', targetType: 'food_item', targetId: '' },
   });
 

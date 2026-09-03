@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   createFoodPreferenceSchema,
   type CreateFoodPreferenceInput,
@@ -18,6 +19,8 @@ export function AddFoodPreferenceForm({
   taxonomy: FoodTaxonomy;
   foodItems: { id: string; name: string }[];
 }) {
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createFoodPreferenceSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
@@ -26,7 +29,7 @@ export function AddFoodPreferenceForm({
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(createFoodPreferenceSchema);
+  } = useZodForm(schema);
 
   // Only one of the four targetId selects below is ever mounted at a
   // time - switching targetType must clear a stale selection from the

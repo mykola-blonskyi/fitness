@@ -1,7 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 import {
   createDietPreferenceSchema,
   type CreateDietPreferenceInput,
@@ -20,6 +22,8 @@ export function AddDietPreferenceForm({
 }: {
   alreadySelected: DietType[];
 }) {
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createDietPreferenceSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
@@ -27,7 +31,7 @@ export function AddDietPreferenceForm({
     setError,
     formState: { errors, isSubmitting },
   } = useForm<CreateDietPreferenceInput>({
-    resolver: zodResolver(createDietPreferenceSchema),
+    resolver: zodResolver(schema),
   });
 
   const options = DIET_TYPES.filter(

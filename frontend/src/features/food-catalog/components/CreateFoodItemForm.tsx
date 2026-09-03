@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   createFoodItemSchema,
   type CreateFoodItemInput,
@@ -24,6 +26,8 @@ const MACRO_FIELDS = [
 ] as const satisfies { name: keyof Macros; label: string }[];
 
 export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => createFoodItemSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
@@ -31,7 +35,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(createFoodItemSchema);
+  } = useZodForm(schema);
 
   // Subcategory options are scoped to whichever category is currently
   // selected - the fixed taxonomy makes categoryId -> subcategories a

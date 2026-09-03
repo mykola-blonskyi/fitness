@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   addProgramExerciseSchema,
   type AddProgramExerciseInput,
@@ -20,6 +22,8 @@ export function AddProgramExerciseForm({
   programId: string;
   exercises: Exercise[];
 }) {
+  const tv = useTranslations('Validation');
+  const schema = useMemo(() => addProgramExerciseSchema(tv), [tv]);
   const {
     register,
     handleSubmit,
@@ -27,7 +31,7 @@ export function AddProgramExerciseForm({
     watch,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(addProgramExerciseSchema);
+  } = useZodForm(schema);
 
   const selectedExerciseId = watch('exerciseId');
   const selectedExercise = exercises.find(

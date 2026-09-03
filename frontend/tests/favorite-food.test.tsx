@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { vi } from 'vitest';
+import { renderWithIntl as render } from './setup/render-with-intl';
 
 const createFoodPreference = vi.fn();
 vi.mock('@features/preferences/actions', () => ({

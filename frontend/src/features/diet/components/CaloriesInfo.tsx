@@ -20,9 +20,7 @@ export const CaloriesInfo = async ({
     <div className="flex flex-col gap-1">
       <p className="text-4xl font-semibold">
         {Math.round(calories)}{' '}
-        <span className="text-lg font-normal text-zinc-500">
-          {t('perDay')}
-        </span>
+        <span className="text-lg font-normal text-zinc-500">{t('perDay')}</span>
       </p>
       <p className="text-sm text-zinc-500">
         {t('caloriesInfo.basedOn', { weight, unit, date })}

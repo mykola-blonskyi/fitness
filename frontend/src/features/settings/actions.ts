@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@libs/api-client';
 import {
   userProfileSchema,
@@ -19,11 +20,12 @@ export type UpdateProfileState = FormActionError<UserProfileInput> & {
 export async function updateProfile(
   input: UserProfileInput,
 ): Promise<UpdateProfileState> {
+  const t = await getTranslations('Validation');
   // No `formData` option - see the identical comment in
   // features/onboarding/actions.ts for why.
   return submitFormAction({
     name: 'updateProfile',
-    schema: userProfileSchema,
+    schema: userProfileSchema(t),
     input,
     errorMessage:
       "Couldn't save your profile — check your inputs and try again.",

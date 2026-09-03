@@ -26,7 +26,7 @@ export function StartWorkoutForm({
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useZodForm(startWorkoutLogSchema);
+  } = useZodForm(startWorkoutLogSchema());
 
   async function onSubmit(input: StartWorkoutLogInput) {
     const result = await startWorkoutLog(locale, date, input);

@@ -3,19 +3,20 @@ import {
   addProgramExerciseSchema,
   createTrainingProgramSchema,
 } from '@shared/schemas/training-program';
+import { testTranslator } from './setup/test-translator';
+
+const trainingProgramSchema = createTrainingProgramSchema(testTranslator);
+const programExerciseSchema = addProgramExerciseSchema(testTranslator);
 
 describe('createTrainingProgramSchema', () => {
   it('accepts a non-empty title', () => {
     expect(
-      createTrainingProgramSchema.safeParse({ title: 'Push/Pull/Legs' })
-        .success,
+      trainingProgramSchema.safeParse({ title: 'Push/Pull/Legs' }).success,
     ).toBe(true);
   });
 
   it('rejects an empty title', () => {
-    expect(createTrainingProgramSchema.safeParse({ title: '' }).success).toBe(
-      false,
-    );
+    expect(trainingProgramSchema.safeParse({ title: '' }).success).toBe(false);
   });
 });
 
@@ -24,7 +25,7 @@ describe('addProgramExerciseSchema', () => {
 
   it('accepts sets/reps for a non-cardio exercise', () => {
     expect(
-      addProgramExerciseSchema.safeParse({
+      programExerciseSchema.safeParse({
         exerciseId,
         targetSets: 3,
         targetReps: 10,
@@ -34,7 +35,7 @@ describe('addProgramExerciseSchema', () => {
 
   it('accepts a duration for a cardio exercise', () => {
     expect(
-      addProgramExerciseSchema.safeParse({
+      programExerciseSchema.safeParse({
         exerciseId,
         targetDurationSeconds: 600,
       }).success,
@@ -43,13 +44,13 @@ describe('addProgramExerciseSchema', () => {
 
   it('rejects a non-uuid exerciseId', () => {
     expect(
-      addProgramExerciseSchema.safeParse({ exerciseId: 'not-a-uuid' }).success,
+      programExerciseSchema.safeParse({ exerciseId: 'not-a-uuid' }).success,
     ).toBe(false);
   });
 
   it('rejects a target below 1', () => {
     expect(
-      addProgramExerciseSchema.safeParse({
+      programExerciseSchema.safeParse({
         exerciseId,
         targetSets: 0,
         targetReps: 10,
@@ -59,26 +60,23 @@ describe('addProgramExerciseSchema', () => {
 
   it('rejects sets without reps', () => {
     expect(
-      addProgramExerciseSchema.safeParse({ exerciseId, targetSets: 3 }).success,
+      programExerciseSchema.safeParse({ exerciseId, targetSets: 3 }).success,
     ).toBe(false);
   });
 
   it('rejects reps without sets', () => {
     expect(
-      addProgramExerciseSchema.safeParse({ exerciseId, targetReps: 10 })
-        .success,
+      programExerciseSchema.safeParse({ exerciseId, targetReps: 10 }).success,
     ).toBe(false);
   });
 
   it('rejects neither sets/reps nor a duration', () => {
-    expect(addProgramExerciseSchema.safeParse({ exerciseId }).success).toBe(
-      false,
-    );
+    expect(programExerciseSchema.safeParse({ exerciseId }).success).toBe(false);
   });
 
   it('accepts a duration even when sets/reps are also absent', () => {
     expect(
-      addProgramExerciseSchema.safeParse({
+      programExerciseSchema.safeParse({
         exerciseId,
         targetDurationSeconds: 30,
       }).success,

@@ -47,11 +47,15 @@ for (const locale of locales) {
   }
   if (extra.length > 0) {
     failed = true;
-    console.error(`${locale}.json has extra keys not in en.json:\n  ${extra.join('\n  ')}`);
+    console.error(
+      `${locale}.json has extra keys not in en.json:\n  ${extra.join('\n  ')}`,
+    );
   }
 }
 
 if (failed) {
   process.exit(1);
 }
-console.log(`messages/*.json key parity OK (${referenceKeys.size} keys, ${locales.length} locales).`);
+console.log(
+  `messages/*.json key parity OK (${referenceKeys.size} keys, ${locales.length} locales).`,
+);
