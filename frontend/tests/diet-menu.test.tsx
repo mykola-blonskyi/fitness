@@ -24,6 +24,7 @@ function item(overrides: Partial<DietResponse['items'][number]>) {
   return {
     id: 'item-1',
     mealType: 'breakfast',
+    mealOccurrence: 1,
     orderIndex: 0,
     weightGrams: 150,
     foodItem: {
@@ -106,6 +107,28 @@ describe('DietMenu', () => {
     expect(headings).toEqual(['Breakfast', 'Dinner']);
     expect(screen.getByText('Oats')).toBeInTheDocument();
     expect(screen.getByText('Salmon')).toBeInTheDocument();
+  });
+
+  it('renders a repeated meal type as a separate, numbered section', () => {
+    const dietWithRepeat: DietResponse = {
+      ...diet,
+      items: [
+        ...diet.items,
+        item({
+          id: 'b2',
+          mealType: 'breakfast',
+          mealOccurrence: 2,
+          foodItem: { id: 'f3', name: 'Yogurt', imageUrl: null, role: 'dairy' },
+        }),
+      ],
+    };
+    render(<DietMenu diet={dietWithRepeat} />);
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((h) => h.textContent);
+    expect(headings).toEqual(['Breakfast', 'Breakfast 2', 'Dinner']);
+    expect(screen.getByText('Yogurt')).toBeInTheDocument();
   });
 
   it('reroll calls swapDietItem with only the diet and item id', async () => {

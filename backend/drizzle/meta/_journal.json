@@ -127,6 +127,13 @@
       "when": 1788204371305,
       "tag": "0017_smiling_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788445775236,
+      "tag": "0018_bumpy_iceman",
+      "breakpoints": true
     }
   ]
 }

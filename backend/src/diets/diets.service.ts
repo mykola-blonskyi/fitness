@@ -276,6 +276,7 @@ export class DietsService {
             dietId: inserted.id,
             foodItemId: item.foodItemId,
             mealType: item.mealType,
+            mealOccurrence: item.mealOccurrence,
             weightGrams: item.weightGrams.toString(),
             orderIndex: item.orderIndex,
           })),
@@ -510,6 +511,7 @@ export class DietsService {
       .select({
         id: schema.dietItems.id,
         mealType: schema.dietItems.mealType,
+        mealOccurrence: schema.dietItems.mealOccurrence,
         orderIndex: schema.dietItems.orderIndex,
         weightGrams: schema.dietItems.weightGrams,
         foodItemId: schema.foodCalories.id,
@@ -531,7 +533,11 @@ export class DietsService {
         eq(schema.foodRoles.id, schema.foodCalories.roleId),
       )
       .where(eq(schema.dietItems.dietId, dietRow.id))
-      .orderBy(schema.dietItems.mealType, schema.dietItems.orderIndex);
+      .orderBy(
+        schema.dietItems.mealType,
+        schema.dietItems.mealOccurrence,
+        schema.dietItems.orderIndex,
+      );
 
     return toDietResponse(dietRow, algorithm, itemRows);
   }

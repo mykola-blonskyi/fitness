@@ -8,6 +8,7 @@ import {
   MEAL_COUNTS,
   WEIGHT_UNITS,
 } from '@shared/types/user';
+import { MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '@shared/types/meal';
 import { FieldError } from '@shared/ui/components/FieldError';
 
 const GOAL_LABELS: Record<(typeof GOALS)[number], string> = {
@@ -38,15 +39,22 @@ const WEIGHT_UNIT_LABELS: Record<(typeof WEIGHT_UNITS)[number], string> = {
   lb: 'Pounds (lb)',
 };
 
-// Diet generation always fills the first N of breakfast/lunch/dinner/snack
-// (see diets/greedy-heuristic.ts's MEAL_TYPES) - spelled out here so
-// picking e.g. "1" doesn't silently surprise someone expecting dinner.
-const MEAL_COUNT_LABELS: Record<(typeof MEAL_COUNTS)[number], string> = {
-  1: '1 — Breakfast',
-  2: '2 — Breakfast, Lunch',
-  3: '3 — Breakfast, Lunch, Dinner',
-  4: '4 — Breakfast, Lunch, Dinner, Snack',
-};
+// Mirrors backend/src/diets/diet.types.ts's mealSlotsForCount round-robin
+// (ADR-015), so the option text stays truthful about what generation does.
+function mealCountBreakdown(count: number): string {
+  const occurrences: Record<(typeof MEAL_TYPE_ORDER)[number], number> = {
+    breakfast: 0,
+    lunch: 0,
+    dinner: 0,
+    snack: 0,
+  };
+  for (let i = 0; i < count; i++) {
+    occurrences[MEAL_TYPE_ORDER[i % MEAL_TYPE_ORDER.length]] += 1;
+  }
+  return MEAL_TYPE_ORDER.filter((type) => occurrences[type] > 0)
+    .map((type) => `${occurrences[type]} ${MEAL_TYPE_LABELS[type]}`)
+    .join(', ');
+}
 
 // Shared by OnboardingForm and ProfileForm - both edit the same
 // UserProfileInput shape via the same fields, differing only in
@@ -193,7 +201,7 @@ export function ProfileFields({
         >
           {MEAL_COUNTS.map((n) => (
             <option key={n} value={n}>
-              {MEAL_COUNT_LABELS[n]}
+              {n} — {mealCountBreakdown(n)}
             </option>
           ))}
         </select>

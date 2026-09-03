@@ -32,6 +32,7 @@ export interface CalorieTarget {
 export interface DietItemResponse {
   id: string;
   mealType: string;
+  mealOccurrence: number;
   orderIndex: number;
   weightGrams: number;
   foodItem: {

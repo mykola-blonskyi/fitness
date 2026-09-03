@@ -62,12 +62,12 @@ describe('userProfileSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it.each([0, 5])('rejects an out-of-range meal count (%s)', (mealCount) => {
+  it.each([0, 21])('rejects an out-of-range meal count (%s)', (mealCount) => {
     const result = userProfileSchema.safeParse({ ...valid, mealCount });
     expect(result.success).toBe(false);
   });
 
-  it.each([1, 4])('accepts meal count at the boundary (%s)', (mealCount) => {
+  it.each([1, 20])('accepts meal count at the boundary (%s)', (mealCount) => {
     const result = userProfileSchema.safeParse({ ...valid, mealCount });
     expect(result.success).toBe(true);
   });

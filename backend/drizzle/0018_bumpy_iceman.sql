@@ -1,0 +1,1 @@
+ALTER TABLE "diet_items" ADD COLUMN "meal_occurrence" integer DEFAULT 1 NOT NULL;
