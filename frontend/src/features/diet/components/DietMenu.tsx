@@ -4,47 +4,22 @@ import { useTranslations } from 'next-intl';
 import type { DietItemResponse, DietResponse } from '@features/diet/actions';
 import { DietItemActions } from '@features/diet/components/DietItemActions';
 import { RegenerateButton } from '@features/diet/components/RegenerateButton';
-import { MEAL_TYPE_ORDER as MEAL_ORDER } from '@shared/types/meal';
 
-// A mealCount past 4 repeats mealTypes as later occurrences (ADR-015) -
-// group by (mealType, occurrence) rather than mealType alone so those
-// repeats render as separate sections instead of merging together.
-function groupByMealSlot(items: DietItemResponse[]) {
-  const maxOccurrence = new Map<(typeof MEAL_ORDER)[number], number>();
-  for (const item of items) {
-    const mealType = item.mealType as (typeof MEAL_ORDER)[number];
-    maxOccurrence.set(
-      mealType,
-      Math.max(maxOccurrence.get(mealType) ?? 0, item.mealOccurrence),
-    );
-  }
-
-  const groups: {
-    mealType: (typeof MEAL_ORDER)[number];
-    occurrence: number;
-    items: DietItemResponse[];
-  }[] = [];
-  for (const mealType of MEAL_ORDER) {
-    const occurrences = maxOccurrence.get(mealType) ?? 0;
-    for (let occurrence = 1; occurrence <= occurrences; occurrence++) {
-      groups.push({
-        mealType,
-        occurrence,
-        items: items
-          .filter(
-            (item) =>
-              item.mealType === mealType && item.mealOccurrence === occurrence,
-          )
-          .sort((a, b) => a.orderIndex - b.orderIndex),
-      });
-    }
-  }
-  return groups.filter((group) => group.items.length > 0);
+function groupByMealPosition(items: DietItemResponse[]) {
+  const positions = [...new Set(items.map((item) => item.mealPosition))].sort(
+    (a, b) => a - b,
+  );
+  return positions.map((position) => ({
+    position,
+    items: items
+      .filter((item) => item.mealPosition === position)
+      .sort((a, b) => a.orderIndex - b.orderIndex),
+  }));
 }
 
 export function DietMenu({ diet }: { diet: DietResponse }) {
   const t = useTranslations('Diet');
-  const groups = groupByMealSlot(diet.items);
+  const groups = groupByMealPosition(diet.items);
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,13 +40,9 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
       </div>
 
       {groups.map((group) => (
-        <section
-          key={`${group.mealType}-${group.occurrence}`}
-          className="flex flex-col gap-3"
-        >
+        <section key={group.position} className="flex flex-col gap-3">
           <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-            {t(`mealTypes.${group.mealType}`)}
-            {group.occurrence > 1 ? ` ${group.occurrence}` : ''}
+            {t('mealPosition', { position: group.position })}
           </h2>
           <ul className="flex flex-col gap-2">
             {group.items.map((item) => (

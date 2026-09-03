@@ -30,12 +30,7 @@
     },
     "perDay": "kcal/día",
     "macroSummary": "Proteínas {protein}g · Hidratos de carbono {carbs}g · Grasas {fat}g",
-    "mealTypes": {
-      "breakfast": "Desayuno",
-      "lunch": "Almuerzo",
-      "dinner": "Cena",
-      "snack": "Aperitivo"
-    },
+    "mealPosition": "Comida {position}",
     "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {
       "calculatedUsing": "Calculado utilizando <strong>{name}</strong> ({code})"
@@ -501,12 +496,6 @@
       "very_active": "Muy activo"
     },
     "mealsPerDay": "Comidas al día",
-    "mealTypes": {
-      "breakfast": "Desayuno",
-      "lunch": "Almuerzo",
-      "dinner": "Cena",
-      "snack": "Aperitivo"
-    },
     "language": "Idioma",
     "weightUnit": "Unidad de peso preferida",
     "weightUnitOptions": {

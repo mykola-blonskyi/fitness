@@ -182,8 +182,28 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-09-03
 
-Status: Accepted
+Status: Superseded by ADR-016 (2026-09-04)
 
 `users.meal_count` was capped at 4 because `meal_type` is a fixed 4-value enum (breakfast/lunch/dinner/snack) and generation picked one slot per type. Chosen design: keep the 4-value enum, allow `meal_count` up to 6 (default 3), and add `diet_items.meal_occurrence` (integer, default 1) — `mealSlotsForCount(mealCount)` (`diets/diet.types.ts`) round-robins through the 4 types so count 6 produces breakfast/lunch/dinner/snack/breakfast(2)/lunch(2). `order_index` is scoped within its `(meal_type, meal_occurrence)` pair, not the whole diet. Within a repeated occurrence of the same meal type, `greedy-heuristic.ts` avoids repeating a dish already used earlier that day for that meal type when another eligible candidate exists for the role, falling back to a repeat only when it's the only option. The frontend groups diet items by `(mealType, occurrence)` and labels repeats "Breakfast 2" etc.; the meal-count select computes each option's breakdown (e.g. "6 — 2 Breakfast, 2 Lunch, 1 Dinner, 1 Snack") instead of a hardcoded label table.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-016: Positional meal naming with equal-calorie, tapered-macro portioning and a carb-free tail
+
+Date: 2026-09-04
+
+Status: Accepted
+
+Supersedes ADR-015: `meal_type`/`meal_occurrence` are dropped entirely in favor of a single `diet_items.meal_position` integer (1-based, computed fresh at generation time, never persisted as a category). Generated meals are labeled purely by position ("Meal 1".."Meal N", translated per locale) instead of breakfast/lunch/dinner/snack.
+
+Every meal gets an equal share of the day's calories (`totalCalories / mealCount`). Carbohydrate and fat grams taper linearly by position across the carb-eligible meals only, using integer taper weights `carbEligibleCount..1` (meal 1 gets the largest share) — this distributes the day's *full* carb/fat targets over just the eligible meals, which is how a tail meal's would-be share ends up redistributed onto the rest rather than dropped. Protein for each meal is what's left of that meal's fixed calorie share once carb/fat calories are subtracted (`(calories - carbsG*4 - fatG*9) / 4`), floored at 0.
+
+Once `mealCount` is 3 or more, the last meal is excluded from the carb taper entirely (no carb-role food, minimal fat via a zero fat target); once `mealCount` exceeds 3, the last two meals both are. At `mealCount` 1-2 every meal follows the normal taper with no tail. `greedy-heuristic.ts` enforces the carb exclusion by skipping the carb role chain outright for a tail meal (never selecting a candidate for it); the fat exclusion is not a hard skip — a zero fat gram target simply rounds below the minimum-gram floor and drops out through the same mechanism as any other unreachable macro portion.
+
+`mealTargetsForCount` (`diets/diet.types.ts`) computes every meal's raw protein residual, clamps each to 0, then rescales the whole set down proportionally (never up) whenever their sum exceeds `totalProteinG` — keeping the day-level protein ceiling always `<= totalProteinG` while preserving each meal's relative share and the monotonic taper. The FITNESS-64 per-meal correction step (`correctMeal`) is otherwise unchanged — it still receives one `{calories, protein, carbs, fat}` ceiling per meal and corrects that meal's own drift in isolation.
+
+The profile form's meal-count `<select>` no longer computes a per-type breakdown string — options just show the plain number.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

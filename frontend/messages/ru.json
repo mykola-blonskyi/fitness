@@ -30,12 +30,7 @@
     },
     "perDay": "ккал/день",
     "macroSummary": "Белок {protein}g · Углеводы {carbs}g · Жиры {fat}g",
-    "mealTypes": {
-      "breakfast": "Завтрак",
-      "lunch": "Обед",
-      "dinner": "Ужин",
-      "snack": "Закуска"
-    },
+    "mealPosition": "Приём пищи {position}",
     "itemSummary": "{weight} г · {calories} ккал · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {
       "calculatedUsing": "Рассчитано с использованием <strong>{name}</strong> ({code})"
@@ -501,12 +496,6 @@
       "very_active": "Очень активный"
     },
     "mealsPerDay": "Количество приемов пищи в день",
-    "mealTypes": {
-      "breakfast": "Завтрак",
-      "lunch": "Обед",
-      "dinner": "Ужин",
-      "snack": "Закуска"
-    },
     "language": "Язык",
     "weightUnit": "Предпочтительная единица измерения веса",
     "weightUnitOptions": {

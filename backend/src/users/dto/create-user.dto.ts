@@ -52,9 +52,8 @@ export class CreateUserDto {
   @IsUrl()
   avatarUrl?: string;
 
-  // Optional - schema defaults to 3 (breakfast/lunch/dinner) when omitted,
-  // see db/schema.ts's users.mealCount comment. Past 4, mealTypeEnum's
-  // slots repeat round-robin as later occurrences (ADR-015).
+  // Optional - schema defaults to 3 when omitted, see db/schema.ts's
+  // users.mealCount comment.
   @IsOptional()
   @IsInt()
   @Min(1)
