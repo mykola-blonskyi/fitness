@@ -19,15 +19,6 @@ export type FoodPreferenceTargetType =
 export const DIET_TYPES = ['vegetarian', 'vegan', 'keto', 'paleo'] as const;
 export type DietType = (typeof DIET_TYPES)[number];
 
-// Shared between AddDietPreferenceForm and the preferences page's list -
-// one definition instead of two copies drifting apart.
-export const DIET_TYPE_LABELS: Record<DietType, string> = {
-  vegetarian: 'Vegetarian',
-  vegan: 'Vegan',
-  keto: 'Keto',
-  paleo: 'Paleo',
-};
-
 // Mirrors backend/src/food-preferences/food-preference.mapper.ts's
 // FoodPreferenceResponse.
 export interface FoodPreference {

@@ -19,6 +19,7 @@ export function AddFoodPreferenceForm({
   taxonomy: FoodTaxonomy;
   foodItems: { id: string; name: string }[];
 }) {
+  const t = useTranslations('Preferences.addFoodForm');
   const tv = useTranslations('Validation');
   const schema = useMemo(() => createFoodPreferenceSchema(tv), [tv]);
   const {
@@ -74,34 +75,34 @@ export function AddFoodPreferenceForm({
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="type" className="text-sm font-medium">
-          Type
+          {t('typeLabel')}
         </label>
         <select
           id="type"
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('type')}
         >
-          <option value="">Select a type</option>
-          <option value="allergy">Allergy</option>
-          <option value="exclude">Exclude</option>
+          <option value="">{t('selectTypePlaceholder')}</option>
+          <option value="allergy">{t('allergy')}</option>
+          <option value="exclude">{t('exclude')}</option>
         </select>
         <FieldError message={errors.type?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="targetType" className="text-sm font-medium">
-          Applies to
+          {t('targetTypeLabel')}
         </label>
         <select
           id="targetType"
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('targetType')}
         >
-          <option value="">Select what to target</option>
-          <option value="category">A whole category</option>
-          <option value="subcategory">A subcategory</option>
-          <option value="role">A role</option>
-          <option value="food_item">A specific food item</option>
+          <option value="">{t('selectTargetTypePlaceholder')}</option>
+          <option value="category">{t('targetCategory')}</option>
+          <option value="subcategory">{t('targetSubcategory')}</option>
+          <option value="role">{t('targetRole')}</option>
+          <option value="food_item">{t('targetFoodItem')}</option>
         </select>
         <FieldError message={errors.targetType?.message} />
       </div>
@@ -109,14 +110,14 @@ export function AddFoodPreferenceForm({
       {targetType === 'category' && (
         <div className="flex flex-col gap-1">
           <label htmlFor="targetId" className="text-sm font-medium">
-            Category
+            {t('categoryLabel')}
           </label>
           <select
             id="targetId"
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             {...register('targetId')}
           >
-            <option value="">Select a category</option>
+            <option value="">{t('selectCategoryPlaceholder')}</option>
             {taxonomy.categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -130,14 +131,14 @@ export function AddFoodPreferenceForm({
       {targetType === 'subcategory' && (
         <div className="flex flex-col gap-1">
           <label htmlFor="targetId" className="text-sm font-medium">
-            Subcategory
+            {t('subcategoryLabel')}
           </label>
           <select
             id="targetId"
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             {...register('targetId')}
           >
-            <option value="">Select a subcategory</option>
+            <option value="">{t('selectSubcategoryPlaceholder')}</option>
             {subcategoryOptions.map((subcategory) => (
               <option key={subcategory.id} value={subcategory.id}>
                 {subcategory.label}
@@ -151,14 +152,14 @@ export function AddFoodPreferenceForm({
       {targetType === 'role' && (
         <div className="flex flex-col gap-1">
           <label htmlFor="targetId" className="text-sm font-medium">
-            Role
+            {t('roleLabel')}
           </label>
           <select
             id="targetId"
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             {...register('targetId')}
           >
-            <option value="">Select a role</option>
+            <option value="">{t('selectRolePlaceholder')}</option>
             {taxonomy.roles.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name}
@@ -172,25 +173,25 @@ export function AddFoodPreferenceForm({
       {targetType === 'food_item' && (
         <div className="flex flex-col gap-1">
           <label htmlFor="foodItemSearch" className="text-sm font-medium">
-            Search food items
+            {t('searchLabel')}
           </label>
           <input
             id="foodItemSearch"
             type="search"
             value={foodItemSearch}
             onChange={(e) => setFoodItemSearch(e.target.value)}
-            placeholder="Food name…"
+            placeholder={t('searchPlaceholder')}
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           />
           <label htmlFor="targetId" className="text-sm font-medium">
-            Food item
+            {t('itemLabel')}
           </label>
           <select
             id="targetId"
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             {...register('targetId')}
           >
-            <option value="">Select a food item</option>
+            <option value="">{t('selectFoodItemPlaceholder')}</option>
             {filteredFoodItems.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -206,7 +207,7 @@ export function AddFoodPreferenceForm({
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Adding…' : 'Add preference'}
+        {isSubmitting ? t('adding') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />

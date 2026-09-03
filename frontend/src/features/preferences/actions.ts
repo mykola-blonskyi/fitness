@@ -31,8 +31,11 @@ export async function createFoodPreference(
     'createFoodPreference',
     {},
     async () => {
-      const t = await getTranslations('Validation');
-      const parsed = createFoodPreferenceSchema(t).safeParse(input);
+      const [tv, t] = await Promise.all([
+        getTranslations('Validation'),
+        getTranslations('Preferences.errors'),
+      ]);
+      const parsed = createFoodPreferenceSchema(tv).safeParse(input);
       if (!parsed.success) {
         return {
           fieldErrors: firstFieldErrors(parsed.error) as Partial<
@@ -52,7 +55,7 @@ export async function createFoodPreference(
         if (err instanceof ApiError && err.status === 409) {
           return { error: err.message };
         }
-        return { error: "Couldn't save that preference — try again." };
+        return { error: t('foodSaveFailed') };
       }
     },
   );
@@ -86,12 +89,15 @@ export type CreateDietPreferenceState =
 export async function createDietPreference(
   input: CreateDietPreferenceInput,
 ): Promise<CreateDietPreferenceState> {
-  const t = await getTranslations('Validation');
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Preferences.errors'),
+  ]);
   return submitFormAction({
     name: 'createDietPreference',
-    schema: createDietPreferenceSchema(t),
+    schema: createDietPreferenceSchema(tv),
     input,
-    errorMessage: "Couldn't save that diet preference — try again.",
+    errorMessage: t('dietSaveFailed'),
     async mutate(parsed) {
       await apiFetch<DietPreference>('/diet-preferences', {
         method: 'POST',

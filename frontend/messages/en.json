@@ -342,6 +342,7 @@
     },
     "addFavoriteForm": {
       "searchLabel": "Search food items",
+      "searchPlaceholder": "Food name…",
       "itemLabel": "Food item",
       "selectPlaceholder": "Select a food item",
       "adding": "Adding…",
@@ -365,6 +366,7 @@
       "roleLabel": "Role",
       "selectRolePlaceholder": "Select a role",
       "searchLabel": "Search food items",
+      "searchPlaceholder": "Food name…",
       "itemLabel": "Food item",
       "selectFoodItemPlaceholder": "Select a food item",
       "adding": "Adding…",

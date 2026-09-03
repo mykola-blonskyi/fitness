@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { SettingsNav } from '@features/settings';
 import {
   AddDietPreferenceForm,
@@ -18,6 +19,7 @@ export default async function PreferencesSettingsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations('Preferences');
 
   const [foodPreferences, dietPreferences, taxonomy, foodItemPage] =
     await Promise.all([
@@ -39,10 +41,10 @@ export default async function PreferencesSettingsPage({
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-8 px-4 py-16">
       <SettingsNav locale={locale} active="preferences" />
-      <h1 className="text-2xl font-semibold">Preferences</h1>
+      <h1 className="text-2xl font-semibold">{t('pageTitle')}</h1>
 
       <section className="flex w-full max-w-sm flex-col gap-3">
-        <h2 className="text-lg font-semibold">Diet type</h2>
+        <h2 className="text-lg font-semibold">{t('dietTypeHeading')}</h2>
         <DietPreferenceList preferences={dietPreferences} />
         <AddDietPreferenceForm
           alreadySelected={dietPreferences.map((p) => p.dietType)}
@@ -50,7 +52,7 @@ export default async function PreferencesSettingsPage({
       </section>
 
       <section className="flex w-full max-w-sm flex-col gap-3">
-        <h2 className="text-lg font-semibold">Allergies &amp; exclusions</h2>
+        <h2 className="text-lg font-semibold">{t('allergiesHeading')}</h2>
         <FoodPreferenceList preferences={exclusionPreferences} />
         <AddFoodPreferenceForm
           taxonomy={taxonomy}
@@ -59,7 +61,7 @@ export default async function PreferencesSettingsPage({
       </section>
 
       <section className="flex w-full max-w-sm flex-col gap-3">
-        <h2 className="text-lg font-semibold">Favorite food items</h2>
+        <h2 className="text-lg font-semibold">{t('favoritesHeading')}</h2>
         <FavoriteFoodList preferences={favoritePreferences} />
         <AddFavoriteFoodForm foodItems={foodItemPage.items} />
       </section>
