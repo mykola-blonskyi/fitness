@@ -24,8 +24,7 @@ import type { DietResponse } from '@features/diet/actions';
 function item(overrides: Partial<DietResponse['items'][number]>) {
   return {
     id: 'item-1',
-    mealType: 'breakfast',
-    mealOccurrence: 1,
+    mealPosition: 1,
     orderIndex: 0,
     weightGrams: 150,
     foodItem: {
@@ -53,7 +52,7 @@ const diet: DietResponse = {
   items: [
     item({
       id: 'b1',
-      mealType: 'breakfast',
+      mealPosition: 1,
       foodItem: {
         id: 'f1',
         name: 'Oats',
@@ -63,7 +62,7 @@ const diet: DietResponse = {
     }),
     item({
       id: 'd1',
-      mealType: 'dinner',
+      mealPosition: 2,
       foodItem: {
         id: 'f2',
         name: 'Salmon',
@@ -94,7 +93,7 @@ beforeEach(() => {
 });
 
 describe('DietMenu', () => {
-  it('renders day totals and groups items by meal in enum order', () => {
+  it('renders day totals and groups items by meal position, numbered in order', () => {
     renderWithIntl(<DietMenu diet={diet} />);
 
     expect(screen.getByText('1800')).toBeInTheDocument();
@@ -105,30 +104,29 @@ describe('DietMenu', () => {
     const headings = screen
       .getAllByRole('heading', { level: 2 })
       .map((h) => h.textContent);
-    expect(headings).toEqual(['Breakfast', 'Dinner']);
+    expect(headings).toEqual(['Meal 1', 'Meal 2']);
     expect(screen.getByText('Oats')).toBeInTheDocument();
     expect(screen.getByText('Salmon')).toBeInTheDocument();
   });
 
-  it('renders a repeated meal type as a separate, numbered section', () => {
-    const dietWithRepeat: DietResponse = {
+  it('renders a third meal position as its own numbered section', () => {
+    const dietWithThirdMeal: DietResponse = {
       ...diet,
       items: [
         ...diet.items,
         item({
           id: 'b2',
-          mealType: 'breakfast',
-          mealOccurrence: 2,
+          mealPosition: 3,
           foodItem: { id: 'f3', name: 'Yogurt', imageUrl: null, role: 'dairy' },
         }),
       ],
     };
-    renderWithIntl(<DietMenu diet={dietWithRepeat} />);
+    renderWithIntl(<DietMenu diet={dietWithThirdMeal} />);
 
     const headings = screen
       .getAllByRole('heading', { level: 2 })
       .map((h) => h.textContent);
-    expect(headings).toEqual(['Breakfast', 'Breakfast 2', 'Dinner']);
+    expect(headings).toEqual(['Meal 1', 'Meal 2', 'Meal 3']);
     expect(screen.getByText('Yogurt')).toBeInTheDocument();
   });
 

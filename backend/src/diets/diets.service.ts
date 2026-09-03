@@ -269,8 +269,7 @@ export class DietsService {
           generated.items.map((item) => ({
             dietId: inserted.id,
             foodItemId: item.foodItemId,
-            mealType: item.mealType,
-            mealOccurrence: item.mealOccurrence,
+            mealPosition: item.mealPosition,
             weightGrams: item.weightGrams.toString(),
             orderIndex: item.orderIndex,
           })),
@@ -490,8 +489,7 @@ export class DietsService {
     const itemRows: DietItemWithFoodRow[] = await this.db
       .select({
         id: schema.dietItems.id,
-        mealType: schema.dietItems.mealType,
-        mealOccurrence: schema.dietItems.mealOccurrence,
+        mealPosition: schema.dietItems.mealPosition,
         orderIndex: schema.dietItems.orderIndex,
         weightGrams: schema.dietItems.weightGrams,
         foodItemId: schema.foodCalories.id,
@@ -513,11 +511,7 @@ export class DietsService {
         eq(schema.foodRoles.id, schema.foodCalories.roleId),
       )
       .where(eq(schema.dietItems.dietId, dietRow.id))
-      .orderBy(
-        schema.dietItems.mealType,
-        schema.dietItems.mealOccurrence,
-        schema.dietItems.orderIndex,
-      );
+      .orderBy(schema.dietItems.mealPosition, schema.dietItems.orderIndex);
 
     return toDietResponse(dietRow, algorithm, itemRows);
   }

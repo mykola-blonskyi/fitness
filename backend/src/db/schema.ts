@@ -44,8 +44,8 @@ export const users = pgTable('users', {
   // Single-user personal app - no self-service grant flow. Set directly
   // in the DB by whoever operates the deployment.
   isAdmin: boolean('is_admin').notNull().default(false),
-  // How many meal slots (breakfast/lunch/dinner/snack, in that fixed
-  // order) diet generation splits a day's calorie target across.
+  // How many equal-calorie meal positions ("Meal 1".."Meal N") diet
+  // generation splits a day's calorie target across.
   mealCount: integer('meal_count').notNull().default(3),
   // Plain text, not a pgEnum, matching exerciseTranslations.locale /
   // foodCalorieTranslations.locale - valid values enforced at the DTO
@@ -388,13 +388,6 @@ export const dietCalculationAlgorithms = pgTable(
   },
 );
 
-export const mealTypeEnum = pgEnum('meal_type', [
-  'breakfast',
-  'lunch',
-  'dinner',
-  'snack',
-]);
-
 // Never updated in place - regenerating always inserts a new row; the
 // current diet for a user is just the most recent one (`ORDER BY
 // created_at DESC LIMIT 1`), not a stored flag. calculationMetadata
@@ -417,10 +410,9 @@ export const diets = pgTable('diets', {
     .defaultNow(),
 });
 
-// orderIndex is scoped within its own (mealType, mealOccurrence) pair
-// (0-based), not across the whole Diet. mealOccurrence (1-based) tells
-// apart repeated same-day occurrences of the same mealType once
-// mealCount exceeds mealTypeEnum's 4 values - see ADR-015.
+// orderIndex is scoped within its own mealPosition (0-based), not across
+// the whole Diet. mealPosition (1-based) is computed fresh at generation
+// time, not a stored category - see ADR-016.
 export const dietItems = pgTable('diet_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   dietId: uuid('diet_id')
@@ -429,8 +421,7 @@ export const dietItems = pgTable('diet_items', {
   foodItemId: uuid('food_item_id')
     .notNull()
     .references(() => foodCalories.id),
-  mealType: mealTypeEnum('meal_type').notNull(),
-  mealOccurrence: integer('meal_occurrence').notNull().default(1),
+  mealPosition: integer('meal_position').notNull(),
   weightGrams: numeric('weight_grams').notNull(),
   orderIndex: integer('order_index').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })

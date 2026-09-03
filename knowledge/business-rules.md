@@ -58,13 +58,13 @@ Why: no extra state (`is_current` flag) to keep in sync; regenerating is just in
 
 ## Diet menu generation is a greedy heuristic
 
-For each meal, pick one Food Item per required Food Role, then scale portion size (`weight_grams`) to hit that meal's calorie share; adjust the largest items if the day's total drifts outside tolerance (~±5%) of the target.
+Meals are identified purely by position (`meal_position`, 1-based, "Meal 1".."Meal N") — there is no meal-type category. For each meal, pick one Food Item per required Food Role, then scale portion size (`weight_grams`) to hit that meal's calorie/macro-gram share; each meal's own drift is then corrected so its totals never exceed target.
 
-Why: this is a recommendation feature, not a medical prescription — "close enough" is the actual requirement.
+Why: this is a recommendation feature, not a medical prescription — "close enough" is the actual requirement, but never over target.
+
+Every meal gets an equal share of the day's calories. Carbohydrate and fat grams taper down linearly by position across the carb-eligible meals (meal 1 gets the largest share); protein fills whatever calories that meal's fixed share doesn't already spend on carbs/fat. Once `meal_count` is 3 or more, the last meal is excluded from the carb taper entirely (no carb-role food, minimal fat); once `meal_count` exceeds 3, the last two meals both are — the carb/fat grams those meals would otherwise have carried are redistributed across the remaining meals' taper rather than dropped. At `meal_count` 1-2 every meal follows the normal taper. See ADR-016.
 
 A single-item swap or reroll holds that item's calorie contribution — the replacement's `weight_grams` is rescaled so the day total stays within tolerance. A full regenerate re-runs generation from scratch and does not preserve prior swaps.
-
-`meal_count` (1-20) can exceed the 4 named meal types — past 4, types repeat round-robin (breakfast/lunch/dinner/snack/breakfast/lunch/...), distinguished by `diet_items.meal_occurrence`. A repeated occurrence prefers a Food Item not already used earlier that day for that meal type, falling back to a repeat only when no other eligible candidate exists for the role. See ADR-015.
 
 ---
 

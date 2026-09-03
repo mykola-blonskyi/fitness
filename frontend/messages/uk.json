@@ -30,12 +30,7 @@
     },
     "perDay": "ккал/день",
     "macroSummary": "Білок {protein}g · Вуглеводи {carbs}g · Жири {fat}g",
-    "mealTypes": {
-      "breakfast": "Сніданок",
-      "lunch": "Обід",
-      "dinner": "Вечеря",
-      "snack": "Закуска"
-    },
+    "mealPosition": "Прийом їжі {position}",
     "itemSummary": "{weight} г · {calories} ккал · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {
       "calculatedUsing": "Розраховано за допомогою <strong>{name}</strong> ({code})"
@@ -501,12 +496,6 @@
       "very_active": "Дуже активний"
     },
     "mealsPerDay": "Кількість прийомів їжі на день",
-    "mealTypes": {
-      "breakfast": "Сніданок",
-      "lunch": "Обід",
-      "dinner": "Вечеря",
-      "snack": "Закуска"
-    },
     "language": "Мова",
     "weightUnit": "Бажана одиниця вимірювання ваги",
     "weightUnitOptions": {

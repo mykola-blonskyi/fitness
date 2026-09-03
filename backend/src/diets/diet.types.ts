@@ -1,6 +1,3 @@
-export const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
-export type MealType = (typeof MEAL_TYPES)[number];
-
 // One role per macro group (protein/carb/vegetable/fat) so every meal is a
 // balanced plate. Each inner array is a fallback chain, tried in order until
 // a role has an eligible candidate after Food Preference exclusion.
@@ -11,32 +8,82 @@ export const MEAL_ROLE_CHAINS: readonly (readonly string[])[] = [
   ['healthy_fat', 'saturated_fat'],
 ];
 
-export interface MealSlot {
-  mealType: MealType;
-  // 1-based, per mealType - a slot's 2nd occurrence of 'breakfast' in a
-  // day is {mealType: 'breakfast', occurrence: 2}, distinct from the
-  // first. See ADR-015.
-  occurrence: number;
+const PROTEIN_KCAL_PER_G = 4;
+const CARB_KCAL_PER_G = 4;
+const FAT_KCAL_PER_G = 9;
+
+export interface DietMacroTotals {
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
 }
 
-// mealCount can exceed MEAL_TYPES.length (ADR-015) - once it does, this
-// round-robins through MEAL_TYPES again rather than inventing a 5th meal
-// type, so every slot still has a real name (e.g. "second lunch", not
-// "meal 5").
-export function mealSlotsForCount(mealCount: number): MealSlot[] {
-  const occurrenceByType: Record<MealType, number> = {
-    breakfast: 0,
-    lunch: 0,
-    dinner: 0,
-    snack: 0,
-  };
-  const slots: MealSlot[] = [];
-  for (let i = 0; i < mealCount; i++) {
-    const mealType = MEAL_TYPES[i % MEAL_TYPES.length];
-    occurrenceByType[mealType] += 1;
-    slots.push({ mealType, occurrence: occurrenceByType[mealType] });
-  }
-  return slots;
+export interface MealTarget {
+  // 1-based position within the day, "Meal 1".."Meal N" - see ADR-016.
+  position: number;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  carbEligible: boolean;
+}
+
+// mealCount >= 3 makes the last meal carb-free/low-fat; past 3, the last two
+// are - see ADR-016.
+function tailCountFor(mealCount: number): number {
+  if (mealCount > 3) return 2;
+  if (mealCount >= 3) return 1;
+  return 0;
+}
+
+// Carb/fat taper linearly by position across carb-eligible meals only, so
+// the day's full carb/fat totals land on eligible meals rather than being
+// reduced by the tail's share. Protein fills each meal's remaining calories
+// - clamped at 0, then the whole set rescaled down (never up) if that sum
+// would exceed totals.proteinG, since independent per-meal clamping alone
+// can inflate the day total past it (see ADR-016).
+export function mealTargetsForCount(
+  mealCount: number,
+  totals: DietMacroTotals,
+): MealTarget[] {
+  const tailCount = tailCountFor(mealCount);
+  const carbEligibleCount = mealCount - tailCount;
+  const taperWeightSum = (carbEligibleCount * (carbEligibleCount + 1)) / 2;
+  const calories = totals.calories / mealCount;
+
+  const positions = Array.from({ length: mealCount }, (_, i) => {
+    const position = i + 1;
+    const carbEligible = position <= carbEligibleCount;
+    const taperWeight = carbEligible ? carbEligibleCount - position + 1 : 0;
+    const carbsG = carbEligible
+      ? (totals.carbsG * taperWeight) / taperWeightSum
+      : 0;
+    const fatG = carbEligible
+      ? (totals.fatG * taperWeight) / taperWeightSum
+      : 0;
+    const rawProteinG = Math.max(
+      0,
+      (calories - carbsG * CARB_KCAL_PER_G - fatG * FAT_KCAL_PER_G) /
+        PROTEIN_KCAL_PER_G,
+    );
+    return { position, carbEligible, carbsG, fatG, rawProteinG };
+  });
+
+  const rawProteinSum = positions.reduce((sum, p) => sum + p.rawProteinG, 0);
+  const proteinScale =
+    rawProteinSum > totals.proteinG && rawProteinSum > 0
+      ? totals.proteinG / rawProteinSum
+      : 1;
+
+  return positions.map((p) => ({
+    position: p.position,
+    calories,
+    proteinG: p.rawProteinG * proteinScale,
+    carbsG: p.carbsG,
+    fatG: p.fatG,
+    carbEligible: p.carbEligible,
+  }));
 }
 
 export interface FoodCandidate {
@@ -48,8 +95,7 @@ export interface FoodCandidate {
 }
 
 export interface GeneratedDietItem {
-  mealType: MealType;
-  mealOccurrence: number;
+  mealPosition: number;
   foodItemId: string;
   weightGrams: number;
   orderIndex: number;

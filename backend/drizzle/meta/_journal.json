@@ -148,6 +148,13 @@
       "when": 1788471172748,
       "tag": "0020_diet_user_scoped",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788472973920,
+      "tag": "0021_diet_positional_meals",
+      "breakpoints": true
     }
   ]
 }

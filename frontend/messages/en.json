@@ -30,12 +30,7 @@
     },
     "perDay": "kcal / day",
     "macroSummary": "{protein}g protein · {carbs}g carbs · {fat}g fat",
-    "mealTypes": {
-      "breakfast": "Breakfast",
-      "lunch": "Lunch",
-      "dinner": "Dinner",
-      "snack": "Snack"
-    },
+    "mealPosition": "Meal {position}",
     "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {
       "calculatedUsing": "Calculated using <strong>{name}</strong> ({code})"
@@ -501,12 +496,6 @@
       "very_active": "Very active"
     },
     "mealsPerDay": "Meals per day",
-    "mealTypes": {
-      "breakfast": "Breakfast",
-      "lunch": "Lunch",
-      "dinner": "Dinner",
-      "snack": "Snack"
-    },
     "language": "Language",
     "weightUnit": "Preferred weight unit",
     "weightUnitOptions": {

@@ -11,7 +11,6 @@ import {
   MEAL_COUNTS,
   WEIGHT_UNITS,
 } from '@shared/types/user';
-import { MEAL_TYPE_ORDER } from '@shared/types/meal';
 import { FieldError } from '@shared/ui/components/FieldError';
 
 // Native names, not English translations - a user looking for their own
@@ -22,26 +21,6 @@ const LOCALE_LABELS: Record<(typeof LOCALES)[number], string> = {
   ru: 'Русский',
   es: 'Español',
 };
-
-// Mirrors backend/src/diets/diet.types.ts's mealSlotsForCount round-robin
-// (ADR-015), so the option text stays truthful about what generation does.
-function mealCountBreakdown(
-  count: number,
-  tMealTypes: (key: (typeof MEAL_TYPE_ORDER)[number]) => string,
-): string {
-  const occurrences: Record<(typeof MEAL_TYPE_ORDER)[number], number> = {
-    breakfast: 0,
-    lunch: 0,
-    dinner: 0,
-    snack: 0,
-  };
-  for (let i = 0; i < count; i++) {
-    occurrences[MEAL_TYPE_ORDER[i % MEAL_TYPE_ORDER.length]] += 1;
-  }
-  return MEAL_TYPE_ORDER.filter((type) => occurrences[type] > 0)
-    .map((type) => `${occurrences[type]} ${tMealTypes(type)}`)
-    .join(', ');
-}
 
 // Shared by OnboardingForm and ProfileForm - both edit the same
 // UserProfileInput shape via the same fields, differing only in
@@ -189,7 +168,7 @@ export function ProfileFields({
         >
           {MEAL_COUNTS.map((n) => (
             <option key={n} value={n}>
-              {n} — {mealCountBreakdown(n, (type) => t(`mealTypes.${type}`))}
+              {n}
             </option>
           ))}
         </select>

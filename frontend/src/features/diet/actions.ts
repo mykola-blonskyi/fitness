@@ -30,8 +30,7 @@ export interface CalorieTarget {
 // Mirrors backend/src/diets/diet.mapper.ts's DietItemResponse.
 export interface DietItemResponse {
   id: string;
-  mealType: string;
-  mealOccurrence: number;
+  mealPosition: number;
   orderIndex: number;
   weightGrams: number;
   foodItem: {
