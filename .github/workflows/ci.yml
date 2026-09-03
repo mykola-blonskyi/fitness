@@ -85,6 +85,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter frontend lint
+      - run: pnpm --filter frontend check:i18n
 
   frontend-format:
     runs-on: ubuntu-latest
