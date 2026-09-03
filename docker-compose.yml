@@ -87,6 +87,16 @@ services:
     restart: unless-stopped
     # Cross-language photo-analysis job queue (ADR-003) - no persistence
     # needed, a lost stub job can just be re-uploaded.
+    # Without a healthcheck, Docker reports no Health status at all for
+    # this container, which Coolify's status aggregator treats as
+    # "unknown" and rolls up to the whole app - even when every other
+    # service is healthy.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   frontend:
     build:
