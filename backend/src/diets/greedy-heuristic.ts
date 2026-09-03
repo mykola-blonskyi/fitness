@@ -30,7 +30,7 @@ export interface GreedyHeuristicInput {
   targetProteinG: number;
   targetCarbsG: number;
   targetFatG: number;
-  // 1-20, validated at the point mealCount is set; not re-validated here.
+  // 1-6, validated at the point mealCount is set; not re-validated here.
   mealCount: number;
   candidatesByRole: Map<string, FoodCandidate[]>;
   // Injectable so tests can pick deterministically; defaults to random.
