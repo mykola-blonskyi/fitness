@@ -3,8 +3,8 @@
 // mealSlotsForCount), picks one Food Item per required Food Role, sizes
 // protein/carb/fat role-slots off their macro-gram target and the
 // candidate's per-100g macro density, sizes the vegetable role-slot off
-// the meal's calorie share, then adjusts non-protein items if the day's
-// total drifts outside tolerance. Pure function, no I/O - testable
+// the meal's calorie share, then corrects each meal's own drift so its
+// totals never exceed target (FITNESS-64). Pure function, no I/O - testable
 // without a database.
 
 import {
@@ -16,8 +16,11 @@ import {
   type MealType,
 } from './diet.types';
 
-const CALORIE_TOLERANCE = 0.05;
 const MIN_WEIGHT_GRAMS = 1;
+// A single item's correction can at most double or halve, so a meal's
+// drift correction spreads across its items rather than one item
+// absorbing the whole adjustment alone.
+const GROWTH_CAP_MULTIPLIER = 2;
 
 // MEAL_ROLE_CHAINS index per macro group - see diet.types.ts.
 const PROTEIN_CHAIN_INDEX = 0;
@@ -56,16 +59,37 @@ export function gramsForCalories(
   return clampToMinGrams((calories / candidate.caloriesPer100g) * 100);
 }
 
-function gramsForMacro(macroPer100g: number, targetGrams: number): number {
-  if (macroPer100g <= 0) {
-    return MIN_WEIGHT_GRAMS;
-  }
-  return clampToMinGrams((targetGrams / macroPer100g) * 100);
+// null signals the role can't be filled with a meaningful portion at all
+// (zero macro density, or the computed portion rounds below
+// MIN_WEIGHT_GRAMS) - callers skip the role for that meal rather than
+// force-including a nutritionally meaningless amount.
+function meaningfulGramsForMacro(
+  macroPer100g: number,
+  targetGrams: number,
+): number | null {
+  if (macroPer100g <= 0) return null;
+  const grams = Math.round((targetGrams / macroPer100g) * 100);
+  return grams >= MIN_WEIGHT_GRAMS ? grams : null;
+}
+
+function meaningfulGramsForCalories(
+  candidate: Pick<FoodCandidate, 'caloriesPer100g'>,
+  calories: number,
+): number | null {
+  const grams = Math.round((calories / candidate.caloriesPer100g) * 100);
+  return grams >= MIN_WEIGHT_GRAMS ? grams : null;
+}
+
+interface MacroTotals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
 function macroTotals(
   items: { candidate: FoodCandidate; weightGrams: number }[],
-): { calories: number; protein: number; carbs: number; fat: number } {
+): MacroTotals {
   return items.reduce(
     (totals, item) => {
       const factor = item.weightGrams / 100;
@@ -87,6 +111,124 @@ interface WorkingItem {
   candidate: FoodCandidate;
   chainIndex: number;
   weightGrams: number;
+}
+
+type MealTargets = MacroTotals;
+
+const METRICS = ['calories', 'protein', 'carbs', 'fat'] as const;
+type Metric = (typeof METRICS)[number];
+
+function perGramValue(candidate: FoodCandidate, metric: Metric): number {
+  switch (metric) {
+    case 'calories':
+      return candidate.caloriesPer100g / 100;
+    case 'protein':
+      return candidate.proteinPer100g / 100;
+    case 'carbs':
+      return candidate.carbsPer100g / 100;
+    case 'fat':
+      return candidate.fatPer100g / 100;
+  }
+}
+
+// Correction prefers carb, then fat, then vegetable items (largest-calorie
+// first within a group) so it doesn't touch protein - the macro-driven
+// sizing pass above already hit protein's own target.
+const CORRECTION_GROUP_ORDER: Record<number, number> = {
+  [CARB_CHAIN_INDEX]: 0,
+  [FAT_CHAIN_INDEX]: 1,
+  [VEGETABLE_CHAIN_INDEX]: 2,
+};
+
+function correctionOrder(items: WorkingItem[]): WorkingItem[] {
+  return items
+    .filter((item) => item.chainIndex !== PROTEIN_CHAIN_INDEX)
+    .sort((a, b) => {
+      const groupDiff =
+        CORRECTION_GROUP_ORDER[a.chainIndex] -
+        CORRECTION_GROUP_ORDER[b.chainIndex];
+      if (groupDiff !== 0) return groupDiff;
+      return (
+        caloriesForGrams(b.candidate, b.weightGrams) -
+        caloriesForGrams(a.candidate, a.weightGrams)
+      );
+    });
+}
+
+// Drops the item (weight 0) rather than leaving it at a token weight when
+// the reduction rounds below MIN_WEIGHT_GRAMS. Unlike growTowardDelta,
+// this has no guard against pushing another macro below its own floor -
+// the calorie ceiling is the one hard constraint, so closing an overshoot
+// must go through even at another macro's expense.
+function shrinkTowardDelta(item: WorkingItem, gramsToRemove: number): number {
+  const newGrams = Math.floor(item.weightGrams - gramsToRemove);
+  if (newGrams < MIN_WEIGHT_GRAMS) {
+    const appliedCalories = caloriesForGrams(item.candidate, -item.weightGrams);
+    item.weightGrams = 0;
+    return appliedCalories;
+  }
+  const appliedCalories = caloriesForGrams(
+    item.candidate,
+    newGrams - item.weightGrams,
+  );
+  item.weightGrams = newGrams;
+  return appliedCalories;
+}
+
+// Bounded by the growth cap and by every metric's own remaining headroom
+// to target, so closing a calorie shortfall can never push
+// protein/carbs/fat past their own ceiling.
+function growTowardDelta(
+  item: WorkingItem,
+  calorieDelta: number,
+  totals: MacroTotals,
+  targets: MealTargets,
+): number {
+  const preGrams = item.weightGrams;
+  const desiredGrams = (calorieDelta / item.candidate.caloriesPer100g) * 100;
+  let allowedGrowth = Math.min(
+    desiredGrams,
+    preGrams * (GROWTH_CAP_MULTIPLIER - 1),
+  );
+
+  for (const metric of METRICS) {
+    const perG = perGramValue(item.candidate, metric);
+    if (perG <= 0) continue;
+    const headroom = Math.max(0, targets[metric] - totals[metric]);
+    allowedGrowth = Math.min(allowedGrowth, headroom / perG);
+  }
+
+  const newGrams = Math.floor(preGrams + Math.max(0, allowedGrowth));
+  if (newGrams === preGrams) return 0;
+  const appliedCalories = caloriesForGrams(item.candidate, newGrams - preGrams);
+  item.weightGrams = newGrams;
+  return appliedCalories;
+}
+
+// Scoped to this meal's own drift only, never pooled with other meals.
+function correctMeal(
+  mealItems: WorkingItem[],
+  targets: MealTargets,
+): WorkingItem[] {
+  let totals = macroTotals(mealItems);
+  let calorieDelta = targets.calories - totals.calories;
+
+  for (const item of correctionOrder(mealItems)) {
+    if (Math.abs(calorieDelta) < 1 || item.weightGrams <= 0) continue;
+
+    const appliedCalories =
+      calorieDelta < 0
+        ? shrinkTowardDelta(
+            item,
+            (-calorieDelta / item.candidate.caloriesPer100g) * 100,
+          )
+        : growTowardDelta(item, calorieDelta, totals, targets);
+
+    calorieDelta -= appliedCalories;
+    totals = macroTotals(mealItems);
+  }
+
+  return mealItems.filter((item) => item.weightGrams > 0);
 }
 
 export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
@@ -122,35 +264,55 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     usedIdsByMealType.set(slot.mealType, usedIds);
     if (picks.length === 0) continue;
 
-    picks.forEach(({ chainIndex, candidate }, orderIndex) => {
-      let weightGrams: number;
+    const mealItems: WorkingItem[] = [];
+    picks.forEach(({ chainIndex, candidate }) => {
+      let weightGrams: number | null;
       switch (chainIndex) {
         case PROTEIN_CHAIN_INDEX:
-          weightGrams = gramsForMacro(
+          weightGrams = meaningfulGramsForMacro(
             candidate.proteinPer100g,
             mealProteinTarget,
           );
           break;
         case CARB_CHAIN_INDEX:
-          weightGrams = gramsForMacro(candidate.carbsPer100g, mealCarbTarget);
+          weightGrams = meaningfulGramsForMacro(
+            candidate.carbsPer100g,
+            mealCarbTarget,
+          );
           break;
         case FAT_CHAIN_INDEX:
-          weightGrams = gramsForMacro(candidate.fatPer100g, mealFatTarget);
+          weightGrams = meaningfulGramsForMacro(
+            candidate.fatPer100g,
+            mealFatTarget,
+          );
           break;
         default:
-          weightGrams = gramsForCalories(
+          weightGrams = meaningfulGramsForCalories(
             candidate,
             mealCalorieTarget / picks.length,
           );
       }
-      items.push({
+      if (weightGrams === null) return;
+      mealItems.push({
         mealType: slot.mealType,
         occurrence: slot.occurrence,
-        orderIndex,
+        orderIndex: 0,
         candidate,
         chainIndex,
         weightGrams,
       });
+    });
+    if (mealItems.length === 0) continue;
+
+    const corrected = correctMeal(mealItems, {
+      calories: mealCalorieTarget,
+      protein: mealProteinTarget,
+      carbs: mealCarbTarget,
+      fat: mealFatTarget,
+    });
+    corrected.forEach((item, orderIndex) => {
+      item.orderIndex = orderIndex;
+      items.push(item);
     });
   }
 
@@ -164,52 +326,7 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     };
   }
 
-  // Correction targets calories only, adjusting carb/fat/vegetable items
-  // first (largest-calorie within that preference order) so it doesn't undo
-  // the protein accuracy the macro-driven sizing pass above already hit.
-  let totals = macroTotals(items);
-  let delta = input.targetCalories - totals.calories;
-  const toleranceCalories = input.targetCalories * CALORIE_TOLERANCE;
-
-  if (Math.abs(delta) > toleranceCalories) {
-    const correctionGroupOrder: Record<number, number> = {
-      [CARB_CHAIN_INDEX]: 0,
-      [FAT_CHAIN_INDEX]: 1,
-      [VEGETABLE_CHAIN_INDEX]: 2,
-    };
-    const byCorrectionOrder = items
-      .filter((item) => item.chainIndex !== PROTEIN_CHAIN_INDEX)
-      .sort((a, b) => {
-        const groupDiff =
-          correctionGroupOrder[a.chainIndex] -
-          correctionGroupOrder[b.chainIndex];
-        if (groupDiff !== 0) return groupDiff;
-        return (
-          caloriesForGrams(b.candidate, b.weightGrams) -
-          caloriesForGrams(a.candidate, a.weightGrams)
-        );
-      });
-
-    for (const item of byCorrectionOrder) {
-      if (Math.abs(delta) < 1) break;
-
-      const deltaGrams = (delta / item.candidate.caloriesPer100g) * 100;
-      const newGrams = Math.max(
-        MIN_WEIGHT_GRAMS,
-        Math.round(item.weightGrams + deltaGrams),
-      );
-      const appliedDeltaCalories = caloriesForGrams(
-        item.candidate,
-        newGrams - item.weightGrams,
-      );
-
-      item.weightGrams = newGrams;
-      delta -= appliedDeltaCalories;
-    }
-
-    totals = macroTotals(items);
-  }
-
+  const totals = macroTotals(items);
   const generatedItems: GeneratedDietItem[] = items.map((item) => ({
     mealType: item.mealType,
     mealOccurrence: item.occurrence,
