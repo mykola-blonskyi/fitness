@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { LogSetForm, WorkoutSetList } from '@features/workout-logs';
 import type { Exercise } from '@shared/types/exercise';
 import type { WorkoutLog } from '@shared/types/workout-log';
@@ -12,6 +13,7 @@ export default async function WorkoutLogDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
+  const t = await getTranslations('Workouts');
 
   let workoutLog: WorkoutLog;
   try {
@@ -35,14 +37,14 @@ export default async function WorkoutLogDetailPage({
           href={`/${locale}/workouts`}
           className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
         >
-          &larr; Workouts
+          &larr; {t('backLink')}
         </Link>
         <h1 className="mt-1 text-2xl font-semibold">{workoutLog.title}</h1>
         <p className="text-sm text-zinc-500">{workoutLog.date}</p>
       </div>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">Sets</h2>
+        <h2 className="text-lg font-semibold">{t('setsHeading')}</h2>
         <WorkoutSetList
           workoutLogId={workoutLog.id}
           sets={workoutLog.sets}
@@ -51,7 +53,7 @@ export default async function WorkoutLogDetailPage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Log a set</h2>
+        <h2 className="text-lg font-semibold">{t('logSetHeading')}</h2>
         <LogSetForm
           workoutLogId={workoutLog.id}
           exercises={exercises}

@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { StartWorkoutForm, WorkoutLogList } from '@features/workout-logs';
 import type { WorkoutLog } from '@shared/types/workout-log';
 import type { TrainingProgram } from '@shared/types/training-program';
@@ -10,6 +11,7 @@ export default async function WorkoutsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations('Workouts');
   const date = todayIso();
 
   const [workoutLogs, programs] = await Promise.all([
@@ -20,10 +22,10 @@ export default async function WorkoutsPage({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">Workouts</h1>
+      <h1 className="text-2xl font-semibold">{t('pageTitle')}</h1>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Start a workout</h2>
+        <h2 className="text-lg font-semibold">{t('startHeading')}</h2>
         <StartWorkoutForm
           locale={locale}
           date={date}
@@ -32,7 +34,7 @@ export default async function WorkoutsPage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Past workouts</h2>
+        <h2 className="text-lg font-semibold">{t('pastHeading')}</h2>
         <WorkoutLogList workoutLogs={workoutLogs} locale={locale} />
       </section>
     </main>

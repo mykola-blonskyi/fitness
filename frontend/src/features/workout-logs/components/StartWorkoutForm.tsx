@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   startWorkoutLogSchema,
   type StartWorkoutLogInput,
@@ -21,6 +22,7 @@ export function StartWorkoutForm({
   date: string;
   activePrograms: TrainingProgram[];
 }) {
+  const t = useTranslations('Workouts.startForm');
   const {
     register,
     handleSubmit,
@@ -41,7 +43,7 @@ export function StartWorkoutForm({
       {activePrograms.length > 0 && (
         <div className="flex flex-col gap-1">
           <label htmlFor="trainingProgramId" className="text-sm font-medium">
-            Training program
+            {t('trainingProgramLabel')}
           </label>
           <select
             id="trainingProgramId"
@@ -49,7 +51,7 @@ export function StartWorkoutForm({
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             {...register('trainingProgramId')}
           >
-            <option value="">Ad hoc (no program)</option>
+            <option value="">{t('adHoc')}</option>
             {activePrograms.map((program) => (
               <option key={program.id} value={program.id}>
                 {program.title}
@@ -62,11 +64,11 @@ export function StartWorkoutForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="title" className="text-sm font-medium">
-          Title (optional)
+          {t('titleLabel')}
         </label>
         <input
           id="title"
-          placeholder="e.g. Push day"
+          placeholder={t('titlePlaceholder')}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('title')}
         />
@@ -78,7 +80,7 @@ export function StartWorkoutForm({
         disabled={isSubmitting}
         className="bg-foreground text-background flex h-11 items-center justify-center rounded px-4 disabled:opacity-50"
       >
-        {isSubmitting ? 'Starting…' : 'Start workout'}
+        {isSubmitting ? t('starting') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />
