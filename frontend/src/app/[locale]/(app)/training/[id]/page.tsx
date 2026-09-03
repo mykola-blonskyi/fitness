@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import {
   AddProgramExerciseForm,
   ProgramExerciseRow,
@@ -14,6 +15,7 @@ export default async function TrainingProgramDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
+  const t = await getTranslations('Training');
 
   let program: TrainingProgram;
   try {
@@ -35,9 +37,7 @@ export default async function TrainingProgramDetailPage({
 
       <section className="flex flex-col gap-2">
         {program.exercises.length === 0 && (
-          <p className="text-sm text-zinc-500">
-            No exercises yet. Add one below.
-          </p>
+          <p className="text-sm text-zinc-500">{t('noExercisesYet')}</p>
         )}
         <ul className="flex flex-col gap-2">
           {program.exercises.map((exercise, index) => (
@@ -55,7 +55,7 @@ export default async function TrainingProgramDetailPage({
 
       {!program.isArchived && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Add an exercise</h2>
+          <h2 className="text-lg font-semibold">{t('addExerciseHeading')}</h2>
           <AddProgramExerciseForm
             programId={program.id}
             exercises={exercises}

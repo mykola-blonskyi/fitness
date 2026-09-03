@@ -37,13 +37,16 @@ export async function listExercises(
 export async function createExercise(
   input: CreateExerciseInput,
 ): Promise<CreateExerciseFormState> {
-  const t = await getTranslations('Validation');
+  const [tv, t] = await Promise.all([
+    getTranslations('Validation'),
+    getTranslations('Exercises.errors'),
+  ]);
   // No `formData` option - see features/onboarding/actions.ts for why.
   return submitFormAction({
     name: 'createExercise',
-    schema: createExerciseSchema(t),
+    schema: createExerciseSchema(tv),
     input,
-    errorMessage: "Couldn't add that exercise — try again.",
+    errorMessage: t('addFailed'),
     async mutate(parsed) {
       await apiFetch<Exercise>('/exercises', {
         method: 'POST',

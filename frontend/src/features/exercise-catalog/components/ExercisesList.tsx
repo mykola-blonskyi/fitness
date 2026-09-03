@@ -2,11 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import {
-  EXERCISE_CATEGORY_LABELS,
-  type Exercise,
-} from '@shared/types/exercise';
+import type { Exercise } from '@shared/types/exercise';
 import type { UserProfile } from '@shared/types/user';
 import { listExercises } from '@features/exercise-catalog/actions';
 import { unapproveExercise } from '@features/admin-exercises/actions';
@@ -28,6 +26,8 @@ export const ExercisesList = ({
   search,
   profile,
 }: ExercisesListProps) => {
+  const t = useTranslations('Exercises.list');
+  const tc = useTranslations('ExerciseCategories');
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -83,11 +83,7 @@ export const ExercisesList = ({
   }
 
   if (items.length === 0 && !cursor) {
-    return (
-      <p className="py-6 text-sm text-zinc-500">
-        No exercises match this filter.
-      </p>
-    );
+    return <p className="py-6 text-sm text-zinc-500">{t('empty')}</p>;
   }
 
   return (
@@ -132,7 +128,7 @@ export const ExercisesList = ({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{exercise.name}</p>
                 <p className="truncate text-xs text-zinc-500">
-                  {EXERCISE_CATEGORY_LABELS[exercise.category]}
+                  {tc(exercise.category)}
                 </p>
                 {rowErrors[exercise.id] && (
                   <p className="text-xs text-red-600 dark:text-red-400">
@@ -148,7 +144,7 @@ export const ExercisesList = ({
                   onClick={() => handleUnapprove(exercise.id)}
                   className="shrink-0 text-sm text-zinc-500 underline hover:text-zinc-700 disabled:opacity-50 dark:hover:text-zinc-300"
                 >
-                  Unapprove
+                  {t('unapprove')}
                 </button>
               )}
             </div>
@@ -156,7 +152,9 @@ export const ExercisesList = ({
         })}
       </div>
       {loadingMore && (
-        <p className="py-3 text-center text-sm text-zinc-500">Loading more…</p>
+        <p className="py-3 text-center text-sm text-zinc-500">
+          {t('loadingMore')}
+        </p>
       )}
     </div>
   );

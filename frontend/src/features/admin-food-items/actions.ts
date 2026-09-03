@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import * as Sentry from '@sentry/nextjs';
 import { apiFetch, ApiError } from '@libs/api-client';
 import type { AdminFoodItem, CursorPage } from '@shared/types/admin';
@@ -22,9 +23,7 @@ export async function listAdminFoodItems(
   );
 }
 
-export async function approveFoodItem(
-  id: string,
-): Promise<AdminActionResult> {
+export async function approveFoodItem(id: string): Promise<AdminActionResult> {
   return Sentry.withServerActionInstrumentation(
     'approveFoodItem',
     {},
@@ -33,7 +32,8 @@ export async function approveFoodItem(
         await apiFetch(`/admin/food-items/${id}/approve`, { method: 'POST' });
         return {};
       } catch {
-        return { error: "Couldn't approve this food item — try again." };
+        const t = await getTranslations('Admin.errors');
+        return { error: t('approveFoodFailed') };
       }
     },
   );
@@ -65,7 +65,8 @@ export async function deleteFoodItem(id: string): Promise<AdminActionResult> {
         if (err instanceof ApiError && err.status === 409) {
           return { error: err.message };
         }
-        return { error: "Couldn't delete this food item — try again." };
+        const t = await getTranslations('Admin.errors');
+        return { error: t('deleteFoodFailed') };
       }
     },
   );

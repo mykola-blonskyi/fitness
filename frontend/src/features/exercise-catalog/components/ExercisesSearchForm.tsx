@@ -1,22 +1,22 @@
-import {
-  EXERCISE_CATEGORIES,
-  EXERCISE_CATEGORY_LABELS,
-} from '@shared/types/exercise';
+import { getTranslations } from 'next-intl/server';
+import { EXERCISE_CATEGORIES } from '@shared/types/exercise';
 
 interface ExercisesSearchFormProps {
   category?: string;
   search?: string;
 }
 
-export const ExercisesSearchForm = ({
+export const ExercisesSearchForm = async ({
   category,
   search,
 }: ExercisesSearchFormProps) => {
+  const t = await getTranslations('Exercises.searchForm');
+  const tc = await getTranslations('ExerciseCategories');
   return (
     <form className="flex flex-wrap items-end gap-2">
       <div className="flex flex-col gap-1">
         <label htmlFor="category" className="text-sm font-medium">
-          Category
+          {t('categoryLabel')}
         </label>
         <select
           id="category"
@@ -24,24 +24,24 @@ export const ExercisesSearchForm = ({
           defaultValue={category ?? ''}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
         >
-          <option value="">All categories</option>
+          <option value="">{t('allCategories')}</option>
           {EXERCISE_CATEGORIES.map((c) => (
             <option key={c} value={c}>
-              {EXERCISE_CATEGORY_LABELS[c]}
+              {tc(c)}
             </option>
           ))}
         </select>
       </div>
       <div className="flex flex-col gap-1">
         <label htmlFor="search" className="text-sm font-medium">
-          Search
+          {t('searchLabel')}
         </label>
         <input
           id="search"
           name="search"
           type="search"
           defaultValue={search ?? ''}
-          placeholder="Exercise name…"
+          placeholder={t('searchPlaceholder')}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
         />
       </div>
@@ -49,7 +49,7 @@ export const ExercisesSearchForm = ({
         type="submit"
         className="bg-foreground text-background rounded px-4 py-2"
       >
-        Filter
+        {t('submit')}
       </button>
     </form>
   );

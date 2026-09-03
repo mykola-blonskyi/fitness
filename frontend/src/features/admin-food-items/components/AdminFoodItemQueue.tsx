@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { AdminFoodItem } from '@shared/types/admin';
 import {
@@ -19,6 +20,7 @@ export function AdminFoodItemQueue({
   initialItems: AdminFoodItem[];
   initialCursor: string | null;
 }) {
+  const t = useTranslations('Admin.queue');
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -87,11 +89,7 @@ export function AdminFoodItemQueue({
   }
 
   if (items.length === 0 && !cursor) {
-    return (
-      <p className="py-6 text-sm text-zinc-500">
-        Nothing to review — the queue is empty.
-      </p>
-    );
+    return <p className="py-6 text-sm text-zinc-500">{t('empty')}</p>;
   }
 
   return (
@@ -145,7 +143,7 @@ export function AdminFoodItemQueue({
                   {item.proteinPer100g.toFixed(1)}g &middot; C{' '}
                   {item.carbsPer100g.toFixed(1)}g &middot; F{' '}
                   {item.fatPer100g.toFixed(1)}g &middot;{' '}
-                  {item.source ?? 'manual'}
+                  {item.source ?? t('manualSource')}
                   {item.sourceId ? ` #${item.sourceId}` : ''}
                 </p>
                 {rowErrors[item.id] && (
@@ -158,14 +156,16 @@ export function AdminFoodItemQueue({
               <div className="flex shrink-0 items-center gap-2">
                 {confirmingId === item.id ? (
                   <>
-                    <span className="text-xs text-zinc-500">Delete?</span>
+                    <span className="text-xs text-zinc-500">
+                      {t('confirmDelete')}
+                    </span>
                     <button
                       type="button"
                       disabled={isPending}
                       onClick={() => handleDelete(item.id)}
                       className="rounded bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50"
                     >
-                      Confirm
+                      {t('confirm')}
                     </button>
                     <button
                       type="button"
@@ -173,7 +173,7 @@ export function AdminFoodItemQueue({
                       onClick={() => setConfirmingId(null)}
                       className="rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700"
                     >
-                      Cancel
+                      {t('cancel')}
                     </button>
                   </>
                 ) : (
@@ -184,7 +184,7 @@ export function AdminFoodItemQueue({
                       onClick={() => handleApprove(item.id)}
                       className="bg-foreground text-background rounded px-3 py-2 text-sm disabled:opacity-50"
                     >
-                      Approve
+                      {t('approve')}
                     </button>
                     <button
                       type="button"
@@ -192,7 +192,7 @@ export function AdminFoodItemQueue({
                       onClick={() => setConfirmingId(item.id)}
                       className="rounded border border-red-300 px-3 py-2 text-sm text-red-600 disabled:opacity-50 dark:border-red-900 dark:text-red-400"
                     >
-                      Delete
+                      {t('delete')}
                     </button>
                   </>
                 )}
@@ -202,7 +202,9 @@ export function AdminFoodItemQueue({
         })}
       </div>
       {loadingMore && (
-        <p className="py-3 text-center text-sm text-zinc-500">Loading more…</p>
+        <p className="py-3 text-center text-sm text-zinc-500">
+          {t('loadingMore')}
+        </p>
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { ActiveBadge } from '@features/training-programs/components/ActiveBadge';
 import {
   activateTrainingProgram,
@@ -13,14 +14,18 @@ interface ProgramHeaderProps {
   locale: string;
 }
 
-export const ProgramHeader = ({ program, locale }: ProgramHeaderProps) => {
+export const ProgramHeader = async ({
+  program,
+  locale,
+}: ProgramHeaderProps) => {
+  const t = await getTranslations('Training');
   return (
     <div>
       <Link
         href={`/${locale}/training`}
         className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
       >
-        &larr; Training Programs
+        &larr; {t('backLink')}
       </Link>
       <div className="mt-1 flex items-center justify-between gap-3">
         <span className="flex items-center gap-2">
@@ -39,7 +44,7 @@ export const ProgramHeader = ({ program, locale }: ProgramHeaderProps) => {
                 type="submit"
                 className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm dark:border-zinc-700"
               >
-                {program.isActive ? 'Deactivate' : 'Activate'}
+                {program.isActive ? t('deactivate') : t('activate')}
               </button>
             </form>
           )}
@@ -53,15 +58,13 @@ export const ProgramHeader = ({ program, locale }: ProgramHeaderProps) => {
               type="submit"
               className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm dark:border-zinc-700"
             >
-              {program.isArchived ? 'Reactivate' : 'Archive'}
+              {program.isArchived ? t('reactivate') : t('archive')}
             </button>
           </form>
         </div>
       </div>
       {program.isArchived && (
-        <p className="mt-1 text-sm text-zinc-500">
-          This program is archived - reactivate it to make changes.
-        </p>
+        <p className="mt-1 text-sm text-zinc-500">{t('archivedNote')}</p>
       )}
     </div>
   );

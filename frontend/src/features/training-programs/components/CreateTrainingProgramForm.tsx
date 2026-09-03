@@ -12,6 +12,7 @@ import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createTrainingProgram } from '@features/training-programs/actions';
 
 export function CreateTrainingProgramForm() {
+  const t = useTranslations('Training.createForm');
   const tv = useTranslations('Validation');
   const schema = useMemo(() => createTrainingProgramSchema(tv), [tv]);
   const {
@@ -34,11 +35,11 @@ export function CreateTrainingProgramForm() {
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="title" className="text-sm font-medium">
-          Title
+          {t('titleLabel')}
         </label>
         <input
           id="title"
-          placeholder="e.g. Push/Pull/Legs"
+          placeholder={t('titlePlaceholder')}
           className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           {...register('title')}
         />
@@ -50,7 +51,7 @@ export function CreateTrainingProgramForm() {
         disabled={isSubmitting}
         className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
       >
-        {isSubmitting ? 'Creating…' : 'Create program'}
+        {isSubmitting ? t('creating') : t('submit')}
       </button>
 
       <FieldError message={errors.root?.message} />
