@@ -14,7 +14,7 @@ function buildDb(overrides: { findFirst: jest.Mock; photos: unknown[] }) {
         where: jest.fn().mockResolvedValue(overrides.photos),
       }),
     }),
-    transaction: jest.fn(async (cb: (tx: typeof tx) => Promise<void>) => {
+    transaction: jest.fn(async (cb: (t: typeof tx) => Promise<void>) => {
       await cb(tx);
     }),
     txDelete,
