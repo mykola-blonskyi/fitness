@@ -4,9 +4,13 @@ A geometry heuristic over the 33 BlazePose landmarks - no separately
 trained classifier (ADR-013). Produces a score per pose; the joint
 assignment across a session's photos happens in pose_assignment.py.
 
-The thresholds below are a first pass calibrated on the geometry model
-(a full-body standing subject); they should be revisited once real
-progress photos exist, same as the seed-data review pass.
+Hip landmarks aren't used for classification here (LEFT_HIP/RIGHT_HIP are
+kept as shared index constants for alignment.py): on two real progress
+photos that were misclassified in production, hip visibility was ~0-3%
+(they're commonly out of frame or occluded in a phone-held-at-chest-height
+shot), so their x-position was noise the original version still let
+outrank the shoulders. Shoulder and nose landmarks stayed reliably
+visible (>99%) on the same photos.
 """
 
 from __future__ import annotations
@@ -53,10 +57,6 @@ def _features(landmarks: list[Landmark]) -> dict:
     shoulder_span = abs(
         _x(landmarks, LEFT_SHOULDER) - _x(landmarks, RIGHT_SHOULDER)
     )
-    hip_span = abs(_x(landmarks, LEFT_HIP) - _x(landmarks, RIGHT_HIP))
-    # A profile collapses both; front/back keeps at least the shoulders
-    # wide even with loose clothing over the hips.
-    body_width = max(shoulder_span, hip_span)
 
     face_vis = (
         _vis(landmarks, NOSE)
@@ -68,7 +68,6 @@ def _features(landmarks: list[Landmark]) -> dict:
     shoulder_asym = abs(
         _vis(landmarks, LEFT_SHOULDER) - _vis(landmarks, RIGHT_SHOULDER)
     )
-    hip_asym = abs(_vis(landmarks, LEFT_HIP) - _vis(landmarks, RIGHT_HIP))
 
     shoulder_mid_x = (
         _x(landmarks, LEFT_SHOULDER) + _x(landmarks, RIGHT_SHOULDER)
@@ -78,9 +77,9 @@ def _features(landmarks: list[Landmark]) -> dict:
     )
 
     return {
-        "body_width": body_width,
+        "body_width": shoulder_span,
         "face_vis": face_vis,
-        "asymmetry": max(ear_asym, shoulder_asym, hip_asym),
+        "asymmetry": max(ear_asym, shoulder_asym),
         "nose_offset": nose_offset,
     }
 
@@ -96,7 +95,7 @@ def _frontality(body_width: float) -> float:
 def score_poses(landmarks: list[Landmark] | None) -> dict[str, float]:
     """Normalised score per pose (sums to 1). No detected pose -> a flat
     distribution, which the joint assignment treats as "no signal"."""
-    if not landmarks or len(landmarks) < RIGHT_HIP + 1:
+    if not landmarks or len(landmarks) < RIGHT_SHOULDER + 1:
         return {pose: 1 / 3 for pose in POSES}
 
     f = _features(landmarks)

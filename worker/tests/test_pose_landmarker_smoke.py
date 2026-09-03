@@ -30,3 +30,14 @@ def test_detects_a_pose_and_scores_front_for_the_frontal_fixture(detect):
     scores = score_poses(landmarks)
     assert abs(sum(scores.values()) - 1.0) < 1e-9
     assert max(scores, key=scores.get) == "front"
+
+
+def test_exif_rotated_frontal_photo_still_scores_front(detect):
+    """Regression test: a photo tagged with EXIF orientation instead of
+    stored upright must still classify correctly - see pose_landmarker's
+    exif_transpose call."""
+    landmarks = detect((FIXTURES / "front_exif_rotated.jpg").read_bytes())
+
+    assert landmarks is not None
+    scores = score_poses(landmarks)
+    assert max(scores, key=scores.get) == "front"
