@@ -198,8 +198,7 @@ export const programExercises = pgTable('program_exercises', {
 // nullable for ad hoc workouts, and title is copied from the program at
 // start time rather than joined live - so later renaming/archiving the
 // program never changes what an already-logged Workout Log displays. No
-// userId column, same as `diets` - ownership is verified by joining
-// through dailyLogId.
+// userId column - ownership is verified by joining through dailyLogId.
 export const workoutLogs = pgTable('workout_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
   dailyLogId: uuid('daily_log_id')
@@ -397,14 +396,14 @@ export const mealTypeEnum = pgEnum('meal_type', [
 ]);
 
 // Never updated in place - regenerating always inserts a new row; the
-// current diet for a Daily Log is just the most recent one (`ORDER BY
+// current diet for a user is just the most recent one (`ORDER BY
 // created_at DESC LIMIT 1`), not a stored flag. calculationMetadata
 // snapshots the algorithm's raw inputs/outputs at generation time.
 export const diets = pgTable('diets', {
   id: uuid('id').primaryKey().defaultRandom(),
-  dailyLogId: uuid('daily_log_id')
+  userId: uuid('user_id')
     .notNull()
-    .references(() => dailyLogs.id),
+    .references(() => users.id),
   algorithmId: uuid('algorithm_id')
     .notNull()
     .references(() => dietCalculationAlgorithms.id),

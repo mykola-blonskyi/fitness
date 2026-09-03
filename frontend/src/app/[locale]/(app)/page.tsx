@@ -5,7 +5,6 @@ import { apiFetch, fetchOr404 } from '@libs/api-client';
 import { todayIso } from '@libs/date';
 import type { DailyLog } from '@features/daily-log/actions';
 import type { CalorieTarget, DietResponse } from '@features/diet/actions';
-import { dietDate } from '@features/diet/date';
 import type { PhotoSession } from '@features/photo-sessions/actions';
 import type { TrainingProgram } from '@shared/types/training-program';
 import type { WorkoutLog } from '@shared/types/workout-log';
@@ -59,7 +58,7 @@ export default async function Home({
     fetchOr404<DailyLog>('/daily-logs/latest-weigh-in'),
     fetchOr404<DailyLog>(`/daily-logs/${today}`),
     fetchOr404<CalorieTarget>('/calorie-targets'),
-    fetchOr404<DietResponse>(`/diets/${dietDate()}/current`),
+    fetchOr404<DietResponse>('/diets/current'),
     apiFetch<TrainingProgram[]>('/training-programs'),
     apiFetch<WorkoutLog[]>('/workout-logs'),
     apiFetch<PhotoSession[]>('/photo-sessions'),
