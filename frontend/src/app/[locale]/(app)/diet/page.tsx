@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { fetchOr404 } from '@libs/api-client';
 import type { CalorieTarget, DietResponse } from '@features/diet/actions';
 import { dietDate } from '@features/diet/date';
@@ -16,6 +17,7 @@ export default async function DietPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations('Diet.page');
 
   const [target, diet] = await Promise.all([
     fetchOr404<CalorieTarget>('/calorie-targets'),
@@ -24,15 +26,17 @@ export default async function DietPage({
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">Diet</h1>
+      <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
       {!target && (
         <p className="text-sm text-zinc-500">
-          Log today&apos;s weight in your{' '}
-          <Link href={`/${locale}/diary`} className="underline">
-            Diary
-          </Link>{' '}
-          to see your daily calorie and macro targets.
+          {t.rich('noTargetYet', {
+            diary: (chunks) => (
+              <Link href={`/${locale}/diary`} className="underline">
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       )}
 

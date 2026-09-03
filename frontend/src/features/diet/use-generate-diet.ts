@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { generateDiet } from '@features/diet/actions';
 
 export function useGenerateDiet() {
+  const t = useTranslations('Diet.errors');
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -23,7 +25,7 @@ export function useGenerateDiet() {
       setError(result.error);
       setPreferencesBlocked(result.preferencesBlocked);
     } catch {
-      setError('Something went wrong — try again.');
+      setError(t('generic'));
     }
     setIsPending(false);
     return false;

@@ -1,14 +1,17 @@
 import * as z from 'zod';
+import type { ValidationTranslator } from '@shared/schemas/validation-translator';
 
 // Mirrors backend/src/training-programs/dto/create-training-program.dto.ts
 // (hand-synced, not derived) - client-side UX only; the backend DTO stays
 // authoritative.
-export const createTrainingProgramSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-});
+export function createTrainingProgramSchema(t: ValidationTranslator) {
+  return z.object({
+    title: z.string().min(1, t('trainingProgram.titleRequired')),
+  });
+}
 
 export type CreateTrainingProgramInput = z.infer<
-  typeof createTrainingProgramSchema
+  ReturnType<typeof createTrainingProgramSchema>
 >;
 
 // Mirrors backend/src/training-programs/dto/add-program-exercise.dto.ts.
@@ -16,34 +19,46 @@ export type CreateTrainingProgramInput = z.infer<
 // renders one field group, so the submitted data alone determines
 // validity. Enforced via superRefine rather than react-hook-form's
 // `required` option, which zodResolver silently ignores.
-export const addProgramExerciseSchema = z
-  .object({
-    exerciseId: z.uuid('Choose an exercise'),
-    targetSets: z.number().int().min(1, 'Must be at least 1').optional(),
-    targetReps: z.number().int().min(1, 'Must be at least 1').optional(),
-    targetDurationSeconds: z
-      .number()
-      .int()
-      .min(1, 'Must be at least 1')
-      .optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.targetDurationSeconds != null) return;
+export function addProgramExerciseSchema(t: ValidationTranslator) {
+  return z
+    .object({
+      exerciseId: z.uuid(t('programExercise.exerciseRequired')),
+      targetSets: z
+        .number()
+        .int()
+        .min(1, t('programExercise.targetMin'))
+        .optional(),
+      targetReps: z
+        .number()
+        .int()
+        .min(1, t('programExercise.targetMin'))
+        .optional(),
+      targetDurationSeconds: z
+        .number()
+        .int()
+        .min(1, t('programExercise.targetMin'))
+        .optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (data.targetDurationSeconds != null) return;
 
-    if (data.targetSets == null) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['targetSets'],
-        message: 'Target sets is required',
-      });
-    }
-    if (data.targetReps == null) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['targetReps'],
-        message: 'Target reps is required',
-      });
-    }
-  });
+      if (data.targetSets == null) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['targetSets'],
+          message: t('programExercise.targetSetsRequired'),
+        });
+      }
+      if (data.targetReps == null) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['targetReps'],
+          message: t('programExercise.targetRepsRequired'),
+        });
+      }
+    });
+}
 
-export type AddProgramExerciseInput = z.infer<typeof addProgramExerciseSchema>;
+export type AddProgramExerciseInput = z.infer<
+  ReturnType<typeof addProgramExerciseSchema>
+>;

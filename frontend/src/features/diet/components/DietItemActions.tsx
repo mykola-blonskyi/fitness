@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { FieldError } from '@shared/ui/components/FieldError';
 import { swapDietItem } from '@features/diet/actions';
@@ -17,6 +18,7 @@ export function DietItemActions({
   foodItemId: string;
   role: string;
 }) {
+  const t = useTranslations('Diet');
   const router = useRouter();
   const [isRerolling, setIsRerolling] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -33,7 +35,7 @@ export function DietItemActions({
       }
       setError(result.error);
     } catch {
-      setError('Something went wrong — try again.');
+      setError(t('errors.generic'));
     }
     setIsRerolling(false);
   }
@@ -47,7 +49,7 @@ export function DietItemActions({
           disabled={isRerolling}
           className="rounded border border-zinc-300 px-3 py-1.5 text-sm transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
         >
-          {isRerolling ? 'Rerolling…' : 'Reroll'}
+          {isRerolling ? t('itemActions.rerolling') : t('itemActions.reroll')}
         </button>
         <button
           type="button"
@@ -55,7 +57,7 @@ export function DietItemActions({
           aria-expanded={pickerOpen}
           className="rounded border border-zinc-300 px-3 py-1.5 text-sm transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
         >
-          Swap
+          {t('itemActions.swap')}
         </button>
       </div>
 

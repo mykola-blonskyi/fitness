@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { FieldError } from '@shared/ui/components/FieldError';
 import { listSwapCandidates, swapDietItem } from '@features/diet/actions';
@@ -19,6 +20,7 @@ export function SwapPicker({
   currentFoodItemId: string;
   onDone: () => void;
 }) {
+  const t = useTranslations('Diet');
   const { locale } = useParams<{ locale: string }>();
   const [search, setSearch] = useState('');
   const [candidates, setCandidates] = useState<FoodItem[]>([]);
@@ -40,7 +42,7 @@ export function SwapPicker({
           setCandidates(items.filter((item) => item.id !== currentFoodItemId));
         }
       } catch {
-        if (!cancelled) setError("Couldn't load food items — try again.");
+        if (!cancelled) setError(t('swapPicker.loadError'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -49,7 +51,7 @@ export function SwapPicker({
       cancelled = true;
       clearTimeout(handle);
     };
-  }, [role, search, currentFoodItemId, locale]);
+  }, [role, search, currentFoodItemId, locale, t]);
 
   async function onSelect(foodItemId: string) {
     setError(undefined);
@@ -62,7 +64,7 @@ export function SwapPicker({
       }
       setError(result.error);
     } catch {
-      setError('Something went wrong — try again.');
+      setError(t('errors.generic'));
     }
     setSubmittingId(null);
   }
@@ -70,23 +72,23 @@ export function SwapPicker({
   return (
     <div className="flex w-full flex-col gap-2 rounded border border-zinc-200 p-3 sm:w-72 dark:border-zinc-800">
       <label className="sr-only" htmlFor={`swap-search-${itemId}`}>
-        Search {role.replace(/_/g, ' ')} food items
+        {t('swapPicker.searchLabel', { role: role.replace(/_/g, ' ') })}
       </label>
       <input
         id={`swap-search-${itemId}`}
         type="search"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder="Search…"
+        placeholder={t('swapPicker.searchPlaceholder')}
         className="rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
       />
 
-      {isLoading && <p className="text-xs text-zinc-500">Loading…</p>}
+      {isLoading && (
+        <p className="text-xs text-zinc-500">{t('swapPicker.loading')}</p>
+      )}
 
       {!isLoading && candidates.length === 0 && (
-        <p className="text-xs text-zinc-500">
-          No other food items in this role.
-        </p>
+        <p className="text-xs text-zinc-500">{t('swapPicker.empty')}</p>
       )}
 
       <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
@@ -100,7 +102,9 @@ export function SwapPicker({
             >
               <span>{candidate.name}</span>
               <span className="text-xs text-zinc-500">
-                {candidate.caloriesPer100g} kcal / 100g
+                {t('swapPicker.caloriesPer100g', {
+                  calories: candidate.caloriesPer100g,
+                })}
               </span>
             </button>
           </li>

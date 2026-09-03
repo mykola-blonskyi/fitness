@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import type { WeightTrendPoint } from '@features/daily-log/actions';
 
 const CHART_WIDTH = 600;
@@ -46,17 +47,19 @@ interface WeightTrendChartProps {
   windowDays: number;
 }
 
-export function WeightTrendChart({
+export async function WeightTrendChart({
   points,
   unit,
   windowStart,
   windowEnd,
   windowDays,
 }: WeightTrendChartProps) {
+  const t = await getTranslations('Diary.weightTrendChart');
+
   if (points.length === 0) {
     return (
       <p className="text-sm text-zinc-500">
-        No weigh-ins in the last {windowDays} days.
+        {t('empty', { days: windowDays })}
       </p>
     );
   }
@@ -103,9 +106,15 @@ export function WeightTrendChart({
       viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
       className="h-auto w-full text-blue-600 dark:text-blue-400"
       role="img"
-      aria-label={`Weight trend over the last ${windowDays} days: ${points.length} weigh-in${
-        points.length === 1 ? '' : 's'
-      }, ranging from ${minWeight}${unit} to ${maxWeight}${unit}, most recent ${latest.weight}${unit} on ${latest.date}.`}
+      aria-label={t('ariaLabel', {
+        days: windowDays,
+        count: points.length,
+        min: minWeight,
+        max: maxWeight,
+        unit,
+        latest: latest.weight,
+        date: latest.date,
+      })}
     >
       {gridlineWeights.map((weight) => (
         <g key={weight}>
@@ -152,7 +161,7 @@ export function WeightTrendChart({
           stroke="var(--background)"
           strokeWidth={2}
         >
-          <title>{`${point.date}: ${point.weight}${unit}`}</title>
+          <title>{t('pointTitle', { date: point.date, weight: point.weight, unit })}</title>
         </circle>
       ))}
 

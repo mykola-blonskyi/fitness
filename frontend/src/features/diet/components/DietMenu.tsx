@@ -1,10 +1,10 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import type { DietItemResponse, DietResponse } from '@features/diet/actions';
 import { DietItemActions } from '@features/diet/components/DietItemActions';
 import { RegenerateButton } from '@features/diet/components/RegenerateButton';
-import {
-  MEAL_TYPE_LABELS as MEAL_LABELS,
-  MEAL_TYPE_ORDER as MEAL_ORDER,
-} from '@shared/types/meal';
+import { MEAL_TYPE_ORDER as MEAL_ORDER } from '@shared/types/meal';
 
 // A mealCount past 4 repeats mealTypes as later occurrences (ADR-015) -
 // group by (mealType, occurrence) rather than mealType alone so those
@@ -43,6 +43,7 @@ function groupByMealSlot(items: DietItemResponse[]) {
 }
 
 export function DietMenu({ diet }: { diet: DietResponse }) {
+  const t = useTranslations('Diet');
   const groups = groupByMealSlot(diet.items);
 
   return (
@@ -50,11 +51,16 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
       <div className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <p className="text-4xl font-semibold">
           {diet.totalCalories}{' '}
-          <span className="text-lg font-normal text-zinc-500">kcal / day</span>
+          <span className="text-lg font-normal text-zinc-500">
+            {t('perDay')}
+          </span>
         </p>
         <p className="text-sm text-zinc-500">
-          {diet.totalProtein}g protein · {diet.totalCarbs}g carbs ·{' '}
-          {diet.totalFat}g fat
+          {t('macroSummary', {
+            protein: diet.totalProtein,
+            carbs: diet.totalCarbs,
+            fat: diet.totalFat,
+          })}
         </p>
       </div>
 
@@ -64,7 +70,7 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
           className="flex flex-col gap-3"
         >
           <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-            {MEAL_LABELS[group.mealType]}
+            {t(`mealTypes.${group.mealType}`)}
             {group.occurrence > 1 ? ` ${group.occurrence}` : ''}
           </h2>
           <ul className="flex flex-col gap-2">
@@ -76,8 +82,13 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">{item.foodItem.name}</span>
                   <span className="text-sm text-zinc-500">
-                    {item.weightGrams} g · {item.calories} kcal ·{' '}
-                    {item.proteinG}P / {item.carbsG}C / {item.fatG}F
+                    {t('itemSummary', {
+                      weight: item.weightGrams,
+                      calories: item.calories,
+                      protein: item.proteinG,
+                      carbs: item.carbsG,
+                      fat: item.fatG,
+                    })}
                   </span>
                 </div>
                 <DietItemActions

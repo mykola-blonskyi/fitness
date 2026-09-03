@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 
 export function GenerateDietError({
@@ -10,6 +11,7 @@ export function GenerateDietError({
   error?: string;
   preferencesBlocked: boolean;
 }) {
+  const t = useTranslations('Diet.generateError');
   const { locale } = useParams<{ locale: string }>();
   if (!error) return null;
 
@@ -20,7 +22,7 @@ export function GenerateDietError({
         <>
           {' '}
           <Link href={`/${locale}/settings/preferences`} className="underline">
-            Review your preferences
+            {t('reviewPreferences')}
           </Link>
           .
         </>
