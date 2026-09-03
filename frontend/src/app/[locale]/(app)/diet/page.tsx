@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { fetchOr404 } from '@libs/api-client';
 import type { CalorieTarget, DietResponse } from '@features/diet/actions';
-import { dietDate } from '@features/diet/date';
 import {
   AlgorithmInfo,
   CaloriesInfo,
@@ -21,7 +20,7 @@ export default async function DietPage({
 
   const [target, diet] = await Promise.all([
     fetchOr404<CalorieTarget>('/calorie-targets'),
-    fetchOr404<DietResponse>(`/diets/${dietDate()}/current`),
+    fetchOr404<DietResponse>('/diets/current'),
   ]);
 
   return (

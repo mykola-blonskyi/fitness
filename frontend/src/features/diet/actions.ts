@@ -6,7 +6,6 @@ import { apiFetch, ApiError } from '@libs/api-client';
 import type { WeightUnit } from '@shared/types/user';
 import type { CursorPage } from '@shared/types/admin';
 import type { FoodItem } from '@features/food-catalog/actions';
-import { dietDate } from '@features/diet/date';
 
 // Mirrors backend/src/calorie-targets/calorie-target.mapper.ts's
 // CalorieTargetResponse.
@@ -81,10 +80,9 @@ export async function generateDiet(): Promise<GenerateDietResult> {
     {},
     async (): Promise<GenerateDietResult> => {
       try {
-        const diet = await apiFetch<DietResponse>(
-          `/diets/${dietDate()}/generate`,
-          { method: 'POST' },
-        );
+        const diet = await apiFetch<DietResponse>('/diets/generate', {
+          method: 'POST',
+        });
         revalidatePath(DIET_PAGE, 'page');
         return { ok: true, diet };
       } catch (err) {

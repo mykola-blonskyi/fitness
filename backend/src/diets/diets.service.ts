@@ -10,7 +10,6 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { CalorieTargetsService } from '../calorie-targets/calorie-targets.service';
-import { DailyLogsService } from '../daily-logs/daily-logs.service';
 import { DietPreferencesService } from '../diet-preferences/diet-preferences.service';
 import type { DietType } from '../diet-preferences/diet-preference.types';
 import { FoodPreferencesService } from '../food-preferences/food-preferences.service';
@@ -45,7 +44,6 @@ export class DietsService {
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
     private readonly usersService: UsersService,
-    private readonly dailyLogsService: DailyLogsService,
     private readonly calorieTargetsService: CalorieTargetsService,
     private readonly foodPreferencesService: FoodPreferencesService,
     private readonly dietPreferencesService: DietPreferencesService,
@@ -212,10 +210,7 @@ export class DietsService {
     return algorithm;
   }
 
-  // `date` selects which Daily Log the new Diet attaches to; the
-  // calorie/macro target itself always comes from the user's most recent
-  // weigh-in regardless of that date.
-  async generate(userId: string, date: string): Promise<DietResponse> {
+  async generate(userId: string): Promise<DietResponse> {
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new NotFoundException('Profile not created yet');
@@ -223,7 +218,6 @@ export class DietsService {
 
     const target = await this.calorieTargetsService.computeForUser(userId);
     const algorithm = await this.getAlgorithm();
-    const dailyLog = await this.dailyLogsService.findOrCreate(userId, date);
 
     const { exclusions, roleIdByName } = await this.resolveExclusions(userId);
     const candidatesByRole = await this.findGenerationCandidatesByRole(
@@ -253,7 +247,7 @@ export class DietsService {
       const [inserted] = await tx
         .insert(schema.diets)
         .values({
-          dailyLogId: dailyLog.id,
+          userId,
           algorithmId: algorithm.id,
           totalCalories: generated.totalCalories.toString(),
           totalProtein: generated.totalProtein.toString(),
@@ -289,20 +283,15 @@ export class DietsService {
     return this.buildResponse(dietRow, algorithm);
   }
 
-  // Most recently created Diet row for the Daily Log, not a stored
-  // is_current flag; older Diets are kept as history.
-  async findCurrent(userId: string, date: string): Promise<DietResponse> {
-    const dailyLog = await this.dailyLogsService.findByDate(userId, date);
-    if (!dailyLog) {
-      throw new NotFoundException('No Daily Log for this date');
-    }
-
+  // Most recently created Diet row for the user, not a stored is_current
+  // flag; older Diets are kept as history.
+  async findCurrent(userId: string): Promise<DietResponse> {
     const dietRow = await this.db.query.diets.findFirst({
-      where: eq(schema.diets.dailyLogId, dailyLog.id),
+      where: eq(schema.diets.userId, userId),
       orderBy: desc(schema.diets.createdAt),
     });
     if (!dietRow) {
-      throw new NotFoundException('No Diet generated for this date yet');
+      throw new NotFoundException('No Diet generated yet');
     }
 
     const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
@@ -315,26 +304,17 @@ export class DietsService {
     return this.buildResponse(dietRow, algorithm);
   }
 
-  // diets carries no userId column - ownership is only verifiable by
-  // joining through its Daily Log.
   private async findOwnedDiet(
     userId: string,
     dietId: string,
   ): Promise<typeof schema.diets.$inferSelect> {
-    const [row] = await this.db
-      .select({ diet: schema.diets })
-      .from(schema.diets)
-      .innerJoin(
-        schema.dailyLogs,
-        eq(schema.dailyLogs.id, schema.diets.dailyLogId),
-      )
-      .where(
-        and(eq(schema.diets.id, dietId), eq(schema.dailyLogs.userId, userId)),
-      );
-    if (!row) {
+    const diet = await this.db.query.diets.findFirst({
+      where: and(eq(schema.diets.id, dietId), eq(schema.diets.userId, userId)),
+    });
+    if (!diet) {
       throw new NotFoundException('Diet not found');
     }
-    return row.diet;
+    return diet;
   }
 
   private async resolveExplicitReplacement(
