@@ -174,6 +174,15 @@ export class PhotoSessionsService {
     );
 
     const updated = await this.db.transaction(async (tx) => {
+      // Cleared to null first: swapping two photos' poses (e.g. front<->side)
+      // would otherwise transiently violate the (photoSessionId, pose)
+      // unique constraint mid-loop, since each UPDATE is checked immediately.
+      for (const photo of photos) {
+        await tx
+          .update(schema.progressPhotos)
+          .set({ pose: null })
+          .where(eq(schema.progressPhotos.id, photo.id));
+      }
       for (const photo of photos) {
         await tx
           .update(schema.progressPhotos)
