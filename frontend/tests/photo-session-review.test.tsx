@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithIntl as render } from './setup/render-with-intl';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -38,7 +39,9 @@ describe('PhotoSessionReview', () => {
 
   it('keeps confirm disabled while two photos share a pose', () => {
     render(<PhotoSessionReview sessionId="s1" photos={photos} />);
-    expect(screen.getByRole('button', { name: /confirm poses/i })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /confirm poses/i }),
+    ).toBeDisabled();
     expect(screen.getByText(/needs a different pose/i)).toBeInTheDocument();
   });
 
@@ -77,7 +80,9 @@ describe('PhotoSessionReview', () => {
       screen.getByRole('button', { name: /confirm poses/i }),
     ).toBeDisabled();
     await user.selectOptions(selects()[2], 'back');
-    expect(screen.getByRole('button', { name: /confirm poses/i })).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: /confirm poses/i }),
+    ).toBeEnabled();
   });
 
   it('shows an error when the confirm call fails', async () => {
@@ -95,6 +100,8 @@ describe('PhotoSessionReview', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /confirm poses/i }));
-    expect(await screen.findByText(/couldn't save the poses/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/couldn't save the poses/i),
+    ).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithIntl as render } from './setup/render-with-intl';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -55,13 +56,16 @@ describe('PhotoUploadForm', () => {
   it('uploads each file then confirms the session with the object keys', async () => {
     const user = userEvent.setup();
     requestUploadUrl
-      .mockResolvedValueOnce({ objectKey: 'key-1', uploadUrl: 'http://minio/1' })
-      .mockResolvedValueOnce({ objectKey: 'key-2', uploadUrl: 'http://minio/2' });
+      .mockResolvedValueOnce({
+        objectKey: 'key-1',
+        uploadUrl: 'http://minio/1',
+      })
+      .mockResolvedValueOnce({
+        objectKey: 'key-2',
+        uploadUrl: 'http://minio/2',
+      });
     confirmPhotoSession.mockResolvedValue({});
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: true } as Response),
-    );
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true } as Response));
 
     render(<PhotoUploadForm date="2026-08-29" />);
     await user.upload(screen.getByLabelText(/photos/i), [

@@ -3,17 +3,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { FieldError } from '@shared/ui/components/FieldError';
 import {
   confirmReview,
   type PhotoPose,
 } from '@features/photo-sessions/actions';
 
-const POSE_OPTIONS: { value: PhotoPose; label: string }[] = [
-  { value: 'front', label: 'Front' },
-  { value: 'side', label: 'Side' },
-  { value: 'back', label: 'Back' },
-];
+const POSE_VALUES: PhotoPose[] = ['front', 'side', 'back'];
 
 export interface ReviewPhoto {
   id: string;
@@ -28,9 +25,11 @@ export function PhotoSessionReview({
   sessionId: string;
   photos: ReviewPhoto[];
 }) {
-  const [assignments, setAssignments] = useState<Record<string, PhotoPose | ''>>(
-    () => Object.fromEntries(photos.map((p) => [p.id, p.pose ?? ''])),
-  );
+  const t = useTranslations('PhotoSessions.review');
+  const tPoses = useTranslations('PhotoSessions.poses');
+  const [assignments, setAssignments] = useState<
+    Record<string, PhotoPose | ''>
+  >(() => Object.fromEntries(photos.map((p) => [p.id, p.pose ?? ''])));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const router = useRouter();
@@ -46,20 +45,21 @@ export function PhotoSessionReview({
     try {
       await confirmReview(
         sessionId,
-        photos.map((p) => ({ photoId: p.id, pose: assignments[p.id] as PhotoPose })),
+        photos.map((p) => ({
+          photoId: p.id,
+          pose: assignments[p.id] as PhotoPose,
+        })),
       );
       router.refresh();
     } catch {
-      setError("Couldn't save the poses — try again.");
+      setError(t('saveError'));
       setIsSubmitting(false);
     }
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-zinc-500">
-        We guessed which photo is which — fix any that are wrong, then confirm.
-      </p>
+      <p className="text-xs text-zinc-500">{t('guessHint')}</p>
 
       <div className="flex flex-wrap gap-4">
         {photos.map((photo) => (
@@ -67,7 +67,7 @@ export function PhotoSessionReview({
             {photo.url ? (
               <Image
                 src={photo.url}
-                alt="Progress photo awaiting pose review"
+                alt={t('altText')}
                 width={96}
                 height={96}
                 className="size-24 rounded-md object-cover"
@@ -79,7 +79,7 @@ export function PhotoSessionReview({
               />
             )}
             <label className="sr-only" htmlFor={`pose-${photo.id}`}>
-              Pose for this photo
+              {t('poseSrLabel')}
             </label>
             <select
               id={`pose-${photo.id}`}
@@ -92,10 +92,10 @@ export function PhotoSessionReview({
               }
               className="rounded border border-zinc-300 bg-transparent px-2 py-1 text-xs dark:border-zinc-700"
             >
-              <option value="">Choose…</option>
-              {POSE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              <option value="">{t('choosePlaceholder')}</option>
+              {POSE_VALUES.map((pose) => (
+                <option key={pose} value={pose}>
+                  {tPoses(pose)}
                 </option>
               ))}
             </select>
@@ -105,7 +105,7 @@ export function PhotoSessionReview({
 
       {allSet && !allDistinct && (
         <p className="text-xs text-amber-700 dark:text-amber-300">
-          Each photo needs a different pose.
+          {t('duplicatePoseError')}
         </p>
       )}
 
@@ -115,7 +115,7 @@ export function PhotoSessionReview({
         disabled={!canConfirm}
         className="bg-foreground text-background self-start rounded px-4 py-2 text-sm disabled:opacity-50"
       >
-        {isSubmitting ? 'Confirming…' : 'Confirm poses'}
+        {isSubmitting ? t('confirming') : t('submit')}
       </button>
 
       <FieldError message={error} />

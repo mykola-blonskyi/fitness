@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import {
   DeleteSessionButton,
   SessionComparison,
@@ -13,6 +14,7 @@ export default async function PhotoGalleryDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
+  const t = await getTranslations('PhotoSessions');
   const sessions = await apiFetch<PhotoSession[]>('/photo-sessions');
 
   const session = sessions.find((candidate) => candidate.id === id);
@@ -31,7 +33,7 @@ export default async function PhotoGalleryDetailPage({
             href={`/${locale}/photos/gallery`}
             className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            &larr; Gallery
+            &larr; {t('galleryHeading')}
           </Link>
           <h1 className="mt-1 text-2xl font-semibold">{session.date}</h1>
         </div>

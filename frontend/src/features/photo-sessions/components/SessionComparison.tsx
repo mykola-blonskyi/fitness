@@ -1,17 +1,11 @@
 import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 import type {
-  PhotoPose,
   PhotoSession,
   ProgressPhoto,
 } from '@features/photo-sessions/actions';
 import { fetchPhotoViewUrl } from '@features/photo-sessions/photo-view-url';
 import { pairPhotosByPose } from '@features/photo-sessions/photo-pairing';
-
-const POSE_LABELS: Record<PhotoPose, string> = {
-  front: 'Front',
-  side: 'Side',
-  back: 'Back',
-};
 
 interface PhotoWithUrl {
   photo: ProgressPhoto;
@@ -32,13 +26,12 @@ export async function SessionComparison({
   session: PhotoSession;
   baseline: PhotoSession | null;
 }) {
+  const t = await getTranslations('PhotoSessions.comparison');
+
   if (!baseline) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-zinc-500">
-          No baseline session set yet — mark a confirmed session as baseline on
-          the Photos page to compare against it.
-        </p>
+        <p className="text-sm text-zinc-500">{t('noBaseline')}</p>
         <SessionPhotos session={session} />
       </div>
     );
@@ -47,12 +40,13 @@ export async function SessionComparison({
   if (baseline.id === session.id) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-zinc-500">This is your baseline session.</p>
+        <p className="text-sm text-zinc-500">{t('isBaseline')}</p>
         <SessionPhotos session={session} />
       </div>
     );
   }
 
+  const tPoses = await getTranslations('PhotoSessions.poses');
   const pairs = pairPhotosByPose(baseline.photos, session.photos);
   const pairsWithUrls = await Promise.all(
     pairs.map(async (pair) => ({
@@ -66,12 +60,12 @@ export async function SessionComparison({
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
       <div className="flex flex-col gap-4">
         <h2 className="text-sm font-medium text-zinc-500">
-          Baseline &middot; {baseline.date}
+          {t('baselineHeading', { date: baseline.date })}
         </h2>
         {pairsWithUrls.map((pair) => (
           <PhotoSlot
             key={pair.pose}
-            label={POSE_LABELS[pair.pose]}
+            label={tPoses(pair.pose)}
             entry={pair.baseline}
           />
         ))}
@@ -81,7 +75,7 @@ export async function SessionComparison({
         {pairsWithUrls.map((pair) => (
           <PhotoSlot
             key={pair.pose}
-            label={POSE_LABELS[pair.pose]}
+            label={tPoses(pair.pose)}
             entry={pair.comparison}
           />
         ))}
@@ -91,9 +85,10 @@ export async function SessionComparison({
 }
 
 async function SessionPhotos({ session }: { session: PhotoSession }) {
-  const photosWithUrls = await Promise.all(
-    session.photos.map((photo) => withUrl(photo)),
-  );
+  const [tPoses, photosWithUrls] = await Promise.all([
+    getTranslations('PhotoSessions.poses'),
+    Promise.all(session.photos.map((photo) => withUrl(photo))),
+  ]);
 
   return (
     <div className="flex gap-3">
@@ -102,9 +97,7 @@ async function SessionPhotos({ session }: { session: PhotoSession }) {
           entry && (
             <PhotoSlot
               key={entry.photo.id}
-              label={
-                entry.photo.pose ? POSE_LABELS[entry.photo.pose] : 'Unassigned'
-              }
+              label={tPoses(entry.photo.pose ?? 'unassigned')}
               entry={entry}
             />
           ),
@@ -113,19 +106,20 @@ async function SessionPhotos({ session }: { session: PhotoSession }) {
   );
 }
 
-function PhotoSlot({
+async function PhotoSlot({
   label,
   entry,
 }: {
   label: string;
   entry: PhotoWithUrl | null;
 }) {
+  const t = await getTranslations('PhotoSessions.list');
   return (
     <div className="flex flex-col items-center gap-1">
       {entry?.url ? (
         <Image
           src={entry.url}
-          alt={`${label} progress photo`}
+          alt={t('photoAlt', { pose: label })}
           width={200}
           height={200}
           className="aspect-square w-full rounded-md object-cover"

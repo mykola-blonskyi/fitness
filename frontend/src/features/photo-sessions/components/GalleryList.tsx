@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 import type { PhotoSession } from '@features/photo-sessions/actions';
 import { fetchPhotoViewUrl } from '@features/photo-sessions/photo-view-url';
 import { groupSessionsByDate } from '@features/photo-sessions/session-grouping';
@@ -12,6 +13,7 @@ export async function GalleryList({
   sessions: PhotoSession[];
   locale: string;
 }) {
+  const t = await getTranslations('PhotoSessions.gallery');
   // Only confirmed sessions have final poses/are baseline-eligible - see
   // knowledge/business-rules.md "Photo pose is machine-suggested, then confirmed".
   const confirmed = sessions.filter(
@@ -23,8 +25,8 @@ export async function GalleryList({
     return (
       <p className="text-sm text-zinc-500">
         {pendingCount > 0
-          ? `${pendingCount} session${pendingCount === 1 ? '' : 's'} still need review on the Photos page before they can appear here.`
-          : "No confirmed sessions yet — confirm a photo session's poses on the Photos page to see it here."}
+          ? t('pendingReviewNotice', { count: pendingCount })
+          : t('emptyNoConfirmed')}
       </p>
     );
   }
@@ -35,8 +37,7 @@ export async function GalleryList({
     <div className="flex w-full flex-col gap-6">
       {pendingCount > 0 && (
         <p className="text-xs text-zinc-500">
-          {pendingCount} session{pendingCount === 1 ? '' : 's'} still need
-          review on the Photos page before they can appear here.
+          {t('pendingReviewNotice', { count: pendingCount })}
         </p>
       )}
       {groups.map((group) => (
@@ -60,6 +61,10 @@ async function GalleryRow({
   session: PhotoSession;
   locale: string;
 }) {
+  const [t, tList] = await Promise.all([
+    getTranslations('PhotoSessions.gallery'),
+    getTranslations('PhotoSessions.list'),
+  ]);
   const cover =
     session.photos.find((photo) => photo.pose === 'front') ?? session.photos[0];
   const url = cover ? await fetchPhotoViewUrl(cover.id) : null;
@@ -73,7 +78,7 @@ async function GalleryRow({
         {url ? (
           <Image
             src={url}
-            alt="Session cover photo"
+            alt={t('coverAlt')}
             width={48}
             height={48}
             className="size-12 shrink-0 rounded-md object-cover"
@@ -86,12 +91,11 @@ async function GalleryRow({
         )}
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
           <span className="text-sm">
-            {session.photos.length}{' '}
-            {session.photos.length === 1 ? 'photo' : 'photos'}
+            {t('photoCount', { count: session.photos.length })}
           </span>
           {session.isBaseline && (
             <span className="shrink-0 rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-              Baseline
+              {tList('baseline')}
             </span>
           )}
         </span>
