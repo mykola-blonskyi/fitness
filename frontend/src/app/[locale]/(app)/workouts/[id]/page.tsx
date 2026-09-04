@@ -5,6 +5,7 @@ import { LogSetForm, WorkoutSetList } from '@features/workout-logs';
 import type { Exercise } from '@shared/types/exercise';
 import type { WorkoutLog } from '@shared/types/workout-log';
 import type { UserProfile } from '@shared/types/user';
+import type { CursorPage } from '@shared/types/admin';
 import { apiFetch, ApiError } from '@libs/api-client';
 
 export default async function WorkoutLogDetailPage({
@@ -27,10 +28,14 @@ export default async function WorkoutLogDetailPage({
     throw err;
   }
 
-  const [exercises, profile] = await Promise.all([
-    apiFetch<Exercise[]>('/exercises'),
+  // /exercises is cursor-paginated (FITNESS-43); this picker isn't
+  // search-driven like the catalog page, so grab the largest page the
+  // backend allows rather than only the default-sized first page.
+  const [exercisePage, profile] = await Promise.all([
+    apiFetch<CursorPage<Exercise>>('/exercises?limit=100'),
     apiFetch<UserProfile>('/users/me'),
   ]);
+  const exercises = exercisePage.items;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">

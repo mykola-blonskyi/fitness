@@ -6,9 +6,13 @@ import { useEffect, useState } from 'react';
 // periodic ping - same signal the service worker already relies on
 // (public/sw.js); a false positive just means a write fails once and
 // gets re-queued (network-error.ts).
+//
+// Guard is `typeof window`, not `typeof navigator`: Node 19+ ships a
+// built-in `navigator` with no `onLine`, so the old check read as
+// offline on the server and mismatched on hydration (React #418).
 export function useOnlineStatus(): boolean {
   const [isOnline, setIsOnline] = useState(
-    () => typeof navigator === 'undefined' || navigator.onLine,
+    () => typeof window === 'undefined' || navigator.onLine,
   );
 
   useEffect(() => {
