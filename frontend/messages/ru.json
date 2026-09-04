@@ -33,7 +33,8 @@
     "mealPosition": "Приём пищи {position}",
     "mealActions": {
       "moveUp": "Переместить приём пищи {position} вверх",
-      "moveDown": "Переместить приём пищи {position} вниз"
+      "moveDown": "Переместить приём пищи {position} вниз",
+      "dragHandle": "Перетащить, чтобы изменить порядок приёма пищи {position}"
     },
     "itemSummary": "{weight} г · {calories} ккал · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {

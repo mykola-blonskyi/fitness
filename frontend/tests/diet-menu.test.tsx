@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderWithIntl } from './setup/render-with-intl';
@@ -13,12 +13,43 @@ const swapDietItem = vi.fn();
 const generateDiet = vi.fn();
 const listSwapCandidates = vi.fn();
 const moveDietMeal = vi.fn();
+const reorderDietMeals = vi.fn();
 vi.mock('@features/diet/actions', () => ({
   swapDietItem: (...args: unknown[]) => swapDietItem(...args),
   generateDiet: (...args: unknown[]) => generateDiet(...args),
   listSwapCandidates: (...args: unknown[]) => listSwapCandidates(...args),
   moveDietMeal: (...args: unknown[]) => moveDietMeal(...args),
+  reorderDietMeals: (...args: unknown[]) => reorderDietMeals(...args),
 }));
+
+// jsdom implements neither pointer capture nor real layout - drag tests give
+// each <section> a distinct, stable getBoundingClientRect in the order its
+// ref first gets measured (which is mount/document order), so hit-testing
+// by clientY behaves the same as it would against real layout.
+Element.prototype.setPointerCapture = vi.fn();
+Element.prototype.releasePointerCapture = vi.fn();
+const sectionRectTop = new WeakMap<Element, number>();
+let nextSectionRectTop = 0;
+Element.prototype.getBoundingClientRect = vi.fn(function (
+  this: Element,
+): DOMRect {
+  if (!sectionRectTop.has(this)) {
+    sectionRectTop.set(this, nextSectionRectTop);
+    nextSectionRectTop += 100;
+  }
+  const top = sectionRectTop.get(this)!;
+  return {
+    top,
+    bottom: top + 80,
+    height: 80,
+    left: 0,
+    right: 0,
+    width: 0,
+    x: 0,
+    y: top,
+    toJSON: () => ({}),
+  };
+});
 
 import { DietMenu } from '@features/diet/components/DietMenu';
 import type { DietResponse } from '@features/diet/actions';
@@ -78,6 +109,7 @@ const diet: DietResponse = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  nextSectionRectTop = 0;
   listSwapCandidates.mockResolvedValue([
     {
       id: 'f9',
@@ -143,9 +175,9 @@ describe('DietMenu', () => {
       .map((h) => h.textContent);
     expect(headings).toEqual(['Meal 2', 'Meal 1']);
 
-    const oatsIndex = screen.getByText('Oats').compareDocumentPosition(
-      screen.getByText('Salmon'),
-    );
+    const oatsIndex = screen
+      .getByText('Oats')
+      .compareDocumentPosition(screen.getByText('Salmon'));
     // Salmon (Meal 2) precedes Oats (Meal 1) in the reordered layout.
     expect(oatsIndex & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
@@ -154,9 +186,7 @@ describe('DietMenu', () => {
     const user = userEvent.setup();
     renderWithIntl(<DietMenu diet={diet} />);
 
-    await user.click(
-      screen.getByRole('button', { name: 'Move Meal 1 down' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Move Meal 1 down' }));
     expect(moveDietMeal).toHaveBeenCalledWith('diet-1', 1, 'down');
 
     await user.click(screen.getByRole('button', { name: 'Move Meal 2 up' }));
@@ -166,7 +196,9 @@ describe('DietMenu', () => {
   it('disables moving the first meal up and the last meal down', () => {
     renderWithIntl(<DietMenu diet={diet} />);
 
-    expect(screen.getByRole('button', { name: 'Move Meal 1 up' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 1 up' }),
+    ).toBeDisabled();
     expect(
       screen.getByRole('button', { name: 'Move Meal 2 down' }),
     ).toBeDisabled();
@@ -176,6 +208,67 @@ describe('DietMenu', () => {
     expect(
       screen.getByRole('button', { name: 'Move Meal 2 up' }),
     ).not.toBeDisabled();
+  });
+
+  it('dragging a meal handle over another section live-reflows the list and persists the new order on release', () => {
+    renderWithIntl(<DietMenu diet={diet} />);
+    const handle = screen.getByTitle('Drag to reorder Meal 1');
+
+    fireEvent.pointerDown(handle, {
+      pointerId: 1,
+      button: 0,
+      pointerType: 'mouse',
+      clientY: 40,
+    });
+    fireEvent.pointerMove(handle, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientY: 150,
+    });
+
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
+    ).toEqual(['Meal 2', 'Meal 1']);
+
+    fireEvent.pointerUp(handle, { pointerId: 1, pointerType: 'mouse' });
+
+    expect(reorderDietMeals).toHaveBeenCalledWith('diet-1', [2, 1]);
+  });
+
+  it('releasing a drag without crossing another section does not call reorderDietMeals', () => {
+    renderWithIntl(<DietMenu diet={diet} />);
+    const handle = screen.getByTitle('Drag to reorder Meal 1');
+
+    fireEvent.pointerDown(handle, {
+      pointerId: 1,
+      button: 0,
+      pointerType: 'mouse',
+      clientY: 40,
+    });
+    fireEvent.pointerUp(handle, { pointerId: 1, pointerType: 'mouse' });
+
+    expect(reorderDietMeals).not.toHaveBeenCalled();
+  });
+
+  it('renders a drag handle alongside the up/down buttons for every meal', () => {
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    expect(screen.getByTitle('Drag to reorder Meal 1')).toBeInTheDocument();
+    expect(screen.getByTitle('Drag to reorder Meal 2')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 1 down' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 2 up' }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides the drag handle from assistive tech since it has no keyboard operation', () => {
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    expect(
+      screen.queryByRole('button', { name: /drag to reorder/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('reroll calls swapDietItem with only the diet and item id', async () => {
