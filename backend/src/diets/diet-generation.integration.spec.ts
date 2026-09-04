@@ -83,10 +83,11 @@ describe('generateDietItems - full pipeline across mealCount 1-6', () => {
       // non-protein role's own incidental protein (e.g. a vegetable
       // candidate with nonzero proteinPer100g) is never weighed against
       // the protein ceiling - only the calorie ceiling is actually
-      // enforced end-to-end today. See the flagged finding in this
-      // session's audit follow-up; asserting the full per-macro ceiling
-      // here currently fails at mealCount 4-6 with a realistic candidate
-      // pool and is left as a TODO pending a fix to correctMeal.
+      // enforced end-to-end today (see
+      // reports/audits/2026-09-04-improvements-optimizations-audit.md).
+      // Asserting the full per-macro ceiling here currently fails at
+      // mealCount 4-6 with a realistic candidate pool and is left as a
+      // TODO pending a fix to correctMeal.
       expect(result.totalCalories).toBeLessThanOrEqual(targets.targetCalories);
 
       // Every generated item is portionable and traceable to an input
