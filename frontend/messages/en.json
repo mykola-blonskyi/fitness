@@ -33,7 +33,8 @@
     "mealPosition": "Meal {position}",
     "mealActions": {
       "moveUp": "Move Meal {position} up",
-      "moveDown": "Move Meal {position} down"
+      "moveDown": "Move Meal {position} down",
+      "dragHandle": "Drag to reorder Meal {position}"
     },
     "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {
