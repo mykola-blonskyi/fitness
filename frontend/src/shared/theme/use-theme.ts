@@ -1,12 +1,8 @@
 'use client';
 
 import { useCallback, useSyncExternalStore } from 'react';
-import {
-  DEFAULT_THEME,
-  THEME_STORAGE_KEY,
-  isTheme,
-  type Theme,
-} from '@shared/theme/themes';
+import { applyTheme, persistTheme } from '@shared/theme/apply-theme';
+import { DEFAULT_THEME, isTheme, type Theme } from '@shared/theme/themes';
 
 const listeners = new Set<() => void>();
 
@@ -25,12 +21,8 @@ export function useTheme(): [Theme, (next: Theme) => void] {
   const theme = useSyncExternalStore(subscribe, readTheme, () => DEFAULT_THEME);
 
   const setTheme = useCallback((next: Theme) => {
-    document.documentElement.setAttribute('data-theme', next);
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, next);
-    } catch {
-      // Private mode / storage disabled: the choice still applies for this page.
-    }
+    applyTheme(next);
+    persistTheme(next);
     listeners.forEach((listener) => listener());
   }, []);
 
