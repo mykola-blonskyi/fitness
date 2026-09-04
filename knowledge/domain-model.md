@@ -224,6 +224,22 @@ Relationships:
 
 ---
 
+### Diet Meal Order
+
+Responsibilities:
+
+Holds one meal's on-screen display order, independent of its meal_position (the generation slot driving its macro taper — see ADR-016). A meal with no row here falls back to its own meal_position for display order — see ADR-017.
+
+Fields:
+
+- meal_position (identifies the meal within its Diet; not a duplicate of Diet Item's own column), display_order
+
+Relationships:
+
+- many_to_one Diet
+
+---
+
 ### Diet Calculation Algorithm
 
 Responsibilities:

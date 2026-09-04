@@ -31,6 +31,10 @@
     "perDay": "ккал/день",
     "macroSummary": "Белок {protein}g · Углеводы {carbs}g · Жиры {fat}g",
     "mealPosition": "Приём пищи {position}",
+    "mealActions": {
+      "moveUp": "Переместить приём пищи {position} вверх",
+      "moveDown": "Переместить приём пищи {position} вниз"
+    },
     "itemSummary": "{weight} г · {calories} ккал · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {
       "calculatedUsing": "Рассчитано с использованием <strong>{name}</strong> ({code})"

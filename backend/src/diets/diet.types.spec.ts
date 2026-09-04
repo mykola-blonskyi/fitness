@@ -1,4 +1,4 @@
-import { mealTargetsForCount } from './diet.types';
+import { mealTargetsForCount, resolveMealOrder } from './diet.types';
 
 describe('mealTargetsForCount', () => {
   it('gives every meal an equal share of the day calories', () => {
@@ -127,5 +127,30 @@ describe('mealTargetsForCount', () => {
         targets[i - 1].proteinG - 1e-9,
       );
     }
+  });
+});
+
+describe('resolveMealOrder', () => {
+  it('falls back to ascending mealPosition order when there are no overrides', () => {
+    expect(resolveMealOrder([3, 1, 2], [])).toEqual([1, 2, 3]);
+  });
+
+  it('sorts by displayOrder when a full override set is given', () => {
+    expect(
+      resolveMealOrder(
+        [1, 2, 3],
+        [
+          { mealPosition: 1, displayOrder: 2 },
+          { mealPosition: 2, displayOrder: 0 },
+          { mealPosition: 3, displayOrder: 1 },
+        ],
+      ),
+    ).toEqual([2, 3, 1]);
+  });
+
+  it('falls back to its own mealPosition for any position missing from a partial override set', () => {
+    expect(
+      resolveMealOrder([1, 2, 3], [{ mealPosition: 3, displayOrder: 0 }]),
+    ).toEqual([3, 1, 2]);
   });
 });

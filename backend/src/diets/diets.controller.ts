@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import type { DietResponse } from './diet.mapper';
 import { DietsService } from './diets.service';
+import { ReorderDietMealsDto } from './dto/reorder-diet-meals.dto';
 import { SwapDietItemDto } from './dto/swap-diet-item.dto';
 
 // Every route here operates on the caller's own Diets only, scoped by
@@ -40,5 +41,14 @@ export class DietsController {
       itemId,
       dto.foodItemId,
     );
+  }
+
+  @Put(':dietId/meals/reorder')
+  async reorderMeals(
+    @CurrentUser() identity: Identity,
+    @Param('dietId') dietId: string,
+    @Body() dto: ReorderDietMealsDto,
+  ): Promise<DietResponse> {
+    return this.dietsService.reorderMeals(identity.hubUserId, dietId, dto);
   }
 }
