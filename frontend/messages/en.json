@@ -31,6 +31,10 @@
     "perDay": "kcal / day",
     "macroSummary": "{protein}g protein · {carbs}g carbs · {fat}g fat",
     "mealPosition": "Meal {position}",
+    "mealActions": {
+      "moveUp": "Move Meal {position} up",
+      "moveDown": "Move Meal {position} down"
+    },
     "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}F",
     "algorithmInfo": {
       "calculatedUsing": "Calculated using <strong>{name}</strong> ({code})"

@@ -58,6 +58,7 @@ export interface DietResponse {
     name: string;
   };
   items: DietItemResponse[];
+  mealOrder: number[];
 }
 
 const DIET_PAGE = '/[locale]/diet';
@@ -123,6 +124,39 @@ export async function swapDietItem(
         }
         throw err;
       }
+    },
+  );
+}
+
+// The backend's reorder endpoint takes a full replacement of the ordered
+// meal_position list, not a single-position move, so this reads the
+// current display order, swaps the two adjacent positions, and sends the
+// whole list back - mirrors training-programs/actions.ts's
+// moveProgramExercise.
+export async function moveDietMeal(
+  dietId: string,
+  mealPosition: number,
+  direction: 'up' | 'down',
+): Promise<void> {
+  return Sentry.withServerActionInstrumentation(
+    'moveDietMeal',
+    {},
+    async () => {
+      const diet = await apiFetch<DietResponse>('/diets/current');
+      const order = [...diet.mealOrder];
+      const index = order.indexOf(mealPosition);
+      const swapWith = direction === 'up' ? index - 1 : index + 1;
+      if (index === -1 || swapWith < 0 || swapWith >= order.length) {
+        return;
+      }
+
+      [order[index], order[swapWith]] = [order[swapWith], order[index]];
+
+      await apiFetch<DietResponse>(`/diets/${dietId}/meals/reorder`, {
+        method: 'PUT',
+        body: JSON.stringify({ orderedMealPositions: order }),
+      });
+      revalidatePath(DIET_PAGE, 'page');
     },
   );
 }

@@ -162,6 +162,13 @@
       "when": 1788511845317,
       "tag": "0022_low_the_enforcers",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1788514485999,
+      "tag": "0023_next_slyde",
+      "breakpoints": true
     }
   ]
 }

@@ -25,7 +25,12 @@ import {
   type DietItemWithFoodRow,
   type DietResponse,
 } from './diet.mapper';
-import { MEAL_ROLE_CHAINS, type FoodCandidate } from './diet.types';
+import {
+  MEAL_ROLE_CHAINS,
+  resolveMealOrder,
+  type FoodCandidate,
+} from './diet.types';
+import { ReorderDietMealsDto } from './dto/reorder-diet-meals.dto';
 import { generateDietItems, gramsForCalories } from './greedy-heuristic';
 import { isPreferenceExcluded } from './swap-candidates';
 
@@ -498,6 +503,60 @@ export class DietsService {
     return this.buildResponse(updatedDiet, algorithm);
   }
 
+  // The full, exact-set list of this diet's meal_position values in the
+  // desired display order - same reorder convention as
+  // training-programs.service.ts's reorderExercises. mealPosition doubles
+  // as the meal's stable identifier (see ADR-017); mealPosition itself,
+  // and every diet_item's role/macros, are untouched by this.
+  async reorderMeals(
+    userId: string,
+    dietId: string,
+    dto: ReorderDietMealsDto,
+  ): Promise<DietResponse> {
+    const diet = await this.findOwnedDiet(userId, dietId);
+
+    const existing = await this.db
+      .selectDistinct({ mealPosition: schema.dietItems.mealPosition })
+      .from(schema.dietItems)
+      .where(eq(schema.dietItems.dietId, diet.id));
+    const existingPositions = new Set(existing.map((row) => row.mealPosition));
+
+    const providedPositions = new Set(dto.orderedMealPositions);
+    const isExactMatch =
+      dto.orderedMealPositions.length === existingPositions.size &&
+      providedPositions.size === existingPositions.size &&
+      dto.orderedMealPositions.every((position) =>
+        existingPositions.has(position),
+      );
+    if (!isExactMatch) {
+      throw new BadRequestException(
+        "orderedMealPositions must contain exactly this diet's meal positions, each once",
+      );
+    }
+
+    await this.db.transaction(async (tx) => {
+      await tx
+        .delete(schema.dietMealOrder)
+        .where(eq(schema.dietMealOrder.dietId, diet.id));
+      await tx.insert(schema.dietMealOrder).values(
+        dto.orderedMealPositions.map((mealPosition, index) => ({
+          dietId: diet.id,
+          mealPosition,
+          displayOrder: index,
+        })),
+      );
+    });
+
+    const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
+      where: eq(schema.dietCalculationAlgorithms.id, diet.algorithmId),
+    });
+    if (!algorithm) {
+      throw new NotFoundException('Calorie algorithm not configured');
+    }
+
+    return this.buildResponse(diet, algorithm);
+  }
+
   private async buildResponse(
     dietRow: typeof schema.diets.$inferSelect,
     // Pick, not the full row type - generate() passes the algorithm
@@ -535,6 +594,17 @@ export class DietsService {
       .where(eq(schema.dietItems.dietId, dietRow.id))
       .orderBy(schema.dietItems.mealPosition, schema.dietItems.orderIndex);
 
-    return toDietResponse(dietRow, algorithm, itemRows);
+    const orderRows = await this.db
+      .select({
+        mealPosition: schema.dietMealOrder.mealPosition,
+        displayOrder: schema.dietMealOrder.displayOrder,
+      })
+      .from(schema.dietMealOrder)
+      .where(eq(schema.dietMealOrder.dietId, dietRow.id));
+
+    const mealPositions = [...new Set(itemRows.map((row) => row.mealPosition))];
+    const mealOrder = resolveMealOrder(mealPositions, orderRows);
+
+    return toDietResponse(dietRow, algorithm, itemRows, mealOrder);
   }
 }

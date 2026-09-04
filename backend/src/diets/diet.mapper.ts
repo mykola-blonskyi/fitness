@@ -53,6 +53,9 @@ export interface DietResponse {
     name: string;
   };
   items: DietItemResponse[];
+  // Every distinct mealPosition present in items, in display order - see
+  // ADR-017. Independent from each meal's own mealPosition/macro taper.
+  mealOrder: number[];
 }
 
 function toDietItemResponse(row: DietItemWithFoodRow): DietItemResponse {
@@ -80,6 +83,7 @@ export function toDietResponse(
   diet: DietRow,
   algorithm: Pick<DietCalculationAlgorithmRow, 'code' | 'name'>,
   itemRows: DietItemWithFoodRow[],
+  mealOrder: number[],
 ): DietResponse {
   return {
     id: diet.id,
@@ -93,5 +97,6 @@ export function toDietResponse(
       name: algorithm.name,
     },
     items: itemRows.map(toDietItemResponse),
+    mealOrder,
   };
 }

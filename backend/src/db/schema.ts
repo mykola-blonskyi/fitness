@@ -468,6 +468,23 @@ export const dietItems = pgTable(
   (table) => [index().on(table.dietId), index().on(table.foodItemId)],
 );
 
+// One row per meal actually reordered - absent a row for a given
+// (dietId, mealPosition), display order falls back to mealPosition itself.
+// mealPosition here is a stable meal identifier, not a duplicate of
+// diet_items' own column - see ADR-017.
+export const dietMealOrder = pgTable(
+  'diet_meal_order',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    dietId: uuid('diet_id')
+      .notNull()
+      .references(() => diets.id),
+    mealPosition: integer('meal_position').notNull(),
+    displayOrder: integer('display_order').notNull(),
+  },
+  (table) => [unique().on(table.dietId, table.mealPosition)],
+);
+
 export const photoPoseEnum = pgEnum('photo_pose', ['front', 'side', 'back']);
 export const photoAnalysisStatusEnum = pgEnum('photo_analysis_status', [
   'pending',

@@ -86,6 +86,27 @@ export function mealTargetsForCount(
   }));
 }
 
+// mealPositions absent from overrides keep their natural ascending
+// position; overrides are only ever a full-set replace (see
+// reorderMeals in diets.service.ts), so a partial override list is not
+// an expected input but is handled defensively rather than assumed away.
+export function resolveMealOrder(
+  mealPositions: readonly number[],
+  overrides: readonly { mealPosition: number; displayOrder: number }[],
+): number[] {
+  if (overrides.length === 0) {
+    return [...mealPositions].sort((a, b) => a - b);
+  }
+  const displayOrderByPosition = new Map(
+    overrides.map((o) => [o.mealPosition, o.displayOrder]),
+  );
+  return [...mealPositions].sort(
+    (a, b) =>
+      (displayOrderByPosition.get(a) ?? a) -
+      (displayOrderByPosition.get(b) ?? b),
+  );
+}
+
 export interface FoodCandidate {
   id: string;
   caloriesPer100g: number;

@@ -207,3 +207,17 @@ Once `mealCount` is 3 or more, the last meal is excluded from the carb taper ent
 The profile form's meal-count `<select>` no longer computes a per-type breakdown string — options just show the plain number.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-017: Meal display order is a separate value from mealPosition; "Meal N" labels always name mealPosition
+
+Date: 2026-09-04
+
+Status: Accepted
+
+A diet's meals have no standalone row — each is a `dietItems.mealPosition` group. Reordering adds a `diet_meal_order` table (`dietId`, `mealPosition`, `displayOrder`) rather than a `displayOrder` column duplicated across every `diet_items` row in a group — one row per meal instead of N. A meal absent from `diet_meal_order` (never reordered) falls back to its own `mealPosition` for display order, so a freshly generated diet needs no order rows at all. The reorder endpoint (`PUT /diets/:dietId/meals/reorder`) takes the diet's full, exact set of `mealPosition` values in the desired order — `mealPosition` doubles as each meal's stable identifier, since it's already unique per diet and no synthetic meal id is needed. Same convention as `training-programs.service.ts`'s `reorderExercises`: exact-set validation, one transaction (existing `diet_meal_order` rows for the diet are deleted and reinserted in the new order).
+
+"Meal N" labels always name a meal's `mealPosition` (the generation slot its macro taper was computed against — ADR-016), never its current display position — reordering only changes which section renders where in the list, not what number a meal is called. Labeling by display position instead would make "Meal 1" lie about which physical meal has the largest carb/fat share once a user reorders away from generation order — exactly the ambiguity ADR-016 introduced positional naming to resolve in the first place.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

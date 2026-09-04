@@ -12,10 +12,12 @@ vi.mock('next/navigation', () => ({
 const swapDietItem = vi.fn();
 const generateDiet = vi.fn();
 const listSwapCandidates = vi.fn();
+const moveDietMeal = vi.fn();
 vi.mock('@features/diet/actions', () => ({
   swapDietItem: (...args: unknown[]) => swapDietItem(...args),
   generateDiet: (...args: unknown[]) => generateDiet(...args),
   listSwapCandidates: (...args: unknown[]) => listSwapCandidates(...args),
+  moveDietMeal: (...args: unknown[]) => moveDietMeal(...args),
 }));
 
 import { DietMenu } from '@features/diet/components/DietMenu';
@@ -49,6 +51,7 @@ const diet: DietResponse = {
   totalCarbs: 180,
   totalFat: 60,
   algorithm: { code: 'mifflin_v1', name: 'Mifflin' },
+  mealOrder: [1, 2],
   items: [
     item({
       id: 'b1',
@@ -112,6 +115,7 @@ describe('DietMenu', () => {
   it('renders a third meal position as its own numbered section', () => {
     const dietWithThirdMeal: DietResponse = {
       ...diet,
+      mealOrder: [1, 2, 3],
       items: [
         ...diet.items,
         item({
@@ -128,6 +132,50 @@ describe('DietMenu', () => {
       .map((h) => h.textContent);
     expect(headings).toEqual(['Meal 1', 'Meal 2', 'Meal 3']);
     expect(screen.getByText('Yogurt')).toBeInTheDocument();
+  });
+
+  it('renders sections in mealOrder while each label still names its own mealPosition', () => {
+    const reordered: DietResponse = { ...diet, mealOrder: [2, 1] };
+    renderWithIntl(<DietMenu diet={reordered} />);
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((h) => h.textContent);
+    expect(headings).toEqual(['Meal 2', 'Meal 1']);
+
+    const oatsIndex = screen.getByText('Oats').compareDocumentPosition(
+      screen.getByText('Salmon'),
+    );
+    // Salmon (Meal 2) precedes Oats (Meal 1) in the reordered layout.
+    expect(oatsIndex & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  });
+
+  it('moving a meal up or down calls moveDietMeal with that meal position and direction', async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    await user.click(
+      screen.getByRole('button', { name: 'Move Meal 1 down' }),
+    );
+    expect(moveDietMeal).toHaveBeenCalledWith('diet-1', 1, 'down');
+
+    await user.click(screen.getByRole('button', { name: 'Move Meal 2 up' }));
+    expect(moveDietMeal).toHaveBeenCalledWith('diet-1', 2, 'up');
+  });
+
+  it('disables moving the first meal up and the last meal down', () => {
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    expect(screen.getByRole('button', { name: 'Move Meal 1 up' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 2 down' }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 1 down' }),
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 2 up' }),
+    ).not.toBeDisabled();
   });
 
   it('reroll calls swapDietItem with only the diet and item id', async () => {
