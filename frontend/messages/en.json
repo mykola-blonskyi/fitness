@@ -142,9 +142,6 @@
       "removeAria": "Remove {name}"
     },
     "addExerciseForm": {
-      "noExercisesInCatalog": "No exercises in the catalog yet — add one on the Exercises page first.",
-      "exerciseLabel": "Exercise",
-      "selectPlaceholder": "Select an exercise",
       "targetDurationLabel": "Target duration (seconds)",
       "targetSetsLabel": "Target sets",
       "targetRepsLabel": "Target reps",
@@ -174,9 +171,6 @@
       "submit": "Start workout"
     },
     "logSetForm": {
-      "noExercisesInCatalog": "No exercises in the catalog yet — add one on the Exercises page first.",
-      "exerciseLabel": "Exercise",
-      "selectPlaceholder": "Select an exercise",
       "durationLabel": "Duration (seconds)",
       "weightLabel": "Weight",
       "unitAriaLabel": "Weight unit",
@@ -287,6 +281,15 @@
       "selectPlaceholder": "Select a category",
       "adding": "Adding…",
       "submit": "Add exercise"
+    },
+    "picker": {
+      "searchLabel": "Search exercises",
+      "searchPlaceholder": "Exercise name…",
+      "selectedLabel": "Selected:",
+      "loading": "Loading…",
+      "loadError": "Couldn't load exercises — try again.",
+      "empty": "No exercises match your search.",
+      "refineSearch": "Showing the first 100 matches — refine your search for more specific results."
     },
     "errors": {
       "addFailed": "Couldn't add that exercise — try again."

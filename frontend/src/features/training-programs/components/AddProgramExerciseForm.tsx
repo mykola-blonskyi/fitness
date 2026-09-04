@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   addProgramExerciseSchema,
@@ -11,17 +11,12 @@ import { FieldError } from '@shared/ui/components/FieldError';
 import { useZodForm } from '@shared/libs/use-zod-form';
 import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { addProgramExercise } from '@features/training-programs/actions';
+import { ExercisePicker } from '@features/exercise-catalog/components/ExercisePicker';
 
 // Renders only the target fields for the selected exercise's category
 // (cardio -> duration, else sets/reps); the backend re-validates
 // regardless of what the client sends.
-export function AddProgramExerciseForm({
-  programId,
-  exercises,
-}: {
-  programId: string;
-  exercises: Exercise[];
-}) {
+export function AddProgramExerciseForm({ programId }: { programId: string }) {
   const t = useTranslations('Training.addExerciseForm');
   const tv = useTranslations('Validation');
   const schema = useMemo(() => addProgramExerciseSchema(tv), [tv]);
@@ -29,16 +24,20 @@ export function AddProgramExerciseForm({
     register,
     handleSubmit,
     reset,
-    watch,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useZodForm(schema);
 
-  const selectedExerciseId = watch('exerciseId');
-  const selectedExercise = exercises.find(
-    (exercise) => exercise.id === selectedExerciseId,
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
   );
   const isCardio = selectedExercise?.category === 'cardio';
+
+  function onExerciseSelect(exercise: Exercise) {
+    setSelectedExercise(exercise);
+    setValue('exerciseId', exercise.id, { shouldValidate: true });
+  }
 
   async function onSubmit(input: AddProgramExerciseInput) {
     const result = await addProgramExercise(programId, {
@@ -47,11 +46,10 @@ export function AddProgramExerciseForm({
         ? { targetDurationSeconds: input.targetDurationSeconds }
         : { targetSets: input.targetSets, targetReps: input.targetReps }),
     });
-    if (!applyFormActionError(setError, result)) reset();
-  }
-
-  if (exercises.length === 0) {
-    return <p className="text-sm text-muted">{t('noExercisesInCatalog')}</p>;
+    if (!applyFormActionError(setError, result)) {
+      reset();
+      setSelectedExercise(null);
+    }
   }
 
   return (
@@ -59,27 +57,12 @@ export function AddProgramExerciseForm({
       onSubmit={handleSubmit(onSubmit)}
       className="flex w-full max-w-md flex-col gap-3"
     >
-      <div className="flex flex-col gap-1">
-        <label htmlFor="exerciseId" className="label">
-          {t('exerciseLabel')}
-        </label>
-        <select
-          id="exerciseId"
-          defaultValue=""
-          className="input"
-          {...register('exerciseId')}
-        >
-          <option value="" disabled>
-            {t('selectPlaceholder')}
-          </option>
-          {exercises.map((exercise) => (
-            <option key={exercise.id} value={exercise.id}>
-              {exercise.name}
-            </option>
-          ))}
-        </select>
-        <FieldError message={errors.exerciseId?.message} />
-      </div>
+      <ExercisePicker
+        id="exerciseId"
+        selectedExercise={selectedExercise}
+        onSelect={onExerciseSelect}
+      />
+      <FieldError message={errors.exerciseId?.message} />
 
       {selectedExercise &&
         (isCardio ? (

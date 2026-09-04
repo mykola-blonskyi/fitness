@@ -142,9 +142,6 @@
       "removeAria": "Видалити {name}"
     },
     "addExerciseForm": {
-      "noExercisesInCatalog": "У каталозі поки що немає вправ — спочатку додайте одну на сторінці «Вправи».",
-      "exerciseLabel": "Вправи",
-      "selectPlaceholder": "Виберіть вправу",
       "targetDurationLabel": "Цільова тривалість (секунди)",
       "targetSetsLabel": "Набори цілей",
       "targetRepsLabel": "Представники компанії Target",
@@ -174,9 +171,6 @@
       "submit": "Почати тренування"
     },
     "logSetForm": {
-      "noExercisesInCatalog": "У каталозі поки що немає вправ — спочатку додайте одну на сторінці «Вправи».",
-      "exerciseLabel": "Вправи",
-      "selectPlaceholder": "Виберіть вправу",
       "durationLabel": "Тривалість (секунди)",
       "weightLabel": "Вага",
       "unitAriaLabel": "Одиниця вимірювання маси",
@@ -287,6 +281,15 @@
       "selectPlaceholder": "Виберіть категорію",
       "adding": "Додається…",
       "submit": "Додати вправу"
+    },
+    "picker": {
+      "searchLabel": "Пошук вправ",
+      "searchPlaceholder": "Назва вправи…",
+      "selectedLabel": "Вибрано:",
+      "loading": "Завантаження…",
+      "loadError": "Не вдалося завантажити вправи — спробуйте ще раз.",
+      "empty": "Немає вправ, що відповідають пошуку.",
+      "refineSearch": "Показано перші 100 збігів — уточніть пошук для точніших результатів."
     },
     "errors": {
       "addFailed": "Не вдалося додати цю вправу — спробуйте ще раз."

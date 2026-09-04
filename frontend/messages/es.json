@@ -142,9 +142,6 @@
       "removeAria": "Eliminar {name}"
     },
     "addExerciseForm": {
-      "noExercisesInCatalog": "Aún no hay ejercicios en el catálogo; primero añade uno en la página «Ejercicios».",
-      "exerciseLabel": "Ejercicio",
-      "selectPlaceholder": "Elige un ejercicio",
       "targetDurationLabel": "Duración prevista (segundos)",
       "targetSetsLabel": "Conjuntos de objetivos",
       "targetRepsLabel": "Representantes de Target",
@@ -174,9 +171,6 @@
       "submit": "Empezar el entrenamiento"
     },
     "logSetForm": {
-      "noExercisesInCatalog": "Aún no hay ejercicios en el catálogo; primero añade uno en la página «Ejercicios».",
-      "exerciseLabel": "Ejercicio",
-      "selectPlaceholder": "Elige un ejercicio",
       "durationLabel": "Duración (segundos)",
       "weightLabel": "Peso",
       "unitAriaLabel": "Unidad de peso",
@@ -287,6 +281,15 @@
       "selectPlaceholder": "Selecciona una categoría",
       "adding": "Añadiendo…",
       "submit": "Añadir ejercicio"
+    },
+    "picker": {
+      "searchLabel": "Buscar ejercicios",
+      "searchPlaceholder": "Nombre del ejercicio…",
+      "selectedLabel": "Seleccionado:",
+      "loading": "Cargando…",
+      "loadError": "No se han podido cargar los ejercicios. Inténtalo de nuevo.",
+      "empty": "Ningún ejercicio coincide con tu búsqueda.",
+      "refineSearch": "Mostrando las primeras 100 coincidencias; refina tu búsqueda para resultados más precisos."
     },
     "errors": {
       "addFailed": "No se ha podido añadir ese ejercicio; inténtalo de nuevo."
