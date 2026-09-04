@@ -7,8 +7,10 @@
 // meal's own drift so its calorie total never exceeds target - shrinking
 // carb/fat/vegetable items first and protein only as a last resort, since a
 // protein source's own incidental fat/carbs can otherwise leave a meal with
-// nothing left to shrink and still over the ceiling (FITNESS-64). Pure
-// function, no I/O - testable without a database.
+// nothing left to shrink and still over the ceiling (FITNESS-64), then caps
+// carbs/fat individually against their own target too, since incidental
+// content elsewhere can leave one over even once calories match (FITNESS-66).
+// Pure function, no I/O - testable without a database.
 
 import {
   MEAL_ROLE_CHAINS,
@@ -106,6 +108,17 @@ function macroTotals(
   );
 }
 
+// What's left of a macro's target after roles already picked this meal -
+// an earlier role's incidental content counts against it too (FITNESS-66).
+function remainingMacroGrams(
+  itemsSoFar: { candidate: FoodCandidate; weightGrams: number }[],
+  metric: 'carbs' | 'fat',
+  targetGrams: number,
+): number {
+  const alreadyContributed = macroTotals(itemsSoFar)[metric];
+  return Math.max(0, targetGrams - alreadyContributed);
+}
+
 interface WorkingItem {
   mealPosition: number;
   orderIndex: number;
@@ -132,22 +145,51 @@ function perGramValue(candidate: FoodCandidate, metric: Metric): number {
   }
 }
 
-// Growth (closing a shortfall) prefers carb, then fat, then vegetable items
-// (largest-calorie first within a group) and never touches protein - a
-// shortfall means protein already hit its own target, so there's no reason
-// to push it further.
-const GROWTH_GROUP_ORDER: Record<number, number> = {
-  [CARB_CHAIN_INDEX]: 0,
-  [FAT_CHAIN_INDEX]: 1,
-  [VEGETABLE_CHAIN_INDEX]: 2,
-};
+// Ratio of a macro's current amount to its own target - tells which of
+// carb/fat actually caused an over/undershoot, instead of always blaming
+// carb (FITNESS-66).
+function macroRatio(
+  totals: MacroTotals,
+  targets: MealTargets,
+  metric: 'carbs' | 'fat',
+): number {
+  const target = targets[metric];
+  if (target <= 0) return totals[metric] > 0 ? Infinity : 0;
+  return totals[metric] / target;
+}
 
-function growthOrder(items: WorkingItem[]): WorkingItem[] {
+// Shared by growthOrder/shrinkOrder: whichever of carb/fat is furthest from
+// its own target goes first (grown toward it, or shrunk from it); vegetable
+// is always last except protein, which only shrinkOrder includes, and only
+// as the final fallback (FITNESS-64).
+function macroGroupOrder(
+  totals: MacroTotals,
+  targets: MealTargets,
+  direction: 'grow' | 'shrink',
+): Record<number, number> {
+  const carbRatio = macroRatio(totals, targets, 'carbs');
+  const fatRatio = macroRatio(totals, targets, 'fat');
+  const carbFirst =
+    direction === 'grow' ? carbRatio <= fatRatio : carbRatio >= fatRatio;
+  const order: Record<number, number> = {
+    [CARB_CHAIN_INDEX]: carbFirst ? 0 : 1,
+    [FAT_CHAIN_INDEX]: carbFirst ? 1 : 0,
+    [VEGETABLE_CHAIN_INDEX]: 2,
+  };
+  if (direction === 'shrink') order[PROTEIN_CHAIN_INDEX] = 3;
+  return order;
+}
+
+function growthOrder(
+  items: WorkingItem[],
+  totals: MacroTotals,
+  targets: MealTargets,
+): WorkingItem[] {
+  const order = macroGroupOrder(totals, targets, 'grow');
   return items
     .filter((item) => item.chainIndex !== PROTEIN_CHAIN_INDEX)
     .sort((a, b) => {
-      const groupDiff =
-        GROWTH_GROUP_ORDER[a.chainIndex] - GROWTH_GROUP_ORDER[b.chainIndex];
+      const groupDiff = order[a.chainIndex] - order[b.chainIndex];
       if (groupDiff !== 0) return groupDiff;
       return (
         caloriesForGrams(b.candidate, b.weightGrams) -
@@ -156,20 +198,14 @@ function growthOrder(items: WorkingItem[]): WorkingItem[] {
     });
 }
 
-// Shrinking (closing an overshoot) prefers the same carb/fat/vegetable
-// order, but falls back to protein as a last resort once those are
-// exhausted: a fatty or plant protein source's own incidental fat/carbs can
-// alone push a meal over its calorie ceiling even after every other role
-// has been zeroed out, and the ceiling is the one hard constraint (FITNESS-64).
-const SHRINK_GROUP_ORDER: Record<number, number> = {
-  ...GROWTH_GROUP_ORDER,
-  [PROTEIN_CHAIN_INDEX]: 3,
-};
-
-function shrinkOrder(items: WorkingItem[]): WorkingItem[] {
+function shrinkOrder(
+  items: WorkingItem[],
+  totals: MacroTotals,
+  targets: MealTargets,
+): WorkingItem[] {
+  const order = macroGroupOrder(totals, targets, 'shrink');
   return [...items].sort((a, b) => {
-    const groupDiff =
-      SHRINK_GROUP_ORDER[a.chainIndex] - SHRINK_GROUP_ORDER[b.chainIndex];
+    const groupDiff = order[a.chainIndex] - order[b.chainIndex];
     if (groupDiff !== 0) return groupDiff;
     return (
       caloriesForGrams(b.candidate, b.weightGrams) -
@@ -228,6 +264,43 @@ function growTowardDelta(
   return appliedCalories;
 }
 
+// A carb/fat ceiling on top of correctMeal's calorie-only pass - incidental
+// content can leave one individually over target even once calories match.
+// Only ever reduces further (can't reopen the calorie ceiling), and never
+// touches protein: better to accept the overage than gut the meal's only
+// protein source over a secondary macro (FITNESS-66).
+function shrinkMacroToTarget(
+  mealItems: WorkingItem[],
+  metric: 'carbs' | 'fat',
+  targetGrams: number,
+): void {
+  let overage = macroTotals(mealItems)[metric] - targetGrams;
+  if (overage <= 0) return;
+
+  const priority = mealItems
+    .filter((item) => item.chainIndex !== PROTEIN_CHAIN_INDEX)
+    .sort(
+      (a, b) =>
+        perGramValue(b.candidate, metric) * b.weightGrams -
+        perGramValue(a.candidate, metric) * a.weightGrams,
+    );
+
+  for (const item of priority) {
+    if (overage <= 0 || item.weightGrams <= 0) continue;
+    const perG = perGramValue(item.candidate, metric);
+    if (perG <= 0) continue;
+
+    const newGrams = Math.floor(item.weightGrams - overage / perG);
+    if (newGrams < MIN_WEIGHT_GRAMS) {
+      overage -= perG * item.weightGrams;
+      item.weightGrams = 0;
+    } else {
+      overage -= perG * (item.weightGrams - newGrams);
+      item.weightGrams = newGrams;
+    }
+  }
+}
+
 // Scoped to this meal's own drift only, never pooled with other meals. The
 // delta's sign at the start decides shrink vs. grow for the whole pass:
 // shrinkTowardDelta closes exactly to the remaining delta (or zeroes the
@@ -241,7 +314,9 @@ function correctMeal(
   let calorieDelta = targets.calories - totals.calories;
 
   const orderedItems =
-    calorieDelta < 0 ? shrinkOrder(mealItems) : growthOrder(mealItems);
+    calorieDelta < 0
+      ? shrinkOrder(mealItems, totals, targets)
+      : growthOrder(mealItems, totals, targets);
 
   for (const item of orderedItems) {
     if (Math.abs(calorieDelta) < 1 || item.weightGrams <= 0) continue;
@@ -257,6 +332,9 @@ function correctMeal(
     calorieDelta -= appliedCalories;
     totals = macroTotals(mealItems);
   }
+
+  shrinkMacroToTarget(mealItems, 'fat', targets.fat);
+  shrinkMacroToTarget(mealItems, 'carbs', targets.carbs);
 
   return mealItems.filter((item) => item.weightGrams > 0);
 }
@@ -301,13 +379,13 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
         case CARB_CHAIN_INDEX:
           weightGrams = meaningfulGramsForMacro(
             candidate.carbsPer100g,
-            target.carbsG,
+            remainingMacroGrams(mealItems, 'carbs', target.carbsG),
           );
           break;
         case FAT_CHAIN_INDEX:
           weightGrams = meaningfulGramsForMacro(
             candidate.fatPer100g,
-            target.fatG,
+            remainingMacroGrams(mealItems, 'fat', target.fatG),
           );
           break;
         default:
