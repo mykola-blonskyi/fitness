@@ -21,11 +21,13 @@ export default async function WorkoutsPage({
   const activePrograms = programs.filter((program) => program.isActive);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">{t('pageTitle')}</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
+      <h1 className="text-2xl font-extrabold md:text-[26px]">
+        {t('pageTitle')}
+      </h1>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">{t('startHeading')}</h2>
+      <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+        <h2 className="text-[15px] font-bold">{t('startHeading')}</h2>
         <StartWorkoutForm
           locale={locale}
           date={date}
@@ -33,8 +35,8 @@ export default async function WorkoutsPage({
         />
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">{t('pastHeading')}</h2>
+      <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+        <h2 className="text-[15px] font-bold">{t('pastHeading')}</h2>
         <WorkoutLogList workoutLogs={workoutLogs} locale={locale} />
       </section>
     </main>

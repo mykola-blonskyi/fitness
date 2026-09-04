@@ -60,10 +60,13 @@ export function WeightForm({
   }
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-4">
-      <form onSubmit={handleSubmit(onSubmit)} className="flex items-end gap-2">
+    <div className="flex w-full flex-col gap-3">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-wrap items-end gap-2 sm:flex-nowrap"
+      >
         <div className="flex flex-1 flex-col gap-1">
-          <label htmlFor="weight" className="text-sm font-medium">
+          <label htmlFor="weight" className="label">
             {t('label')}
           </label>
           <div className="flex gap-2">
@@ -71,13 +74,13 @@ export function WeightForm({
               id="weight"
               type="number"
               step="any"
-              className="w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              className="input"
               {...register('weight', { valueAsNumber: true })}
             />
             <select
               id="unit"
               aria-label={t('unitAriaLabel')}
-              className="rounded border border-zinc-300 px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              className="input w-24"
               {...unitField}
               onChange={(e) => {
                 unitField.onChange(e);
@@ -96,7 +99,7 @@ export function WeightForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
+          className="btn-primary w-full sm:w-auto"
         >
           {isSubmitting
             ? t('saving')
@@ -109,7 +112,7 @@ export function WeightForm({
       <FieldError message={errors.root?.message} />
 
       {queued && (
-        <p className="text-sm text-zinc-500" role="status">
+        <p className="text-sm text-muted" role="status">
           {t('savedOffline')}
         </p>
       )}
@@ -118,7 +121,7 @@ export function WeightForm({
         <form action={clearWeight.bind(null, date)}>
           <button
             type="submit"
-            className="text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+            className="text-sm text-muted underline hover:text-ink"
           >
             {t('remove')}
           </button>

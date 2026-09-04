@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import type { MetadataRoute } from 'next';
 import { hasLocale } from 'next-intl';
 import { PWA_THEME_COLOR } from '@shared/constants/pwa';
+import { THEME_COLORS, THEME_COOKIE, isTheme } from '@shared/theme/themes';
 import { routing } from '@/i18n/routing';
 
 // Root layout's metadata.manifest also links to this explicitly (see
@@ -11,10 +12,16 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   // cookies() makes this route dynamic (opts out of the default static
   // caching for metadata files) - needed since start_url must match
   // whichever locale the user is actually on when they install the PWA.
-  const saved = (await cookies()).get('NEXT_LOCALE')?.value;
+  const cookieStore = await cookies();
+  const saved = cookieStore.get('NEXT_LOCALE')?.value;
   const locale = hasLocale(routing.locales, saved)
     ? saved
     : routing.defaultLocale;
+  // Written by the Appearance settings page; 'auto' can't know the OS
+  // preference here, so it falls back to the light default.
+  const theme = cookieStore.get(THEME_COOKIE)?.value;
+  const themeColor =
+    isTheme(theme) && theme !== 'auto' ? THEME_COLORS[theme] : PWA_THEME_COLOR;
 
   return {
     name: 'Fitness',
@@ -24,8 +31,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     start_url: `/${locale}`,
     scope: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: PWA_THEME_COLOR,
+    background_color: themeColor,
+    theme_color: themeColor,
     icons: [
       {
         src: '/icons/icon-192.png',

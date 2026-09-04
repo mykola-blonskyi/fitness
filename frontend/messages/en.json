@@ -1,6 +1,6 @@
 {
   "Diary": {
-    "title": "Diary — {date}",
+    "kicker": "Diary · today",
     "weightForm": {
       "label": "Weight today",
       "unitAriaLabel": "Weight unit",
@@ -21,6 +21,26 @@
     },
     "errors": {
       "saveFailed": "Couldn't save your weight — try again."
+    },
+    "timeline": {
+      "morning": "Morning",
+      "weighIn": "Weigh-in",
+      "weighInHint": "Not logged yet — use the field above",
+      "meal": "Meal {position}",
+      "meals": "Meals",
+      "edit": "Edit",
+      "openDiet": "Open diet",
+      "noDiet": "No diet plan for today yet.",
+      "evening": "Evening",
+      "workoutWith": "Workout · {program}",
+      "workout": "Workout",
+      "continueWorkout": "Continue",
+      "startWorkout": "Start",
+      "setsLogged": "{count, plural, one {# set} other {# sets}} logged",
+      "anytime": "Anytime",
+      "photo": "Progress photo",
+      "addPhoto": "Add",
+      "photoHint": "Optional — keep the series going."
     }
   },
   "Diet": {
@@ -78,7 +98,9 @@
     },
     "errors": {
       "generic": "Something went wrong — try again."
-    }
+    },
+    "targetLabel": "Target",
+    "plannedLabel": "Planned"
   },
   "ExerciseCategories": {
     "chest": "Chest",
@@ -380,7 +402,8 @@
   "Settings": {
     "nav": {
       "profile": "Profile",
-      "preferences": "Preferences"
+      "preferences": "Preferences",
+      "appearance": "Appearance"
     },
     "profilePage": {
       "title": "Profile"
@@ -393,6 +416,19 @@
     },
     "errors": {
       "saveFailed": "Couldn't save your profile — check your inputs and try again."
+    },
+    "appearancePage": {
+      "title": "Appearance",
+      "description": "Theme applies on every screen and is remembered on this device.",
+      "themeLabel": "Theme",
+      "themes": {
+        "lime": "Lime Pulse",
+        "midnight": "Midnight",
+        "paper": "Paper",
+        "glass": "Soft Glass"
+      },
+      "followSystem": "Follow system",
+      "followSystemHint": "Lime Pulse by day, Midnight when your device is in dark mode"
     }
   },
   "Onboarding": {
@@ -468,12 +504,39 @@
       "last": "Last: {date}",
       "setsLogged": "{count, plural, one {# set} other {# sets}} logged",
       "empty": "No workouts yet",
-      "cta": "Start a workout"
+      "cta": "Start a workout",
+      "lastNamed": "Last workout {date} · {title} · {count, plural, one {# set} other {# sets}}",
+      "continue": "Continue workout"
     },
     "photos": {
       "label": "Photos",
       "needsReview": "{count, plural, one {# review needed} other {# reviews needed}}",
-      "allCaughtUp": "All caught up"
+      "allCaughtUp": "All caught up",
+      "cta": "Add photo"
+    },
+    "greeting": "Hello, {name}",
+    "actions": {
+      "logWeight": "Log weight"
+    },
+    "calories": {
+      "label": "Calories",
+      "of": "of {target} kcal",
+      "toSpare": "{kcal} kcal to spare",
+      "over": "{kcal} kcal over target"
+    },
+    "macros": {
+      "label": "Macros · planned vs target",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "basedOn": "{algorithm} · {weight} {unit} weigh-in"
+    },
+    "plan": {
+      "label": "Today's plan · {kcal} kcal",
+      "labelEmpty": "Today's plan",
+      "meal": "Meal {position}",
+      "remaining": "{count, plural, one {# more meal} other {# more meals}}",
+      "open": "Open diet"
     }
   },
   "ProfileFields": {
@@ -572,6 +635,7 @@
   "Header": {
     "brand": "Fitness",
     "nav": {
+      "home": "Home",
       "diary": "Diary",
       "photos": "Photos",
       "training": "Training",
@@ -580,8 +644,17 @@
       "food": "Food",
       "diet": "Diet",
       "settings": "Settings",
-      "admin": "Admin"
-    }
+      "admin": "Admin",
+      "more": "More"
+    },
+    "groups": {
+      "track": "Track",
+      "plan": "Plan",
+      "account": "Account"
+    },
+    "hub": "Open blonskyi.dev",
+    "mobileNavLabel": "Main navigation",
+    "closeMore": "Close menu"
   },
   "LanguageSwitcher": {
     "label": "Language"

@@ -7,6 +7,7 @@ import { moveDietMeal, reorderDietMeals } from '@features/diet/actions';
 import type { DietItemResponse, DietResponse } from '@features/diet/actions';
 import { DietItemActions } from '@features/diet/components/DietItemActions';
 import { RegenerateButton } from '@features/diet/components/RegenerateButton';
+import { ArrowDownIcon, ArrowUpIcon } from '@shared/ui/icons';
 
 function arraysEqual(a: number[], b: number[]) {
   return a.length === b.length && a.every((value, i) => value === b[i]);
@@ -114,15 +115,18 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1 border-b border-zinc-200 pb-4 dark:border-zinc-800">
-        <p className="text-4xl font-semibold">
-          {diet.totalCalories}{' '}
-          <span className="text-lg font-normal text-zinc-500">
-            {t('perDay')}
-          </span>
-        </p>
-        <p className="text-sm text-zinc-500">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line-soft pb-4">
+        <div className="flex flex-col">
+          <span className="kicker">{t('plannedLabel')}</span>
+          <p className="font-display text-3xl font-extrabold tabular-nums tracking-tight">
+            {diet.totalCalories}{' '}
+            <span className="text-sm font-medium text-muted">
+              {t('perDay')}
+            </span>
+          </p>
+        </div>
+        <p className="text-xs text-muted">
           {t('macroSummary', {
             protein: diet.totalProtein,
             carbs: diet.totalCarbs,
@@ -160,10 +164,10 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
                 title={t('mealActions.dragHandle', {
                   position: group.position,
                 })}
-                className={`flex size-11 shrink-0 touch-none items-center justify-center rounded text-zinc-400 transition-colors ${
+                className={`flex size-11 shrink-0 touch-none items-center justify-center rounded text-muted transition-colors ${
                   movingPosition !== undefined
                     ? 'pointer-events-none opacity-30'
-                    : 'cursor-grab hover:bg-zinc-100 active:cursor-grabbing dark:hover:bg-zinc-900'
+                    : 'cursor-grab hover:bg-hover active:cursor-grabbing'
                 }`}
               >
                 <svg
@@ -180,7 +184,7 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
                   <circle cx="13" cy="16" r="1.5" />
                 </svg>
               </div>
-              <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+              <h2 className="kicker">
                 {t('mealPosition', { position: group.position })}
               </h2>
             </div>
@@ -192,9 +196,9 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
                 aria-label={t('mealActions.moveUp', {
                   position: group.position,
                 })}
-                className="flex size-11 items-center justify-center rounded border border-zinc-300 text-zinc-600 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-900"
+                className="btn-ghost size-11 !px-0 disabled:pointer-events-none disabled:opacity-30"
               >
-                &uarr;
+                <ArrowUpIcon className="size-4" />
               </button>
               <button
                 type="button"
@@ -203,9 +207,9 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
                 aria-label={t('mealActions.moveDown', {
                   position: group.position,
                 })}
-                className="flex size-11 items-center justify-center rounded border border-zinc-300 text-zinc-600 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-900"
+                className="btn-ghost size-11 !px-0 disabled:pointer-events-none disabled:opacity-30"
               >
-                &darr;
+                <ArrowDownIcon className="size-4" />
               </button>
             </div>
           </div>
@@ -213,11 +217,11 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
             {group.items.map((item) => (
               <li
                 key={item.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded border border-zinc-200 p-3 dark:border-zinc-800"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5"
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">{item.foodItem.name}</span>
-                  <span className="text-sm text-zinc-500">
+                  <span className="text-sm text-muted">
                     {t('itemSummary', {
                       weight: item.weightGrams,
                       calories: item.calories,

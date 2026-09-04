@@ -76,7 +76,7 @@ export function WorkoutSetList({
   }, [pendingSets.length, router]);
 
   if (allSets.length === 0) {
-    return <p className="text-sm text-zinc-500">{t('noSetsYet')}</p>;
+    return <p className="text-sm text-muted">{t('noSetsYet')}</p>;
   }
 
   const byExercise = new Map<string, WorkoutSet[]>();
@@ -95,9 +95,9 @@ export function WorkoutSetList({
             {group.map((set) => (
               <li
                 key={set.id}
-                className="flex items-center justify-between gap-3 rounded border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
+                className="flex items-center justify-between gap-3 rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5 text-sm"
               >
-                <span className="text-zinc-500">
+                <span className="text-muted">
                   {pendingIds.has(set.id)
                     ? t('setPending')
                     : t('setNumber', { number: set.setNumber })}
@@ -108,7 +108,7 @@ export function WorkoutSetList({
                     : `${set.weight}${set.weightUnit ?? 'kg'} × ${set.reps}`}
                 </span>
                 {pendingIds.has(set.id) && (
-                  <span className="text-xs text-zinc-500" role="status">
+                  <span className="text-xs text-muted" role="status">
                     {t('queuedOffline')}
                   </span>
                 )}

@@ -1,40 +1,98 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getFormatter, getTranslations } from 'next-intl/server';
 import { apiFetch, fetchOr404 } from '@libs/api-client';
 import { todayIso } from '@libs/date';
-import type { DailyLog } from '@features/daily-log/actions';
+import type {
+  DailyLog,
+  WeightTrendResponse,
+} from '@features/daily-log/actions';
 import type { CalorieTarget, DietResponse } from '@features/diet/actions';
 import type { PhotoSession } from '@features/photo-sessions/actions';
 import type { TrainingProgram } from '@shared/types/training-program';
+import type { UserProfile } from '@shared/types/user';
 import type { WorkoutLog } from '@shared/types/workout-log';
+import { Page, PageHeader } from '@shared/ui/components/Page';
+import { Ring } from '@shared/ui/components/Ring';
+import { Sparkline } from '@shared/ui/components/Sparkline';
+import {
+  ArrowIcon,
+  CameraIcon,
+  DietIcon,
+  FlameIcon,
+  FoodIcon,
+  PlusIcon,
+  ScaleIcon,
+  TrainingIcon,
+} from '@shared/ui/icons';
+import {
+  dateFromDayIndex,
+  dayIndex,
+} from '@features/daily-log/components/WeightTrendChart';
+import { ActiveBadge } from '@features/training-programs/components/ActiveBadge';
 
-function DashboardCard({
-  href,
-  label,
+function Tile({
+  className = '',
   children,
 }: {
-  href: string;
-  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return <div className={`tile ${className}`}>{children}</div>;
+}
+
+function TileTitle({
+  icon,
+  children,
+}: {
+  icon?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className="flex flex-col gap-2 rounded border border-zinc-200 p-4 transition-colors hover:border-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:focus-visible:ring-zinc-100"
-    >
-      <span className="text-sm font-medium text-zinc-500">{label}</span>
-      {children}
-    </Link>
+    <div className="flex items-center justify-between text-xs font-semibold text-muted">
+      <span>{children}</span>
+      {icon && (
+        <span className="text-accent-strong [&>svg]:size-[18px]">{icon}</span>
+      )}
+    </div>
   );
 }
 
-function CardStat({ children }: { children: ReactNode }) {
-  return <span className="text-lg font-semibold">{children}</span>;
+function MacroBar({
+  label,
+  planned,
+  target,
+  colorClass,
+}: {
+  label: string;
+  planned: number;
+  target: number;
+  colorClass: string;
+}) {
+  const ratio = target > 0 ? Math.min(1, planned / target) : 0;
+  return (
+    <div className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-2.5 text-xs">
+      <span>{label}</span>
+      <div className="h-2 overflow-hidden rounded-full bg-track">
+        <div
+          className={`h-full rounded-full ${colorClass}`}
+          style={{ width: `${ratio * 100}%` }}
+        />
+      </div>
+      <b className="whitespace-nowrap font-semibold tabular-nums text-muted">
+        {Math.round(planned)} / {Math.round(target)} g
+      </b>
+    </div>
+  );
 }
 
-function CardHint({ children }: { children: ReactNode }) {
-  return <span className="text-sm text-zinc-500">{children}</span>;
+// Monday-first week containing `today`.
+function weekDays(today: string) {
+  const todayIndex = dayIndex(today);
+  const weekday = (new Date(today + 'T00:00:00Z').getUTCDay() + 6) % 7;
+  return Array.from({ length: 7 }, (_, i) =>
+    dateFromDayIndex(todayIndex - weekday + i),
+  );
 }
 
 export default async function Home({
@@ -44,19 +102,24 @@ export default async function Home({
 }) {
   const { locale } = await params;
   const t = await getTranslations('Home');
+  const format = await getFormatter();
   const today = todayIso();
 
   const [
+    profile,
     latestWeighIn,
     todayLog,
+    trend,
     calorieTarget,
     diet,
     programs,
     workoutLogs,
     photoSessions,
   ] = await Promise.all([
+    apiFetch<UserProfile>('/users/me'),
     fetchOr404<DailyLog>('/daily-logs/latest-weigh-in'),
     fetchOr404<DailyLog>(`/daily-logs/${today}`),
+    apiFetch<WeightTrendResponse>('/daily-logs/weight-trend?days=30'),
     fetchOr404<CalorieTarget>('/calorie-targets'),
     fetchOr404<DietResponse>('/diets/current'),
     apiFetch<TrainingProgram[]>('/training-programs'),
@@ -64,128 +127,335 @@ export default async function Home({
     apiFetch<PhotoSession[]>('/photo-sessions'),
   ]);
 
-  const activeProgramCount = programs.filter((p) => p.isActive).length;
+  const activeProgram =
+    programs.find((p) => p.isActive && !p.isArchived) ?? null;
   // Backend orders by date desc, createdAt desc - [0] is today's log if
   // one was started, otherwise the most recent past one.
   const latestWorkout = workoutLogs[0] ?? null;
   const needsReviewCount = photoSessions.filter(
     (session) => session.status === 'needs_review',
   ).length;
+  const workoutDates = new Set(workoutLogs.map((log) => log.date));
+  const days = weekDays(today);
+  const shortDate = (iso: string) =>
+    format.dateTime(new Date(iso + 'T00:00:00Z'), {
+      day: 'numeric',
+      month: 'short',
+    });
+
+  const meals = diet
+    ? [...new Set(diet.items.map((item) => item.mealPosition))]
+        .sort((a, b) => diet.mealOrder.indexOf(a) - diet.mealOrder.indexOf(b))
+        .map((position) => {
+          const items = diet.items.filter(
+            (item) => item.mealPosition === position,
+          );
+          return {
+            position,
+            calories: items.reduce((sum, item) => sum + item.calories, 0),
+            names: items.map((item) => item.foodItem.name),
+          };
+        })
+    : [];
+  const shownMeals = meals.slice(0, 3);
+  const remainingCalories = meals
+    .slice(3)
+    .reduce((sum, meal) => sum + meal.calories, 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
+    <Page>
+      <PageHeader
+        title={t('greeting', { name: profile.name || profile.email })}
+        description={format.dateTime(new Date(today + 'T00:00:00Z'), {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })}
+        actions={
+          <Link href={`/${locale}/diary`} className="btn-primary">
+            {t('actions.logWeight')}
+            <PlusIcon className="size-[18px]" />
+          </Link>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <DashboardCard href={`/${locale}/diary`} label={t('weight.label')}>
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4 md:[grid-auto-rows:120px] xl:grid-cols-12">
+        <Tile className="hero-tile col-span-2 justify-between border-0 md:col-span-6 md:row-span-2 xl:col-span-5">
+          <TileTitle icon={<ScaleIcon className="text-hero-accent" />}>
+            <span className="text-hero-muted">{t('weight.label')}</span>
+          </TileTitle>
           {latestWeighIn ? (
-            <>
-              <CardStat>
-                {t('weight.value', {
-                  weight: latestWeighIn.weight ?? '',
-                  unit: latestWeighIn.weightUnit ?? '',
-                })}
-              </CardStat>
-              <CardHint>
-                {t('weight.last', { date: latestWeighIn.date })}
-              </CardHint>
-            </>
+            <div>
+              <div className="font-display text-[52px] font-extrabold leading-none tracking-tight md:text-[60px]">
+                {latestWeighIn.weight}
+                <small className="ml-1.5 text-xl font-semibold opacity-70">
+                  {latestWeighIn.weightUnit}
+                </small>
+              </div>
+              <div className="mt-1 text-[13px] text-hero-muted">
+                {t('weight.last', { date: shortDate(latestWeighIn.date) })}
+              </div>
+            </div>
           ) : (
-            <>
-              <CardHint>{t('weight.empty')}</CardHint>
-              <CardHint>{t('weight.cta')}</CardHint>
-            </>
+            <div>
+              <div className="font-display text-2xl font-extrabold">
+                {t('weight.empty')}
+              </div>
+              <Link
+                href={`/${locale}/diary`}
+                className="text-[13px] text-hero-muted underline"
+              >
+                {t('weight.cta')}
+              </Link>
+            </div>
           )}
-        </DashboardCard>
+          <div className="text-hero-accent">
+            <Sparkline values={trend.points.map((p) => p.weight)} />
+          </div>
+        </Tile>
 
-        <DashboardCard href={`/${locale}/diary`} label={t('diary.label')}>
-          {todayLog ? (
-            <CardStat>{t('diary.loggedToday')}</CardStat>
-          ) : (
+        <Tile className="col-span-2 items-center justify-center text-center md:col-span-3 md:row-span-2 xl:col-span-3">
+          <TileTitle icon={<FlameIcon />}>
+            <span className="self-stretch">{t('calories.label')}</span>
+          </TileTitle>
+          {calorieTarget && diet ? (
             <>
-              <CardHint>{t('diary.notLoggedToday')}</CardHint>
-              <CardHint>{t('diary.cta')}</CardHint>
-            </>
-          )}
-        </DashboardCard>
-
-        <DashboardCard href={`/${locale}/diet`} label={t('diet.label')}>
-          {!calorieTarget && (
-            <>
-              <CardHint>{t('diet.noTarget')}</CardHint>
-              <CardHint>{t('diet.noTargetCta')}</CardHint>
-            </>
-          )}
-          {calorieTarget && !diet && (
-            <>
-              <CardHint>{t('diet.targetNoMenu')}</CardHint>
-              <CardHint>{t('diet.targetNoMenuCta')}</CardHint>
-            </>
-          )}
-          {calorieTarget && diet && (
-            <CardStat>
-              {t('diet.value', {
-                total: diet.totalCalories,
-                target: calorieTarget.calories,
-              })}
-            </CardStat>
-          )}
-        </DashboardCard>
-
-        <DashboardCard href={`/${locale}/training`} label={t('training.label')}>
-          {activeProgramCount > 0 ? (
-            <CardStat>
-              {t('training.activeProgramCount', { count: activeProgramCount })}
-            </CardStat>
-          ) : (
-            <>
-              <CardHint>{t('training.empty')}</CardHint>
-              <CardHint>{t('training.cta')}</CardHint>
-            </>
-          )}
-        </DashboardCard>
-
-        <DashboardCard
-          href={
-            latestWorkout
-              ? `/${locale}/workouts/${latestWorkout.id}`
-              : `/${locale}/workouts`
-          }
-          label={t('workout.label')}
-        >
-          {latestWorkout ? (
-            <>
-              <CardStat>
-                {latestWorkout.date === today
-                  ? t('workout.startedToday')
-                  : t('workout.last', { date: latestWorkout.date })}
-              </CardStat>
-              <CardHint>
-                {t('workout.setsLogged', {
-                  count: latestWorkout.sets.length,
-                })}
-              </CardHint>
-            </>
-          ) : (
-            <>
-              <CardHint>{t('workout.empty')}</CardHint>
-              <CardHint>{t('workout.cta')}</CardHint>
-            </>
-          )}
-        </DashboardCard>
-
-        <DashboardCard href={`/${locale}/photos`} label={t('photos.label')}>
-          {needsReviewCount > 0 ? (
-            <span className="flex items-center gap-2">
-              <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                {t('photos.needsReview', { count: needsReviewCount })}
+              <Ring
+                value={diet.totalCalories / calorieTarget.calories}
+                className="text-accent"
+              >
+                <b className="font-display text-[26px] font-extrabold tabular-nums text-ink">
+                  {Math.round(diet.totalCalories)}
+                </b>
+                <span className="text-xs text-muted">
+                  {t('calories.of', {
+                    target: Math.round(calorieTarget.calories),
+                  })}
+                </span>
+              </Ring>
+              <span className="text-xs text-muted">
+                {diet.totalCalories <= calorieTarget.calories
+                  ? t('calories.toSpare', {
+                      kcal: Math.round(
+                        calorieTarget.calories - diet.totalCalories,
+                      ),
+                    })
+                  : t('calories.over', {
+                      kcal: Math.round(
+                        diet.totalCalories - calorieTarget.calories,
+                      ),
+                    })}
               </span>
+            </>
+          ) : (
+            <div className="flex flex-col gap-2 py-4">
+              <span className="text-sm text-muted">
+                {calorieTarget ? t('diet.targetNoMenu') : t('diet.noTarget')}
+              </span>
+              <Link
+                href={calorieTarget ? `/${locale}/diet` : `/${locale}/diary`}
+                className="btn-ghost btn-sm"
+              >
+                {calorieTarget
+                  ? t('diet.targetNoMenuCta')
+                  : t('diet.noTargetCta')}
+              </Link>
+            </div>
+          )}
+        </Tile>
+
+        <Tile className="col-span-2 justify-between md:col-span-3 md:row-span-2 xl:col-span-4">
+          <TileTitle icon={<DietIcon />}>{t('macros.label')}</TileTitle>
+          {calorieTarget ? (
+            <>
+              <MacroBar
+                label={t('macros.protein')}
+                planned={diet?.totalProtein ?? 0}
+                target={calorieTarget.proteinG}
+                colorClass="bg-accent"
+              />
+              <MacroBar
+                label={t('macros.carbs')}
+                planned={diet?.totalCarbs ?? 0}
+                target={calorieTarget.carbsG}
+                colorClass="bg-accent-2"
+              />
+              <MacroBar
+                label={t('macros.fat')}
+                planned={diet?.totalFat ?? 0}
+                target={calorieTarget.fatG}
+                colorClass="bg-accent-3"
+              />
+              <span className="text-xs text-muted">
+                {t('macros.basedOn', {
+                  algorithm: calorieTarget.algorithm.name,
+                  weight: calorieTarget.weighIn.weight,
+                  unit: calorieTarget.weighIn.unit,
+                })}
+              </span>
+            </>
+          ) : (
+            <span className="text-sm text-muted">{t('diet.noTarget')}</span>
+          )}
+        </Tile>
+
+        <Tile className="col-span-2 flex-row items-center gap-1 md:col-span-6 xl:col-span-8">
+          {days.map((day) => {
+            const isToday = day === today;
+            const date = new Date(day + 'T00:00:00Z');
+            return (
+              <div
+                key={day}
+                className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-ctl py-1.5 text-[11px] font-semibold md:text-xs ${
+                  isToday ? 'bg-accent text-accent-ink' : 'text-muted'
+                }`}
+              >
+                <span>{format.dateTime(date, { weekday: 'short' })}</span>
+                <b
+                  className={`font-display text-base md:text-lg ${isToday ? '' : 'text-ink'}`}
+                >
+                  {date.getUTCDate()}
+                </b>
+                <i
+                  className={`size-1.5 rounded-full ${
+                    workoutDates.has(day)
+                      ? isToday
+                        ? 'bg-accent-ink'
+                        : 'bg-accent-strong'
+                      : 'bg-track'
+                  }`}
+                  aria-hidden="true"
+                />
+              </div>
+            );
+          })}
+        </Tile>
+
+        <Tile className="col-span-2 flex-row items-center justify-between border-0 bg-accent text-accent-ink md:col-span-3 md:row-span-2 xl:col-span-4 xl:row-span-1">
+          <div className="min-w-0">
+            <div className="text-xs font-semibold opacity-75">
+              {t('diary.label')}
+            </div>
+            <div className="font-display text-lg font-extrabold leading-tight">
+              {todayLog ? t('diary.loggedToday') : t('diary.notLoggedToday')}
+            </div>
+          </div>
+          <Link
+            href={`/${locale}/diary`}
+            className="btn-inverse btn-sm shrink-0"
+          >
+            {t('diary.cta')}
+            <ArrowIcon className="size-4" />
+          </Link>
+        </Tile>
+
+        <Tile className="col-span-2 justify-between md:col-span-3 md:row-span-2 xl:col-span-4">
+          <TileTitle icon={<TrainingIcon />}>{t('training.label')}</TileTitle>
+          {activeProgram ? (
+            <div>
+              <div className="font-display text-lg font-extrabold leading-tight">
+                {activeProgram.title} <ActiveBadge />
+              </div>
+              <div className="mt-1 text-xs text-muted">
+                {latestWorkout
+                  ? latestWorkout.date === today
+                    ? t('workout.startedToday')
+                    : t('workout.lastNamed', {
+                        title: latestWorkout.title,
+                        date: shortDate(latestWorkout.date),
+                        count: latestWorkout.sets.length,
+                      })
+                  : t('workout.empty')}
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted">{t('training.empty')}</div>
+          )}
+          <Link
+            href={
+              latestWorkout?.date === today
+                ? `/${locale}/workouts/${latestWorkout.id}`
+                : activeProgram
+                  ? `/${locale}/workouts`
+                  : `/${locale}/training`
+            }
+            className="btn-inverse btn-sm self-start"
+          >
+            {latestWorkout?.date === today
+              ? t('workout.continue')
+              : activeProgram
+                ? t('workout.cta')
+                : t('training.cta')}
+            <ArrowIcon className="size-4" />
+          </Link>
+        </Tile>
+
+        <Tile className="col-span-2 md:col-span-4 md:row-span-2 xl:col-span-5">
+          <TileTitle icon={<FoodIcon />}>
+            {diet
+              ? t('plan.label', { kcal: Math.round(diet.totalCalories) })
+              : t('plan.labelEmpty')}
+          </TileTitle>
+          {diet ? (
+            <>
+              {shownMeals.map((meal) => (
+                <div
+                  key={meal.position}
+                  className="flex items-center justify-between gap-3 border-t border-line-soft py-2 text-[13px]"
+                >
+                  <span className="truncate">
+                    {t('plan.meal', { position: meal.position })} ·{' '}
+                    {meal.names.join(', ')}
+                  </span>
+                  <span className="whitespace-nowrap text-muted">
+                    {Math.round(meal.calories)} kcal
+                  </span>
+                </div>
+              ))}
+              {meals.length > 3 && (
+                <div className="flex items-center justify-between gap-3 border-t border-line-soft py-2 text-[13px]">
+                  <span>
+                    {t('plan.remaining', { count: meals.length - 3 })}
+                  </span>
+                  <span className="whitespace-nowrap text-muted">
+                    {Math.round(remainingCalories)} kcal
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <span className="text-sm text-muted">
+              {calorieTarget ? t('diet.targetNoMenu') : t('diet.noTarget')}
+            </span>
+          )}
+          <Link
+            href={`/${locale}/diet`}
+            className="btn-ghost btn-sm mt-auto self-start"
+          >
+            {t('plan.open')}
+          </Link>
+        </Tile>
+
+        <Tile className="col-span-2 justify-between md:col-span-2 md:row-span-2 xl:col-span-3">
+          <TileTitle icon={<CameraIcon />}>{t('photos.label')}</TileTitle>
+          {needsReviewCount > 0 ? (
+            <span className="self-start rounded-full bg-warn-soft px-2.5 py-1 text-xs font-semibold text-warn">
+              {t('photos.needsReview', { count: needsReviewCount })}
             </span>
           ) : (
-            <CardHint>{t('photos.allCaughtUp')}</CardHint>
+            <div className="font-display text-lg font-extrabold">
+              {t('photos.allCaughtUp')}
+            </div>
           )}
-        </DashboardCard>
-      </div>
-    </main>
+          <Link
+            href={`/${locale}/photos`}
+            className="btn-ghost btn-sm self-start"
+          >
+            {t('photos.cta')}
+            <PlusIcon className="size-4" />
+          </Link>
+        </Tile>
+      </section>
+    </Page>
   );
 }

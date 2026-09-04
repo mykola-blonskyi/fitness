@@ -23,7 +23,7 @@ export async function GalleryList({
 
   if (confirmed.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-muted">
         {pendingCount > 0
           ? t('pendingReviewNotice', { count: pendingCount })
           : t('emptyNoConfirmed')}
@@ -36,13 +36,13 @@ export async function GalleryList({
   return (
     <div className="flex w-full flex-col gap-6">
       {pendingCount > 0 && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted">
           {t('pendingReviewNotice', { count: pendingCount })}
         </p>
       )}
       {groups.map((group) => (
         <section key={group.date} className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-zinc-500">{group.date}</h2>
+          <h2 className="text-sm font-medium text-muted">{group.date}</h2>
           <ul className="flex flex-col gap-2">
             {group.sessions.map((session) => (
               <GalleryRow key={session.id} session={session} locale={locale} />
@@ -70,7 +70,7 @@ async function GalleryRow({
   const url = cover ? await fetchPhotoViewUrl(cover.id) : null;
 
   return (
-    <li className="flex items-center gap-3 rounded border border-zinc-200 px-3 py-2 dark:border-zinc-800">
+    <li className="flex items-center gap-3 rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5">
       <Link
         href={`/${locale}/photos/gallery/${session.id}`}
         className="flex min-w-0 flex-1 items-center gap-3"
@@ -86,7 +86,7 @@ async function GalleryRow({
         ) : (
           <div
             aria-hidden="true"
-            className="size-12 shrink-0 rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
+            className="size-12 shrink-0 rounded-md border border-line bg-surface-2"
           />
         )}
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -94,7 +94,7 @@ async function GalleryRow({
             {t('photoCount', { count: session.photos.length })}
           </span>
           {session.isBaseline && (
-            <span className="shrink-0 rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            <span className="shrink-0 rounded bg-surface-2 px-2 py-1 text-xs font-medium text-muted">
               {tList('baseline')}
             </span>
           )}

@@ -93,14 +93,11 @@ export function AdminExerciseQueue({
   }
 
   if (items.length === 0 && !cursor) {
-    return <p className="py-6 text-sm text-zinc-500">{t('empty')}</p>;
+    return <p className="py-6 text-sm text-muted">{t('empty')}</p>;
   }
 
   return (
-    <div
-      ref={parentRef}
-      className="h-[70vh] w-full overflow-y-auto rounded border border-zinc-200 dark:border-zinc-800"
-    >
+    <div ref={parentRef} className="card h-[70vh] w-full overflow-y-auto">
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
         {virtualItems.map((virtualRow) => {
           const exercise = items[virtualRow.index];
@@ -119,7 +116,7 @@ export function AdminExerciseQueue({
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
               }}
-              className="flex items-center gap-4 border-b border-zinc-100 px-4 py-3 dark:border-zinc-900"
+              className="flex items-center gap-4 border-b border-line-soft px-4 py-3"
             >
               {exercise.imageUrl ? (
                 <Image
@@ -132,19 +129,19 @@ export function AdminExerciseQueue({
               ) : (
                 <div
                   aria-hidden="true"
-                  className="size-12 shrink-0 rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
+                  className="size-12 shrink-0 rounded-md border border-line bg-surface-2"
                 />
               )}
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{exercise.name}</p>
-                <p className="truncate text-xs text-zinc-500">
+                <p className="truncate text-xs text-muted">
                   {tc(exercise.category)} &middot;{' '}
                   {exercise.source ?? t('manualSource')}
                   {exercise.sourceId ? ` #${exercise.sourceId}` : ''}
                 </p>
                 {rowErrors[exercise.id] && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
+                  <p className="text-xs text-danger">
                     {rowErrors[exercise.id]}
                   </p>
                 )}
@@ -153,14 +150,14 @@ export function AdminExerciseQueue({
               <div className="flex shrink-0 items-center gap-2">
                 {confirmingId === exercise.id ? (
                   <>
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-muted">
                       {t('confirmDelete')}
                     </span>
                     <button
                       type="button"
                       disabled={isPending}
                       onClick={() => handleDelete(exercise.id)}
-                      className="rounded bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                      className="rounded bg-danger px-3 py-2 text-sm text-white disabled:opacity-50"
                     >
                       {t('confirm')}
                     </button>
@@ -168,7 +165,7 @@ export function AdminExerciseQueue({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmingId(null)}
-                      className="rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700"
+                      className="input"
                     >
                       {t('cancel')}
                     </button>
@@ -179,7 +176,7 @@ export function AdminExerciseQueue({
                       type="button"
                       disabled={isPending}
                       onClick={() => handleApprove(exercise.id)}
-                      className="bg-foreground text-background rounded px-3 py-2 text-sm disabled:opacity-50"
+                      className="btn-primary btn-sm"
                     >
                       {t('approve')}
                     </button>
@@ -187,7 +184,7 @@ export function AdminExerciseQueue({
                       type="button"
                       disabled={isPending}
                       onClick={() => setConfirmingId(exercise.id)}
-                      className="rounded border border-red-300 px-3 py-2 text-sm text-red-600 disabled:opacity-50 dark:border-red-900 dark:text-red-400"
+                      className="rounded border border-danger px-3 py-2 text-sm text-danger disabled:opacity-50"
                     >
                       {t('delete')}
                     </button>
@@ -199,7 +196,7 @@ export function AdminExerciseQueue({
         })}
       </div>
       {loadingMore && (
-        <p className="py-3 text-center text-sm text-zinc-500">
+        <p className="py-3 text-center text-sm text-muted">
           {t('loadingMore')}
         </p>
       )}

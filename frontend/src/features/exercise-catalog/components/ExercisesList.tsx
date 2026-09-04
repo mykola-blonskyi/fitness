@@ -83,14 +83,11 @@ export const ExercisesList = ({
   }
 
   if (items.length === 0 && !cursor) {
-    return <p className="py-6 text-sm text-zinc-500">{t('empty')}</p>;
+    return <p className="py-6 text-sm text-muted">{t('empty')}</p>;
   }
 
   return (
-    <div
-      ref={parentRef}
-      className="h-[60vh] w-full overflow-y-auto rounded border border-zinc-200 dark:border-zinc-800"
-    >
+    <div ref={parentRef} className="card h-[60vh] w-full overflow-y-auto">
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
         {virtualItems.map((virtualRow) => {
           const exercise = items[virtualRow.index];
@@ -108,7 +105,7 @@ export const ExercisesList = ({
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
               }}
-              className="flex items-center gap-4 border-b border-zinc-100 px-4 py-3 dark:border-zinc-900"
+              className="flex items-center gap-4 border-b border-line-soft px-4 py-3"
             >
               {exercise.imageUrl ? (
                 <Image
@@ -121,17 +118,17 @@ export const ExercisesList = ({
               ) : (
                 <div
                   aria-hidden="true"
-                  className="size-10 shrink-0 rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
+                  className="size-10 shrink-0 rounded-md border border-line bg-surface-2"
                 />
               )}
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{exercise.name}</p>
-                <p className="truncate text-xs text-zinc-500">
+                <p className="truncate text-xs text-muted">
                   {tc(exercise.category)}
                 </p>
                 {rowErrors[exercise.id] && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
+                  <p className="text-xs text-danger">
                     {rowErrors[exercise.id]}
                   </p>
                 )}
@@ -142,7 +139,7 @@ export const ExercisesList = ({
                   type="button"
                   disabled={pendingIds.has(exercise.id)}
                   onClick={() => handleUnapprove(exercise.id)}
-                  className="shrink-0 text-sm text-zinc-500 underline hover:text-zinc-700 disabled:opacity-50 dark:hover:text-zinc-300"
+                  className="shrink-0 text-sm text-muted underline hover:text-ink disabled:opacity-50"
                 >
                   {t('unapprove')}
                 </button>
@@ -152,7 +149,7 @@ export const ExercisesList = ({
         })}
       </div>
       {loadingMore && (
-        <p className="py-3 text-center text-sm text-zinc-500">
+        <p className="py-3 text-center text-sm text-muted">
           {t('loadingMore')}
         </p>
       )}

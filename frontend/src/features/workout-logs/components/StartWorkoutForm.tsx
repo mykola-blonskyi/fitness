@@ -42,13 +42,13 @@ export function StartWorkoutForm({
     >
       {activePrograms.length > 0 && (
         <div className="flex flex-col gap-1">
-          <label htmlFor="trainingProgramId" className="text-sm font-medium">
+          <label htmlFor="trainingProgramId" className="label">
             {t('trainingProgramLabel')}
           </label>
           <select
             id="trainingProgramId"
             defaultValue=""
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+            className="input"
             {...register('trainingProgramId')}
           >
             <option value="">{t('adHoc')}</option>
@@ -63,23 +63,19 @@ export function StartWorkoutForm({
       )}
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="title" className="text-sm font-medium">
+        <label htmlFor="title" className="label">
           {t('titleLabel')}
         </label>
         <input
           id="title"
           placeholder={t('titlePlaceholder')}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('title')}
         />
         <FieldError message={errors.title?.message} />
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background flex h-11 items-center justify-center rounded px-4 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('starting') : t('submit')}
       </button>
 

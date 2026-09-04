@@ -1,4 +1,7 @@
-// Shared by manifest.ts and layout.tsx's viewport.themeColor so browser
-// chrome and installed icon/splash never drift apart. Scoped to PWA
-// presentation only — ADR-009 keeps the rest of the UI on raw Tailwind zinc.
-export const PWA_THEME_COLOR = '#f97316';
+import { THEME_COLORS } from '@shared/theme/themes';
+
+// Static default for the viewport meta and the manifest when no theme
+// cookie is set (first visit): the Lime Pulse page background. The client
+// keeps <meta name="theme-color"> in step with the active theme
+// (shared/theme/apply-theme.ts) and manifest.ts reads the theme cookie.
+export const PWA_THEME_COLOR = THEME_COLORS.lime;

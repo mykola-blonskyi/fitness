@@ -10,6 +10,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
+    // Dates in this app are ISO day strings computed in UTC (todayIso()).
+    timeZone: 'UTC',
     messages: (await import(`../../messages/${locale}.json`)).default,
     onError(error) {
       // A missing key must be loud in dev/CI (throw) rather than

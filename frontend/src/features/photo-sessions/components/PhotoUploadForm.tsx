@@ -67,7 +67,7 @@ export function PhotoUploadForm({ date }: { date: string }) {
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="photos" className="text-sm font-medium">
+        <label htmlFor="photos" className="label">
           {t('photosLabel', { max: MAX_PHOTOS })}
         </label>
         <input
@@ -77,16 +77,12 @@ export function PhotoUploadForm({ date }: { date: string }) {
           accept="image/*"
           multiple
           onChange={onFilesSelected}
-          className="text-sm file:mr-3 file:rounded file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-zinc-800"
+          className="text-sm file:mr-3 file:rounded file:border-0 file:bg-surface-2 file:px-3 file:py-2 file:text-sm file:font-medium"
         />
-        <p className="text-xs text-zinc-500">{t('photosHint')}</p>
+        <p className="text-xs text-muted">{t('photosHint')}</p>
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('uploading') : t('submit')}
       </button>
 

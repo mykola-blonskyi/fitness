@@ -33,20 +33,22 @@ export default async function WorkoutLogDetailPage({
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
       <div>
         <Link
           href={`/${locale}/workouts`}
-          className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          className="text-sm text-muted transition-colors hover:text-ink"
         >
           &larr; {t('backLink')}
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold">{workoutLog.title}</h1>
-        <p className="text-sm text-zinc-500">{workoutLog.date}</p>
+        <h1 className="text-2xl font-extrabold md:text-[26px]">
+          {workoutLog.title}
+        </h1>
+        <p className="text-sm text-muted">{workoutLog.date}</p>
       </div>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">{t('setsHeading')}</h2>
+      <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+        <h2 className="text-[15px] font-bold">{t('setsHeading')}</h2>
         <WorkoutSetList
           workoutLogId={workoutLog.id}
           sets={workoutLog.sets}
@@ -54,8 +56,8 @@ export default async function WorkoutLogDetailPage({
         />
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">{t('logSetHeading')}</h2>
+      <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+        <h2 className="text-[15px] font-bold">{t('logSetHeading')}</h2>
         <LogSetForm
           workoutLogId={workoutLog.id}
           exercises={exercises}

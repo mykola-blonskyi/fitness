@@ -23,13 +23,15 @@ export const ProgramHeader = async ({
     <div>
       <Link
         href={`/${locale}/training`}
-        className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+        className="text-sm text-muted transition-colors hover:text-ink"
       >
         &larr; {t('backLink')}
       </Link>
       <div className="mt-1 flex items-center justify-between gap-3">
         <span className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold">{program.title}</h1>
+          <h1 className="text-2xl font-extrabold md:text-[26px]">
+            {program.title}
+          </h1>
           {program.isActive && <ActiveBadge />}
         </span>
         <div className="flex items-center gap-2">
@@ -40,10 +42,7 @@ export const ProgramHeader = async ({
                 : activateTrainingProgram
               ).bind(null, program.id)}
             >
-              <button
-                type="submit"
-                className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm dark:border-zinc-700"
-              >
+              <button type="submit" className="btn-ghost">
                 {program.isActive ? t('deactivate') : t('activate')}
               </button>
             </form>
@@ -54,17 +53,14 @@ export const ProgramHeader = async ({
               : archiveTrainingProgram
             ).bind(null, program.id)}
           >
-            <button
-              type="submit"
-              className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm dark:border-zinc-700"
-            >
+            <button type="submit" className="btn-ghost">
               {program.isArchived ? t('reactivate') : t('archive')}
             </button>
           </form>
         </div>
       </div>
       {program.isArchived && (
-        <p className="mt-1 text-sm text-zinc-500">{t('archivedNote')}</p>
+        <p className="mt-1 text-sm text-muted">{t('archivedNote')}</p>
       )}
     </div>
   );

@@ -11,9 +11,9 @@ import type { SyncStatus } from '@shared/offline/types';
 //
 // Color plus text label together, never color alone (accessibility).
 const STATUS_DOT: Record<SyncStatus, string> = {
-  offline: 'bg-zinc-400',
-  syncing: 'bg-amber-500 animate-pulse',
-  synced: 'bg-emerald-500',
+  offline: 'bg-muted',
+  syncing: 'bg-warn animate-pulse',
+  synced: 'bg-ok',
 };
 
 export function OfflineIndicator({ userId }: { userId: string }) {
@@ -25,7 +25,7 @@ export function OfflineIndicator({ userId }: { userId: string }) {
     <span
       role="status"
       aria-live="polite"
-      className="flex items-center gap-1.5 text-xs text-zinc-500"
+      className="flex items-center gap-1.5 text-xs text-ink"
     >
       <span
         className={`h-2 w-2 shrink-0 rounded-full ${STATUS_DOT[status]}`}

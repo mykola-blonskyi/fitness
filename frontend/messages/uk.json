@@ -1,6 +1,6 @@
 {
   "Diary": {
-    "title": "Щоденник — {date}",
+    "kicker": "Щоденник · сьогодні",
     "weightForm": {
       "label": "Вага на сьогодні",
       "unitAriaLabel": "Одиниця виміру ваги",
@@ -21,6 +21,26 @@
     },
     "errors": {
       "saveFailed": "Не вдалося зберегти вагу — спробуйте ще раз."
+    },
+    "timeline": {
+      "morning": "Ранок",
+      "weighIn": "Зважування",
+      "weighInHint": "Ще не записано — скористайтесь полем вище",
+      "meal": "Прийом {position}",
+      "meals": "Прийоми їжі",
+      "edit": "Змінити",
+      "openDiet": "Відкрити дієту",
+      "noDiet": "На сьогодні ще немає плану харчування.",
+      "evening": "Вечір",
+      "workoutWith": "Тренування · {program}",
+      "workout": "Тренування",
+      "continueWorkout": "Продовжити",
+      "startWorkout": "Почати",
+      "setsLogged": "{count, plural, one {# підхід} few {# підходи} other {# підходів}} записано",
+      "anytime": "Будь-коли",
+      "photo": "Фото прогресу",
+      "addPhoto": "Додати",
+      "photoHint": "За бажанням — щоб серія не переривалась."
     }
   },
   "Diet": {
@@ -78,7 +98,9 @@
     },
     "errors": {
       "generic": "Сталася помилка — спробуйте ще раз."
-    }
+    },
+    "targetLabel": "Ціль",
+    "plannedLabel": "Заплановано"
   },
   "ExerciseCategories": {
     "chest": "Груди",
@@ -380,7 +402,8 @@
   "Settings": {
     "nav": {
       "profile": "Профіль",
-      "preferences": "Налаштування"
+      "preferences": "Налаштування",
+      "appearance": "Вигляд"
     },
     "profilePage": {
       "title": "Профіль"
@@ -393,6 +416,19 @@
     },
     "errors": {
       "saveFailed": "Не вдалося зберегти ваш профіль — перевірте введені дані та спробуйте ще раз."
+    },
+    "appearancePage": {
+      "title": "Вигляд",
+      "description": "Тема діє на всіх екранах і запам’ятовується на цьому пристрої.",
+      "themeLabel": "Тема",
+      "themes": {
+        "lime": "Lime Pulse",
+        "midnight": "Midnight",
+        "paper": "Paper",
+        "glass": "Soft Glass"
+      },
+      "followSystem": "Як у системі",
+      "followSystemHint": "Lime Pulse удень, Midnight — коли пристрій у темному режимі"
     }
   },
   "Onboarding": {
@@ -468,12 +504,39 @@
       "last": "Останній: {date}",
       "setsLogged": "{count, plural, one {# набір} other {# набори}} зареєстровано",
       "empty": "Тренувань поки що немає",
-      "cta": "Почати тренування"
+      "cta": "Почати тренування",
+      "lastNamed": "Останнє тренування {date} · {title} · {count, plural, one {# підхід} few {# підходи} other {# підходів}}",
+      "continue": "Продовжити тренування"
     },
     "photos": {
       "label": "Фотографії",
       "needsReview": "{count, plural, one {# потрібні відгуки} other {# потрібні відгуки}}",
-      "allCaughtUp": "Все в порядку"
+      "allCaughtUp": "Все в порядку",
+      "cta": "Додати фото"
+    },
+    "greeting": "Привіт, {name}",
+    "actions": {
+      "logWeight": "Записати вагу"
+    },
+    "calories": {
+      "label": "Калорії",
+      "of": "з {target} ккал",
+      "toSpare": "Запас {kcal} ккал",
+      "over": "{kcal} ккал понад ціль"
+    },
+    "macros": {
+      "label": "Макроси · план проти цілі",
+      "protein": "Білки",
+      "carbs": "Вуглеводи",
+      "fat": "Жири",
+      "basedOn": "{algorithm} · зважування {weight} {unit}"
+    },
+    "plan": {
+      "label": "План на сьогодні · {kcal} ккал",
+      "labelEmpty": "План на сьогодні",
+      "meal": "Прийом {position}",
+      "remaining": "{count, plural, one {ще # прийом} few {ще # прийоми} other {ще # прийомів}}",
+      "open": "Відкрити дієту"
     }
   },
   "ProfileFields": {
@@ -572,6 +635,7 @@
   "Header": {
     "brand": "Fitness",
     "nav": {
+      "home": "Головна",
       "diary": "Щоденник",
       "photos": "Фото",
       "training": "Тренування",
@@ -580,8 +644,17 @@
       "food": "Їжа",
       "diet": "Раціон",
       "settings": "Налаштування",
-      "admin": "Адміністрування"
-    }
+      "admin": "Адміністрування",
+      "more": "Ще"
+    },
+    "groups": {
+      "track": "Трекінг",
+      "plan": "План",
+      "account": "Акаунт"
+    },
+    "hub": "Відкрити blonskyi.dev",
+    "mobileNavLabel": "Головна навігація",
+    "closeMore": "Закрити меню"
   },
   "LanguageSwitcher": {
     "label": "Мова"

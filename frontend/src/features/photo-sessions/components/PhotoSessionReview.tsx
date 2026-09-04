@@ -59,7 +59,7 @@ export function PhotoSessionReview({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-zinc-500">{t('guessHint')}</p>
+      <p className="text-xs text-muted">{t('guessHint')}</p>
 
       <div className="flex flex-wrap gap-4">
         {photos.map((photo) => (
@@ -75,7 +75,7 @@ export function PhotoSessionReview({
             ) : (
               <div
                 aria-hidden="true"
-                className="size-24 rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
+                className="size-24 rounded-md border border-line bg-surface-2"
               />
             )}
             <label className="sr-only" htmlFor={`pose-${photo.id}`}>
@@ -90,7 +90,7 @@ export function PhotoSessionReview({
                   [photo.id]: event.target.value as PhotoPose | '',
                 }))
               }
-              className="rounded border border-zinc-300 bg-transparent px-2 py-1 text-xs dark:border-zinc-700"
+              className="rounded border border-line bg-transparent px-2 py-1 text-xs"
             >
               <option value="">{t('choosePlaceholder')}</option>
               {POSE_VALUES.map((pose) => (
@@ -104,16 +104,14 @@ export function PhotoSessionReview({
       </div>
 
       {allSet && !allDistinct && (
-        <p className="text-xs text-amber-700 dark:text-amber-300">
-          {t('duplicatePoseError')}
-        </p>
+        <p className="text-xs text-warn">{t('duplicatePoseError')}</p>
       )}
 
       <button
         type="button"
         onClick={onConfirm}
         disabled={!canConfirm}
-        className="bg-foreground text-background self-start rounded px-4 py-2 text-sm disabled:opacity-50"
+        className="btn-primary self-start"
       >
         {isSubmitting ? t('confirming') : t('submit')}
       </button>

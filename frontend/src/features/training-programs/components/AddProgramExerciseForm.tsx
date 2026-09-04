@@ -51,7 +51,7 @@ export function AddProgramExerciseForm({
   }
 
   if (exercises.length === 0) {
-    return <p className="text-sm text-zinc-500">{t('noExercisesInCatalog')}</p>;
+    return <p className="text-sm text-muted">{t('noExercisesInCatalog')}</p>;
   }
 
   return (
@@ -60,13 +60,13 @@ export function AddProgramExerciseForm({
       className="flex w-full max-w-md flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="exerciseId" className="text-sm font-medium">
+        <label htmlFor="exerciseId" className="label">
           {t('exerciseLabel')}
         </label>
         <select
           id="exerciseId"
           defaultValue=""
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('exerciseId')}
         >
           <option value="" disabled>
@@ -84,17 +84,14 @@ export function AddProgramExerciseForm({
       {selectedExercise &&
         (isCardio ? (
           <div className="flex flex-col gap-1">
-            <label
-              htmlFor="targetDurationSeconds"
-              className="text-sm font-medium"
-            >
+            <label htmlFor="targetDurationSeconds" className="label">
               {t('targetDurationLabel')}
             </label>
             <input
               id="targetDurationSeconds"
               type="number"
               min={1}
-              className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              className="input"
               {...register('targetDurationSeconds', { valueAsNumber: true })}
             />
             <FieldError message={errors.targetDurationSeconds?.message} />
@@ -102,27 +99,27 @@ export function AddProgramExerciseForm({
         ) : (
           <div className="flex gap-3">
             <div className="flex flex-1 flex-col gap-1">
-              <label htmlFor="targetSets" className="text-sm font-medium">
+              <label htmlFor="targetSets" className="label">
                 {t('targetSetsLabel')}
               </label>
               <input
                 id="targetSets"
                 type="number"
                 min={1}
-                className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                className="input"
                 {...register('targetSets', { valueAsNumber: true })}
               />
               <FieldError message={errors.targetSets?.message} />
             </div>
             <div className="flex flex-1 flex-col gap-1">
-              <label htmlFor="targetReps" className="text-sm font-medium">
+              <label htmlFor="targetReps" className="label">
                 {t('targetRepsLabel')}
               </label>
               <input
                 id="targetReps"
                 type="number"
                 min={1}
-                className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                className="input"
                 {...register('targetReps', { valueAsNumber: true })}
               />
               <FieldError message={errors.targetReps?.message} />
@@ -133,7 +130,7 @@ export function AddProgramExerciseForm({
       <button
         type="submit"
         disabled={isSubmitting || !selectedExercise}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
+        className="btn-primary"
       >
         {isSubmitting ? t('adding') : t('submit')}
       </button>

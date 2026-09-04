@@ -70,7 +70,7 @@ export function SwapPicker({
   }
 
   return (
-    <div className="flex w-full flex-col gap-2 rounded border border-zinc-200 p-3 sm:w-72 dark:border-zinc-800">
+    <div className="flex w-full flex-col gap-2 rounded border border-line p-3 sm:w-72">
       <label className="sr-only" htmlFor={`swap-search-${itemId}`}>
         {t('swapPicker.searchLabel', { role: role.replace(/_/g, ' ') })}
       </label>
@@ -80,15 +80,15 @@ export function SwapPicker({
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('swapPicker.searchPlaceholder')}
-        className="rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
+        className="rounded border border-line bg-transparent px-2 py-1 text-sm"
       />
 
       {isLoading && (
-        <p className="text-xs text-zinc-500">{t('swapPicker.loading')}</p>
+        <p className="text-xs text-muted">{t('swapPicker.loading')}</p>
       )}
 
       {!isLoading && candidates.length === 0 && (
-        <p className="text-xs text-zinc-500">{t('swapPicker.empty')}</p>
+        <p className="text-xs text-muted">{t('swapPicker.empty')}</p>
       )}
 
       <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
@@ -98,10 +98,10 @@ export function SwapPicker({
               type="button"
               onClick={() => onSelect(candidate.id)}
               disabled={submittingId !== null}
-              className="flex w-full flex-col rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-800"
+              className="flex w-full flex-col rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-hover disabled:opacity-50"
             >
               <span>{candidate.name}</span>
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-muted">
                 {t('swapPicker.caloriesPer100g', {
                   calories: candidate.caloriesPer100g,
                 })}

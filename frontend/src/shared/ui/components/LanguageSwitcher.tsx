@@ -22,7 +22,7 @@ export function LanguageSwitcher() {
       aria-label={t('label')}
       value={locale}
       onChange={(e) => router.replace(pathname, { locale: e.target.value })}
-      className="rounded border border-zinc-200 bg-transparent px-2 py-1 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:border-zinc-800 dark:hover:text-zinc-100"
+      className="chip min-h-8 cursor-pointer appearance-none text-ink transition-colors hover:bg-hover"
     >
       {routing.locales.map((l) => (
         <option key={l} value={l}>

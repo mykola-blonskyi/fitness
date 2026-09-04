@@ -32,12 +32,12 @@ export default async function TrainingProgramDetailPage({
   const exercises = await apiFetch<Exercise[]>('/exercises');
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
       <ProgramHeader program={program} locale={locale} />
 
-      <section className="flex flex-col gap-2">
+      <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
         {program.exercises.length === 0 && (
-          <p className="text-sm text-zinc-500">{t('noExercisesYet')}</p>
+          <p className="text-sm text-muted">{t('noExercisesYet')}</p>
         )}
         <ul className="flex flex-col gap-2">
           {program.exercises.map((exercise, index) => (
@@ -54,8 +54,8 @@ export default async function TrainingProgramDetailPage({
       </section>
 
       {!program.isArchived && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{t('addExerciseHeading')}</h2>
+        <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+          <h2 className="text-[15px] font-bold">{t('addExerciseHeading')}</h2>
           <AddProgramExerciseForm
             programId={program.id}
             exercises={exercises}

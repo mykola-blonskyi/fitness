@@ -16,16 +16,18 @@ export default async function PhotosPage({
   const sessions = await apiFetch<PhotoSession[]>('/photo-sessions');
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">{t('pageTitle')}</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
+      <h1 className="text-2xl font-extrabold md:text-[26px]">
+        {t('pageTitle')}
+      </h1>
       <PhotoUploadForm date={date} />
 
-      <section className="flex w-full flex-col gap-4">
+      <section className="card flex w-full flex-col gap-4 p-4 md:p-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">{t('historyHeading')}</h2>
+          <h2 className="text-[15px] font-bold">{t('historyHeading')}</h2>
           <Link
             href={`/${locale}/photos/gallery`}
-            className="text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+            className="text-sm text-muted underline hover:text-ink"
           >
             {t('viewGallery')}
           </Link>

@@ -27,16 +27,16 @@ export const TrainingProgramList = async ({
 
   return (
     <>
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">{t('programsHeading')}</h2>
+      <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+        <h2 className="text-[15px] font-bold">{t('programsHeading')}</h2>
         {unarchived.length === 0 && (
-          <p className="text-sm text-zinc-500">{t('noPrograms')}</p>
+          <p className="text-sm text-muted">{t('noPrograms')}</p>
         )}
         <ul className="flex flex-col gap-2">
           {unarchived.map((program) => (
             <li
               key={program.id}
-              className="flex items-center justify-between gap-3 rounded border border-zinc-200 px-3 py-2 dark:border-zinc-800"
+              className="flex items-center justify-between gap-3 rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5"
             >
               <Link
                 href={`/${locale}/training/${program.id}`}
@@ -46,7 +46,7 @@ export const TrainingProgramList = async ({
                   <span className="text-sm font-medium">{program.title}</span>
                   {program.isActive && <ActiveBadge />}
                 </span>
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-muted">
                   {t('exerciseCount', { count: program.exercises.length })}
                 </span>
               </Link>
@@ -57,18 +57,12 @@ export const TrainingProgramList = async ({
                     : activateTrainingProgram
                   ).bind(null, program.id)}
                 >
-                  <button
-                    type="submit"
-                    className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:border-zinc-700 dark:hover:text-zinc-100"
-                  >
+                  <button type="submit" className="btn-ghost">
                     {program.isActive ? t('deactivate') : t('activate')}
                   </button>
                 </form>
                 <form action={archiveTrainingProgram.bind(null, program.id)}>
-                  <button
-                    type="submit"
-                    className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:border-zinc-700 dark:hover:text-zinc-100"
-                  >
+                  <button type="submit" className="btn-ghost">
                     {t('archive')}
                   </button>
                 </form>
@@ -79,31 +73,28 @@ export const TrainingProgramList = async ({
       </section>
 
       {archived.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{t('archivedHeading')}</h2>
+        <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+          <h2 className="text-[15px] font-bold">{t('archivedHeading')}</h2>
           <ul className="flex flex-col gap-2">
             {archived.map((program) => (
               <li
                 key={program.id}
-                className="flex items-center justify-between gap-3 rounded border border-zinc-200 px-3 py-2 dark:border-zinc-800"
+                className="flex items-center justify-between gap-3 rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5"
               >
                 <Link
                   href={`/${locale}/training/${program.id}`}
                   className="flex flex-col"
                 >
-                  <span className="text-sm font-medium text-zinc-500">
+                  <span className="text-sm font-medium text-muted">
                     {program.title}
                   </span>
-                  <span className="text-sm text-zinc-500">
+                  <span className="text-sm text-muted">
                     {program.exercises.length}{' '}
                     {program.exercises.length === 1 ? 'exercise' : 'exercises'}
                   </span>
                 </Link>
                 <form action={reactivateTrainingProgram.bind(null, program.id)}>
-                  <button
-                    type="submit"
-                    className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:border-zinc-700 dark:hover:text-zinc-100"
-                  >
+                  <button type="submit" className="btn-ghost">
                     {t('reactivate')}
                   </button>
                 </form>

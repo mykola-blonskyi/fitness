@@ -29,15 +29,11 @@ export function RetryAnalysisButton({ photoId }: { photoId: string }) {
         type="button"
         onClick={onRetry}
         disabled={isRetrying}
-        className="text-xs text-zinc-500 underline hover:text-zinc-700 disabled:opacity-50 dark:hover:text-zinc-300"
+        className="text-xs text-muted underline hover:text-ink disabled:opacity-50"
       >
         {isRetrying ? t('retrying') : t('submit')}
       </button>
-      {failed && (
-        <span className="text-xs text-amber-700 dark:text-amber-300">
-          {t('error')}
-        </span>
-      )}
+      {failed && <span className="text-xs text-warn">{t('error')}</span>}
     </div>
   );
 }

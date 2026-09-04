@@ -13,7 +13,7 @@ export const WorkoutLogList = async ({
 }: WorkoutLogListProps) => {
   const t = await getTranslations('Workouts');
   if (workoutLogs.length === 0) {
-    return <p className="text-sm text-zinc-500">{t('noWorkoutsYet')}</p>;
+    return <p className="text-sm text-muted">{t('noWorkoutsYet')}</p>;
   }
 
   return (
@@ -21,7 +21,7 @@ export const WorkoutLogList = async ({
       {workoutLogs.map((log) => (
         <li
           key={log.id}
-          className="rounded border border-zinc-200 px-3 py-2 dark:border-zinc-800"
+          className="rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5"
         >
           <Link
             href={`/${locale}/workouts/${log.id}`}
@@ -29,9 +29,9 @@ export const WorkoutLogList = async ({
           >
             <span className="flex items-center justify-between gap-3">
               <span className="text-sm font-medium">{log.title}</span>
-              <span className="text-sm text-zinc-500">{log.date}</span>
+              <span className="text-sm text-muted">{log.date}</span>
             </span>
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-muted">
               {t('setsLoggedCount', { count: log.sets.length })}
             </span>
           </Link>

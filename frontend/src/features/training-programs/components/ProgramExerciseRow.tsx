@@ -29,10 +29,10 @@ export async function ProgramExerciseRow({
       : `${exercise.targetSets ?? '—'} × ${exercise.targetReps ?? '—'}`;
 
   return (
-    <li className="flex items-center justify-between gap-3 rounded border border-zinc-200 px-3 py-2 dark:border-zinc-800">
+    <li className="flex items-center justify-between gap-3 rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5">
       <div className="flex flex-col">
         <span className="text-sm font-medium">{exercise.exerciseName}</span>
-        <span className="text-sm text-zinc-500">
+        <span className="text-sm text-muted">
           {tc(exercise.exerciseCategory)} &middot; {target}
         </span>
       </div>
@@ -45,7 +45,7 @@ export async function ProgramExerciseRow({
             type="submit"
             disabled={disabled || isFirst}
             aria-label={t('moveUp', { name: exercise.exerciseName })}
-            className="flex size-11 items-center justify-center rounded border border-zinc-300 text-zinc-600 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-900"
+            className="flex size-11 items-center justify-center rounded border border-line text-muted transition-colors hover:bg-hover disabled:pointer-events-none disabled:opacity-30"
           >
             &uarr;
           </button>
@@ -62,7 +62,7 @@ export async function ProgramExerciseRow({
             type="submit"
             disabled={disabled || isLast}
             aria-label={t('moveDown', { name: exercise.exerciseName })}
-            className="flex size-11 items-center justify-center rounded border border-zinc-300 text-zinc-600 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-900"
+            className="flex size-11 items-center justify-center rounded border border-line text-muted transition-colors hover:bg-hover disabled:pointer-events-none disabled:opacity-30"
           >
             &darr;
           </button>
@@ -72,7 +72,7 @@ export async function ProgramExerciseRow({
             type="submit"
             disabled={disabled}
             aria-label={t('removeAria', { name: exercise.exerciseName })}
-            className="flex h-11 items-center justify-center rounded border border-zinc-300 px-3 text-sm text-zinc-500 transition-colors hover:text-zinc-900 disabled:pointer-events-none disabled:opacity-30 dark:border-zinc-700 dark:hover:text-zinc-100"
+            className="btn-ghost disabled:pointer-events-none disabled:opacity-30"
           >
             {t('remove')}
           </button>

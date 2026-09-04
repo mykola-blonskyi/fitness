@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 
-const TAB_KEYS = ['profile', 'preferences'] as const;
+const TAB_KEYS = ['profile', 'preferences', 'appearance'] as const;
 
-// Shared between settings/profile and settings/preferences - Header.tsx's
-// own nav only goes one level deep (top-level sections), so a sub-nav
-// between Settings' own pages lives here instead of growing Header.
+// Sub-nav between Settings' own pages - the app shell's rail only goes one
+// level deep (top-level sections).
 export async function SettingsNav({
   locale,
   active,
@@ -15,16 +14,15 @@ export async function SettingsNav({
 }) {
   const t = await getTranslations('Settings.nav');
   return (
-    <nav className="flex w-full max-w-sm gap-4 border-b border-zinc-200 pb-2 dark:border-zinc-800">
+    <nav className="flex w-full gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1">
       {TAB_KEYS.map((key) => (
         <Link
           key={key}
           href={`/${locale}/settings/${key}`}
-          className={
-            key === active
-              ? 'text-sm font-semibold text-zinc-900 dark:text-zinc-100'
-              : 'text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100'
-          }
+          aria-current={key === active ? 'page' : undefined}
+          className={`flex min-h-9 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors ${
+            key === active ? 'bg-inv text-inv-ink' : 'text-muted hover:text-ink'
+          }`}
         >
           {t(key)}
         </Link>

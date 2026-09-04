@@ -1,6 +1,6 @@
 {
   "Diary": {
-    "title": "Diario — {date}",
+    "kicker": "Diario · hoy",
     "weightForm": {
       "label": "Peso de hoy",
       "unitAriaLabel": "Unidad de peso",
@@ -21,6 +21,26 @@
     },
     "errors": {
       "saveFailed": "No se ha podido guardar tu peso. Inténtalo de nuevo."
+    },
+    "timeline": {
+      "morning": "Mañana",
+      "weighIn": "Pesaje",
+      "weighInHint": "Sin registrar — usa el campo de arriba",
+      "meal": "Comida {position}",
+      "meals": "Comidas",
+      "edit": "Editar",
+      "openDiet": "Abrir dieta",
+      "noDiet": "Aún no hay plan de dieta para hoy.",
+      "evening": "Tarde",
+      "workoutWith": "Entrenamiento · {program}",
+      "workout": "Entrenamiento",
+      "continueWorkout": "Continuar",
+      "startWorkout": "Empezar",
+      "setsLogged": "{count, plural, one {# serie} other {# series}} registradas",
+      "anytime": "Cuando quieras",
+      "photo": "Foto de progreso",
+      "addPhoto": "Añadir",
+      "photoHint": "Opcional — para no romper la serie."
     }
   },
   "Diet": {
@@ -78,7 +98,9 @@
     },
     "errors": {
       "generic": "Ha habido un error. Inténtalo de nuevo."
-    }
+    },
+    "targetLabel": "Objetivo",
+    "plannedLabel": "Planificado"
   },
   "ExerciseCategories": {
     "chest": "Pecho",
@@ -380,7 +402,8 @@
   "Settings": {
     "nav": {
       "profile": "Perfil",
-      "preferences": "Preferencias"
+      "preferences": "Preferencias",
+      "appearance": "Apariencia"
     },
     "profilePage": {
       "title": "Perfil"
@@ -393,6 +416,19 @@
     },
     "errors": {
       "saveFailed": "No se ha podido guardar tu perfil. Comprueba los datos introducidos e inténtalo de nuevo."
+    },
+    "appearancePage": {
+      "title": "Apariencia",
+      "description": "El tema se aplica en todas las pantallas y se recuerda en este dispositivo.",
+      "themeLabel": "Tema",
+      "themes": {
+        "lime": "Lime Pulse",
+        "midnight": "Midnight",
+        "paper": "Paper",
+        "glass": "Soft Glass"
+      },
+      "followSystem": "Seguir el sistema",
+      "followSystemHint": "Lime Pulse de día, Midnight cuando el dispositivo está en modo oscuro"
     }
   },
   "Onboarding": {
@@ -468,12 +504,39 @@
       "last": "Último: {date}",
       "setsLogged": "{count, plural, one {# conjunto} other {# conjuntos}} registrado",
       "empty": "Aún no hay entrenamientos",
-      "cta": "Empezar una sesión de entrenamiento"
+      "cta": "Empezar una sesión de entrenamiento",
+      "lastNamed": "Último entrenamiento {date} · {title} · {count, plural, one {# serie} other {# series}}",
+      "continue": "Continuar entrenamiento"
     },
     "photos": {
       "label": "Fotos",
       "needsReview": "{count, plural, one {# Se necesita una reseña} other {# Se necesitan reseñas}}",
-      "allCaughtUp": "Ya estoy al día"
+      "allCaughtUp": "Ya estoy al día",
+      "cta": "Añadir foto"
+    },
+    "greeting": "Hola, {name}",
+    "actions": {
+      "logWeight": "Registrar peso"
+    },
+    "calories": {
+      "label": "Calorías",
+      "of": "de {target} kcal",
+      "toSpare": "{kcal} kcal de margen",
+      "over": "{kcal} kcal por encima"
+    },
+    "macros": {
+      "label": "Macros · plan vs objetivo",
+      "protein": "Proteína",
+      "carbs": "Carbohidratos",
+      "fat": "Grasa",
+      "basedOn": "{algorithm} · pesaje de {weight} {unit}"
+    },
+    "plan": {
+      "label": "Plan de hoy · {kcal} kcal",
+      "labelEmpty": "Plan de hoy",
+      "meal": "Comida {position}",
+      "remaining": "{count, plural, one {# comida más} other {# comidas más}}",
+      "open": "Abrir dieta"
     }
   },
   "ProfileFields": {
@@ -572,6 +635,7 @@
   "Header": {
     "brand": "Fitness",
     "nav": {
+      "home": "Inicio",
       "diary": "Diario",
       "photos": "Fotos",
       "training": "Entrenamiento",
@@ -580,8 +644,17 @@
       "food": "Comida",
       "diet": "Dieta",
       "settings": "Ajustes",
-      "admin": "Admin"
-    }
+      "admin": "Admin",
+      "more": "Más"
+    },
+    "groups": {
+      "track": "Seguimiento",
+      "plan": "Plan",
+      "account": "Cuenta"
+    },
+    "hub": "Abrir blonskyi.dev",
+    "mobileNavLabel": "Navegación principal",
+    "closeMore": "Cerrar menú"
   },
   "LanguageSwitcher": {
     "label": "Idioma"

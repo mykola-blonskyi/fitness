@@ -14,18 +14,24 @@ export const NutritionsInfo = async ({
   const t = await getTranslations('Diet.nutritionsInfo');
 
   return (
-    <div className="grid grid-cols-3 gap-4 sm:max-w-md">
-      <div className="flex flex-col gap-1 rounded border border-zinc-200 p-3 dark:border-zinc-800">
-        <span className="text-sm text-zinc-500">{t('protein')}</span>
-        <span className="text-lg font-medium">{proteinG}g</span>
+    <div className="flex gap-6">
+      <div className="flex flex-col">
+        <span className="kicker">{t('protein')}</span>
+        <span className="font-display text-[22px] font-extrabold tabular-nums tracking-tight">
+          {proteinG}g
+        </span>
       </div>
-      <div className="flex flex-col gap-1 rounded border border-zinc-200 p-3 dark:border-zinc-800">
-        <span className="text-sm text-zinc-500">{t('carbs')}</span>
-        <span className="text-lg font-medium">{carbsG}g</span>
+      <div className="flex flex-col">
+        <span className="kicker">{t('carbs')}</span>
+        <span className="font-display text-[22px] font-extrabold tabular-nums tracking-tight">
+          {carbsG}g
+        </span>
       </div>
-      <div className="flex flex-col gap-1 rounded border border-zinc-200 p-3 dark:border-zinc-800">
-        <span className="text-sm text-zinc-500">{t('fat')}</span>
-        <span className="text-lg font-medium">{fatG}g</span>
+      <div className="flex flex-col">
+        <span className="kicker">{t('fat')}</span>
+        <span className="font-display text-[22px] font-extrabold tabular-nums tracking-tight">
+          {fatG}g
+        </span>
       </div>
     </div>
   );

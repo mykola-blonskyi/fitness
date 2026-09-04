@@ -66,14 +66,11 @@ export const FoodList = ({
   }, [lastVirtualItem?.index, items.length, cursor, loadingMore]);
 
   if (items.length === 0) {
-    return <p className="py-6 text-sm text-zinc-500">{t('empty')}</p>;
+    return <p className="py-6 text-sm text-muted">{t('empty')}</p>;
   }
 
   return (
-    <div
-      ref={parentRef}
-      className="h-[70vh] w-full overflow-y-auto rounded border border-zinc-200 dark:border-zinc-800"
-    >
+    <div ref={parentRef} className="card h-[70vh] w-full overflow-y-auto">
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
         {virtualItems.map((virtualRow) => {
           const item = items[virtualRow.index];
@@ -91,7 +88,7 @@ export const FoodList = ({
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
               }}
-              className="flex items-center gap-4 border-b border-zinc-100 px-4 py-3 dark:border-zinc-900"
+              className="flex items-center gap-4 border-b border-line-soft px-4 py-3"
             >
               {item.imageUrl ? (
                 <Image
@@ -104,7 +101,7 @@ export const FoodList = ({
               ) : (
                 <div
                   aria-hidden="true"
-                  className="size-10 shrink-0 rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
+                  className="size-10 shrink-0 rounded-md border border-line bg-surface-2"
                 />
               )}
 
@@ -112,7 +109,7 @@ export const FoodList = ({
                 {item.name}
               </p>
 
-              <div className="flex shrink-0 items-center gap-3 text-xs text-zinc-500">
+              <div className="flex shrink-0 items-center gap-3 text-xs text-muted">
                 <span>{Math.round(item.caloriesPer100g)} kcal</span>
                 <span>{item.proteinPer100g.toFixed(1)}g P</span>
                 <span>{item.carbsPer100g.toFixed(1)}g C</span>
@@ -123,7 +120,7 @@ export const FoodList = ({
                 <form action={unapproveFoodItem.bind(null, item.id)}>
                   <button
                     type="submit"
-                    className="shrink-0 text-sm text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                    className="shrink-0 text-sm text-muted underline hover:text-ink"
                   >
                     {t('unapprove')}
                   </button>
@@ -134,7 +131,7 @@ export const FoodList = ({
         })}
       </div>
       {loadingMore && (
-        <p className="py-3 text-center text-sm text-zinc-500">
+        <p className="py-3 text-center text-sm text-muted">
           {t('loadingMore')}
         </p>
       )}

@@ -40,25 +40,21 @@ export function CreateExerciseForm() {
       className="flex w-full max-w-md flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
+        <label htmlFor="name" className="label">
           {t('nameLabel')}
         </label>
-        <input
-          id="name"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('name')}
-        />
+        <input id="name" className="input" {...register('name')} />
         <FieldError message={errors.name?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="category" className="text-sm font-medium">
+        <label htmlFor="category" className="label">
           {t('categoryLabel')}
         </label>
         <select
           id="category"
           defaultValue=""
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('category')}
         >
           <option value="" disabled>
@@ -73,11 +69,7 @@ export function CreateExerciseForm() {
         <FieldError message={errors.category?.message} />
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('adding') : t('submit')}
       </button>
 

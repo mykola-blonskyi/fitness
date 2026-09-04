@@ -34,23 +34,19 @@ export function CreateTrainingProgramForm() {
       className="flex w-full max-w-md flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="title" className="text-sm font-medium">
+        <label htmlFor="title" className="label">
           {t('titleLabel')}
         </label>
         <input
           id="title"
           placeholder={t('titlePlaceholder')}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('title')}
         />
         <FieldError message={errors.title?.message} />
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('creating') : t('submit')}
       </button>
 
