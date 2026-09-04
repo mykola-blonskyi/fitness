@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useOfflineQueueStore } from '@shared/offline/offline-queue-store';
@@ -53,9 +53,13 @@ export function WorkoutSetList({
 }) {
   const t = useTranslations('Workouts.setList');
   // Reads straight from the offline write-queue (not local component
-  // state) so a set logged offline shows up here immediately.
-  const pendingSets = useOfflineQueueStore((state) =>
-    pendingSetsFor(state.queue, workoutLogId, exercises),
+  // state) so a set logged offline shows up here immediately. Selects the
+  // raw queue, not pendingSetsFor's own always-new-array output - a
+  // non-settling selector crashes every render (FITNESS-67).
+  const queue = useOfflineQueueStore((state) => state.queue);
+  const pendingSets = useMemo(
+    () => pendingSetsFor(queue, workoutLogId, exercises),
+    [queue, workoutLogId, exercises],
   );
   const pendingIds = new Set(pendingSets.map((set) => set.id));
   const allSets = [...sets, ...pendingSets];
