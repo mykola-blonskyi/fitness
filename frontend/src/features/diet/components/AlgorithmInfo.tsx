@@ -14,7 +14,7 @@ export const AlgorithmInfo = async ({
   const t = await getTranslations('Diet.algorithmInfo');
 
   return (
-    <div className="flex flex-col gap-1 border-t border-zinc-200 pt-4 text-sm text-zinc-500 dark:border-zinc-800">
+    <div className="flex flex-col gap-0.5 border-t border-line-soft pt-3 text-xs text-muted">
       <p>
         {t.rich('calculatedUsing', {
           name,

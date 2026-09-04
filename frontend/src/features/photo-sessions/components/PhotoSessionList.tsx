@@ -16,7 +16,7 @@ export async function PhotoSessionList({
 }) {
   const t = await getTranslations('PhotoSessions');
   if (sessions.length === 0) {
-    return <p className="text-sm text-zinc-500">{t('list.empty')}</p>;
+    return <p className="text-sm text-muted">{t('list.empty')}</p>;
   }
 
   return (
@@ -43,18 +43,18 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
   const poseLabel = (pose: PhotoPose | null) => tPoses(pose ?? 'unassigned');
 
   return (
-    <li className="flex flex-col gap-3 border-b border-zinc-200 pb-6 dark:border-zinc-800">
+    <li className="flex flex-col gap-3 border-b border-line pb-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{session.date}</span>
           {session.status === 'needs_review' && (
-            <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            <span className="rounded bg-warn-soft px-2 py-1 text-xs font-medium text-warn">
               {t('needsReview')}
             </span>
           )}
         </div>
         {session.isBaseline ? (
-          <span className="rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          <span className="rounded bg-surface-2 px-2 py-1 text-xs font-medium text-muted">
             {t('baseline')}
           </span>
         ) : (
@@ -62,7 +62,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
             <form action={setBaseline.bind(null, session.id)}>
               <button
                 type="submit"
-                className="text-xs text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                className="text-xs text-muted underline hover:text-ink"
               >
                 {t('markBaseline')}
               </button>
@@ -95,10 +95,10 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
               ) : (
                 <div
                   aria-hidden="true"
-                  className="size-24 rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
+                  className="size-24 rounded-md border border-line bg-surface-2"
                 />
               )}
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-muted">
                 {poseLabel(photo.pose)}
               </span>
               {session.status === 'confirmed' && (
@@ -106,8 +106,8 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
                   <span
                     className={`text-xs ${
                       photo.analysisStatus === 'failed'
-                        ? 'text-amber-700 dark:text-amber-300'
-                        : 'text-zinc-400'
+                        ? 'text-warn'
+                        : 'text-muted'
                     }`}
                   >
                     {tAnalysis(photo.analysisStatus)}

@@ -31,7 +31,7 @@ export async function SessionComparison({
   if (!baseline) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-zinc-500">{t('noBaseline')}</p>
+        <p className="text-sm text-muted">{t('noBaseline')}</p>
         <SessionPhotos session={session} />
       </div>
     );
@@ -40,7 +40,7 @@ export async function SessionComparison({
   if (baseline.id === session.id) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-zinc-500">{t('isBaseline')}</p>
+        <p className="text-sm text-muted">{t('isBaseline')}</p>
         <SessionPhotos session={session} />
       </div>
     );
@@ -59,7 +59,7 @@ export async function SessionComparison({
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
       <div className="flex flex-col gap-4">
-        <h2 className="text-sm font-medium text-zinc-500">
+        <h2 className="text-sm font-medium text-muted">
           {t('baselineHeading', { date: baseline.date })}
         </h2>
         {pairsWithUrls.map((pair) => (
@@ -71,7 +71,7 @@ export async function SessionComparison({
         ))}
       </div>
       <div className="flex flex-col gap-4">
-        <h2 className="text-sm font-medium text-zinc-500">{session.date}</h2>
+        <h2 className="text-sm font-medium text-muted">{session.date}</h2>
         {pairsWithUrls.map((pair) => (
           <PhotoSlot
             key={pair.pose}
@@ -127,10 +127,10 @@ async function PhotoSlot({
       ) : (
         <div
           aria-hidden="true"
-          className="aspect-square w-full rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
+          className="aspect-square w-full rounded-md border border-line bg-surface-2"
         />
       )}
-      <span className="text-xs text-zinc-500">{label}</span>
+      <span className="text-xs text-muted">{label}</span>
     </div>
   );
 }

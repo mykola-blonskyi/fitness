@@ -16,7 +16,7 @@ export function GenerateDietError({
   if (!error) return null;
 
   return (
-    <p className="text-sm text-red-600" role="alert">
+    <p className="text-sm text-danger" role="alert">
       {error}
       {preferencesBlocked && (
         <>

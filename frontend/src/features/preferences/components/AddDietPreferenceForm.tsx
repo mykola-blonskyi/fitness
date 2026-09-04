@@ -46,14 +46,10 @@ export function AddDietPreferenceForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex items-end gap-2">
       <div className="flex flex-col gap-1">
-        <label htmlFor="dietType" className="text-sm font-medium">
+        <label htmlFor="dietType" className="label">
           {t('label')}
         </label>
-        <select
-          id="dietType"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('dietType')}
-        >
+        <select id="dietType" className="input" {...register('dietType')}>
           <option value="">{t('placeholder')}</option>
           {options.map((dietType) => (
             <option key={dietType} value={dietType}>
@@ -63,11 +59,7 @@ export function AddDietPreferenceForm({
         </select>
         <FieldError message={errors.dietType?.message} />
       </div>
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('adding') : t('submit')}
       </button>
       <FieldError message={errors.root?.message} />

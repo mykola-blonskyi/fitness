@@ -48,7 +48,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       onSubmit={handleSubmit(onSubmit)}
       className="flex w-full max-w-sm flex-col gap-4"
     >
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-muted">
         {t('emailAge', { email: profile.email, age: profile.age })}
       </p>
 
@@ -56,16 +56,12 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
 
       <FieldError message={errors.root?.message} />
       {saved && !errors.root && (
-        <p className="text-sm text-green-600" role="status">
+        <p className="text-sm text-ok" role="status">
           {t('saved')}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('saving') : t('submit')}
       </button>
     </form>

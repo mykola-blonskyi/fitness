@@ -15,14 +15,14 @@ export const ExercisesSearchForm = async ({
   return (
     <form className="flex flex-wrap items-end gap-2">
       <div className="flex flex-col gap-1">
-        <label htmlFor="category" className="text-sm font-medium">
+        <label htmlFor="category" className="label">
           {t('categoryLabel')}
         </label>
         <select
           id="category"
           name="category"
           defaultValue={category ?? ''}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
         >
           <option value="">{t('allCategories')}</option>
           {EXERCISE_CATEGORIES.map((c) => (
@@ -33,7 +33,7 @@ export const ExercisesSearchForm = async ({
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor="search" className="text-sm font-medium">
+        <label htmlFor="search" className="label">
           {t('searchLabel')}
         </label>
         <input
@@ -42,13 +42,10 @@ export const ExercisesSearchForm = async ({
           type="search"
           defaultValue={search ?? ''}
           placeholder={t('searchPlaceholder')}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
         />
       </div>
-      <button
-        type="submit"
-        className="bg-foreground text-background rounded px-4 py-2"
-      >
+      <button type="submit" className="btn-primary">
         {t('submit')}
       </button>
     </form>

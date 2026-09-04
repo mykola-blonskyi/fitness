@@ -26,16 +26,18 @@ export default async function PhotoGalleryDetailPage({
   const baseline = sessions.find((candidate) => candidate.isBaseline) ?? null;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link
             href={`/${locale}/photos/gallery`}
-            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+            className="text-sm text-muted transition-colors hover:text-ink"
           >
             &larr; {t('galleryHeading')}
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold">{session.date}</h1>
+          <h1 className="text-2xl font-extrabold md:text-[26px]">
+            {session.date}
+          </h1>
         </div>
         <DeleteSessionButton
           sessionId={session.id}

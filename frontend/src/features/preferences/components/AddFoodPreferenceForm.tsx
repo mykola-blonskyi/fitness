@@ -74,14 +74,10 @@ export function AddFoodPreferenceForm({
       className="flex w-full max-w-sm flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="type" className="text-sm font-medium">
+        <label htmlFor="type" className="label">
           {t('typeLabel')}
         </label>
-        <select
-          id="type"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('type')}
-        >
+        <select id="type" className="input" {...register('type')}>
           <option value="">{t('selectTypePlaceholder')}</option>
           <option value="allergy">{t('allergy')}</option>
           <option value="exclude">{t('exclude')}</option>
@@ -90,14 +86,10 @@ export function AddFoodPreferenceForm({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="targetType" className="text-sm font-medium">
+        <label htmlFor="targetType" className="label">
           {t('targetTypeLabel')}
         </label>
-        <select
-          id="targetType"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('targetType')}
-        >
+        <select id="targetType" className="input" {...register('targetType')}>
           <option value="">{t('selectTargetTypePlaceholder')}</option>
           <option value="category">{t('targetCategory')}</option>
           <option value="subcategory">{t('targetSubcategory')}</option>
@@ -109,14 +101,10 @@ export function AddFoodPreferenceForm({
 
       {targetType === 'category' && (
         <div className="flex flex-col gap-1">
-          <label htmlFor="targetId" className="text-sm font-medium">
+          <label htmlFor="targetId" className="label">
             {t('categoryLabel')}
           </label>
-          <select
-            id="targetId"
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            {...register('targetId')}
-          >
+          <select id="targetId" className="input" {...register('targetId')}>
             <option value="">{t('selectCategoryPlaceholder')}</option>
             {taxonomy.categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -130,14 +118,10 @@ export function AddFoodPreferenceForm({
 
       {targetType === 'subcategory' && (
         <div className="flex flex-col gap-1">
-          <label htmlFor="targetId" className="text-sm font-medium">
+          <label htmlFor="targetId" className="label">
             {t('subcategoryLabel')}
           </label>
-          <select
-            id="targetId"
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            {...register('targetId')}
-          >
+          <select id="targetId" className="input" {...register('targetId')}>
             <option value="">{t('selectSubcategoryPlaceholder')}</option>
             {subcategoryOptions.map((subcategory) => (
               <option key={subcategory.id} value={subcategory.id}>
@@ -151,14 +135,10 @@ export function AddFoodPreferenceForm({
 
       {targetType === 'role' && (
         <div className="flex flex-col gap-1">
-          <label htmlFor="targetId" className="text-sm font-medium">
+          <label htmlFor="targetId" className="label">
             {t('roleLabel')}
           </label>
-          <select
-            id="targetId"
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            {...register('targetId')}
-          >
+          <select id="targetId" className="input" {...register('targetId')}>
             <option value="">{t('selectRolePlaceholder')}</option>
             {taxonomy.roles.map((role) => (
               <option key={role.id} value={role.id}>
@@ -172,7 +152,7 @@ export function AddFoodPreferenceForm({
 
       {targetType === 'food_item' && (
         <div className="flex flex-col gap-1">
-          <label htmlFor="foodItemSearch" className="text-sm font-medium">
+          <label htmlFor="foodItemSearch" className="label">
             {t('searchLabel')}
           </label>
           <input
@@ -181,16 +161,12 @@ export function AddFoodPreferenceForm({
             value={foodItemSearch}
             onChange={(e) => setFoodItemSearch(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+            className="input"
           />
-          <label htmlFor="targetId" className="text-sm font-medium">
+          <label htmlFor="targetId" className="label">
             {t('itemLabel')}
           </label>
-          <select
-            id="targetId"
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            {...register('targetId')}
-          >
+          <select id="targetId" className="input" {...register('targetId')}>
             <option value="">{t('selectFoodItemPlaceholder')}</option>
             {filteredFoodItems.map((item) => (
               <option key={item.id} value={item.id}>
@@ -202,11 +178,7 @@ export function AddFoodPreferenceForm({
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('adding') : t('submit')}
       </button>
 

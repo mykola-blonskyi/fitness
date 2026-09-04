@@ -58,9 +58,7 @@ export async function WeightTrendChart({
 
   if (points.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
-        {t('empty', { days: windowDays })}
-      </p>
+      <p className="text-sm text-muted">{t('empty', { days: windowDays })}</p>
     );
   }
 
@@ -104,7 +102,7 @@ export async function WeightTrendChart({
   return (
     <svg
       viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-      className="h-auto w-full text-blue-600 dark:text-blue-400"
+      className="h-auto w-full text-accent-strong"
       role="img"
       aria-label={t('ariaLabel', {
         days: windowDays,
@@ -123,7 +121,7 @@ export async function WeightTrendChart({
             x2={CHART_WIDTH - PADDING.right}
             y1={y(weight)}
             y2={y(weight)}
-            className="stroke-zinc-200 dark:stroke-zinc-800"
+            className="stroke-line"
             strokeWidth={1}
           />
           <text
@@ -131,7 +129,7 @@ export async function WeightTrendChart({
             y={y(weight)}
             textAnchor="end"
             dominantBaseline="middle"
-            className="fill-zinc-500 text-[10px]"
+            className="fill-muted text-[10px]"
           >
             {weight}
           </text>
@@ -171,7 +169,7 @@ export async function WeightTrendChart({
         x={x(latest.date)}
         y={Math.max(y(latest.weight) - 10, 10)}
         textAnchor="end"
-        className="fill-zinc-900 text-xs font-medium dark:fill-zinc-100"
+        className="fill-ink text-xs font-medium"
       >
         {latest.weight}
         {unit}

@@ -15,9 +15,9 @@ export default async function AdminFoodPage({
     await apiFetch<CursorPage<AdminFoodItem>>('/admin/food-items');
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
       <AdminNav locale={locale} active="food" />
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
+      <h1 className="text-2xl font-extrabold md:text-[26px]">{t('title')}</h1>
       <AdminFoodItemQueue
         initialItems={firstPage.items}
         initialCursor={firstPage.nextCursor}

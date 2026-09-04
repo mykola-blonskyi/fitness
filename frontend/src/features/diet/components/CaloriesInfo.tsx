@@ -17,12 +17,13 @@ export const CaloriesInfo = async ({
   const t = await getTranslations('Diet');
 
   return (
-    <div className="flex flex-col gap-1">
-      <p className="text-4xl font-semibold">
+    <div className="flex flex-col">
+      <span className="kicker">{t('targetLabel')}</span>
+      <p className="font-display text-4xl font-extrabold tabular-nums tracking-tight">
         {Math.round(calories)}{' '}
-        <span className="text-lg font-normal text-zinc-500">{t('perDay')}</span>
+        <span className="text-sm font-medium text-muted">{t('perDay')}</span>
       </p>
-      <p className="text-sm text-zinc-500">
+      <p className="text-xs text-muted">
         {t('caloriesInfo.basedOn', { weight, unit, date })}
       </p>
     </div>

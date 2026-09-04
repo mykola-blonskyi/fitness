@@ -47,7 +47,7 @@ export function DietItemActions({
           type="button"
           onClick={onReroll}
           disabled={isRerolling}
-          className="rounded border border-zinc-300 px-3 py-1.5 text-sm transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          className="btn-ghost btn-sm"
         >
           {isRerolling ? t('itemActions.rerolling') : t('itemActions.reroll')}
         </button>
@@ -55,7 +55,7 @@ export function DietItemActions({
           type="button"
           onClick={() => setPickerOpen((open) => !open)}
           aria-expanded={pickerOpen}
-          className="rounded border border-zinc-300 px-3 py-1.5 text-sm transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          className="btn-ghost btn-sm"
         >
           {t('itemActions.swap')}
         </button>

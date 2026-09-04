@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Header } from '@shared/ui/components/Header';
+import { AppShell } from '@shared/ui/shell/AppShell';
 import { apiFetch } from '@libs/api-client';
 import type { UserProfile } from '@shared/types/user';
 
@@ -19,17 +19,16 @@ export default async function AppLayout({
   const profile = await apiFetch<UserProfile>('/users/me');
 
   return (
-    <>
-      <Header
-        locale={locale}
-        identity={{
-          userId: profile.id,
-          name: profile.name,
-          email: profile.email,
-          isAdmin: profile.isAdmin,
-        }}
-      />
+    <AppShell
+      locale={locale}
+      identity={{
+        userId: profile.id,
+        name: profile.name,
+        email: profile.email,
+        isAdmin: profile.isAdmin,
+      }}
+    >
       {children}
-    </>
+    </AppShell>
   );
 }

@@ -14,14 +14,12 @@ export function GenerateMenuCta({ hasTarget }: { hasTarget: boolean }) {
         type="button"
         onClick={run}
         disabled={!hasTarget || isPending}
-        className="bg-foreground text-background self-start rounded px-4 py-2 text-sm transition-opacity disabled:opacity-50"
+        className="btn-primary self-start"
       >
         {isPending ? t('generating') : t('generate')}
       </button>
 
-      {!hasTarget && (
-        <p className="text-sm text-zinc-500">{t('needsWeighIn')}</p>
-      )}
+      {!hasTarget && <p className="text-sm text-muted">{t('needsWeighIn')}</p>}
 
       <GenerateDietError
         error={error}

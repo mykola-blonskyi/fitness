@@ -46,26 +46,21 @@ export function ProfileFields({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
+        <label htmlFor="name" className="label">
           {t('name')}
         </label>
-        <input
-          id="name"
-          type="text"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('name')}
-        />
+        <input id="name" type="text" className="input" {...register('name')} />
         <FieldError message={errors.name?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="gender" className="text-sm font-medium">
+        <label htmlFor="gender" className="label">
           {t('gender')}
         </label>
         <select
           id="gender"
           defaultValue={showPlaceholder ? '' : undefined}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('gender')}
         >
           {showPlaceholder && (
@@ -83,39 +78,39 @@ export function ProfileFields({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="dateOfBirth" className="text-sm font-medium">
+        <label htmlFor="dateOfBirth" className="label">
           {t('dateOfBirth')}
         </label>
         <input
           id="dateOfBirth"
           type="date"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('dateOfBirth')}
         />
         <FieldError message={errors.dateOfBirth?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="height" className="text-sm font-medium">
+        <label htmlFor="height" className="label">
           {t('height')}
         </label>
         <input
           id="height"
           type="number"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('height', { valueAsNumber: true })}
         />
         <FieldError message={errors.height?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="goal" className="text-sm font-medium">
+        <label htmlFor="goal" className="label">
           {t('goal')}
         </label>
         <select
           id="goal"
           defaultValue={showPlaceholder ? '' : undefined}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('goal')}
         >
           {showPlaceholder && (
@@ -133,13 +128,13 @@ export function ProfileFields({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="activityLevel" className="text-sm font-medium">
+        <label htmlFor="activityLevel" className="label">
           {t('activityLevel')}
         </label>
         <select
           id="activityLevel"
           defaultValue={showPlaceholder ? '' : undefined}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('activityLevel')}
         >
           {showPlaceholder && (
@@ -157,13 +152,13 @@ export function ProfileFields({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="mealCount" className="text-sm font-medium">
+        <label htmlFor="mealCount" className="label">
           {t('mealsPerDay')}
         </label>
         <select
           id="mealCount"
           defaultValue={showPlaceholder ? 3 : undefined}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('mealCount', { valueAsNumber: true })}
         >
           {MEAL_COUNTS.map((n) => (
@@ -176,13 +171,13 @@ export function ProfileFields({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="locale" className="text-sm font-medium">
+        <label htmlFor="locale" className="label">
           {t('language')}
         </label>
         <select
           id="locale"
           defaultValue={showPlaceholder ? 'en' : undefined}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('locale')}
         >
           {LOCALES.map((l) => (
@@ -195,13 +190,13 @@ export function ProfileFields({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="defaultWeightUnit" className="text-sm font-medium">
+        <label htmlFor="defaultWeightUnit" className="label">
           {t('weightUnit')}
         </label>
         <select
           id="defaultWeightUnit"
           defaultValue={showPlaceholder ? 'kg' : undefined}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('defaultWeightUnit')}
         >
           {WEIGHT_UNITS.map((u) => (

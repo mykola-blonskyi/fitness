@@ -75,7 +75,7 @@ export function LogSetForm({
   }
 
   if (exercises.length === 0) {
-    return <p className="text-sm text-zinc-500">{t('noExercisesInCatalog')}</p>;
+    return <p className="text-sm text-muted">{t('noExercisesInCatalog')}</p>;
   }
 
   return (
@@ -84,13 +84,13 @@ export function LogSetForm({
       className="flex w-full max-w-md flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="exerciseId" className="text-sm font-medium">
+        <label htmlFor="exerciseId" className="label">
           {t('exerciseLabel')}
         </label>
         <select
           id="exerciseId"
           defaultValue=""
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('exerciseId')}
         >
           <option value="" disabled>
@@ -108,14 +108,14 @@ export function LogSetForm({
       {selectedExercise &&
         (isCardio ? (
           <div className="flex flex-col gap-1">
-            <label htmlFor="durationSeconds" className="text-sm font-medium">
+            <label htmlFor="durationSeconds" className="label">
               {t('durationLabel')}
             </label>
             <input
               id="durationSeconds"
               type="number"
               min={1}
-              className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              className="input"
               {...register('durationSeconds', { valueAsNumber: true })}
             />
             <FieldError message={errors.durationSeconds?.message} />
@@ -123,7 +123,7 @@ export function LogSetForm({
         ) : (
           <div className="flex gap-3">
             <div className="flex flex-1 flex-col gap-1">
-              <label htmlFor="weight" className="text-sm font-medium">
+              <label htmlFor="weight" className="label">
                 {t('weightLabel')}
               </label>
               <div className="flex gap-2">
@@ -131,13 +131,13 @@ export function LogSetForm({
                   id="weight"
                   type="number"
                   step="any"
-                  className="w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="input"
                   {...register('weight', { valueAsNumber: true })}
                 />
                 <select
                   id="unit"
                   aria-label={t('unitAriaLabel')}
-                  className="rounded border border-zinc-300 px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="input w-auto"
                   {...unitField}
                   onChange={(e) => {
                     unitField.onChange(e);
@@ -154,14 +154,14 @@ export function LogSetForm({
               <FieldError message={errors.weight?.message} />
             </div>
             <div className="flex flex-1 flex-col gap-1">
-              <label htmlFor="reps" className="text-sm font-medium">
+              <label htmlFor="reps" className="label">
                 {t('repsLabel')}
               </label>
               <input
                 id="reps"
                 type="number"
                 min={1}
-                className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                className="input"
                 {...register('reps', { valueAsNumber: true })}
               />
               <FieldError message={errors.reps?.message} />
@@ -172,7 +172,7 @@ export function LogSetForm({
       <button
         type="submit"
         disabled={isSubmitting || !selectedExercise}
-        className="bg-foreground text-background flex h-11 items-center justify-center rounded px-4 disabled:opacity-50"
+        className="btn-primary"
       >
         {isSubmitting ? t('logging') : t('submit')}
       </button>
@@ -180,7 +180,7 @@ export function LogSetForm({
       <FieldError message={errors.root?.message} />
 
       {queued && (
-        <p className="text-sm text-zinc-500" role="status">
+        <p className="text-sm text-muted" role="status">
           {t('savedOffline')}
         </p>
       )}

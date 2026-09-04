@@ -14,15 +14,17 @@ export default async function PhotoGalleryPage({
   const sessions = await apiFetch<PhotoSession[]>('/photo-sessions');
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
       <div>
         <Link
           href={`/${locale}/photos`}
-          className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100"
+          className="text-sm text-muted transition-colors hover:text-ink"
         >
           &larr; {t('galleryBackLink')}
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold">{t('galleryHeading')}</h1>
+        <h1 className="text-2xl font-extrabold md:text-[26px]">
+          {t('galleryHeading')}
+        </h1>
       </div>
 
       <GalleryList sessions={sessions} locale={locale} />

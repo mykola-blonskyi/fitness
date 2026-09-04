@@ -2,16 +2,47 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { Geist, Geist_Mono } from 'next/font/google';
+import {
+  Geist_Mono,
+  Geologica,
+  IBM_Plex_Sans,
+  Manrope,
+  Onest,
+  Source_Serif_4,
+} from 'next/font/google';
+import { THEME_INIT_SCRIPT } from '@shared/theme/themes';
+import { ThemeBoot } from '@shared/theme/ThemeBoot';
 import { ServiceWorkerRegistration } from '@shared/ui/components/ServiceWorkerRegistration';
 import { PWA_THEME_COLOR } from '@shared/constants/pwa';
 import { routing } from '@/i18n/routing';
 import { IntlErrorBoundaryProvider } from '@/i18n/IntlErrorBoundaryProvider';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
+// One body/display pairing per theme (globals.css maps --font-display /
+// --font-body per data-theme). All five carry Cyrillic for the uk/ru locales.
+const manrope = Manrope({
+  variable: '--font-manrope',
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+});
+const geologica = Geologica({
+  variable: '--font-geologica',
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+  weight: ['500', '700', '800'],
+});
+const sourceSerif = Source_Serif_4({
+  variable: '--font-source-serif',
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+  style: ['normal', 'italic'],
+  weight: ['500', '600', '700'],
+});
+const plexSans = IBM_Plex_Sans({
+  variable: '--font-plex-sans',
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+  weight: ['400', '500', '600'],
+});
+const onest = Onest({
+  variable: '--font-onest',
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
 });
 
 const geistMono = Geist_Mono({
@@ -64,11 +95,19 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${manrope.variable} ${geologica.variable} ${sourceSerif.variable} ${plexSans.variable} ${onest.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Applies the stored theme before first paint; ThemeBoot re-applies
+            it after hydration (see that file). Without JS the :root defaults
+            (Lime Pulse) apply. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale}>
           <IntlErrorBoundaryProvider locale={locale}>
+            <ThemeBoot />
             <ServiceWorkerRegistration />
             {children}
           </IntlErrorBoundaryProvider>

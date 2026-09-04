@@ -13,9 +13,9 @@ export default async function ProfileSettingsPage({
   const profile = await apiFetch<UserProfile>('/users/me');
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-6 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
       <SettingsNav locale={locale} active="profile" />
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
+      <h1 className="text-2xl font-extrabold md:text-[26px]">{t('title')}</h1>
       <ProfileForm profile={profile} />
     </main>
   );

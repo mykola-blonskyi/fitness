@@ -9,6 +9,7 @@ import {
   GenerateMenuCta,
   NutritionsInfo,
 } from '@features/diet';
+import { Page, PageHeader, Section } from '@shared/ui/components/Page';
 
 export default async function DietPage({
   params,
@@ -24,49 +25,52 @@ export default async function DietPage({
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-
-      {!target && (
-        <p className="text-sm text-zinc-500">
-          {t.rich('noTargetYet', {
+    <Page>
+      <PageHeader
+        title={t('title')}
+        description={
+          !target &&
+          t.rich('noTargetYet', {
             diary: (chunks) => (
               <Link href={`/${locale}/diary`} className="underline">
                 {chunks}
               </Link>
             ),
-          })}
-        </p>
-      )}
+          })
+        }
+      />
 
       {target && (
-        <div className="flex flex-col gap-6">
-          <CaloriesInfo
-            calories={target.calories}
-            weight={target.weighIn.weight}
-            unit={target.weighIn.unit}
-            date={target.weighIn.date}
-          />
+        <Section>
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+            <CaloriesInfo
+              calories={target.calories}
+              weight={target.weighIn.weight}
+              unit={target.weighIn.unit}
+              date={target.weighIn.date}
+            />
 
-          <NutritionsInfo
-            proteinG={target.proteinG}
-            carbsG={target.carbsG}
-            fatG={target.fatG}
-          />
-
+            <NutritionsInfo
+              proteinG={target.proteinG}
+              carbsG={target.carbsG}
+              fatG={target.fatG}
+            />
+          </div>
           <AlgorithmInfo
             name={target.algorithm.name}
             code={target.algorithm.code}
             description={target.algorithm.description}
           />
-        </div>
+        </Section>
       )}
 
-      {diet ? (
-        <DietMenu diet={diet} />
-      ) : (
-        <GenerateMenuCta hasTarget={Boolean(target)} />
-      )}
-    </main>
+      <Section>
+        {diet ? (
+          <DietMenu diet={diet} />
+        ) : (
+          <GenerateMenuCta hasTarget={Boolean(target)} />
+        )}
+      </Section>
+    </Page>
   );
 }

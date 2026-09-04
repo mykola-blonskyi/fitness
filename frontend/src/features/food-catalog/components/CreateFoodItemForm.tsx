@@ -57,26 +57,18 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
       className="flex w-full max-w-md flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
+        <label htmlFor="name" className="label">
           {t('nameLabel')}
         </label>
-        <input
-          id="name"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('name')}
-        />
+        <input id="name" className="input" {...register('name')} />
         <FieldError message={errors.name?.message} />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="categoryId" className="text-sm font-medium">
+        <label htmlFor="categoryId" className="label">
           {t('categoryLabel')}
         </label>
-        <select
-          id="categoryId"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('categoryId')}
-        >
+        <select id="categoryId" className="input" {...register('categoryId')}>
           <option value="">{t('selectCategoryPlaceholder')}</option>
           {taxonomy.categories.map((category) => (
             <option key={category.id} value={category.id}>
@@ -88,13 +80,13 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="subcategoryId" className="text-sm font-medium">
+        <label htmlFor="subcategoryId" className="label">
           {t('subcategoryLabel')}
         </label>
         <select
           id="subcategoryId"
           disabled={!selectedCategoryId}
-          className="rounded border border-zinc-300 px-3 py-2 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input disabled:opacity-50"
           {...register('subcategoryId')}
         >
           <option value="">{t('selectSubcategoryPlaceholder')}</option>
@@ -108,14 +100,10 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="roleId" className="text-sm font-medium">
+        <label htmlFor="roleId" className="label">
           {t('roleLabel')}
         </label>
-        <select
-          id="roleId"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          {...register('roleId')}
-        >
+        <select id="roleId" className="input" {...register('roleId')}>
           <option value="">{t('selectRolePlaceholder')}</option>
           {taxonomy.roles.map((role) => (
             <option key={role.id} value={role.id}>
@@ -129,14 +117,14 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
       <div className="grid grid-cols-2 gap-3">
         {MACRO_FIELDS.map(({ name, labelKey }) => (
           <div key={name} className="flex flex-col gap-1">
-            <label htmlFor={name} className="text-sm font-medium">
+            <label htmlFor={name} className="label">
               {t(labelKey)}
             </label>
             <input
               id={name}
               type="number"
               step="0.1"
-              className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              className="input"
               {...register(name, { valueAsNumber: true })}
             />
             <FieldError message={errors[name]?.message} />
@@ -144,11 +132,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
         ))}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('adding') : t('submit')}
       </button>
 

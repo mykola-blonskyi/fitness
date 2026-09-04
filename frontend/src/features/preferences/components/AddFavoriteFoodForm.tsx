@@ -53,7 +53,7 @@ export function AddFavoriteFoodForm({
       className="flex w-full max-w-sm flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="favoriteFoodItemSearch" className="text-sm font-medium">
+        <label htmlFor="favoriteFoodItemSearch" className="label">
           {t('searchLabel')}
         </label>
         <input
@@ -62,14 +62,14 @@ export function AddFavoriteFoodForm({
           value={foodItemSearch}
           onChange={(e) => setFoodItemSearch(e.target.value)}
           placeholder={t('searchPlaceholder')}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
         />
-        <label htmlFor="favoriteTargetId" className="text-sm font-medium">
+        <label htmlFor="favoriteTargetId" className="label">
           {t('itemLabel')}
         </label>
         <select
           id="favoriteTargetId"
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="input"
           {...register('targetId')}
         >
           <option value="">{t('selectPlaceholder')}</option>
@@ -82,11 +82,7 @@ export function AddFavoriteFoodForm({
         <FieldError message={errors.targetId?.message} />
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-foreground text-background rounded px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isSubmitting} className="btn-primary">
         {isSubmitting ? t('adding') : t('submit')}
       </button>
 
