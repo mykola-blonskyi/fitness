@@ -18,13 +18,3 @@ export function isPreferenceExcluded(
     exclusions.role.has(row.roleId)
   );
 }
-
-export function eligibleReplacements<T extends SwapCandidateRow>(
-  sameRoleRows: T[],
-  currentId: string,
-  exclusions: ExclusionTargets,
-): T[] {
-  return sameRoleRows.filter(
-    (row) => row.id !== currentId && !isPreferenceExcluded(row, exclusions),
-  );
-}

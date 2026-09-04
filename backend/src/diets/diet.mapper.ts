@@ -78,7 +78,7 @@ function toDietItemResponse(row: DietItemWithFoodRow): DietItemResponse {
 
 export function toDietResponse(
   diet: DietRow,
-  algorithm: DietCalculationAlgorithmRow,
+  algorithm: Pick<DietCalculationAlgorithmRow, 'code' | 'name'>,
   itemRows: DietItemWithFoodRow[],
 ): DietResponse {
   return {

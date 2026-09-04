@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { and, desc, eq, notInArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, notInArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -27,11 +27,7 @@ import {
 } from './diet.mapper';
 import { MEAL_ROLE_CHAINS, type FoodCandidate } from './diet.types';
 import { generateDietItems, gramsForCalories } from './greedy-heuristic';
-import { eligibleReplacements, isPreferenceExcluded } from './swap-candidates';
-
-// Same registered code calorie-targets.service.ts looks up, so the two
-// services' targets can never drift apart.
-const ALGORITHM_CODE = 'mifflin_v1';
+import { isPreferenceExcluded } from './swap-candidates';
 
 function defaultPick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
@@ -99,7 +95,10 @@ export class DietsService {
   }
 
   // A whole-role exclusion short-circuits to an empty candidate list
-  // without a query.
+  // without that role taking part in the query. One query covers every
+  // non-excluded role rather than one query per role - roleIdByName is a
+  // bijection (food_roles.name is unique), so each role id maps back to
+  // exactly one role name.
   private async findCandidatesByRole(
     exclusions: ExclusionTargets,
     roleIdByName: Map<string, string>,
@@ -111,54 +110,63 @@ export class DietsService {
     const excludedSubcategories = [...exclusions.subcategory];
 
     const candidatesByRole = new Map<string, FoodCandidate[]>();
+    const roleNameById = new Map<string, string>();
     for (const roleName of roleNames) {
       const roleId = roleIdByName.get(roleName);
       if (!roleId || exclusions.role.has(roleId)) {
         candidatesByRole.set(roleName, []);
         continue;
       }
+      roleNameById.set(roleId, roleName);
+      candidatesByRole.set(roleName, []);
+    }
 
-      const rows = await this.db
-        .select({
-          id: schema.foodCalories.id,
-          caloriesPer100g: schema.foodCalories.caloriesPer100g,
-          proteinPer100g: schema.foodCalories.proteinPer100g,
-          carbsPer100g: schema.foodCalories.carbsPer100g,
-          fatPer100g: schema.foodCalories.fatPer100g,
-        })
-        .from(schema.foodCalories)
-        .where(
-          and(
-            eq(schema.foodCalories.roleId, roleId),
-            excludedFoodItems.length > 0
-              ? notInArray(schema.foodCalories.id, excludedFoodItems)
-              : undefined,
-            excludedCategories.length > 0
-              ? notInArray(schema.foodCalories.categoryId, excludedCategories)
-              : undefined,
-            excludedSubcategories.length > 0
-              ? notInArray(
-                  schema.foodCalories.subcategoryId,
-                  excludedSubcategories,
-                )
-              : undefined,
-          ),
-        );
+    const queryableRoleIds = [...roleNameById.keys()];
+    if (queryableRoleIds.length === 0) {
+      return candidatesByRole;
+    }
 
-      candidatesByRole.set(
-        roleName,
-        rows
-          // Excludes 0-calorie items (e.g. water) - greedy-heuristic.ts
-          // divides by this value when portion-scaling.
-          .filter((row) => Number(row.caloriesPer100g) > 0)
-          .map((row) => ({
-            id: row.id,
-            caloriesPer100g: Number(row.caloriesPer100g),
-            proteinPer100g: Number(row.proteinPer100g),
-            carbsPer100g: Number(row.carbsPer100g),
-            fatPer100g: Number(row.fatPer100g),
-          })),
+    const rows = await this.db
+      .select({
+        id: schema.foodCalories.id,
+        roleId: schema.foodCalories.roleId,
+        caloriesPer100g: schema.foodCalories.caloriesPer100g,
+        proteinPer100g: schema.foodCalories.proteinPer100g,
+        carbsPer100g: schema.foodCalories.carbsPer100g,
+        fatPer100g: schema.foodCalories.fatPer100g,
+      })
+      .from(schema.foodCalories)
+      .where(
+        and(
+          inArray(schema.foodCalories.roleId, queryableRoleIds),
+          excludedFoodItems.length > 0
+            ? notInArray(schema.foodCalories.id, excludedFoodItems)
+            : undefined,
+          excludedCategories.length > 0
+            ? notInArray(schema.foodCalories.categoryId, excludedCategories)
+            : undefined,
+          excludedSubcategories.length > 0
+            ? notInArray(
+                schema.foodCalories.subcategoryId,
+                excludedSubcategories,
+              )
+            : undefined,
+        ),
       );
+
+    for (const row of rows) {
+      // Excludes 0-calorie items (e.g. water) - greedy-heuristic.ts
+      // divides by this value when portion-scaling.
+      if (Number(row.caloriesPer100g) <= 0) continue;
+      const roleName = roleNameById.get(row.roleId);
+      if (!roleName) continue;
+      candidatesByRole.get(roleName)!.push({
+        id: row.id,
+        caloriesPer100g: Number(row.caloriesPer100g),
+        proteinPer100g: Number(row.proteinPer100g),
+        carbsPer100g: Number(row.carbsPer100g),
+        fatPer100g: Number(row.fatPer100g),
+      });
     }
 
     return candidatesByRole;
@@ -199,12 +207,15 @@ export class DietsService {
     return restrictToFavorites(candidatesByRole, favoriteFoodItemIds);
   }
 
-  private async getAlgorithm() {
+  // Shared by findCurrent()'s and swapItem()'s lookup of the algorithm a
+  // stored Diet row was generated with - which may be an older algorithm
+  // than the one CalorieTargetsService currently looks up by code, since
+  // Diet rows are never migrated when the registered algorithm changes.
+  private async getAlgorithmById(id: string) {
     const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
-      where: eq(schema.dietCalculationAlgorithms.code, ALGORITHM_CODE),
+      where: eq(schema.dietCalculationAlgorithms.id, id),
     });
     if (!algorithm) {
-      // Seeded by a migration - only reachable if migrations haven't fully run.
       throw new NotFoundException('Calorie algorithm not configured');
     }
     return algorithm;
@@ -216,8 +227,10 @@ export class DietsService {
       throw new NotFoundException('Profile not created yet');
     }
 
+    // Reuses the algorithm row computeForUser() already fetched (by code,
+    // the currently-registered one) instead of a second lookup for it.
     const target = await this.calorieTargetsService.computeForUser(userId);
-    const algorithm = await this.getAlgorithm();
+    const algorithm = target.algorithm;
 
     const { exclusions, roleIdByName } = await this.resolveExclusions(userId);
     const candidatesByRole = await this.findGenerationCandidatesByRole(
@@ -254,7 +267,7 @@ export class DietsService {
           totalCarbs: generated.totalCarbs.toString(),
           totalFat: generated.totalFat.toString(),
           calculationMetadata: {
-            algorithmCode: ALGORITHM_CODE,
+            algorithmCode: algorithm.code,
             targetCalories: target.calories,
             targetProteinG: target.proteinG,
             targetCarbsG: target.carbsG,
@@ -293,13 +306,7 @@ export class DietsService {
       throw new NotFoundException('No Diet generated yet');
     }
 
-    const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
-      where: eq(schema.dietCalculationAlgorithms.id, dietRow.algorithmId),
-    });
-    if (!algorithm) {
-      throw new NotFoundException('Calorie algorithm not configured');
-    }
-
+    const algorithm = await this.getAlgorithmById(dietRow.algorithmId);
     return this.buildResponse(dietRow, algorithm);
   }
 
@@ -351,17 +358,32 @@ export class DietsService {
     exclusions: ExclusionTargets,
     pickRandom: <T>(items: T[]) => T,
   ): Promise<FoodItemRow> {
+    if (exclusions.role.has(currentFoodItem.roleId)) {
+      throw new UnprocessableEntityException(
+        'No other food item in this role matches your preferences',
+      );
+    }
+
+    const excludedFoodItems = [...exclusions.food_item, currentFoodItem.id];
+    const excludedCategories = [...exclusions.category];
+    const excludedSubcategories = [...exclusions.subcategory];
+
     const sameRoleRows = await this.db.query.foodCalories.findMany({
       where: and(
         eq(schema.foodCalories.roleId, currentFoodItem.roleId),
         eq(schema.foodCalories.isVerified, true),
+        notInArray(schema.foodCalories.id, excludedFoodItems),
+        excludedCategories.length > 0
+          ? notInArray(schema.foodCalories.categoryId, excludedCategories)
+          : undefined,
+        excludedSubcategories.length > 0
+          ? notInArray(schema.foodCalories.subcategoryId, excludedSubcategories)
+          : undefined,
       ),
     });
-    const candidates = eligibleReplacements(
-      // 0-calorie items can't be portion-scaled - same exclusion generate makes.
-      sameRoleRows.filter((row) => Number(row.caloriesPer100g) > 0),
-      currentFoodItem.id,
-      exclusions,
+    // 0-calorie items can't be portion-scaled - same exclusion generate makes.
+    const candidates = sameRoleRows.filter(
+      (row) => Number(row.caloriesPer100g) > 0,
     );
     if (candidates.length === 0) {
       throw new UnprocessableEntityException(
@@ -472,19 +494,19 @@ export class DietsService {
       return updated;
     });
 
-    const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
-      where: eq(schema.dietCalculationAlgorithms.id, updatedDiet.algorithmId),
-    });
-    if (!algorithm) {
-      throw new NotFoundException('Calorie algorithm not configured');
-    }
-
+    const algorithm = await this.getAlgorithmById(updatedDiet.algorithmId);
     return this.buildResponse(updatedDiet, algorithm);
   }
 
   private async buildResponse(
     dietRow: typeof schema.diets.$inferSelect,
-    algorithm: typeof schema.dietCalculationAlgorithms.$inferSelect,
+    // Pick, not the full row type - generate() passes the algorithm
+    // subset CalorieTargetResponse carries (see computeForUser), which
+    // has no createdAt.
+    algorithm: Pick<
+      typeof schema.dietCalculationAlgorithms.$inferSelect,
+      'code' | 'name'
+    >,
   ): Promise<DietResponse> {
     const itemRows: DietItemWithFoodRow[] = await this.db
       .select({
