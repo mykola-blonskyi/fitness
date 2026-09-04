@@ -7,6 +7,10 @@ export type DietCalculationAlgorithmRow =
 
 export interface CalorieTargetResponse {
   algorithm: {
+    // Exposed so callers that already fetched a target (e.g.
+    // diets.service.ts's generate()) can use this same row for the diets
+    // FK insert instead of re-querying it.
+    id: string;
     code: string;
     name: string;
     description: string;
@@ -30,6 +34,7 @@ export function toCalorieTargetResponse(
 ): CalorieTargetResponse {
   return {
     algorithm: {
+      id: algorithm.id,
       code: algorithm.code,
       name: algorithm.name,
       description: algorithm.description,

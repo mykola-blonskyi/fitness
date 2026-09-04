@@ -8,6 +8,7 @@ import {
   pgEnum,
   unique,
   uniqueIndex,
+  index,
   boolean,
   integer,
   jsonb,
@@ -117,7 +118,10 @@ export const exercises = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [unique().on(table.source, table.sourceId)],
+  (table) => [
+    unique().on(table.source, table.sourceId),
+    index().on(table.category),
+  ],
 );
 
 // Never created for 'en' - Exercise.name is already the canonical English
@@ -139,20 +143,24 @@ export const exerciseTranslations = pgTable(
 // Training Program (see knowledge/domain-model.md). isArchived and "active"
 // (userActivePrograms below) are independent axes - a program can be
 // non-archived and inactive at the same time, e.g. right after creation.
-export const trainingPrograms = pgTable('training_programs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id),
-  title: text('title').notNull(),
-  isArchived: boolean('is_archived').notNull().default(false),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const trainingPrograms = pgTable(
+  'training_programs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    title: text('title').notNull(),
+    isArchived: boolean('is_archived').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index().on(table.userId)],
+);
 
 // A user's currently-active Training Programs (many-to-many, see
 // knowledge/domain-model.md). userId is redundant with the FK chain through
@@ -177,44 +185,52 @@ export const userActivePrograms = pgTable(
 // Program Exercise. Exactly one of (targetSets + targetReps) or
 // targetDurationSeconds is set, depending on the exercise's category -
 // enforced in program-exercise-targets.ts, not a DB CHECK constraint.
-export const programExercises = pgTable('program_exercises', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  trainingProgramId: uuid('training_program_id')
-    .notNull()
-    .references(() => trainingPrograms.id),
-  exerciseId: uuid('exercise_id')
-    .notNull()
-    .references(() => exercises.id),
-  orderIndex: integer('order_index').notNull(),
-  targetSets: integer('target_sets'),
-  targetReps: integer('target_reps'),
-  targetDurationSeconds: integer('target_duration_seconds'),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const programExercises = pgTable(
+  'program_exercises',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    trainingProgramId: uuid('training_program_id')
+      .notNull()
+      .references(() => trainingPrograms.id),
+    exerciseId: uuid('exercise_id')
+      .notNull()
+      .references(() => exercises.id),
+    orderIndex: integer('order_index').notNull(),
+    targetSets: integer('target_sets'),
+    targetReps: integer('target_reps'),
+    targetDurationSeconds: integer('target_duration_seconds'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index().on(table.trainingProgramId)],
+);
 
 // A completed (or in-progress) training session. trainingProgramId is
 // nullable for ad hoc workouts, and title is copied from the program at
 // start time rather than joined live - so later renaming/archiving the
 // program never changes what an already-logged Workout Log displays. No
 // userId column - ownership is verified by joining through dailyLogId.
-export const workoutLogs = pgTable('workout_logs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  dailyLogId: uuid('daily_log_id')
-    .notNull()
-    .references(() => dailyLogs.id),
-  trainingProgramId: uuid('training_program_id').references(
-    () => trainingPrograms.id,
-  ),
-  title: text('title').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const workoutLogs = pgTable(
+  'workout_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    dailyLogId: uuid('daily_log_id')
+      .notNull()
+      .references(() => dailyLogs.id),
+    trainingProgramId: uuid('training_program_id').references(
+      () => trainingPrograms.id,
+    ),
+    title: text('title').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index().on(table.dailyLogId)],
+);
 
 // One logged set. exerciseId references the Exercise catalog directly,
 // never a Program Exercise row - so removing/reordering a program's
@@ -224,23 +240,27 @@ export const workoutLogs = pgTable('workout_logs', {
 // pattern as programExercises' targets, not a DB CHECK constraint.
 // weightUnit mirrors weight's own nullability; null (pre-dating this
 // column) means kg.
-export const workoutSets = pgTable('workout_sets', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  workoutLogId: uuid('workout_log_id')
-    .notNull()
-    .references(() => workoutLogs.id),
-  exerciseId: uuid('exercise_id')
-    .notNull()
-    .references(() => exercises.id),
-  setNumber: integer('set_number').notNull(),
-  weight: numeric('weight'),
-  weightUnit: weightUnitEnum('weight_unit'),
-  reps: integer('reps'),
-  durationSeconds: integer('duration_seconds'),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const workoutSets = pgTable(
+  'workout_sets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workoutLogId: uuid('workout_log_id')
+      .notNull()
+      .references(() => workoutLogs.id),
+    exerciseId: uuid('exercise_id')
+      .notNull()
+      .references(() => exercises.id),
+    setNumber: integer('set_number').notNull(),
+    weight: numeric('weight'),
+    weightUnit: weightUnitEnum('weight_unit'),
+    reps: integer('reps'),
+    durationSeconds: integer('duration_seconds'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index().on(table.workoutLogId), index().on(table.exerciseId)],
+);
 
 // Real tables, not enums: Food Preference needs a stable row id to target
 // polymorphically ("exclude everything in this category"), which a pgEnum
@@ -292,7 +312,15 @@ export const foodCalories = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [unique().on(table.source, table.sourceId)],
+  (table) => [
+    unique().on(table.source, table.sourceId),
+    // roleId + categoryId/subcategoryId are diet generation's hot filter
+    // columns (diets.service.ts's findCandidatesByRole), queried on every
+    // generate() call.
+    index().on(table.roleId),
+    index().on(table.categoryId),
+    index().on(table.subcategoryId),
+  ],
 );
 
 // Never created for 'en', same convention as exerciseTranslations.
@@ -392,42 +420,53 @@ export const dietCalculationAlgorithms = pgTable(
 // current diet for a user is just the most recent one (`ORDER BY
 // created_at DESC LIMIT 1`), not a stored flag. calculationMetadata
 // snapshots the algorithm's raw inputs/outputs at generation time.
-export const diets = pgTable('diets', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id),
-  algorithmId: uuid('algorithm_id')
-    .notNull()
-    .references(() => dietCalculationAlgorithms.id),
-  totalCalories: numeric('total_calories').notNull(),
-  totalProtein: numeric('total_protein').notNull(),
-  totalCarbs: numeric('total_carbs').notNull(),
-  totalFat: numeric('total_fat').notNull(),
-  calculationMetadata: jsonb('calculation_metadata').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const diets = pgTable(
+  'diets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    algorithmId: uuid('algorithm_id')
+      .notNull()
+      .references(() => dietCalculationAlgorithms.id),
+    totalCalories: numeric('total_calories').notNull(),
+    totalProtein: numeric('total_protein').notNull(),
+    totalCarbs: numeric('total_carbs').notNull(),
+    totalFat: numeric('total_fat').notNull(),
+    calculationMetadata: jsonb('calculation_metadata').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  // Rows are never updated/deleted (history grows unboundedly - see comment
+  // above); findCurrent/findOwnedDiet filter by userId, and findCurrent
+  // orders by createdAt desc, on every diet read.
+  (table) => [index().on(table.userId, table.createdAt)],
+);
 
 // orderIndex is scoped within its own mealPosition (0-based), not across
 // the whole Diet. mealPosition (1-based) is computed fresh at generation
 // time, not a stored category - see ADR-016.
-export const dietItems = pgTable('diet_items', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  dietId: uuid('diet_id')
-    .notNull()
-    .references(() => diets.id),
-  foodItemId: uuid('food_item_id')
-    .notNull()
-    .references(() => foodCalories.id),
-  mealPosition: integer('meal_position').notNull(),
-  weightGrams: numeric('weight_grams').notNull(),
-  orderIndex: integer('order_index').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const dietItems = pgTable(
+  'diet_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    dietId: uuid('diet_id')
+      .notNull()
+      .references(() => diets.id),
+    foodItemId: uuid('food_item_id')
+      .notNull()
+      .references(() => foodCalories.id),
+    mealPosition: integer('meal_position').notNull(),
+    weightGrams: numeric('weight_grams').notNull(),
+    orderIndex: integer('order_index').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index().on(table.dietId), index().on(table.foodItemId)],
+);
 
 export const photoPoseEnum = pgEnum('photo_pose', ['front', 'side', 'back']);
 export const photoAnalysisStatusEnum = pgEnum('photo_analysis_status', [
@@ -496,5 +535,8 @@ export const progressPhotos = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [unique().on(table.photoSessionId, table.pose)],
+  (table) => [
+    unique().on(table.photoSessionId, table.pose),
+    index().on(table.dailyLogId),
+  ],
 );

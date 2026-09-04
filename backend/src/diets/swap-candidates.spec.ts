@@ -1,8 +1,4 @@
-import {
-  eligibleReplacements,
-  isPreferenceExcluded,
-  type SwapCandidateRow,
-} from './swap-candidates';
+import { isPreferenceExcluded, type SwapCandidateRow } from './swap-candidates';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
 
 function noExclusions(): ExclusionTargets {
@@ -19,37 +15,6 @@ const rows: SwapCandidateRow[] = [
   { id: 'b', categoryId: 'cat-2', subcategoryId: 'sub-2', roleId: 'role-1' },
   { id: 'c', categoryId: 'cat-1', subcategoryId: 'sub-3', roleId: 'role-1' },
 ];
-
-describe('eligibleReplacements', () => {
-  it('drops the current item', () => {
-    const result = eligibleReplacements(rows, 'a', noExclusions());
-    expect(result.map((r) => r.id)).toEqual(['b', 'c']);
-  });
-
-  it('drops a preference-excluded category', () => {
-    const exclusions = noExclusions();
-    exclusions.category.add('cat-1');
-    const result = eligibleReplacements(rows, 'a', exclusions);
-    expect(result.map((r) => r.id)).toEqual(['b']);
-  });
-
-  it('drops an excluded food item, subcategory, or role', () => {
-    const exclusions = noExclusions();
-    exclusions.food_item.add('b');
-    exclusions.subcategory.add('sub-3');
-    expect(
-      eligibleReplacements(rows, 'x', exclusions).map((r) => r.id),
-    ).toEqual(['a']);
-
-    const roleExcluded = noExclusions();
-    roleExcluded.role.add('role-1');
-    expect(eligibleReplacements(rows, 'x', roleExcluded)).toEqual([]);
-  });
-
-  it('returns an empty list when nothing is eligible', () => {
-    expect(eligibleReplacements([rows[0]], 'a', noExclusions())).toEqual([]);
-  });
-});
 
 describe('isPreferenceExcluded', () => {
   it('is false when no exclusion matches', () => {

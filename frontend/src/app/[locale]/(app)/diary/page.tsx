@@ -47,12 +47,14 @@ export default async function DiaryPage({
   const windowStart = windowStartIso(date, windowDays);
 
   const t = await getTranslations('Diary');
-  const dailyLog = await fetchOr404<DailyLog>(`/daily-logs/${date}`);
 
-  const trend = await apiFetch<WeightTrendResponse>(
-    `/daily-logs/weight-trend?days=${windowDays}`,
-  );
-  const profile = await apiFetch<UserProfile>('/users/me');
+  const [dailyLog, trend, profile] = await Promise.all([
+    fetchOr404<DailyLog>(`/daily-logs/${date}`),
+    apiFetch<WeightTrendResponse>(
+      `/daily-logs/weight-trend?days=${windowDays}`,
+    ),
+    apiFetch<UserProfile>('/users/me'),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-4 py-16">

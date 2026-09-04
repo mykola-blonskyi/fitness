@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import createIntlMiddleware from 'next-intl/middleware';
 import * as Sentry from '@sentry/nextjs';
-import { devBypassIdentity, resolveIdentity } from '@libs/hub-identity';
+import {
+  devBypassIdentity,
+  requireEnv,
+  resolveIdentity,
+} from '@libs/hub-identity';
 import type { Identity } from '@shared/types/identity';
 import { routing } from '@/i18n/routing';
 
-const API_URL = process.env.API_URL!;
-const AUTH_SECRET = process.env.AUTH_SECRET!;
-const APP_URL = process.env.APP_URL!;
-const BACKEND_URL = process.env.BACKEND_URL!;
+const API_URL = requireEnv('API_URL');
+const AUTH_SECRET = requireEnv('AUTH_SECRET');
+const APP_URL = requireEnv('APP_URL');
+const BACKEND_URL = requireEnv('BACKEND_URL');
+
+const HEALTH_PATH = new RegExp(`^/(${routing.locales.join('|')})/health$`);
 
 const handleI18nRouting = createIntlMiddleware(routing);
 
@@ -19,21 +25,28 @@ function loginRedirect(req: NextRequest, locale: string) {
   return NextResponse.redirect(loginUrl);
 }
 
+// Never throws - a backend-unreachable or non-2xx response is treated as
+// "not completed" so the caller falls back to the onboarding redirect,
+// not a 500, matching resolveIdentity's fail-to-redirect behavior.
 async function hasCompletedProfile(identity: Identity): Promise<boolean> {
-  const res = await fetch(`${BACKEND_URL}/users/me`, {
-    headers: {
-      'x-user-id': identity.userId,
-      'x-user-email': identity.email,
-    },
-    cache: 'no-store',
-  });
-  return res.ok;
+  try {
+    const res = await fetch(`${BACKEND_URL}/users/me`, {
+      headers: {
+        'x-user-id': identity.userId,
+        'x-user-email': identity.email,
+      },
+      cache: 'no-store',
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function proxy(req: NextRequest) {
   // Health checks stay public for infra monitoring (Coolify etc. have no
   // Hub session cookie to present).
-  if (req.nextUrl.pathname.endsWith('/health')) {
+  if (HEALTH_PATH.test(req.nextUrl.pathname)) {
     return NextResponse.next();
   }
 

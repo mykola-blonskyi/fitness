@@ -5,13 +5,13 @@ of the personal hub ([blonskyi.dev](https://blonskyi.dev), repo `my-projects`). 
 exclusively via the hub's SSO; this repo never implements its own login.
 
 **Status: in active development, live in production.** Scaffolding, Hub SSO auth, profile
-onboarding/settings, CI/CD, Daily Log + weight logging, and the exercise-catalog seed script are
-built, merged, and deployed at [fitness.blonskyi.dev](https://fitness.blonskyi.dev). Training
-programs, the diet engine, progress photos, i18n, and PWA offline support are designed (specs,
-ADRs, domain model — see `docs/` and `knowledge/`) but not yet built. See
-[plans/current.md](plans/current.md) for the phased plan and current progress.
+onboarding/settings, CI/CD, Daily Log + weight logging, training programs and workout logs, the
+diet engine (generation, swaps, favorites), progress photos (upload, pose analysis, gallery with
+baseline comparison), i18n (en/uk/ru/es), and PWA offline support are all built, merged, and
+deployed at [fitness.blonskyi.dev](https://fitness.blonskyi.dev). See
+[plans/current.md](plans/current.md) for the phased plan and remaining work.
 
-## What it does (once built)
+## What it does
 
 - Training programs and workout logs — multiple concurrent active programs, offline-capable logging
 - Body-weight diary, decoupled from any other daily activity (no forced weigh-in to log a workout)

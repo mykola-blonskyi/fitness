@@ -1,5 +1,15 @@
 import type { Identity } from '@shared/types/identity';
 
+export function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+const API_URL = requireEnv('API_URL');
+
 // Local dev only — the .blonskyi.dev cookie domain doesn't resolve on
 // localhost and there's no way to reach a real deployed hub from here.
 // Never honored in production, regardless of env content. Exported so
@@ -26,7 +36,6 @@ export async function resolveIdentity(
   const bypass = devBypassIdentity();
   if (bypass) return bypass;
 
-  const API_URL = process.env.API_URL!;
   const PROJECT_SLUG = process.env.PROJECT_SLUG ?? 'fitness';
 
   try {
