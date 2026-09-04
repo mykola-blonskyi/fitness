@@ -4,7 +4,10 @@
 // per required Food Role, sizes protein/carb/fat role-slots off their
 // macro-gram target and the candidate's per-100g macro density, sizes the
 // vegetable role-slot off the meal's calorie share, then corrects each
-// meal's own drift so its totals never exceed target (FITNESS-64). Pure
+// meal's own drift so its calorie total never exceeds target - shrinking
+// carb/fat/vegetable items first and protein only as a last resort, since a
+// protein source's own incidental fat/carbs can otherwise leave a meal with
+// nothing left to shrink and still over the ceiling (FITNESS-64). Pure
 // function, no I/O - testable without a database.
 
 import {
@@ -129,28 +132,50 @@ function perGramValue(candidate: FoodCandidate, metric: Metric): number {
   }
 }
 
-// Correction prefers carb, then fat, then vegetable items (largest-calorie
-// first within a group) so it doesn't touch protein - the macro-driven
-// sizing pass above already hit protein's own target.
-const CORRECTION_GROUP_ORDER: Record<number, number> = {
+// Growth (closing a shortfall) prefers carb, then fat, then vegetable items
+// (largest-calorie first within a group) and never touches protein - a
+// shortfall means protein already hit its own target, so there's no reason
+// to push it further.
+const GROWTH_GROUP_ORDER: Record<number, number> = {
   [CARB_CHAIN_INDEX]: 0,
   [FAT_CHAIN_INDEX]: 1,
   [VEGETABLE_CHAIN_INDEX]: 2,
 };
 
-function correctionOrder(items: WorkingItem[]): WorkingItem[] {
+function growthOrder(items: WorkingItem[]): WorkingItem[] {
   return items
     .filter((item) => item.chainIndex !== PROTEIN_CHAIN_INDEX)
     .sort((a, b) => {
       const groupDiff =
-        CORRECTION_GROUP_ORDER[a.chainIndex] -
-        CORRECTION_GROUP_ORDER[b.chainIndex];
+        GROWTH_GROUP_ORDER[a.chainIndex] - GROWTH_GROUP_ORDER[b.chainIndex];
       if (groupDiff !== 0) return groupDiff;
       return (
         caloriesForGrams(b.candidate, b.weightGrams) -
         caloriesForGrams(a.candidate, a.weightGrams)
       );
     });
+}
+
+// Shrinking (closing an overshoot) prefers the same carb/fat/vegetable
+// order, but falls back to protein as a last resort once those are
+// exhausted: a fatty or plant protein source's own incidental fat/carbs can
+// alone push a meal over its calorie ceiling even after every other role
+// has been zeroed out, and the ceiling is the one hard constraint (FITNESS-64).
+const SHRINK_GROUP_ORDER: Record<number, number> = {
+  ...GROWTH_GROUP_ORDER,
+  [PROTEIN_CHAIN_INDEX]: 3,
+};
+
+function shrinkOrder(items: WorkingItem[]): WorkingItem[] {
+  return [...items].sort((a, b) => {
+    const groupDiff =
+      SHRINK_GROUP_ORDER[a.chainIndex] - SHRINK_GROUP_ORDER[b.chainIndex];
+    if (groupDiff !== 0) return groupDiff;
+    return (
+      caloriesForGrams(b.candidate, b.weightGrams) -
+      caloriesForGrams(a.candidate, a.weightGrams)
+    );
+  });
 }
 
 // Drops the item (weight 0) rather than leaving it at a token weight when
@@ -203,7 +228,11 @@ function growTowardDelta(
   return appliedCalories;
 }
 
-// Scoped to this meal's own drift only, never pooled with other meals.
+// Scoped to this meal's own drift only, never pooled with other meals. The
+// delta's sign at the start decides shrink vs. grow for the whole pass:
+// shrinkTowardDelta closes exactly to the remaining delta (or zeroes the
+// item and continues) and growTowardDelta is capped at target, so neither
+// can push the delta past zero and flip its sign mid-loop.
 function correctMeal(
   mealItems: WorkingItem[],
   targets: MealTargets,
@@ -211,7 +240,10 @@ function correctMeal(
   let totals = macroTotals(mealItems);
   let calorieDelta = targets.calories - totals.calories;
 
-  for (const item of correctionOrder(mealItems)) {
+  const orderedItems =
+    calorieDelta < 0 ? shrinkOrder(mealItems) : growthOrder(mealItems);
+
+  for (const item of orderedItems) {
     if (Math.abs(calorieDelta) < 1 || item.weightGrams <= 0) continue;
 
     const appliedCalories =

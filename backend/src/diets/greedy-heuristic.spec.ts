@@ -403,6 +403,34 @@ describe('generateDietItems', () => {
     expect(result.items.every((item) => item.weightGrams >= 1)).toBe(true);
   });
 
+  it('regression: a fatty/plant protein source with no carb, fat, or vegetable candidates to shrink instead still respects the calorie ceiling', () => {
+    // Only a protein-role candidate is available, and its own low protein
+    // density needs 300g to hit the protein target - which alone triples
+    // the meal's calorie budget. With nothing else in the meal to shrink,
+    // protein itself must become the last-resort shrink target or the
+    // ceiling breaks - shaped after a real diet where a fatty protein's
+    // incidental fat/calories, not the carb or fat role, drove the overshoot.
+    const fattyProtein: FoodCandidate = {
+      id: 'fatty-protein-2',
+      caloriesPer100g: 250,
+      proteinPer100g: 25,
+      carbsPer100g: 0,
+      fatPer100g: 17,
+    };
+    const candidates = new Map([['lean_protein', [fattyProtein]]]);
+
+    const result = generateDietItems({
+      targetCalories: 300,
+      targetProteinG: 75,
+      targetCarbsG: 0,
+      targetFatG: 0,
+      mealCount: 1,
+      candidatesByRole: candidates,
+    });
+
+    expect(result.totalCalories).toBeLessThanOrEqual(300);
+  });
+
   it('caps how much a single item can grow to close a shortfall, rather than letting it absorb all of it alone', () => {
     const proteinIsolate: FoodCandidate = {
       id: 'protein-isolate-3',
