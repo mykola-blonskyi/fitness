@@ -13,6 +13,7 @@ import { useZodForm } from '@shared/libs/use-zod-form';
 import { useLastWeightUnit } from '@shared/libs/use-last-weight-unit';
 import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { syncedLogWorkoutSet } from '@features/workout-logs/offline';
+import { ExercisePicker } from '@features/exercise-catalog/components/ExercisePicker';
 
 // Renders only the value fields for the selected exercise's category
 // (cardio -> duration, else weight/reps); the backend re-validates
@@ -20,11 +21,9 @@ import { syncedLogWorkoutSet } from '@features/workout-logs/offline';
 // training-programs/components/AddProgramExerciseForm.tsx.
 export function LogSetForm({
   workoutLogId,
-  exercises,
   defaultWeightUnit,
 }: {
   workoutLogId: string;
-  exercises: Exercise[];
   defaultWeightUnit: WeightUnit;
 }) {
   const [queued, setQueued] = useState(false);
@@ -37,7 +36,7 @@ export function LogSetForm({
     register,
     handleSubmit,
     reset,
-    watch,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useZodForm(schema, {
@@ -45,11 +44,15 @@ export function LogSetForm({
   });
   const unitField = register('unit');
 
-  const selectedExerciseId = watch('exerciseId');
-  const selectedExercise = exercises.find(
-    (exercise) => exercise.id === selectedExerciseId,
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
   );
   const isCardio = selectedExercise?.category === 'cardio';
+
+  function onExerciseSelect(exercise: Exercise) {
+    setSelectedExercise(exercise);
+    setValue('exerciseId', exercise.id, { shouldValidate: true });
+  }
 
   async function onSubmit(input: LogWorkoutSetInput) {
     setQueued(false);
@@ -67,15 +70,13 @@ export function LogSetForm({
     if (outcome.queued) {
       setQueued(true);
       reset({ unit: rememberedUnit });
+      setSelectedExercise(null);
       return;
     }
     if (!applyFormActionError(setError, outcome.result)) {
       reset({ unit: rememberedUnit });
+      setSelectedExercise(null);
     }
-  }
-
-  if (exercises.length === 0) {
-    return <p className="text-sm text-muted">{t('noExercisesInCatalog')}</p>;
   }
 
   return (
@@ -83,27 +84,12 @@ export function LogSetForm({
       onSubmit={handleSubmit(onSubmit)}
       className="flex w-full max-w-md flex-col gap-3"
     >
-      <div className="flex flex-col gap-1">
-        <label htmlFor="exerciseId" className="label">
-          {t('exerciseLabel')}
-        </label>
-        <select
-          id="exerciseId"
-          defaultValue=""
-          className="input"
-          {...register('exerciseId')}
-        >
-          <option value="" disabled>
-            {t('selectPlaceholder')}
-          </option>
-          {exercises.map((exercise) => (
-            <option key={exercise.id} value={exercise.id}>
-              {exercise.name}
-            </option>
-          ))}
-        </select>
-        <FieldError message={errors.exerciseId?.message} />
-      </div>
+      <ExercisePicker
+        id="exerciseId"
+        selectedExercise={selectedExercise}
+        onSelect={onExerciseSelect}
+      />
+      <FieldError message={errors.exerciseId?.message} />
 
       {selectedExercise &&
         (isCardio ? (

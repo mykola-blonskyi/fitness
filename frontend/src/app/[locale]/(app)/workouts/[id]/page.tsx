@@ -28,9 +28,8 @@ export default async function WorkoutLogDetailPage({
     throw err;
   }
 
-  // /exercises is cursor-paginated (FITNESS-43); this picker isn't
-  // search-driven like the catalog page, so grab the largest page the
-  // backend allows rather than only the default-sized first page.
+  // Only WorkoutSetList needs this, to resolve names for offline-queued
+  // pending sets - LogSetForm's picker searches the catalog itself.
   const [exercisePage, profile] = await Promise.all([
     apiFetch<CursorPage<Exercise>>('/exercises?limit=100'),
     apiFetch<UserProfile>('/users/me'),
@@ -65,7 +64,6 @@ export default async function WorkoutLogDetailPage({
         <h2 className="text-[15px] font-bold">{t('logSetHeading')}</h2>
         <LogSetForm
           workoutLogId={workoutLog.id}
-          exercises={exercises}
           defaultWeightUnit={profile.defaultWeightUnit}
         />
       </section>

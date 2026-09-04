@@ -5,9 +5,7 @@ import {
   ProgramExerciseRow,
   ProgramHeader,
 } from '@features/training-programs';
-import type { Exercise } from '@shared/types/exercise';
 import type { TrainingProgram } from '@shared/types/training-program';
-import type { CursorPage } from '@shared/types/admin';
 import { apiFetch, ApiError } from '@libs/api-client';
 
 export default async function TrainingProgramDetailPage({
@@ -29,14 +27,6 @@ export default async function TrainingProgramDetailPage({
     }
     throw err;
   }
-
-  // /exercises is cursor-paginated (FITNESS-43); this picker isn't
-  // search-driven like the catalog page, so grab the largest page the
-  // backend allows rather than only the default-sized first page.
-  const exercisePage = await apiFetch<CursorPage<Exercise>>(
-    '/exercises?limit=100',
-  );
-  const exercises = exercisePage.items;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
@@ -63,10 +53,7 @@ export default async function TrainingProgramDetailPage({
       {!program.isArchived && (
         <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
           <h2 className="text-[15px] font-bold">{t('addExerciseHeading')}</h2>
-          <AddProgramExerciseForm
-            programId={program.id}
-            exercises={exercises}
-          />
+          <AddProgramExerciseForm programId={program.id} />
         </section>
       )}
     </main>

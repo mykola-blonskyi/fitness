@@ -21,6 +21,7 @@ export async function listExercises(
   cursor: string,
   category?: string,
   search?: string,
+  limit?: number,
 ): Promise<CursorPage<Exercise>> {
   return Sentry.withServerActionInstrumentation(
     'listExercises',
@@ -29,6 +30,7 @@ export async function listExercises(
       const query = new URLSearchParams({ cursor });
       if (category) query.set('category', category);
       if (search) query.set('search', search);
+      if (limit) query.set('limit', String(limit));
       return apiFetch<CursorPage<Exercise>>(`/exercises?${query.toString()}`);
     },
   );
