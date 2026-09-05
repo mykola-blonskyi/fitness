@@ -4,6 +4,10 @@ import {
   SESSION_COOKIE_NAME,
   SESSION_COOKIE_SECURE,
 } from '@features/auth/lib/session-cookie';
+import { requireEnv } from '@libs/require-env';
+
+const OIDC_ISSUER = requireEnv('OIDC_ISSUER');
+const OIDC_CLIENT_SECRET = requireEnv('OIDC_CLIENT_SECRET');
 
 // No database adapter: NestJS owns the database (ADR-001), so there is no
 // Auth.js-managed table for it to write to.
@@ -14,9 +18,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       id: 'login',
       name: 'login.blonskyi.dev',
       type: 'oidc',
-      issuer: process.env.OIDC_ISSUER!,
+      issuer: OIDC_ISSUER,
       clientId: 'fitness',
-      clientSecret: process.env.OIDC_CLIENT_SECRET!,
+      clientSecret: OIDC_CLIENT_SECRET,
       checks: ['pkce', 'state'],
       // Maps the ID token's standard claims onto `user` for email/name,
       // but not for the identity itself — see jwt-callback.ts.

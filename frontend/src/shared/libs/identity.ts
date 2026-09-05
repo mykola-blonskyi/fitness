@@ -5,14 +5,7 @@ import {
   SESSION_COOKIE_SECURE,
 } from '@features/auth/lib/session-cookie';
 import type { Identity } from '@shared/types/identity';
-
-export function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
+import { requireEnv } from '@libs/require-env';
 
 const AUTH_SECRET = requireEnv('AUTH_SECRET');
 

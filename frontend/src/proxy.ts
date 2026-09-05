@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createIntlMiddleware from 'next-intl/middleware';
 import * as Sentry from '@sentry/nextjs';
-import { requireEnv, resolveIdentity } from '@libs/identity';
+import { resolveIdentity } from '@libs/identity';
+import { requireEnv } from '@libs/require-env';
 import type { Identity } from '@shared/types/identity';
 import { routing } from '@/i18n/routing';
 
