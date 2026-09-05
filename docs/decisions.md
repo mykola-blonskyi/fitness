@@ -78,7 +78,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-08-17
 
-Status: Accepted
+Status: Accepted; the no-sign-out half superseded by ADR-018 (2026-09-05)
 
 Every other `*.blonskyi.dev` app uses a breadcrumb-style header, but fitness has several genuinely separate top-level sections (Training, Diary, Diet, Photos, Settings) a user needs to move between, which breadcrumbs don't serve. The header is a nav menu, not a breadcrumb trail, scoped to only what's actually built (currently Diary and Settings) and growing as each section ships its first page; it renders on every route except `/onboarding`. The account menu is identity-only (name/email as plain text) with no dropdown, no settings link, and no sign-out — dropped entirely rather than worked around, since fitness has no public logout URL to redirect to (the Hub's sign-out is a Server Action bound to its own session) and clearing the shared cookie itself would contradict ADR-001. Locale switching and theme toggling are out of scope for this header entirely, deferred to FITNESS-11 and a future theming ticket respectively. The header ships without sign-out, a real gap for a personal-data app until the Hub exposes a public logout mechanism.
 
@@ -219,5 +219,53 @@ Status: Accepted
 A diet's meals have no standalone row — each is a `dietItems.mealPosition` group. Reordering adds a `diet_meal_order` table (`dietId`, `mealPosition`, `displayOrder`) rather than a `displayOrder` column duplicated across every `diet_items` row in a group — one row per meal instead of N. A meal absent from `diet_meal_order` (never reordered) falls back to its own `mealPosition` for display order, so a freshly generated diet needs no order rows at all. The reorder endpoint (`PUT /diets/:dietId/meals/reorder`) takes the diet's full, exact set of `mealPosition` values in the desired order — `mealPosition` doubles as each meal's stable identifier, since it's already unique per diet and no synthetic meal id is needed. Same convention as `training-programs.service.ts`'s `reorderExercises`: exact-set validation, one transaction (existing `diet_meal_order` rows for the diet are deleted and reinserted in the new order).
 
 "Meal N" labels always name a meal's `mealPosition` (the generation slot its macro taper was computed against — ADR-016), never its current display position — reordering only changes which section renders where in the list, not what number a meal is called. Labeling by display position instead would make "Meal 1" lie about which physical meal has the largest carb/fat share once a user reorders away from generation order — exactly the ambiguity ADR-016 introduced positional naming to resolve in the first place.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-018: fitness is an independent OIDC client of login.blonskyi.dev
+
+Date: 2026-09-05
+
+Status: Accepted
+
+Supersedes ADR-007's no-sign-out decision.
+
+Authentication moves off the Hub's shared `.blonskyi.dev` Auth.js cookie and onto
+`login.blonskyi.dev` as a standard OIDC client (authorization code + PKCE, `client_id` `fitness`).
+The frontend runs its own Auth.js instance with its own `AUTH_SECRET` and a host-only session
+cookie, and no longer calls the Hub's `/api/auth/validate` — a token is only issued after login's
+own approval-status and `fitness` client-membership checks, so there is no separate authorization
+call left to make. NestJS is unchanged in kind: it still never validates a cookie or token, only
+the `x-user-id`/`x-user-email` headers the frontend forwards over the private Docker network.
+Auth.js discards the id returned by `profile()` when there is no database adapter, so the identity
+is read from `profile.sub` in the `jwt` callback and never from `user.id`. Session lifetime is 24h,
+matching login's own IdP session and refresh-token TTLs; true per-request revocation would need
+login's opt-in RFC 7662 introspection endpoint and is deferred.
+
+`users.id` is untouched by the conversion. login's `sub` lands in a new `users.identity_sub`
+column (text, unique) instead of being written into the primary key: at least seven tables
+reference `users.id` with no `ON UPDATE CASCADE`, so re-pointing the key at a new `sub` would mean
+an FK-cascading rewrite across all of them. The migration adds the column nullable, backfills
+`identity_sub = id::text` (existing rows' `id` already is the Hub user id), then applies
+`NOT NULL` + `UNIQUE`; `users.id` also gains a `gen_random_uuid()` default so new profiles get a
+locally generated key.
+
+Because the backfilled `identity_sub` is a Hub id and can never match a real login `sub`, identity
+resolution reconciles on email: look up by `identity_sub`, fall back to `email`, and on an email
+match update that row's `identity_sub` in place rather than creating a second row. Without it the
+owner's first real login would look like a brand-new user and silently orphan every row in the
+FK-referencing child tables — so this ships with the conversion, not as a follow-up. Resolution
+happens once per request in `IdentityGuard`, which is the only place a `sub` is translated into a
+`users.id`; every controller reads `identity.userId` and never sees a `sub`. Routes that legitimately
+run before a profile row exists (the onboarding create, and the lookup that decides whether
+onboarding is needed) opt out with `@ProfileOptional()`; everywhere else an unresolvable identity is
+rejected.
+
+ADR-007 dropped sign-out because fitness had no session of its own to clear and clearing the shared
+Hub cookie would have contradicted ADR-001. Both reasons are gone, so the account chip in the header
+now has a sign-out control. It clears only this app's own host-only cookie — login's IdP session is
+untouched, so it signs the user out of fitness, not of every project.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
