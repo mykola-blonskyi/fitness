@@ -10,10 +10,11 @@ Full history and rationale for this model's shape: `~/Documents/obsidian-notes/p
 
 Responsibilities:
 
-Owns profile data used for calorie/macro calculation; owns Daily Logs, Training Programs, Diets (via Daily Logs), and Food/Diet Preferences. Identity itself is owned by the Hub — this table stores fitness-specific profile fields only.
+Owns profile data used for calorie/macro calculation; owns Daily Logs, Training Programs, Diets (via Daily Logs), and Food/Diet Preferences. Identity itself is owned by login — this table stores fitness-specific profile fields only, keyed by its own locally generated `id`.
 
 Fields:
 
+- identity_sub — login's OIDC `sub` for this user (unique). Kept separate from `id` so a re-issued sub never moves the primary key every other table references; see ADR-018
 - name, email, date_of_birth, height (metric), gender (male/female)
 - goal (weight_loss/maintenance/muscle_gain)
 - activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation

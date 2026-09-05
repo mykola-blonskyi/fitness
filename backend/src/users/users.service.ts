@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -23,13 +23,44 @@ export class UsersService {
     return user ? toUserResponse(user) : null;
   }
 
+  // The email fallback carries pre-conversion rows over: their backfilled
+  // identity_sub is a Hub id that no real login `sub` can match (ADR-018).
+  async findByIdentity(
+    sub: string,
+    email: string,
+  ): Promise<UserResponse | null> {
+    const bySub = await this.db.query.users.findFirst({
+      where: eq(schema.users.identitySub, sub),
+    });
+    if (bySub) {
+      return toUserResponse(bySub);
+    }
+
+    // Case-insensitive: login's email claim casing isn't guaranteed to match
+    // whatever case a pre-conversion row happened to be stored in.
+    const byEmail = await this.db.query.users.findFirst({
+      where: eq(sql`lower(${schema.users.email})`, email.toLowerCase()),
+    });
+    if (!byEmail) {
+      return null;
+    }
+
+    const [reconciled] = await this.db
+      .update(schema.users)
+      .set({ identitySub: sub, email, updatedAt: new Date() })
+      .where(eq(schema.users.id, byEmail.id))
+      .returning();
+
+    return toUserResponse(reconciled);
+  }
+
   async create(
-    id: string,
+    sub: string,
     email: string,
     dto: CreateUserDto,
   ): Promise<UserResponse> {
     const existing = await this.db.query.users.findFirst({
-      where: eq(schema.users.id, id),
+      where: eq(schema.users.identitySub, sub),
     });
     if (existing) {
       throw new ConflictException('Profile already exists');
@@ -38,7 +69,7 @@ export class UsersService {
     const [created] = await this.db
       .insert(schema.users)
       .values({
-        id,
+        identitySub: sub,
         email,
         name: dto.name,
         gender: dto.gender,

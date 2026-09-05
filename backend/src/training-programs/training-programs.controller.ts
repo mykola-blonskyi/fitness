@@ -33,7 +33,7 @@ export class TrainingProgramsController {
   async list(
     @CurrentUser() identity: Identity,
   ): Promise<TrainingProgramResponse[]> {
-    return this.trainingProgramsService.list(identity.hubUserId);
+    return this.trainingProgramsService.list(identity.userId);
   }
 
   @Get(':id')
@@ -41,7 +41,7 @@ export class TrainingProgramsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<TrainingProgramResponse> {
-    return this.trainingProgramsService.findOne(identity.hubUserId, id);
+    return this.trainingProgramsService.findOne(identity.userId, id);
   }
 
   @Post()
@@ -49,7 +49,7 @@ export class TrainingProgramsController {
     @CurrentUser() identity: Identity,
     @Body() dto: CreateTrainingProgramDto,
   ): Promise<TrainingProgramResponse> {
-    return this.trainingProgramsService.create(identity.hubUserId, dto);
+    return this.trainingProgramsService.create(identity.userId, dto);
   }
 
   @Post(':id/exercises')
@@ -58,11 +58,7 @@ export class TrainingProgramsController {
     @Param('id') id: string,
     @Body() dto: AddProgramExerciseDto,
   ): Promise<ProgramExerciseResponse> {
-    return this.trainingProgramsService.addExercise(
-      identity.hubUserId,
-      id,
-      dto,
-    );
+    return this.trainingProgramsService.addExercise(identity.userId, id, dto);
   }
 
   @Put(':id/exercises/reorder')
@@ -72,7 +68,7 @@ export class TrainingProgramsController {
     @Body() dto: ReorderProgramExercisesDto,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.reorderExercises(
-      identity.hubUserId,
+      identity.userId,
       id,
       dto,
     );
@@ -85,7 +81,7 @@ export class TrainingProgramsController {
     @Param('programExerciseId') programExerciseId: string,
   ): Promise<ProgramExerciseResponse> {
     return this.trainingProgramsService.removeExercise(
-      identity.hubUserId,
+      identity.userId,
       id,
       programExerciseId,
     );
@@ -96,7 +92,7 @@ export class TrainingProgramsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<TrainingProgramResponse> {
-    return this.trainingProgramsService.archive(identity.hubUserId, id);
+    return this.trainingProgramsService.archive(identity.userId, id);
   }
 
   @Patch(':id/reactivate')
@@ -104,7 +100,7 @@ export class TrainingProgramsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<TrainingProgramResponse> {
-    return this.trainingProgramsService.reactivate(identity.hubUserId, id);
+    return this.trainingProgramsService.reactivate(identity.userId, id);
   }
 
   // isActive is independent of isArchived - see schema.ts's trainingPrograms.
@@ -113,7 +109,7 @@ export class TrainingProgramsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<TrainingProgramResponse> {
-    return this.trainingProgramsService.activate(identity.hubUserId, id);
+    return this.trainingProgramsService.activate(identity.userId, id);
   }
 
   @Patch(':id/deactivate')
@@ -121,6 +117,6 @@ export class TrainingProgramsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<TrainingProgramResponse> {
-    return this.trainingProgramsService.deactivate(identity.hubUserId, id);
+    return this.trainingProgramsService.deactivate(identity.userId, id);
   }
 }

@@ -46,6 +46,14 @@ The nutritional role a Food Item plays (e.g. `lean_protein`, `complex_carb`, `he
 
 A user's allergy, exclusion, or favorite (`user_food_preferences`), targeting either a whole taxonomy node (Category, Subcategory, or Role) or a single Food Item, via a polymorphic `target_type`/`target_id` pair. Not free text — always a structured reference. **Favorite** is the one exception to the polymorphic targeting: it always targets a specific Food Item, never a Category/Subcategory/Role — see [[business-rules]] "Favorited Food Items narrow diet generation, per role" and ADR-014. The same Food Item can never be both favorited and excluded/allergied at once.
 
+### login
+
+The `login.blonskyi.dev` OpenID Provider that owns authentication for all subdomain pet projects (including this one). The Fitness Tracker's Next.js frontend is an OIDC client of it, holds its own session, and forwards trusted identity headers to the internal NestJS backend, which never touches the cookie or token directly. See ADR-018.
+
+### Identity Sub
+
+login's OIDC `sub` for a user, stored on `users.identity_sub`. Deliberately separate from `users.id`, which is this app's own key and never changes — resolution from one to the other happens once per request in `IdentityGuard`, and falls back to an email match that reconciles the row in place. See ADR-018.
+
 ### Hub
 
-The `blonskyi.dev` project that owns authentication for all subdomain pet projects (including this one). Issues the shared session cookie; the Fitness Tracker's Next.js frontend validates it and forwards trusted identity headers to the internal NestJS backend, which never touches the cookie directly.
+The `blonskyi.dev` project. Still a sibling app (the nav rail links to it), but no longer part of authentication — that moved to login (ADR-018).

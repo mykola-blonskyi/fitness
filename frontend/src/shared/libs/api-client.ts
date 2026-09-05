@@ -20,26 +20,26 @@ export async function apiFetch<T>(
   init?: RequestInit,
   identity?: Identity,
 ): Promise<T> {
-  let userId: string | null = identity?.userId ?? null;
+  let sub: string | null = identity?.sub ?? null;
   let email: string | null = identity?.email ?? null;
 
   if (!identity) {
     // Routes covered by proxy.ts's matcher already have these injected
     // into the request headers; read them back out here.
     const headerList = await headers();
-    userId = headerList.get('x-user-id');
+    sub = headerList.get('x-user-id');
     email = headerList.get('x-user-email');
   }
 
   // Only the UUID, never email - ADR-006, this app handles real health
   // data and Sentry is a third-party service.
-  if (userId) Sentry.setUser({ id: userId });
+  if (sub) Sentry.setUser({ id: sub });
 
   const res = await fetch(`${process.env.BACKEND_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...(userId ? { 'x-user-id': userId } : {}),
+      ...(sub ? { 'x-user-id': sub } : {}),
       ...(email ? { 'x-user-email': email } : {}),
       ...init?.headers,
     },

@@ -9,8 +9,8 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 ## Phase 1 — Project scaffolding & auth
 
 - [x] Scaffold Next.js frontend + NestJS backend per `my-projects/boilerplates/subdomain-app.md` (FITNESS-7)
-- [x] Wire up Hub auth reuse (Auth.js cookie validation in Next.js, `x-user-id`/`x-user-email` forwarding to NestJS) (FITNESS-9)
-- [x] Register `fitness` project slug + access grant in the Hub's Postgres (FITNESS-9)
+- [x] Wire up Hub auth reuse (Auth.js cookie validation in Next.js, `x-user-id`/`x-user-email` forwarding to NestJS) (FITNESS-9) — superseded by Phase 6
+- [x] Register `fitness` project slug + access grant in the Hub's Postgres (FITNESS-9) — superseded by Phase 6
 - [ ] Set up Drizzle schema for User, Daily Log (see ADR-004), Training Program stack, and migration step in CI/CD (User schema + migration-in-CI done via FITNESS-7/8; Daily Log schema done via FITNESS-14; Training Program stack schema not yet started)
 
 ---
@@ -52,6 +52,16 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - [x] Generic IndexedDB offline write-queue + sync + offline/syncing/synced indicator, reusable by any feature's write endpoint; wired up to the daily-log weight entry Server Action as the concrete example (FITNESS-13)
 - [x] Coolify/Docker Compose deployment, CI/CD gates (lint, prettier, tests, migration-before-deploy) — live at fitness.blonskyi.dev (FITNESS-8)
 - [x] Plane workspace (FITNESS) ticket setup: Modules = specs above, Work items = individual tickets, branch-per-ticket workflow
+
+---
+
+## Phase 6 — Identity migration to login.blonskyi.dev
+
+- [x] Frontend becomes an independent OIDC client of `login.blonskyi.dev` (own Auth.js instance, authorization code + PKCE, own `AUTH_SECRET`, host-only session cookie); the Hub's shared `.blonskyi.dev` cookie and its `/api/auth/validate` call are dropped (see ADR-018)
+- [x] `users.identity_sub` added as its own column with a backfill migration; `users.id` and every FK referencing it are left untouched
+- [x] Identity resolution reconciles on email in `IdentityGuard`, so the owner's first login under a new `sub` keeps their existing row instead of orphaning it
+- [x] Sign-out control added to the header (supersedes ADR-007's no-sign-out decision)
+- [ ] Operational: register the `fitness` client against the deployed login instance and set `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`/a fresh `AUTH_SECRET` in Coolify before deploying
 
 ---
 

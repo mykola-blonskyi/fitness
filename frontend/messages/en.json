@@ -661,5 +661,13 @@
   },
   "LanguageSwitcher": {
     "label": "Language"
+  },
+  "SignIn": {
+    "title": "Sign in",
+    "subtitle": "Continue with your blonskyi.dev account.",
+    "button": "Continue",
+    "error": "Could not prepare the sign-in form.",
+    "retry": "Try again",
+    "signOut": "Sign out"
   }
 }

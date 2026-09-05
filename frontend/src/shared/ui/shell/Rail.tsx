@@ -51,7 +51,7 @@ export function Rail({
       })}
 
       <a
-        href={`${process.env.API_URL}/${locale}`}
+        href={`${process.env.HUB_URL}/${locale}`}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-auto hidden items-center justify-between rounded-ctl border border-line bg-surface px-2.5 py-2 text-xs text-muted transition-colors hover:text-ink lg:flex"

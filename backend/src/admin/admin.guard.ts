@@ -25,7 +25,7 @@ export class AdminGuard implements CanActivate {
       .getRequest<Request & { identity: Identity }>();
 
     const user = await this.db.query.users.findFirst({
-      where: eq(schema.users.id, req.identity.hubUserId),
+      where: eq(schema.users.id, req.identity.userId),
       columns: { isAdmin: true },
     });
 

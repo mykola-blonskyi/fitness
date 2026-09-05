@@ -35,14 +35,14 @@ export class PhotoSessionsController {
   async requestUploadUrl(
     @CurrentUser() identity: Identity,
   ): Promise<UploadUrlResponse> {
-    return this.photoSessionsService.requestUploadUrl(identity.hubUserId);
+    return this.photoSessionsService.requestUploadUrl(identity.userId);
   }
 
   @Get()
   async list(
     @CurrentUser() identity: Identity,
   ): Promise<PhotoSessionResponse[]> {
-    return this.photoSessionsService.list(identity.hubUserId);
+    return this.photoSessionsService.list(identity.userId);
   }
 
   @Get('photos/:photoId/view')
@@ -50,10 +50,7 @@ export class PhotoSessionsController {
     @CurrentUser() identity: Identity,
     @Param('photoId') photoId: string,
   ): Promise<PhotoViewUrlResponse> {
-    return this.photoSessionsService.getPhotoViewUrl(
-      identity.hubUserId,
-      photoId,
-    );
+    return this.photoSessionsService.getPhotoViewUrl(identity.userId, photoId);
   }
 
   @Post('photos/:photoId/retry-analysis')
@@ -61,7 +58,7 @@ export class PhotoSessionsController {
     @CurrentUser() identity: Identity,
     @Param('photoId') photoId: string,
   ): Promise<ProgressPhotoResponse> {
-    return this.photoSessionsService.retryAnalysis(identity.hubUserId, photoId);
+    return this.photoSessionsService.retryAnalysis(identity.userId, photoId);
   }
 
   @Get(':id')
@@ -69,7 +66,7 @@ export class PhotoSessionsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<PhotoSessionResponse> {
-    return this.photoSessionsService.findOne(identity.hubUserId, id);
+    return this.photoSessionsService.findOne(identity.userId, id);
   }
 
   @Patch(':id/review')
@@ -78,7 +75,7 @@ export class PhotoSessionsController {
     @Param('id') id: string,
     @Body() dto: ConfirmReviewDto,
   ): Promise<PhotoSessionResponse> {
-    return this.photoSessionsService.confirmReview(identity.hubUserId, id, dto);
+    return this.photoSessionsService.confirmReview(identity.userId, id, dto);
   }
 
   @Patch(':id/baseline')
@@ -86,7 +83,7 @@ export class PhotoSessionsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<PhotoSessionResponse> {
-    return this.photoSessionsService.setBaseline(identity.hubUserId, id);
+    return this.photoSessionsService.setBaseline(identity.userId, id);
   }
 
   @Delete(':id')
@@ -94,7 +91,7 @@ export class PhotoSessionsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<PhotoSessionResponse> {
-    return this.photoSessionsService.remove(identity.hubUserId, id);
+    return this.photoSessionsService.remove(identity.userId, id);
   }
 
   @Post(':date')
@@ -104,6 +101,6 @@ export class PhotoSessionsController {
     @Body() dto: ConfirmPhotoSessionDto,
   ): Promise<PhotoSessionResponse> {
     assertValidDate(date);
-    return this.photoSessionsService.confirm(identity.hubUserId, date, dto);
+    return this.photoSessionsService.confirm(identity.userId, date, dto);
   }
 }

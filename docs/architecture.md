@@ -2,7 +2,7 @@
 
 ## Overview
 
-fitness.blonskyi.dev — a fitness-tracking PWA: training programs/logs, a body-weight diary with progress photos, ML-based photo pose analysis, and a generated-diet recommendation engine. One of several `*.blonskyi.dev` subdomain pet projects sharing a Postgres instance and a common Hub-based auth system, deployed via Coolify.
+fitness.blonskyi.dev — a fitness-tracking PWA: training programs/logs, a body-weight diary with progress photos, ML-based photo pose analysis, and a generated-diet recommendation engine. One of several `*.blonskyi.dev` subdomain pet projects sharing a Postgres instance and a common identity provider (`login.blonskyi.dev`), deployed via Coolify.
 
 See [[domain-model]] and [[business-rules]] for the domain layer this architecture serves.
 
@@ -27,14 +27,14 @@ Next.js (App Router), TypeScript, TailwindCSS, ShadCN, next-intl (en/uk/ru/es), 
 Responsibilities:
 
 - All UI rendering and client-side interaction
-- Validates the Hub's shared auth cookie and forwards trusted identity headers to the backend (see Security below) — **no direct database access**, no Server Actions touching Drizzle/Postgres
+- Runs its own Auth.js instance as an OIDC client of `login.blonskyi.dev` and forwards trusted identity headers to the backend (see Security below) — **no direct database access**, no Server Actions touching Drizzle/Postgres
 - App-wide nav header (see [ADR-007](docs/decisions.md)) — a nav menu scoped to built sections, not a breadcrumb trail. Renders everywhere except `/onboarding`; includes a language switcher (FITNESS-11) — theme toggling is still not part of it
 - Offline: caches active programs/exercises/recent logs for viewing; queues workout-set writes in IndexedDB and flushes them to the API in order once back online
 
 Dependencies:
 
 - NestJS API (all reads/writes go through it)
-- Hub (`blonskyi.dev`) for auth validation
+- login (`login.blonskyi.dev`) as the OpenID Provider
 
 ---
 
@@ -47,14 +47,13 @@ Responsibilities:
 - All Drizzle/Postgres access
 - Generates presigned MinIO URLs for photo upload (client leg) and photo read (owner-only, short-lived — see Security)
 - Enqueues photo-analysis jobs onto Redis; exposes an internal endpoint (or reads back) for worker results
-- Trusts `x-user-id`/`x-user-email` headers forwarded by the frontend; never touches the auth cookie itself
+- Trusts `x-user-id`/`x-user-email` headers forwarded by the frontend; never touches the session cookie or token itself. `x-user-id` carries login's `sub`, which `IdentityGuard` resolves to this app's own `users.id` via `users.identity_sub` (see [ADR-018](docs/decisions.md))
 
 Dependencies:
 
 - Postgres (shared instance, this project's own tables)
 - Redis (job queue)
 - MinIO (photo storage)
-- Hub Postgres (`project_access` grant, registered once during setup — see the `subdomain-app.md` boilerplate in `my-projects`)
 
 ---
 
@@ -81,7 +80,7 @@ Dependencies:
 
 External systems:
 
-- Hub (`blonskyi.dev`) — shared authentication (Auth.js JWT cookie, validated by the frontend)
+- login (`login.blonskyi.dev`) — the OpenID Provider this app authenticates against (authorization code + PKCE)
 - MinIO (`s3.blonskyi.dev`) — object storage for progress photos, private bucket
 - Open Food Facts / USDA FoodData Central — one-time curated seed import for the food catalog
 - wger / ExerciseDB — one-time curated seed import for the exercise catalog
@@ -118,15 +117,17 @@ Docker Compose, deployed via Coolify (self-hosted) using a GitHub App for the pr
 
 Authentication:
 
-Reused, not reinvented — see the `todolist` project and `my-projects/boilerplates/subdomain-app.md`. The Hub issues an Auth.js JWT session cookie (`authjs.session-token`, domain `.blonskyi.dev`, httpOnly, `sameSite: lax`). The Next.js frontend decodes it with a shared `AUTH_SECRET` and calls `GET https://blonskyi.dev/api/auth/validate?project=fitness` for per-project authorization, then forwards trusted `x-user-id`/`x-user-email` headers to NestJS. NestJS is internal-only (private Docker network) and never validates the cookie itself.
+The Next.js frontend is an OIDC client of `login.blonskyi.dev` (authorization code + PKCE, `client_id` `fitness`, redirect URI `/api/auth/callback/login`) — see [ADR-018](docs/decisions.md). It runs its own Auth.js instance with its own `AUTH_SECRET` and issues its own **host-only** session cookie (`authjs.session-token`, no `Domain`, httpOnly, `sameSite: lax`); nothing is shared with any other subdomain. `proxy.ts` reads that cookie and forwards trusted `x-user-id` (login's `sub`) / `x-user-email` headers to NestJS. NestJS is internal-only (private Docker network) and never validates the cookie itself.
 
 Authorization:
 
-Per-project access granted via the Hub's `project_access` table (registered once during project setup). Within the app, all data is scoped to the authenticated `user_id` — no cross-user data access.
+Enforced by login at token issuance: it only issues a token once the user is approved site-wide and is a member of the `fitness` client, so a valid session already implies access and the frontend makes no separate allow/deny call. Within the app, all data is scoped to the resolved `users.id` — no cross-user data access.
+
+Sign-out clears only this app's own cookie; login's IdP session is untouched.
 
 Secrets Management:
 
-`AUTH_SECRET` must match the Hub's byte-for-byte. MinIO/Redis/Postgres credentials and the translation-API key are environment variables, not committed. Same for the Sentry DSN and the build-time Sentry auth token used to upload frontend source maps (see [[decisions]] ADR-006) — the auth token is a CI/build secret, not a runtime one, and only needs upload-project-scoped access.
+`AUTH_SECRET` is this app's own, deliberately not shared with any other app; `OIDC_CLIENT_SECRET` is the `fitness` client's secret as registered with login. MinIO/Redis/Postgres credentials and the translation-API key are environment variables, not committed. Same for the Sentry DSN and the build-time Sentry auth token used to upload frontend source maps (see [[decisions]] ADR-006) — the auth token is a CI/build secret, not a runtime one, and only needs upload-project-scoped access.
 
 Photo privacy: the MinIO bucket for progress photos is **private**. No permanent public URLs are ever stored or served — see [[business-rules]] "Progress photos are private."
 

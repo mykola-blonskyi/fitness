@@ -31,16 +31,14 @@ export class DailyLogsController {
     @CurrentUser() identity: Identity,
     @Query() query: WeightTrendQueryDto,
   ): Promise<WeightTrendResponse> {
-    return this.dailyLogsService.getWeightTrend(identity.hubUserId, query.days);
+    return this.dailyLogsService.getWeightTrend(identity.userId, query.days);
   }
 
   @Get('latest-weigh-in')
   async getLatestWeighIn(
     @CurrentUser() identity: Identity,
   ): Promise<DailyLogResponse> {
-    const log = await this.dailyLogsService.findLatestWeighIn(
-      identity.hubUserId,
-    );
+    const log = await this.dailyLogsService.findLatestWeighIn(identity.userId);
     if (!log) {
       throw new NotFoundException('No weigh-in yet');
     }
@@ -53,10 +51,7 @@ export class DailyLogsController {
     @Param('date') date: string,
   ): Promise<DailyLogResponse> {
     assertValidDate(date);
-    const log = await this.dailyLogsService.findByDate(
-      identity.hubUserId,
-      date,
-    );
+    const log = await this.dailyLogsService.findByDate(identity.userId, date);
     if (!log) {
       throw new NotFoundException('No Daily Log for this date');
     }
@@ -71,7 +66,7 @@ export class DailyLogsController {
   ): Promise<DailyLogResponse> {
     assertValidDate(date);
     return this.dailyLogsService.setWeight(
-      identity.hubUserId,
+      identity.userId,
       date,
       dto.weight,
       dto.unit,
@@ -84,6 +79,6 @@ export class DailyLogsController {
     @Param('date') date: string,
   ): Promise<DailyLogResponse> {
     assertValidDate(date);
-    return this.dailyLogsService.clearWeight(identity.hubUserId, date);
+    return this.dailyLogsService.clearWeight(identity.userId, date);
   }
 }
