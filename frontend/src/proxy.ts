@@ -1,38 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import createIntlMiddleware from 'next-intl/middleware';
 import * as Sentry from '@sentry/nextjs';
-import {
-  devBypassIdentity,
-  requireEnv,
-  resolveIdentity,
-} from '@libs/hub-identity';
+import { requireEnv, resolveIdentity } from '@libs/identity';
 import type { Identity } from '@shared/types/identity';
 import { routing } from '@/i18n/routing';
 
-const API_URL = requireEnv('API_URL');
-const AUTH_SECRET = requireEnv('AUTH_SECRET');
 const APP_URL = requireEnv('APP_URL');
 const BACKEND_URL = requireEnv('BACKEND_URL');
 
 const HEALTH_PATH = new RegExp(`^/(${routing.locales.join('|')})/health$`);
+const SIGN_IN_PATH = new RegExp(`^/(${routing.locales.join('|')})/login$`);
 
 const handleI18nRouting = createIntlMiddleware(routing);
 
-function loginRedirect(req: NextRequest, locale: string) {
-  const callbackUrl = `${APP_URL}${req.nextUrl.pathname}${req.nextUrl.search}`;
-  const loginUrl = `${API_URL}/${locale}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-  return NextResponse.redirect(loginUrl);
+function signInRedirect(req: NextRequest, locale: string) {
+  const signInUrl = new URL(`/${locale}/login`, APP_URL);
+  signInUrl.searchParams.set(
+    'callbackUrl',
+    `${APP_URL}${req.nextUrl.pathname}${req.nextUrl.search}`,
+  );
+  return NextResponse.redirect(signInUrl);
 }
 
 // Never throws - a backend-unreachable or non-2xx response is treated as
 // "not completed" so the caller falls back to the onboarding redirect,
-// not a 500, matching resolveIdentity's fail-to-redirect behavior.
+// not a 500.
 async function hasCompletedProfile(identity: Identity): Promise<boolean> {
   try {
     const res = await fetch(`${BACKEND_URL}/users/me`, {
       headers: {
-        'x-user-id': identity.userId,
+        'x-user-id': identity.sub,
         'x-user-email': identity.email,
       },
       cache: 'no-store',
@@ -45,7 +42,7 @@ async function hasCompletedProfile(identity: Identity): Promise<boolean> {
 
 export async function proxy(req: NextRequest) {
   // Health checks stay public for infra monitoring (Coolify etc. have no
-  // Hub session cookie to present).
+  // session cookie to present).
   if (HEALTH_PATH.test(req.nextUrl.pathname)) {
     return NextResponse.next();
   }
@@ -63,36 +60,20 @@ export async function proxy(req: NextRequest) {
   // 'always' mode (routing.ts); switching that would break this.
   const locale = req.nextUrl.pathname.split('/')[1];
 
-  let identity: Identity | null;
+  // The sign-in page itself must never be gated, or an unauthenticated
+  // visit redirects to it forever.
+  if (SIGN_IN_PATH.test(req.nextUrl.pathname)) {
+    return intlResponse;
+  }
 
-  const bypass = devBypassIdentity();
-  if (bypass) {
-    // Local dev only — skips the Hub JWT check entirely, since the real
-    // cookie can never be present on localhost. Hard-gated off in
-    // production inside devBypassIdentity() itself.
-    identity = bypass;
-  } else {
-    // Cookie name is pinned exactly as the Hub issues it — no
-    // `__Secure-` prefix even in production. Do not "smart-detect" this
-    // per-environment.
-    const token = await getToken({
-      req,
-      secret: AUTH_SECRET,
-      cookieName: 'authjs.session-token',
-    });
-    if (!token) {
-      return loginRedirect(req, locale);
-    }
-
-    identity = await resolveIdentity(req.headers.get('cookie') ?? '');
-    if (!identity) {
-      return loginRedirect(req, locale);
-    }
+  const identity = await resolveIdentity(req);
+  if (!identity) {
+    return signInRedirect(req, locale);
   }
 
   // Only the UUID, never email - ADR-006, this app handles real health
   // data and Sentry is a third-party service.
-  Sentry.setUser({ id: identity.userId });
+  Sentry.setUser({ id: identity.sub });
 
   // Profile completion is enforced here, before any other feature route
   // is reached (see the Auth spec's Implementation Decisions). /onboarding
@@ -112,7 +93,7 @@ export async function proxy(req: NextRequest) {
   // next-intl's own X-NEXT-INTL-LOCALE header (its documented contract
   // for a composed proxy - getRequestConfig reads this server-side).
   const headers = new Headers(req.headers);
-  headers.set('x-user-id', identity.userId);
+  headers.set('x-user-id', identity.sub);
   headers.set('x-user-email', identity.email);
   headers.set('X-NEXT-INTL-LOCALE', locale);
 
@@ -124,8 +105,8 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Excludes API routes, Next.js internals, and static files — routes
-  // outside this matcher (e.g. future /api/* route handlers) must call
+  // Excludes API routes (Auth.js's own /api/auth/* included), Next.js
+  // internals, and static files — routes outside this matcher must call
   // resolveIdentity() themselves rather than relying on this proxy.
   matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 };

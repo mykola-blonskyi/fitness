@@ -661,5 +661,13 @@
   },
   "LanguageSwitcher": {
     "label": "Idioma"
+  },
+  "SignIn": {
+    "title": "Iniciar sesión",
+    "subtitle": "Continúa con tu cuenta de blonskyi.dev.",
+    "button": "Continuar",
+    "error": "No se pudo preparar el formulario de inicio de sesión.",
+    "retry": "Reintentar",
+    "signOut": "Cerrar sesión"
   }
 }

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { OfflineIndicator } from '@shared/ui/components/OfflineIndicator';
 import { LanguageSwitcher } from '@shared/ui/components/LanguageSwitcher';
 import { useActiveNavKey } from '@shared/ui/shell/NavLink';
+import { SignOutButton } from '@features/auth';
 
 interface TopBarProps {
   identity: { userId: string; name: string; email: string };
@@ -30,7 +31,6 @@ export function TopBar({ identity }: TopBarProps) {
           <OfflineIndicator userId={identity.userId} />
         </span>
         <LanguageSwitcher />
-        {/* Identity only - no dropdown, no sign-out (ADR-007). */}
         <span className="chip !border-accent !bg-accent text-accent-ink">
           <span className="flex size-5 items-center justify-center rounded-full bg-inv text-[10px] font-bold text-inv-ink">
             {initial}
@@ -39,6 +39,7 @@ export function TopBar({ identity }: TopBarProps) {
             {identity.name || identity.email}
           </span>
         </span>
+        <SignOutButton />
       </div>
     </header>
   );
