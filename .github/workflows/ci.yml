@@ -174,12 +174,12 @@ jobs:
         # setting them anyway keeps this job from breaking outright if
         # the audited route ever changes to one that does.
         env:
-          API_URL: http://localhost:1
+          OIDC_ISSUER: http://localhost:1
+          OIDC_CLIENT_SECRET: ci-placeholder
           APP_URL: http://localhost:3000
           BACKEND_URL: http://localhost:1
           AUTH_SECRET: ci-placeholder
-          COOKIE_DOMAIN: .blonskyi.dev
-          PROJECT_SLUG: fitness
+          HUB_URL: http://localhost:1
         run: pnpm --filter frontend start &
       - name: Wait for frontend to be ready
         run: |
