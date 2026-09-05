@@ -6,8 +6,12 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { CurrentUser } from '../identity/current-user.decorator';
-import type { Identity } from '../identity/identity.types';
+import {
+  CurrentIdentity,
+  CurrentUser,
+} from '../identity/current-user.decorator';
+import type { Identity, ResolvedIdentity } from '../identity/identity.types';
+import { ProfileOptional } from '../identity/profile-optional.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import type { UserResponse } from './user.mapper';
@@ -21,9 +25,17 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // The frontend proxy calls this to decide whether to send the caller to
+  // /onboarding, so a missing profile has to answer 404 rather than be
+  // rejected by IdentityGuard.
   @Get()
-  async getMe(@CurrentUser() identity: Identity): Promise<UserResponse> {
-    const user = await this.usersService.findById(identity.hubUserId);
+  @ProfileOptional()
+  async getMe(
+    @CurrentIdentity() identity: ResolvedIdentity,
+  ): Promise<UserResponse> {
+    const user = identity.userId
+      ? await this.usersService.findById(identity.userId)
+      : null;
     if (!user) {
       throw new NotFoundException('Profile not created yet');
     }
@@ -31,11 +43,12 @@ export class UsersController {
   }
 
   @Post()
+  @ProfileOptional()
   async createMe(
-    @CurrentUser() identity: Identity,
+    @CurrentIdentity() identity: ResolvedIdentity,
     @Body() dto: CreateUserDto,
   ): Promise<UserResponse> {
-    return this.usersService.create(identity.hubUserId, identity.email, dto);
+    return this.usersService.create(identity.sub, identity.email, dto);
   }
 
   @Patch()
@@ -43,6 +56,6 @@ export class UsersController {
     @CurrentUser() identity: Identity,
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponse> {
-    return this.usersService.update(identity.hubUserId, dto);
+    return this.usersService.update(identity.userId, dto);
   }
 }

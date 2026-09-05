@@ -14,6 +14,6 @@ export class CalorieTargetsController {
   async getMine(
     @CurrentUser() identity: Identity,
   ): Promise<CalorieTargetResponse> {
-    return this.calorieTargetsService.computeForUser(identity.hubUserId);
+    return this.calorieTargetsService.computeForUser(identity.userId);
   }
 }

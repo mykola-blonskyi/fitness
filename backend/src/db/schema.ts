@@ -30,10 +30,13 @@ export const activityLevelEnum = pgEnum('activity_level', [
 ]);
 export const weightUnitEnum = pgEnum('weight_unit', ['kg', 'lb']);
 
-// id is NOT locally generated — it's always set to the Hub's own user id,
-// so cross-project identity stays aligned.
+// identitySub is login.blonskyi.dev's OIDC `sub`, kept as its own column
+// rather than reused as `id`: every other table references users.id
+// without a cascade, so a re-issued sub must never move the primary key
+// (ADR-018).
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
+  identitySub: text('identity_sub').notNull().unique(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   dateOfBirth: date('date_of_birth').notNull(),

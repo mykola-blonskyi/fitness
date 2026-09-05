@@ -17,7 +17,7 @@ export class FoodPreferencesController {
   async list(
     @CurrentUser() identity: Identity,
   ): Promise<FoodPreferenceResponse[]> {
-    return this.foodPreferencesService.list(identity.hubUserId);
+    return this.foodPreferencesService.list(identity.userId);
   }
 
   @Post()
@@ -25,7 +25,7 @@ export class FoodPreferencesController {
     @CurrentUser() identity: Identity,
     @Body() dto: CreateFoodPreferenceDto,
   ): Promise<FoodPreferenceResponse> {
-    return this.foodPreferencesService.create(identity.hubUserId, dto);
+    return this.foodPreferencesService.create(identity.userId, dto);
   }
 
   // Returns the removed row rather than 204 - apiFetch (frontend/src/
@@ -36,6 +36,6 @@ export class FoodPreferencesController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<FoodPreferenceResponse> {
-    return this.foodPreferencesService.remove(identity.hubUserId, id);
+    return this.foodPreferencesService.remove(identity.userId, id);
   }
 }

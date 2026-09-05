@@ -23,13 +23,46 @@ export class UsersService {
     return user ? toUserResponse(user) : null;
   }
 
+  // Resolves an identity from login.blonskyi.dev to this app's own user
+  // row. The email fallback is what carries a pre-existing profile across
+  // the conversion: rows migrated from the Hub carry a backfilled
+  // identity_sub that will never match a real login `sub`, and without
+  // this they'd silently look like a brand-new user and orphan every
+  // FK-referencing row they own (ADR-018).
+  async findByIdentity(
+    sub: string,
+    email: string,
+  ): Promise<UserResponse | null> {
+    const bySub = await this.db.query.users.findFirst({
+      where: eq(schema.users.identitySub, sub),
+    });
+    if (bySub) {
+      return toUserResponse(bySub);
+    }
+
+    const byEmail = await this.db.query.users.findFirst({
+      where: eq(schema.users.email, email),
+    });
+    if (!byEmail) {
+      return null;
+    }
+
+    const [reconciled] = await this.db
+      .update(schema.users)
+      .set({ identitySub: sub, updatedAt: new Date() })
+      .where(eq(schema.users.id, byEmail.id))
+      .returning();
+
+    return toUserResponse(reconciled);
+  }
+
   async create(
-    id: string,
+    sub: string,
     email: string,
     dto: CreateUserDto,
   ): Promise<UserResponse> {
     const existing = await this.db.query.users.findFirst({
-      where: eq(schema.users.id, id),
+      where: eq(schema.users.identitySub, sub),
     });
     if (existing) {
       throw new ConflictException('Profile already exists');
@@ -38,7 +71,7 @@ export class UsersService {
     const [created] = await this.db
       .insert(schema.users)
       .values({
-        id,
+        identitySub: sub,
         email,
         name: dto.name,
         gender: dto.gender,

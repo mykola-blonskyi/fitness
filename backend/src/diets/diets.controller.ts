@@ -17,13 +17,13 @@ export class DietsController {
   // previous one.
   @Post('generate')
   async generate(@CurrentUser() identity: Identity): Promise<DietResponse> {
-    return this.dietsService.generate(identity.hubUserId);
+    return this.dietsService.generate(identity.userId);
   }
 
   // The most recently generated Diet for this user, regardless of when.
   @Get('current')
   async getCurrent(@CurrentUser() identity: Identity): Promise<DietResponse> {
-    return this.dietsService.findCurrent(identity.hubUserId);
+    return this.dietsService.findCurrent(identity.userId);
   }
 
   // Unlike generate(), this edits the existing Diet row in place rather
@@ -36,7 +36,7 @@ export class DietsController {
     @Body() dto: SwapDietItemDto,
   ): Promise<DietResponse> {
     return this.dietsService.swapItem(
-      identity.hubUserId,
+      identity.userId,
       dietId,
       itemId,
       dto.foodItemId,
@@ -49,6 +49,6 @@ export class DietsController {
     @Param('dietId') dietId: string,
     @Body() dto: ReorderDietMealsDto,
   ): Promise<DietResponse> {
-    return this.dietsService.reorderMeals(identity.hubUserId, dietId, dto);
+    return this.dietsService.reorderMeals(identity.userId, dietId, dto);
   }
 }

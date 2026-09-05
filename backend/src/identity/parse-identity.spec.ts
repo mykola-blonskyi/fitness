@@ -6,14 +6,14 @@ function buildRequest(headers: Record<string, unknown>): Request {
 }
 
 describe('parseIdentity', () => {
-  it('extracts hubUserId and email from valid headers', () => {
+  it('extracts sub and email from valid headers', () => {
     const req = buildRequest({
       'x-user-id': 'user-1',
       'x-user-email': 'user1@example.com',
     });
 
     expect(parseIdentity(req)).toEqual({
-      hubUserId: 'user-1',
+      sub: 'user-1',
       email: 'user1@example.com',
     });
   });
@@ -88,7 +88,7 @@ describe('parseIdentity', () => {
     });
 
     expect(parseIdentity(req)).toEqual({
-      hubUserId: '  user-1  ',
+      sub: '  user-1  ',
       email: 'User1@Example.com',
     });
   });

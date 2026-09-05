@@ -17,7 +17,7 @@ export class ExercisesController {
     @CurrentUser() identity: Identity,
     @Query() query: ListExercisesDto,
   ): Promise<ExercisePage> {
-    return this.exercisesService.list(identity.hubUserId, query);
+    return this.exercisesService.list(identity.userId, query);
   }
 
   @Post()

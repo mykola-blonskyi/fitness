@@ -19,7 +19,7 @@ export class WorkoutLogsController {
   // Past Workout Logs, most recent date first.
   @Get()
   async list(@CurrentUser() identity: Identity): Promise<WorkoutLogResponse[]> {
-    return this.workoutLogsService.list(identity.hubUserId);
+    return this.workoutLogsService.list(identity.userId);
   }
 
   @Get(':id')
@@ -27,7 +27,7 @@ export class WorkoutLogsController {
     @CurrentUser() identity: Identity,
     @Param('id') id: string,
   ): Promise<WorkoutLogResponse> {
-    return this.workoutLogsService.findOne(identity.hubUserId, id);
+    return this.workoutLogsService.findOne(identity.userId, id);
   }
 
   @Post(':date')
@@ -37,7 +37,7 @@ export class WorkoutLogsController {
     @Body() dto: StartWorkoutLogDto,
   ): Promise<WorkoutLogResponse> {
     assertValidDate(date);
-    return this.workoutLogsService.start(identity.hubUserId, date, dto);
+    return this.workoutLogsService.start(identity.userId, date, dto);
   }
 
   @Post(':id/sets')
@@ -46,6 +46,6 @@ export class WorkoutLogsController {
     @Param('id') id: string,
     @Body() dto: LogWorkoutSetDto,
   ): Promise<WorkoutSetResponse> {
-    return this.workoutLogsService.logSet(identity.hubUserId, id, dto);
+    return this.workoutLogsService.logSet(identity.userId, id, dto);
   }
 }
