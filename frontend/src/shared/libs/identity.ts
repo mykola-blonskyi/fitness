@@ -3,7 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import {
   SESSION_COOKIE_NAME,
   SESSION_COOKIE_SECURE,
-} from '@features/auth/lib/session-cookie';
+} from '@libs/session-cookie';
 import type { Identity } from '@shared/types/identity';
 import { requireEnv } from '@libs/require-env';
 

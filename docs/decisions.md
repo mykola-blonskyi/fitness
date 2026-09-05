@@ -232,40 +232,14 @@ Status: Accepted
 
 Supersedes ADR-007's no-sign-out decision.
 
-Authentication moves off the Hub's shared `.blonskyi.dev` Auth.js cookie and onto
-`login.blonskyi.dev` as a standard OIDC client (authorization code + PKCE, `client_id` `fitness`).
-The frontend runs its own Auth.js instance with its own `AUTH_SECRET` and a host-only session
-cookie, and no longer calls the Hub's `/api/auth/validate` — a token is only issued after login's
-own approval-status and `fitness` client-membership checks, so there is no separate authorization
-call left to make. NestJS is unchanged in kind: it still never validates a cookie or token, only
-the `x-user-id`/`x-user-email` headers the frontend forwards over the private Docker network.
-Auth.js discards the id returned by `profile()` when there is no database adapter, so the identity
-is read from `profile.sub` in the `jwt` callback and never from `user.id`. Session lifetime is 24h,
-matching login's own IdP session and refresh-token TTLs; true per-request revocation would need
-login's opt-in RFC 7662 introspection endpoint and is deferred.
+Authentication moves off the Hub's shared `.blonskyi.dev` Auth.js cookie onto `login.blonskyi.dev` as a standard OIDC client (authorization code + PKCE, `client_id` `fitness`). The frontend runs its own Auth.js instance with its own `AUTH_SECRET` and a host-only session cookie, and makes no separate authorization call — login only issues a token to an approved user holding `fitness` client membership. NestJS is unchanged in kind: still no cookie or token validation, only the `x-user-id`/`x-user-email` headers forwarded over the private Docker network. The identity comes from `profile.sub` in the `jwt` callback, never `user.id`, which Auth.js fills with a fresh random value per sign-in absent a database adapter. Session lifetime is 24h, matching login's own TTLs; per-request revocation would need its opt-in RFC 7662 introspection and is deferred.
 
-`users.id` is untouched by the conversion. login's `sub` lands in a new `users.identity_sub`
-column (text, unique) instead of being written into the primary key: at least seven tables
-reference `users.id` with no `ON UPDATE CASCADE`, so re-pointing the key at a new `sub` would mean
-an FK-cascading rewrite across all of them. The migration adds the column nullable, backfills
-`identity_sub = id::text` (existing rows' `id` already is the Hub user id), then applies
-`NOT NULL` + `UNIQUE`; `users.id` also gains a `gen_random_uuid()` default so new profiles get a
-locally generated key.
+login's `sub` lands in a new `users.identity_sub` column (text, unique) rather than in the primary key: at least seven tables reference `users.id` with no `ON UPDATE CASCADE`, so re-pointing the key would mean an FK-cascading rewrite across all of them. Migration `0024` adds the column nullable, backfills `identity_sub = id::text` (existing rows' `id` already is the Hub user id), then applies `NOT NULL` + `UNIQUE`; `users.id` gains a `gen_random_uuid()` default and is otherwise untouched.
 
-Because the backfilled `identity_sub` is a Hub id and can never match a real login `sub`, identity
-resolution reconciles on email: look up by `identity_sub`, fall back to `email`, and on an email
-match update that row's `identity_sub` in place rather than creating a second row. Without it the
-owner's first real login would look like a brand-new user and silently orphan every row in the
-FK-referencing child tables — so this ships with the conversion, not as a follow-up. Resolution
-happens once per request in `IdentityGuard`, which is the only place a `sub` is translated into a
-`users.id`; every controller reads `identity.userId` and never sees a `sub`. Routes that legitimately
-run before a profile row exists (the onboarding create, and the lookup that decides whether
-onboarding is needed) opt out with `@ProfileOptional()`; everywhere else an unresolvable identity is
-rejected.
+The backfilled `identity_sub` is a Hub id no real `sub` can match, so resolution reconciles on email: look up by `identity_sub`, fall back to `email`, and on an email match update that row's `identity_sub` in place. Without it the owner's first login would look like a new user and silently orphan every FK-referencing child row, so it ships with the conversion rather than after it. Resolution runs once per request in `IdentityGuard`, the only place a `sub` becomes a `users.id`; controllers read `identity.userId`. The onboarding create and the lookup deciding whether onboarding is needed opt out with `@ProfileOptional()`; elsewhere an unresolvable identity is rejected. Sentry reports the `sub` on both sides of the stack so events correlate to one user (a `sub` is a UUID, so ADR-006 is unaffected).
 
-ADR-007 dropped sign-out because fitness had no session of its own to clear and clearing the shared
-Hub cookie would have contradicted ADR-001. Both reasons are gone, so the account chip in the header
-now has a sign-out control. It clears only this app's own host-only cookie — login's IdP session is
-untouched, so it signs the user out of fitness, not of every project.
+The header's account chip gains a sign-out control, clearing only this app's own cookie — login's IdP session is untouched, so it signs the user out of fitness, not of every project.
+
+Env: added `OIDC_ISSUER`, `OIDC_CLIENT_SECRET`; dropped `API_URL`, `PROJECT_SLUG`, `COOKIE_DOMAIN` and the `DEV_BYPASS_AUTH`/`DEV_USER_ID`/`DEV_USER_EMAIL` bypass. `HUB_URL` takes over `API_URL`'s one non-auth use, the nav rail's link to the hub.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

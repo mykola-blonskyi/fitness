@@ -50,9 +50,9 @@ export class IdentityGuard implements CanActivate {
 
     const identity: ResolvedIdentity = { ...parsed, userId: user?.id ?? null };
     (req as Request & { identity: ResolvedIdentity }).identity = identity;
-    // Only a UUID, never email - ADR-006, this app handles real health
-    // data and Sentry is a third-party service.
-    Sentry.setUser({ id: identity.userId ?? identity.sub });
+    // The sub, not userId, so backend and frontend events correlate to one
+    // Sentry user. Never email - ADR-006, this app handles real health data.
+    Sentry.setUser({ id: identity.sub });
     return true;
   }
 }

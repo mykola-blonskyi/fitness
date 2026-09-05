@@ -73,13 +73,15 @@ describe('IdentityGuard', () => {
     });
   });
 
-  it('reports only the local user id to Sentry, never the email', async () => {
+  // The sub, not the resolved userId, so backend and frontend events
+  // correlate to one Sentry user.
+  it('reports the sub to Sentry, never the email', async () => {
     findByIdentity.mockResolvedValue({ id: 'local-1' });
     const { context } = buildContext(validHeaders);
 
     await guard.canActivate(context);
 
-    expect(Sentry.setUser).toHaveBeenCalledWith({ id: 'local-1' });
+    expect(Sentry.setUser).toHaveBeenCalledWith({ id: 'sub-1' });
   });
 
   it('rejects an identity with no profile row on a normal route', async () => {

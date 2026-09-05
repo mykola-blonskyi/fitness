@@ -1,16 +1,15 @@
-// The trusted headers carry login.blonskyi.dev's OIDC `sub`, which is not
-// this app's users.id (ADR-018).
-export interface RequestIdentity {
+// The trusted headers carry login's OIDC `sub`, which is not this app's
+// users.id (ADR-018). IdentityGuard resolves one into the other, and only
+// @ProfileOptional() routes can see a null userId.
+export interface IdentityHeaders {
   sub: string;
   email: string;
 }
 
-// What IdentityGuard attaches. userId is null only on @ProfileOptional()
-// routes, where the profile row legitimately doesn't exist yet.
-export interface ResolvedIdentity extends RequestIdentity {
+export interface ResolvedIdentity extends IdentityHeaders {
   userId: string | null;
 }
 
-export interface Identity extends RequestIdentity {
+export interface Identity extends IdentityHeaders {
   userId: string;
 }

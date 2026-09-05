@@ -3,14 +3,13 @@ import { jwtCallback } from '@features/auth/lib/jwt-callback';
 import {
   SESSION_COOKIE_NAME,
   SESSION_COOKIE_SECURE,
-} from '@features/auth/lib/session-cookie';
+} from '@libs/session-cookie';
 import { requireEnv } from '@libs/require-env';
 
 const OIDC_ISSUER = requireEnv('OIDC_ISSUER');
 const OIDC_CLIENT_SECRET = requireEnv('OIDC_CLIENT_SECRET');
 
-// No database adapter: NestJS owns the database (ADR-001), so there is no
-// Auth.js-managed table for it to write to.
+// No database adapter: NestJS owns the database (ADR-001).
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
@@ -22,8 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: 'fitness',
       clientSecret: OIDC_CLIENT_SECRET,
       checks: ['pkce', 'state'],
-      // Maps the ID token's standard claims onto `user` for email/name,
-      // but not for the identity itself — see jwt-callback.ts.
+      // Supplies email/name only; the identity comes from jwt-callback.ts.
       profile(profile) {
         return {
           id: profile.sub as string,
@@ -36,17 +34,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   session: {
     strategy: 'jwt',
-    // 24h, matching login's own IdP session and refresh-token TTLs. True
-    // per-request revocation would need login's RFC 7662 introspection
-    // endpoint (opt-in per client) - deferred, not enabled here.
+    // Matches login's own IdP session/refresh TTLs; true per-request
+    // revocation would need its opt-in RFC 7662 introspection endpoint.
     maxAge: 60 * 60 * 24,
   },
   cookies: {
     sessionToken: {
-      // Pinned explicitly rather than left to Auth.js's automatic
-      // `__Secure-` prefixing, whose protocol detection is unreliable
-      // behind Coolify/Traefik. No `domain` — host-only, never shared
-      // with any other *.blonskyi.dev app.
+      // Pinned, not left to Auth.js's `__Secure-` prefixing, whose
+      // protocol detection is unreliable behind Coolify/Traefik. The
+      // absent `domain` is deliberate: host-only, never cross-subdomain.
       name: SESSION_COOKIE_NAME,
       options: {
         httpOnly: true,

@@ -23,12 +23,8 @@ export class UsersService {
     return user ? toUserResponse(user) : null;
   }
 
-  // Resolves an identity from login.blonskyi.dev to this app's own user
-  // row. The email fallback is what carries a pre-existing profile across
-  // the conversion: rows migrated from the Hub carry a backfilled
-  // identity_sub that will never match a real login `sub`, and without
-  // this they'd silently look like a brand-new user and orphan every
-  // FK-referencing row they own (ADR-018).
+  // The email fallback carries pre-conversion rows over: their backfilled
+  // identity_sub is a Hub id that no real login `sub` can match (ADR-018).
   async findByIdentity(
     sub: string,
     email: string,

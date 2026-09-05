@@ -6,12 +6,9 @@ declare module 'next-auth/jwt' {
   }
 }
 
-// Split out from auth.ts so it stays testable without NextAuth()'s
-// module-scope initialization. Reads the identity from `profile.sub`, not
-// `user.id`: with no database adapter Auth.js discards the id returned by
-// profile() and assigns a fresh random one on every sign-in (ADR-018).
-// Kept off the standard `token.sub`, which Auth.js writes that random id
-// into itself.
+// Never read the identity from `user.id`: with no database adapter Auth.js
+// discards profile()'s id and substitutes a fresh random one per sign-in,
+// which it also writes into the standard `token.sub` (ADR-018).
 export function jwtCallback({
   token,
   profile,

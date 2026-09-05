@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { OfflineIndicator } from '@shared/ui/components/OfflineIndicator';
 import { LanguageSwitcher } from '@shared/ui/components/LanguageSwitcher';
 import { useActiveNavKey } from '@shared/ui/shell/NavLink';
-import { SignOutButton } from '@features/auth';
+import { SignOutButton } from '@shared/ui/components/SignOutButton';
 
 interface TopBarProps {
   identity: { userId: string; name: string; email: string };
