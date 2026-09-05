@@ -40,8 +40,7 @@ describe('IdentityGuard', () => {
   let reflector: Reflector;
   let guard: IdentityGuard;
 
-  // Public and profile-optional are separate metadata keys, so the mock
-  // answers per key rather than returning one value for both.
+  // Public and profile-optional are separate metadata keys.
   function metadata(flags: { public?: boolean; profileOptional?: boolean }) {
     getAllAndOverride.mockImplementation((key: string) =>
       key === IS_PUBLIC_KEY ? !!flags.public : !!flags.profileOptional,
@@ -73,8 +72,6 @@ describe('IdentityGuard', () => {
     });
   });
 
-  // The sub, not the resolved userId, so backend and frontend events
-  // correlate to one Sentry user.
   it('reports the sub to Sentry, never the email', async () => {
     findByIdentity.mockResolvedValue({ id: 'local-1' });
     const { context } = buildContext(validHeaders);

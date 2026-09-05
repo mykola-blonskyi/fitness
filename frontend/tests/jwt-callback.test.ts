@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { JWT } from 'next-auth/jwt';
 import { jwtCallback } from '@features/auth/lib/jwt-callback';
 
-// Guards ADR-018's one silent-corruption risk: without a database adapter
-// Auth.js hands `user.id`/`token.sub` a fresh random value per sign-in, so
-// the identity must come from the provider's own claims.
+// See jwt-callback.ts for why this can't read user.id/token.sub.
 describe('jwtCallback', () => {
   it('takes the identity from profile.sub', () => {
     const token = jwtCallback({

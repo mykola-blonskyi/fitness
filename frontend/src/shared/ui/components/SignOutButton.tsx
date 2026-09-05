@@ -8,7 +8,19 @@ import { useCsrfToken } from '@libs/use-csrf-token';
 // (ADR-018).
 export function SignOutButton() {
   const t = useTranslations('SignIn');
-  const { csrfToken } = useCsrfToken();
+  const { csrfToken, failed, reload } = useCsrfToken();
+
+  if (failed) {
+    return (
+      <button
+        type="button"
+        onClick={reload}
+        className="chip cursor-pointer text-ink transition-colors hover:bg-hover"
+      >
+        {t('retry')}
+      </button>
+    );
+  }
 
   return (
     <form method="POST" action="/api/auth/signout">

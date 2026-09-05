@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -36,8 +36,10 @@ export class UsersService {
       return toUserResponse(bySub);
     }
 
+    // Case-insensitive: login's email claim casing isn't guaranteed to match
+    // whatever case a pre-conversion row happened to be stored in.
     const byEmail = await this.db.query.users.findFirst({
-      where: eq(schema.users.email, email),
+      where: eq(sql`lower(${schema.users.email})`, email.toLowerCase()),
     });
     if (!byEmail) {
       return null;
@@ -45,7 +47,7 @@ export class UsersService {
 
     const [reconciled] = await this.db
       .update(schema.users)
-      .set({ identitySub: sub, updatedAt: new Date() })
+      .set({ identitySub: sub, email, updatedAt: new Date() })
       .where(eq(schema.users.id, byEmail.id))
       .returning();
 
