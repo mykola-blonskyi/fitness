@@ -28,6 +28,9 @@ const MACRO_FIELDS = [
 export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
   const t = useTranslations('Food.createForm');
   const tv = useTranslations('Validation');
+  const tCategories = useTranslations('FoodCategories');
+  const tSubcategories = useTranslations('FoodSubcategories');
+  const tRoles = useTranslations('FoodRoles');
   const schema = useMemo(() => createFoodItemSchema(tv), [tv]);
   const {
     register,
@@ -72,7 +75,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
           <option value="">{t('selectCategoryPlaceholder')}</option>
           {taxonomy.categories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.name}
+              {tCategories(category.name)}
             </option>
           ))}
         </select>
@@ -92,7 +95,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
           <option value="">{t('selectSubcategoryPlaceholder')}</option>
           {subcategories.map((subcategory) => (
             <option key={subcategory.id} value={subcategory.id}>
-              {subcategory.name}
+              {tSubcategories(subcategory.name)}
             </option>
           ))}
         </select>
@@ -107,7 +110,7 @@ export function CreateFoodItemForm({ taxonomy }: { taxonomy: FoodTaxonomy }) {
           <option value="">{t('selectRolePlaceholder')}</option>
           {taxonomy.roles.map((role) => (
             <option key={role.id} value={role.id}>
-              {role.name}
+              {tRoles(role.name)}
             </option>
           ))}
         </select>

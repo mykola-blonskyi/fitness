@@ -162,7 +162,11 @@ Why: avoids maintaining a recurring sync job and unattended auto-categorization 
 
 Catalog browse endpoints (Exercise, Food Item) resolve each item's display name against the caller's own `users.locale` value — read server-side from the authenticated identity, never a `locale` value the client passes in. The rule extends to every read path that renders a catalog name inside another entity: Diet items and Food Preference targets. A translation row missing for that locale falls back to the item's base English `name`. Name search matches either the base English name or the translated one, so a user can type what's on screen.
 
-Why: the stored preference is the only locale available to read paths with no route context, and resolving it server-side keeps a client-supplied value from choosing which content is served. The route locale (next-intl's segment) stays a presentation concern for UI strings only — the two are deliberately independent, so changing the language in the top-bar switcher does not re-translate catalog names.
+Both language controls — the top-bar switcher and Settings → Profile's Language field — write `users.locale` and move the route segment together, so the stored preference and the displayed UI language can't diverge.
+
+Food taxonomy names (category, subcategory, role) are the exception: they have no translation table, so their labels live in `frontend/messages/*.json` under `FoodCategories`/`FoodSubcategories`/`FoodRoles`, keyed by the seeded name — the same arrangement as `ExerciseCategories`.
+
+Why: the stored preference is the only locale available to read paths with no route context, and resolving it server-side keeps a client-supplied value from choosing which content is served.
 
 ---
 

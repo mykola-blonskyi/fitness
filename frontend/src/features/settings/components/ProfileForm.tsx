@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import {
   userProfileSchema,
   type UserProfileInput,
@@ -16,6 +17,9 @@ import { updateProfile } from '@features/settings/actions';
 export function ProfileForm({ profile }: { profile: UserProfile }) {
   const [saved, setSaved] = useState(false);
   const t = useTranslations('Settings.profileForm');
+  const locale = useLocale();
+  const pathname = usePathname();
+  const router = useRouter();
   const tv = useTranslations('Validation');
   const schema = useMemo(() => userProfileSchema(tv), [tv]);
   const {
@@ -40,7 +44,13 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
   async function onSubmit(input: UserProfileInput) {
     setSaved(false);
     const result = await updateProfile(input);
-    if (!applyFormActionError(setError, result)) setSaved(true);
+    if (applyFormActionError(setError, result)) return;
+    setSaved(true);
+    // Same pairing the language switcher maintains from the other side:
+    // the stored preference and the route segment must not diverge.
+    if (input.locale !== locale) {
+      router.replace(pathname, { locale: input.locale });
+    }
   }
 
   return (

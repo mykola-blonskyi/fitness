@@ -36,7 +36,9 @@ export async function updateProfile(
         method: 'PATCH',
         body: JSON.stringify(parsed),
       });
-      revalidatePath('/[locale]/settings/profile', 'page');
+      // Layout-wide, not just this page: the profile carries the locale
+      // that catalog display names resolve against.
+      revalidatePath('/', 'layout');
       return { success: true };
     },
   });

@@ -12,7 +12,10 @@ export const FoodSearchForm = async ({
   category,
   search,
 }: FoodSearchFormProps) => {
-  const t = await getTranslations('Food.searchForm');
+  const [t, tCategories] = await Promise.all([
+    getTranslations('Food.searchForm'),
+    getTranslations('FoodCategories'),
+  ]);
   return (
     <form className="flex flex-wrap items-end gap-2">
       <div className="flex flex-col gap-1">
@@ -28,7 +31,7 @@ export const FoodSearchForm = async ({
           <option value="">{t('allCategories')}</option>
           {taxonomy.categories.map((c) => (
             <option key={c.id} value={c.name}>
-              {c.name}
+              {tCategories(c.name)}
             </option>
           ))}
         </select>

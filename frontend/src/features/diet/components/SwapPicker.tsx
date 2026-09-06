@@ -20,6 +20,7 @@ export function SwapPicker({
   onDone: () => void;
 }) {
   const t = useTranslations('Diet');
+  const tRoles = useTranslations('FoodRoles');
   const [search, setSearch] = useState('');
   const [candidates, setCandidates] = useState<FoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +67,7 @@ export function SwapPicker({
   return (
     <div className="flex w-full flex-col gap-2 rounded border border-line p-3 sm:w-72">
       <label className="sr-only" htmlFor={`swap-search-${itemId}`}>
-        {t('swapPicker.searchLabel', { role: role.replace(/_/g, ' ') })}
+        {t('swapPicker.searchLabel', { role: tRoles(role) })}
       </label>
       <input
         id={`swap-search-${itemId}`}
