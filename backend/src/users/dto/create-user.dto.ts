@@ -10,6 +10,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { LOCALES, type Locale } from '../../shared/locale';
 import { WEIGHT_UNITS, type WeightUnit } from '../../shared/weight-unit';
 
 const GENDERS = ['male', 'female'] as const;
@@ -21,10 +22,6 @@ const ACTIVITY_LEVELS = [
   'active',
   'very_active',
 ] as const;
-// Matches list-food-items.dto.ts's LOCALES - the only locales a
-// translation row could ever exist for (see schema.ts's users.locale
-// comment).
-const LOCALES = ['en', 'uk', 'ru', 'es'] as const;
 
 export class CreateUserDto {
   @IsString()
@@ -65,7 +62,7 @@ export class CreateUserDto {
   // working unchanged.
   @IsOptional()
   @IsIn(LOCALES)
-  locale?: (typeof LOCALES)[number];
+  locale?: Locale;
 
   // Optional - the schema default ('kg') applies when omitted.
   @IsOptional()

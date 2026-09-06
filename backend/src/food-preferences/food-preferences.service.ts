@@ -9,6 +9,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import { resolveUserLocale } from '../shared/locale';
 import type { CreateFoodPreferenceDto } from './dto/create-food-preference.dto';
 import {
   toFoodPreferenceResponse,
@@ -31,6 +32,7 @@ export class FoodPreferencesService {
   // common supertype), so this is a switch rather than a lookup object -
   // that would need an unsound cast to type-check.
   private async fetchTargetNames(
+    userId: string,
     targetType: FoodPreferenceTargetType,
     ids: string[],
   ): Promise<Map<string, string>> {
@@ -65,14 +67,30 @@ export class FoodPreferencesService {
         return new Map(rows.map((row) => [row.id, row.name]));
       }
       case 'food_item': {
+        // The only target type with per-locale names - the three taxonomy
+        // tables above have no translation table at all.
+        const locale = await resolveUserLocale(this.db, userId);
         const rows = await this.db
           .select({
             id: schema.foodCalories.id,
             name: schema.foodCalories.name,
+            translatedName: schema.foodCalorieTranslations.name,
           })
           .from(schema.foodCalories)
+          .leftJoin(
+            schema.foodCalorieTranslations,
+            and(
+              eq(
+                schema.foodCalorieTranslations.foodCalorieId,
+                schema.foodCalories.id,
+              ),
+              eq(schema.foodCalorieTranslations.locale, locale),
+            ),
+          )
           .where(inArray(schema.foodCalories.id, ids));
-        return new Map(rows.map((row) => [row.id, row.name]));
+        return new Map(
+          rows.map((row) => [row.id, row.translatedName ?? row.name]),
+        );
       }
     }
   }
@@ -148,7 +166,7 @@ export class FoodPreferencesService {
         .map((row) => row.targetId);
       namesByTargetType.set(
         targetType,
-        await this.fetchTargetNames(targetType, ids),
+        await this.fetchTargetNames(userId, targetType, ids),
       );
     }
 
@@ -164,7 +182,7 @@ export class FoodPreferencesService {
     userId: string,
     dto: CreateFoodPreferenceDto,
   ): Promise<FoodPreferenceResponse> {
-    const targetNames = await this.fetchTargetNames(dto.targetType, [
+    const targetNames = await this.fetchTargetNames(userId, dto.targetType, [
       dto.targetId,
     ]);
     const targetName = targetNames.get(dto.targetId);
@@ -247,7 +265,9 @@ export class FoodPreferencesService {
       .where(eq(schema.foodPreferences.id, id));
 
     const targetName = (
-      await this.fetchTargetNames(existing.targetType, [existing.targetId])
+      await this.fetchTargetNames(userId, existing.targetType, [
+        existing.targetId,
+      ])
     ).get(existing.targetId);
     return toFoodPreferenceResponse(existing, targetName ?? null);
   }

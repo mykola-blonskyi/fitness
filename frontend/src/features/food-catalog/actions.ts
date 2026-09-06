@@ -40,13 +40,11 @@ export type CreateFoodItemFormState = FormActionError<CreateFoodItemInput>;
 export async function listFoodItems(params: {
   category?: string;
   search?: string;
-  locale?: string;
   cursor?: string;
 }): Promise<CursorPage<FoodItem>> {
   const query = new URLSearchParams();
   if (params.category) query.set('category', params.category);
   if (params.search) query.set('search', params.search);
-  if (params.locale) query.set('locale', params.locale);
   if (params.cursor) query.set('cursor', params.cursor);
   return apiFetch<CursorPage<FoodItem>>(`/food-items?${query.toString()}`);
 }

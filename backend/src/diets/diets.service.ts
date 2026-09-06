@@ -14,6 +14,7 @@ import { DietPreferencesService } from '../diet-preferences/diet-preferences.ser
 import type { DietType } from '../diet-preferences/diet-preference.types';
 import { FoodPreferencesService } from '../food-preferences/food-preferences.service';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
+import { resolveUserLocale } from '../shared/locale';
 import { UsersService } from '../users/users.service';
 import {
   categoryNamesExcludedBy,
@@ -567,7 +568,9 @@ export class DietsService {
       'code' | 'name'
     >,
   ): Promise<DietResponse> {
-    const itemRows: DietItemWithFoodRow[] = await this.db
+    const locale = await resolveUserLocale(this.db, dietRow.userId);
+
+    const rows = await this.db
       .select({
         id: schema.dietItems.id,
         mealPosition: schema.dietItems.mealPosition,
@@ -575,6 +578,7 @@ export class DietsService {
         weightGrams: schema.dietItems.weightGrams,
         foodItemId: schema.foodCalories.id,
         foodItemName: schema.foodCalories.name,
+        translatedName: schema.foodCalorieTranslations.name,
         foodItemImageUrl: schema.foodCalories.imageUrl,
         foodItemRole: schema.foodRoles.name,
         caloriesPer100g: schema.foodCalories.caloriesPer100g,
@@ -591,8 +595,25 @@ export class DietsService {
         schema.foodRoles,
         eq(schema.foodRoles.id, schema.foodCalories.roleId),
       )
+      .leftJoin(
+        schema.foodCalorieTranslations,
+        and(
+          eq(
+            schema.foodCalorieTranslations.foodCalorieId,
+            schema.foodCalories.id,
+          ),
+          eq(schema.foodCalorieTranslations.locale, locale),
+        ),
+      )
       .where(eq(schema.dietItems.dietId, dietRow.id))
       .orderBy(schema.dietItems.mealPosition, schema.dietItems.orderIndex);
+
+    const itemRows: DietItemWithFoodRow[] = rows.map(
+      ({ translatedName, ...row }) => ({
+        ...row,
+        foodItemName: translatedName ?? row.foodItemName,
+      }),
+    );
 
     const orderRows = await this.db
       .select({

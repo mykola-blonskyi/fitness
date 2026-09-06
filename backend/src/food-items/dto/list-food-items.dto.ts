@@ -1,9 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-
-// Matches DEEPL_TARGET_LOCALES in scripts/seed-food-catalog.ts plus the
-// base 'en' - the only locales a translation row could ever exist for.
-const LOCALES = ['en', 'uk', 'ru', 'es'] as const;
+import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class ListFoodItemsDto {
   @IsOptional()
@@ -17,10 +13,6 @@ export class ListFoodItemsDto {
   @IsOptional()
   @IsString()
   role?: string;
-
-  @IsOptional()
-  @IsIn(LOCALES)
-  locale?: (typeof LOCALES)[number];
 
   @IsOptional()
   @IsString()

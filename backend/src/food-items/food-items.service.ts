@@ -5,13 +5,14 @@ import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { decodeCursor, encodeCursor } from '../admin/cursor-pagination';
 import type { CreateFoodItemDto } from './dto/create-food-item.dto';
+import type { ListFoodItemsDto } from './dto/list-food-items.dto';
+import { resolveUserLocale } from '../shared/locale';
 import {
   toFoodItemResponse,
   type FoodItemResponse,
   type TaxonomyResponse,
 } from './food-item.mapper';
 
-const DEFAULT_LOCALE = 'en';
 const DEFAULT_LIMIT = 20;
 
 export interface FoodItemPage {
@@ -42,24 +43,17 @@ export class FoodItemsService {
   constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
 
   // Browse by category and/or search by name, with each item's display
-  // name resolved to the requested locale - falling back to the English
-  // base name when no translation row exists yet (untranslated or the
-  // locale itself is 'en', which never gets its own translation row -
+  // name resolved to the caller's stored locale - falling back to the
+  // English base name when no translation row exists yet (untranslated or
+  // the locale itself is 'en', which never gets its own translation row -
   // see knowledge/domain-model.md). Verified-only, cursor-paginated on
   // (createdAt, id) - same keyset machinery as AdminExercisesService.list().
   //
   // Newest-first (unlike the admin queue's oldest-first FIFO): a food
   // item created via the form below then lands on page 1 right away,
   // instead of at the tail of the full scroll.
-  async list(params: {
-    category?: string;
-    search?: string;
-    role?: string;
-    locale?: string;
-    cursor?: string;
-    limit?: number;
-  }): Promise<FoodItemPage> {
-    const locale = params.locale ?? DEFAULT_LOCALE;
+  async list(userId: string, params: ListFoodItemsDto): Promise<FoodItemPage> {
+    const locale = await resolveUserLocale(this.db, userId);
     const limit = params.limit ?? DEFAULT_LIMIT;
     const cursor = params.cursor ? decodeCursor(params.cursor) : null;
     if (params.cursor && !cursor) {
@@ -102,7 +96,13 @@ export class FoodItemsService {
             : undefined,
           params.role ? eq(schema.foodRoles.name, params.role) : undefined,
           params.search
-            ? ilike(schema.foodCalories.name, `%${params.search}%`)
+            ? or(
+                ilike(schema.foodCalories.name, `%${params.search}%`),
+                ilike(
+                  schema.foodCalorieTranslations.name,
+                  `%${params.search}%`,
+                ),
+              )
             : undefined,
           cursor
             ? or(
