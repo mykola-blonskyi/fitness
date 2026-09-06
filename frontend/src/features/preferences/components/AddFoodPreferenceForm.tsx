@@ -21,6 +21,9 @@ export function AddFoodPreferenceForm({
 }) {
   const t = useTranslations('Preferences.addFoodForm');
   const tv = useTranslations('Validation');
+  const tCategories = useTranslations('FoodCategories');
+  const tSubcategories = useTranslations('FoodSubcategories');
+  const tRoles = useTranslations('FoodRoles');
   const schema = useMemo(() => createFoodPreferenceSchema(tv), [tv]);
   const {
     register,
@@ -45,7 +48,7 @@ export function AddFoodPreferenceForm({
   const subcategoryOptions = taxonomy.categories.flatMap((category) =>
     category.subcategories.map((subcategory) => ({
       id: subcategory.id,
-      label: `${category.name} — ${subcategory.name}`,
+      label: `${tCategories(category.name)} — ${tSubcategories(subcategory.name)}`,
     })),
   );
 
@@ -108,7 +111,7 @@ export function AddFoodPreferenceForm({
             <option value="">{t('selectCategoryPlaceholder')}</option>
             {taxonomy.categories.map((category) => (
               <option key={category.id} value={category.id}>
-                {category.name}
+                {tCategories(category.name)}
               </option>
             ))}
           </select>
@@ -142,7 +145,7 @@ export function AddFoodPreferenceForm({
             <option value="">{t('selectRolePlaceholder')}</option>
             {taxonomy.roles.map((role) => (
               <option key={role.id} value={role.id}>
-                {role.name}
+                {tRoles(role.name)}
               </option>
             ))}
           </select>

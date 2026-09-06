@@ -21,6 +21,9 @@ export function AdminFoodItemQueue({
   initialCursor: string | null;
 }) {
   const t = useTranslations('Admin.queue');
+  const tCategories = useTranslations('FoodCategories');
+  const tSubcategories = useTranslations('FoodSubcategories');
+  const tRoles = useTranslations('FoodRoles');
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -132,8 +135,9 @@ export function AdminFoodItemQueue({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{item.name}</p>
                 <p className="truncate text-xs text-muted">
-                  {item.category} &middot; {item.subcategory} &middot;{' '}
-                  {item.role}
+                  {tCategories(item.category)} &middot;{' '}
+                  {tSubcategories(item.subcategory)} &middot;{' '}
+                  {tRoles(item.role)}
                 </p>
                 <p className="truncate text-xs text-muted">
                   {Math.round(item.caloriesPer100g)} kcal &middot; P{' '}

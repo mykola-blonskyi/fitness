@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import type { FoodPreference } from '@shared/types/preferences';
+import { foodPreferenceTargetLabel } from '@libs/food-taxonomy-label';
 import { removeFoodPreference } from '@features/preferences/actions';
 
 interface FavoriteFoodListProps {
@@ -10,6 +11,7 @@ interface FavoriteFoodListProps {
 
 export const FavoriteFoodList = ({ preferences }: FavoriteFoodListProps) => {
   const t = useTranslations('Preferences.favoriteList');
+  const tTaxonomy = useTranslations();
   return (
     <ul className="flex flex-col gap-2">
       {preferences.map((preference) => (
@@ -18,7 +20,13 @@ export const FavoriteFoodList = ({ preferences }: FavoriteFoodListProps) => {
           className="flex items-center justify-between rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5"
         >
           <span className="text-sm">
-            {preference.targetName ?? t('unknown')}
+            {preference.targetName === null
+              ? t('unknown')
+              : foodPreferenceTargetLabel(
+                  preference.targetType,
+                  preference.targetName,
+                  tTaxonomy,
+                )}
           </span>
           <form action={removeFoodPreference.bind(null, preference.id)}>
             <button
