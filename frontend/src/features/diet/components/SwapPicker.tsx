@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useParams } from 'next/navigation';
 import { FieldError } from '@shared/ui/components/FieldError';
 import { listSwapCandidates, swapDietItem } from '@features/diet/actions';
 import type { FoodItem } from '@features/food-catalog/actions';
@@ -21,7 +20,6 @@ export function SwapPicker({
   onDone: () => void;
 }) {
   const t = useTranslations('Diet');
-  const { locale } = useParams<{ locale: string }>();
   const [search, setSearch] = useState('');
   const [candidates, setCandidates] = useState<FoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,11 +31,7 @@ export function SwapPicker({
     const handle = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const items = await listSwapCandidates(
-          role,
-          search || undefined,
-          locale,
-        );
+        const items = await listSwapCandidates(role, search || undefined);
         if (!cancelled) {
           setCandidates(items.filter((item) => item.id !== currentFoodItemId));
         }
@@ -51,7 +45,7 @@ export function SwapPicker({
       cancelled = true;
       clearTimeout(handle);
     };
-  }, [role, search, currentFoodItemId, locale, t]);
+  }, [role, search, currentFoodItemId, t]);
 
   async function onSelect(foodItemId: string) {
     setError(undefined);

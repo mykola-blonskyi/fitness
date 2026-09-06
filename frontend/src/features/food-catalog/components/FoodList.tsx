@@ -15,7 +15,6 @@ interface FoodListProps {
   nextCursor: string | null;
   category?: string;
   search?: string;
-  locale: string;
   profile: UserProfile;
 }
 
@@ -24,7 +23,6 @@ export const FoodList = ({
   nextCursor: initialCursor,
   category,
   search,
-  locale,
   profile,
 }: FoodListProps) => {
   const t = useTranslations('Food.list');
@@ -47,7 +45,6 @@ export const FoodList = ({
     const page = await listFoodItems({
       category,
       search,
-      locale,
       cursor: after,
     });
     setItems((prev) => [...prev, ...page.items]);

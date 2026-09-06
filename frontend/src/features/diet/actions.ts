@@ -172,7 +172,6 @@ export async function moveDietMeal(
 export async function listSwapCandidates(
   role: string,
   search?: string,
-  locale?: string,
 ): Promise<FoodItem[]> {
   return Sentry.withServerActionInstrumentation(
     'listSwapCandidates',
@@ -180,7 +179,6 @@ export async function listSwapCandidates(
     async () => {
       const query = new URLSearchParams({ role });
       if (search) query.set('search', search);
-      if (locale) query.set('locale', locale);
       const page = await apiFetch<CursorPage<FoodItem>>(
         `/food-items?${query.toString()}`,
       );

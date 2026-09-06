@@ -14,17 +14,14 @@ import { apiFetch } from '@libs/api-client';
 // Server Component with the new searchParams (see AGENTS.md: searchParams
 // is a promise in this Next.js version, must be awaited).
 export default async function FoodCatalogPage({
-  params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }>;
   searchParams: Promise<{ category?: string; search?: string }>;
 }) {
-  const { locale } = await params;
   const { category, search } = await searchParams;
   const t = await getTranslations('Food');
 
-  const query = new URLSearchParams({ locale });
+  const query = new URLSearchParams();
   if (category) query.set('category', category);
   if (search) query.set('search', search);
 
@@ -48,7 +45,6 @@ export default async function FoodCatalogPage({
         nextCursor={firstPage.nextCursor}
         category={category}
         search={search}
-        locale={locale}
         profile={profile}
       />
 

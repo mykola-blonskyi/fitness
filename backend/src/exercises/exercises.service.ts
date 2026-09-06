@@ -6,9 +6,9 @@ import * as schema from '../db/schema';
 import { decodeCursor, encodeCursor } from '../admin/cursor-pagination';
 import type { CreateExerciseDto } from './dto/create-exercise.dto';
 import type { ListExercisesDto } from './dto/list-exercises.dto';
+import { resolveUserLocale } from '../shared/locale';
 import { toExerciseResponse, type ExerciseResponse } from './exercise.mapper';
 
-const DEFAULT_LOCALE = 'en';
 const DEFAULT_LIMIT = 20;
 
 export interface ExercisePage {
@@ -31,21 +31,11 @@ const exerciseColumns = {
 export class ExercisesService {
   constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
 
-  // Falls back to 'en' if the profile row is somehow missing - shouldn't
-  // happen behind the profile-completion gate, but list() shouldn't 500 over it.
-  private async resolveLocale(userId: string): Promise<string> {
-    const user = await this.db.query.users.findFirst({
-      where: eq(schema.users.id, userId),
-      columns: { locale: true },
-    });
-    return user?.locale ?? DEFAULT_LOCALE;
-  }
-
   // Search matches either the base English name or the joined translated
   // name - a non-English user typing what they see on screen should still
   // find it.
   async list(userId: string, params: ListExercisesDto): Promise<ExercisePage> {
-    const locale = await this.resolveLocale(userId);
+    const locale = await resolveUserLocale(this.db, userId);
     const limit = params.limit ?? DEFAULT_LIMIT;
     const cursor = params.cursor ? decodeCursor(params.cursor) : null;
     if (params.cursor && !cursor) {
