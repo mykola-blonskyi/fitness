@@ -56,13 +56,15 @@ Why: no extra state (`is_current` flag) to keep in sync; regenerating is just in
 
 ---
 
-## Diet menu generation is a greedy heuristic
+## Diet menu generation fits portions to the macro targets
 
-Meals are identified purely by position (`meal_position`, 1-based, "Meal 1".."Meal N") — there is no meal-type category. For each meal, pick one Food Item per required Food Role, then scale portion size (`weight_grams`) to hit that meal's calorie/macro-gram share; each meal's own drift is then corrected so its totals never exceed target.
+Meals are identified purely by position (`meal_position`, 1-based, "Meal 1".."Meal N") — there is no meal-type category. For each meal, one Food Item is picked per required Food Role, then all of that meal's portions are sized together to hit its protein/carb/fat target as closely as possible.
 
-Why: this is a recommendation feature, not a medical prescription — "close enough" is the actual requirement, but never over target.
+Protein is split equally across meals; carbohydrates taper down by position across the carb-eligible meals and fat tapers across all meals (meal 1 gets the largest share). Each meal's calorie budget is what its own macros cost, so meals differ in size rather than each taking `totalCalories / mealCount`. Once `meal_count` is 3 or more, the last meal gets no carb-role food at all; past 3, the last two don't — the carbs those meals would have carried are redistributed across the rest, not dropped. See ADR-016 and ADR-019.
 
-Every meal gets an equal share of the day's calories. Carbohydrate and fat grams taper down linearly by position across the carb-eligible meals (meal 1 gets the largest share); protein fills whatever calories that meal's fixed share doesn't already spend on carbs/fat. Once `meal_count` is 3 or more, the last meal is excluded from the carb taper entirely (no carb-role food, minimal fat); once `meal_count` exceeds 3, the last two meals both are — the carb/fat grams those meals would otherwise have carried are redistributed across the remaining meals' taper rather than dropped. At `meal_count` 1-2 every meal follows the normal taper. See ADR-016.
+The day's calorie target is a hard ceiling: a menu may land under it, never over. Macro grams are fitted two-sided and may land slightly either side of target — an earlier rule capped each macro at its target, which is what left carbs starved whenever a meal's other content pushed calories up. Candidate choice is macro-aware: a food too dilute to carry its role's share in a sensible portion is passed over for a denser one from the same role, and a protein source whose own fat would eat most of the meal's fat budget loses to a leaner sibling when there is one.
+
+Why: this is a recommendation feature, not a medical prescription — but the macro grams are the point of a diet, so "close enough" applies to all four numbers, not to calories alone.
 
 A single-item swap or reroll holds that item's calorie contribution — the replacement's `weight_grams` is rescaled so the day total stays within tolerance. A full regenerate re-runs generation from scratch and does not preserve prior swaps.
 

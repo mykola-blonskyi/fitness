@@ -194,7 +194,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-09-04
 
-Status: Accepted
+Status: Partially superseded by ADR-019 (2026-09-08) — positional naming and the carb-free tail stand; the equal-calorie split, the calorie-residual protein share and the tail's zero fat target do not.
 
 Supersedes ADR-015: `meal_type`/`meal_occurrence` are dropped entirely in favor of a single `diet_items.meal_position` integer (1-based, computed fresh at generation time, never persisted as a category). Generated meals are labeled purely by position ("Meal 1".."Meal N", translated per locale) instead of breakfast/lunch/dinner/snack.
 
@@ -237,5 +237,25 @@ Authentication moves off the Hub's shared `.blonskyi.dev` cookie onto `login.blo
 login's `sub` lands in a new `users.identity_sub` column, not the primary key — `users.id` has no `ON UPDATE CASCADE` from the seven+ tables referencing it, so re-pointing it would mean an FK-cascading rewrite. Migration `0024` adds the column, backfills it to the existing `id` (the Hub's id), then constrains it `NOT NULL UNIQUE`; `id` itself is never touched. Because the backfilled value can never match a real `sub`, `IdentityGuard` (the one place a `sub` becomes a `users.id`) reconciles by `email` (case-insensitively — login's claim casing isn't guaranteed) when the `identity_sub` lookup misses, updating it in place rather than treating the row as new — otherwise the owner's first login would silently orphan every row that FKs to their existing `id`.
 
 Sign-out is added (supersedes ADR-007 — both of its reasons no longer hold once fitness owns its own session); it clears only this app's cookie. Env: added `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`; dropped `API_URL`/`PROJECT_SLUG`/`COOKIE_DOMAIN`/`DEV_BYPASS_AUTH` and friends; `HUB_URL` takes over `API_URL`'s one surviving use, the nav rail's hub link.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-019: Meal targets are macro-priced, and portions are fitted to all three macros at once
+
+Date: 2026-09-08
+
+Status: Accepted
+
+Supersedes ADR-016's equal-calorie split, its calorie-residual protein share, and the tail meal's zero fat target. Positional naming, the linear carb taper and the carb-free tail itself are unchanged.
+
+`mealTargetsForCount` splits protein equally across meals, tapers carbs across the carb-eligible meals and fat across all of them, and prices each meal at what its own macros cost (`P*4 + C*4 + F*9`) rather than giving every meal `totalCalories / mealCount`. Meals therefore differ in size — the front-loaded carb/fat meals are the bigger ones. An equal-calorie split cannot coexist with a steep carb/fat taper at a high protein share: at 310 g protein against 2463 kcal, meal 1's tapered carbs and fat alone cost more than its whole share, so the residual protein clamped to 0 and the meal was arithmetically impossible before generation even started. That impossibility, not the sizing, is what forced the correction pass to gut carbs (−47 g) and leave fat at nearly double target (+26 g).
+
+`greedy-heuristic.ts` picks a candidate per role from those that can carry the meal's share of their own macro within a per-role portion cap (protein 600 g, carbs 500 g, vegetables 400 g, fat 80 g), preferring — for the protein role — one whose incidental fat stays under 70% of the meal's fat budget. Portions are then fitted to the meal's protein/carb/fat target together by bounded coordinate descent on squared error measured in calories, replacing the sequential per-role sizing plus grow/shrink correction passes (FITNESS-64/66) entirely. Fitting all three macros at once is what pays for a protein source's incidental fat out of the fat role instead of overshooting the day.
+
+The calorie target stays a hard ceiling but is now enforced once over the whole day rather than meal by meal, so a meal that needs slightly more than its macros cost can borrow from meals that came in under; the shrink takes what it needs from carb/vegetable/fat items before touching protein. Individual macro grams are no longer capped at target — they are fitted two-sided, and may land a few grams either side. Vegetables keep a 100 g floor per meal since they are the one role with no macro target of their own.
+
+Measured over 300 randomised menus per meal count against realistic catalogue foods: protein lands within ~4 g of target and carbs/fat within ~7 g at meal counts 3-6, against 19-47 g misses before. At meal counts 1-2 an extreme protein target (310 g/day) still falls short — no single portion of one food can carry it — which is accepted rather than solved by allowing multiple items per role.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

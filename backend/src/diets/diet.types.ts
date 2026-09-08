@@ -29,61 +29,58 @@ export interface MealTarget {
   carbEligible: boolean;
 }
 
-// mealCount >= 3 makes the last meal carb-free/low-fat; past 3, the last two
-// are - see ADR-016.
+// mealCount >= 3 makes the last meal carb-free; past 3, the last two are -
+// see ADR-016.
 function tailCountFor(mealCount: number): number {
   if (mealCount > 3) return 2;
   if (mealCount >= 3) return 1;
   return 0;
 }
 
-// Carb/fat taper linearly by position across carb-eligible meals only, so
-// the day's full carb/fat totals land on eligible meals rather than being
-// reduced by the tail's share. Protein fills each meal's remaining calories
-// - clamped at 0, then the whole set rescaled down (never up) if that sum
-// would exceed totals.proteinG, since independent per-meal clamping alone
-// can inflate the day total past it (see ADR-016).
+// Carbs taper linearly by position across the carb-eligible meals only,
+// so the day's full carb target lands on those meals rather than being
+// reduced by the tail's share; fat tapers the same way but across every
+// meal. Protein is split equally - it is the macro a plan is judged on,
+// and deriving it from what a meal's calorie share has left over made
+// early meals arithmetically impossible whenever carb+fat calories
+// already exceeded that share (ADR-019). A meal's calories are therefore
+// what its own macros cost, not a fixed share of the day; they are scaled
+// down (never up) if the rounded macro targets together cost marginally
+// more than the day's calorie target, which stays a hard ceiling.
 export function mealTargetsForCount(
   mealCount: number,
   totals: DietMacroTotals,
 ): MealTarget[] {
   const tailCount = tailCountFor(mealCount);
   const carbEligibleCount = mealCount - tailCount;
-  const taperWeightSum = (carbEligibleCount * (carbEligibleCount + 1)) / 2;
-  const calories = totals.calories / mealCount;
+  const carbTaperSum = (carbEligibleCount * (carbEligibleCount + 1)) / 2;
+  const fatTaperSum = (mealCount * (mealCount + 1)) / 2;
+  const proteinG = totals.proteinG / mealCount;
 
-  const positions = Array.from({ length: mealCount }, (_, i) => {
+  const targets = Array.from({ length: mealCount }, (_, i) => {
     const position = i + 1;
     const carbEligible = position <= carbEligibleCount;
-    const taperWeight = carbEligible ? carbEligibleCount - position + 1 : 0;
     const carbsG = carbEligible
-      ? (totals.carbsG * taperWeight) / taperWeightSum
+      ? (totals.carbsG * (carbEligibleCount - position + 1)) / carbTaperSum
       : 0;
-    const fatG = carbEligible
-      ? (totals.fatG * taperWeight) / taperWeightSum
-      : 0;
-    const rawProteinG = Math.max(
-      0,
-      (calories - carbsG * CARB_KCAL_PER_G - fatG * FAT_KCAL_PER_G) /
-        PROTEIN_KCAL_PER_G,
-    );
-    return { position, carbEligible, carbsG, fatG, rawProteinG };
+    const fatG = (totals.fatG * (mealCount - position + 1)) / fatTaperSum;
+    return {
+      position,
+      calories:
+        proteinG * PROTEIN_KCAL_PER_G +
+        carbsG * CARB_KCAL_PER_G +
+        fatG * FAT_KCAL_PER_G,
+      proteinG,
+      carbsG,
+      fatG,
+      carbEligible,
+    };
   });
 
-  const rawProteinSum = positions.reduce((sum, p) => sum + p.rawProteinG, 0);
-  const proteinScale =
-    rawProteinSum > totals.proteinG && rawProteinSum > 0
-      ? totals.proteinG / rawProteinSum
-      : 1;
-
-  return positions.map((p) => ({
-    position: p.position,
-    calories,
-    proteinG: p.rawProteinG * proteinScale,
-    carbsG: p.carbsG,
-    fatG: p.fatG,
-    carbEligible: p.carbEligible,
-  }));
+  const macroCalories = targets.reduce((sum, t) => sum + t.calories, 0);
+  if (macroCalories <= totals.calories || macroCalories <= 0) return targets;
+  const scale = totals.calories / macroCalories;
+  return targets.map((t) => ({ ...t, calories: t.calories * scale }));
 }
 
 // mealPositions absent from overrides keep their natural ascending

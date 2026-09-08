@@ -95,9 +95,9 @@ describe('generateDietItems', () => {
     expect(foodIdsAt(result.items, 1)).toContain(complexCarb.id);
     expect(foodIdsAt(result.items, 2)).toContain(complexCarb.id);
     expect(foodIdsAt(result.items, 3)).not.toContain(complexCarb.id);
-    // Fat target for the tail meal taper down to zero, so it naturally
-    // rounds below the minimum-gram floor and drops out too.
-    expect(foodIdsAt(result.items, 3)).not.toContain(healthyFat.id);
+    // Only carbs are withheld from the tail - fat tapers across every meal,
+    // so the last one still gets its (smallest) share.
+    expect(foodIdsAt(result.items, 3)).toContain(healthyFat.id);
   });
 
   it('omits carb-role food from the last two meals once mealCount exceeds 3', () => {
@@ -447,20 +447,14 @@ describe('generateDietItems', () => {
       Math.abs(value - target) / target;
     expect(drift(result.totalCalories, 2463)).toBeLessThanOrEqual(0.05);
     expect(drift(result.totalProtein, 310)).toBeLessThanOrEqual(0.05);
-    // Looser than FITNESS-64's target*0.95..target bound on purpose: real
-    // (non-isolated) foods can't fully hit that bound at this protein level
-    // (a lean protein source's own incidental fat alone approaches the
-    // whole fat budget - shrinkMacroToTarget won't touch it, see its own
-    // comment). This documents the improvement (was carbs 102g / fat 95g),
-    // not full convergence with FITNESS-64's stricter, isolated-macro bound.
-    expect(result.totalCarbs).toBeGreaterThanOrEqual(153 * 0.65);
-    expect(result.totalFat).toBeLessThanOrEqual(68 * 1.45);
+    expect(drift(result.totalCarbs, 153)).toBeLessThanOrEqual(0.1);
+    expect(drift(result.totalFat, 68)).toBeLessThanOrEqual(0.1);
   });
 
-  it("regression: shrinkMacroToTarget's extra pass can't reopen the calorie ceiling FITNESS-64 already closed", () => {
-    // 100g of the one candidate exactly hits both the carb and calorie
-    // target at once, so correctMeal's loop is a no-op - only
-    // shrinkMacroToTarget's later pass has anything to do here.
+  it('splits the difference between two macros carried by the same food instead of gutting one of them', () => {
+    // 100g of the one candidate covers the carb target exactly but would
+    // quadruple the fat target - there is no portion that satisfies both,
+    // so the fit lands between them rather than sacrificing carbs outright.
     const carbAndFat: FoodCandidate = {
       id: 'carb-and-fat-1',
       caloriesPer100g: 100,
@@ -478,14 +472,12 @@ describe('generateDietItems', () => {
     });
 
     expect(result.totalCalories).toBeLessThanOrEqual(100);
-    expect(result.totalFat).toBeLessThanOrEqual(5);
+    expect(result.totalCarbs).toBeGreaterThan(0);
+    expect(result.totalCarbs).toBeLessThan(20);
+    expect(result.totalFat).toBeLessThan(20);
   });
 
-  it('shrinks a non-protein item to bring an individually-overshot macro back under its own target, even once calories already match', () => {
-    // The carb item's own incidental fat alone exceeds the fat target, so
-    // remainingMacroGrams zeroes out the dedicated fat role - only the carb
-    // item is left to shrink fat from (accepted, same trade-off the calorie
-    // ceiling already makes).
+  it("drops the fat role when the carb source already carries the meal's fat", () => {
     const fattyCarb: FoodCandidate = {
       id: 'fatty-carb-1',
       caloriesPer100g: 500,
@@ -507,13 +499,13 @@ describe('generateDietItems', () => {
       candidatesByRole: candidates,
     });
 
-    expect(result.totalFat).toBeLessThanOrEqual(5);
+    expect(result.totalCalories).toBeLessThanOrEqual(250);
     expect(result.items.some((item) => item.foodItemId === healthyFat.id)).toBe(
       false,
     );
   });
 
-  it('never shrinks the sole protein item to satisfy a secondary macro ceiling, even when its own incidental fat exceeds a zero fat target', () => {
+  it('keeps the sole protein item even when its own incidental fat exceeds a zero fat target', () => {
     const candidates = new Map([['lean_protein', [leanProtein]]]);
 
     const result = generateDietItems({
@@ -530,52 +522,86 @@ describe('generateDietItems', () => {
     ).toBe(true);
   });
 
-  it('caps how much a single item can grow to close a shortfall, rather than letting it absorb all of it alone', () => {
-    const proteinIsolate: FoodCandidate = {
-      id: 'protein-isolate-3',
-      caloriesPer100g: 100,
-      proteinPer100g: 25,
-      carbsPer100g: 0,
-      fatPer100g: 0,
+  it('never sizes a single item past its role portion cap, however far short of the macro target that leaves it', () => {
+    const diluteCarb: FoodCandidate = {
+      id: 'dilute-carb-1',
+      caloriesPer100g: 80,
+      proteinPer100g: 2,
+      carbsPer100g: 17,
+      fatPer100g: 0.1,
     };
-    const carbIsolate: FoodCandidate = {
-      id: 'carb-isolate-2',
-      caloriesPer100g: 100,
-      proteinPer100g: 0,
-      carbsPer100g: 50,
-      fatPer100g: 0,
-    };
-    const fatIsolate: FoodCandidate = { ...healthyFat, id: 'fat-isolate-2' };
-    const pureCalorieVegetable: FoodCandidate = {
-      id: 'pure-calorie-vegetable-1',
-      caloriesPer100g: 100,
-      proteinPer100g: 0,
-      carbsPer100g: 0,
-      fatPer100g: 0,
-    };
-    const candidates = new Map([
-      ['lean_protein', [proteinIsolate]],
-      ['complex_carb', [carbIsolate]],
-      ['healthy_fat', [fatIsolate]],
-      ['vegetable', [pureCalorieVegetable]],
-    ]);
 
-    // Vegetable starts at 500g/500kcal (a quarter of the 2000kcal budget);
-    // fully closing the shortfall alone would need ~1985g, but the cap
-    // holds it to double its starting weight.
     const result = generateDietItems({
       targetCalories: 2000,
-      targetProteinG: 1,
-      targetCarbsG: 1,
-      targetFatG: 1,
+      targetProteinG: 0,
+      targetCarbsG: 300,
+      targetFatG: 0,
       mealCount: 1,
-      candidatesByRole: candidates,
+      candidatesByRole: new Map([['complex_carb', [diluteCarb]]]),
     });
 
-    const vegItem = result.items.find(
-      (item) => item.foodItemId === pureCalorieVegetable.id,
-    );
-    expect(vegItem?.weightGrams).toBe(1000);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].weightGrams).toBe(500);
+    expect(result.totalCarbs).toBeLessThan(300);
+  });
+
+  it('passes over a protein source too dilute to reach the meal target, and a fatty one that would eat the fat budget', () => {
+    const dilute: FoodCandidate = {
+      id: 'dilute-protein-1',
+      caloriesPer100g: 60,
+      proteinPer100g: 5,
+      carbsPer100g: 4,
+      fatPer100g: 3,
+    };
+
+    const result = generateDietItems({
+      targetCalories: 1200,
+      targetProteinG: 120,
+      targetCarbsG: 60,
+      targetFatG: 30,
+      mealCount: 1,
+      candidatesByRole: new Map([
+        ['lean_protein', [dilute, fattyProtein, leanProtein]],
+      ]),
+      // Would take the dilute candidate if it were still in the running.
+      pickRandom: (items) => items[0],
+    });
+
+    expect(result.items[0].foodItemId).toBe(leanProtein.id);
+  });
+
+  it('keeps a vegetable on the plate even when the carb role already covers the meal carbs', () => {
+    const result = generateDietItems({
+      targetCalories: 1200,
+      targetProteinG: 60,
+      targetCarbsG: 120,
+      targetFatG: 30,
+      mealCount: 2,
+      candidatesByRole: balancedCandidates(),
+    });
+
+    expect(foodIdsAt(result.items, 1)).toContain(vegetable.id);
+    expect(foodIdsAt(result.items, 2)).toContain(vegetable.id);
+  });
+
+  it('regression: a high-protein target lands on protein, carbs and fat at once instead of trading one for another (ADR-019)', () => {
+    // The production case behind ADR-019: the plan matched on calories but
+    // came back 73g short on protein with nearly double the fat target.
+    const result = generateDietItems({
+      targetCalories: 2463,
+      targetProteinG: 310,
+      targetCarbsG: 153,
+      targetFatG: 68,
+      mealCount: 4,
+      candidatesByRole: balancedCandidates(),
+    });
+
+    const drift = (value: number, target: number) =>
+      Math.abs(value - target) / target;
+    expect(result.totalCalories).toBeLessThanOrEqual(2463);
+    expect(drift(result.totalProtein, 310)).toBeLessThanOrEqual(0.05);
+    expect(drift(result.totalCarbs, 153)).toBeLessThanOrEqual(0.1);
+    expect(drift(result.totalFat, 68)).toBeLessThanOrEqual(0.1);
   });
 });
 
