@@ -8,7 +8,11 @@ This repository follows the global Claude configuration.
 
 ## Current State
 
-Scaffolding, Hub SSO auth, profile onboarding/settings, CI/CD, Daily Log + weight logging, and the exercise-catalog seed script are built, merged, and deployed to production at fitness.blonskyi.dev (FITNESS-7, 8, 9, 10, 14, 16). Error tracking (Sentry — see ADR-006) is designed and ticketed (FITNESS-32, 33) but not yet implemented. See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
+All six phases of `plans/current.md` are implemented and merged into `main`, and every FITNESS work item in Plane is Done or Cancelled — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018).
+
+One thing is outstanding, and it is operational rather than code: the `fitness` OIDC client still has to be registered against the deployed login instance, with `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`/a fresh `AUTH_SECRET` set in Coolify. `login.blonskyi.dev` has no DNS record yet, so this is blocked on that instance existing. Until it ships, production lags `main`: `fitness.blonskyi.dev` still serves the pre-#78 build and redirects to the Hub's `blonskyi.dev/en/login`. GitHub Actions billing is failing, so pushing to `main` does not auto-deploy — releases are triggered by hand in Coolify.
+
+See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
 
 Common commands (run from repo root):
 
