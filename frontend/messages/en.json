@@ -632,6 +632,9 @@
     "synced": "Synced"
   },
   "Validation": {
+    "common": {
+      "numberRequired": "Enter a number"
+    },
     "exercise": {
       "nameRequired": "Name is required",
       "categoryRequired": "Choose a category"

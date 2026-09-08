@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { blankToUndefined } from '@shared/schemas/preprocess';
 import type { ValidationTranslator } from '@shared/schemas/validation-translator';
 
 // Mirrors backend/src/training-programs/dto/create-training-program.dto.ts
@@ -23,21 +24,18 @@ export function addProgramExerciseSchema(t: ValidationTranslator) {
   return z
     .object({
       exerciseId: z.uuid(t('programExercise.exerciseRequired')),
-      targetSets: z
-        .number()
-        .int()
-        .min(1, t('programExercise.targetMin'))
-        .optional(),
-      targetReps: z
-        .number()
-        .int()
-        .min(1, t('programExercise.targetMin'))
-        .optional(),
-      targetDurationSeconds: z
-        .number()
-        .int()
-        .min(1, t('programExercise.targetMin'))
-        .optional(),
+      targetSets: z.preprocess(
+        blankToUndefined,
+        z.number().int().min(1, t('programExercise.targetMin')).optional(),
+      ),
+      targetReps: z.preprocess(
+        blankToUndefined,
+        z.number().int().min(1, t('programExercise.targetMin')).optional(),
+      ),
+      targetDurationSeconds: z.preprocess(
+        blankToUndefined,
+        z.number().int().min(1, t('programExercise.targetMin')).optional(),
+      ),
     })
     .superRefine((data, ctx) => {
       if (data.targetDurationSeconds != null) return;

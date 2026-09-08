@@ -1,17 +1,16 @@
 import * as z from 'zod';
 import { WEIGHT_UNITS } from '@shared/types/user';
 import { MAX_KG, MAX_LB } from '@shared/constants/weight-unit';
+import { blankToUndefined } from '@shared/schemas/preprocess';
 import type { ValidationTranslator } from '@shared/schemas/validation-translator';
 
 // Mirrors backend/src/workout-logs/dto/start-workout-log.dto.ts. Both
 // fields come from a <select>/<input> that can submit '' for "not set" -
 // preprocessed to undefined so the optional() checks below actually apply.
-const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
-
 export function startWorkoutLogSchema() {
   return z.object({
-    trainingProgramId: z.preprocess(emptyToUndefined, z.uuid().optional()),
-    title: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+    trainingProgramId: z.preprocess(blankToUndefined, z.uuid().optional()),
+    title: z.preprocess(blankToUndefined, z.string().min(1).optional()),
   });
 }
 
@@ -26,14 +25,19 @@ export function logWorkoutSetSchema(t: ValidationTranslator) {
   return z
     .object({
       exerciseId: z.uuid(t('workoutSet.exerciseRequired')),
-      weight: z.number().min(0.1, t('workoutSet.weightMin')).optional(),
-      unit: z.enum(WEIGHT_UNITS).optional(),
-      reps: z.number().int().min(1, t('workoutSet.repsMin')).optional(),
-      durationSeconds: z
-        .number()
-        .int()
-        .min(1, t('workoutSet.durationMin'))
-        .optional(),
+      weight: z.preprocess(
+        blankToUndefined,
+        z.number().min(0.1, t('workoutSet.weightMin')).optional(),
+      ),
+      unit: z.preprocess(blankToUndefined, z.enum(WEIGHT_UNITS).optional()),
+      reps: z.preprocess(
+        blankToUndefined,
+        z.number().int().min(1, t('workoutSet.repsMin')).optional(),
+      ),
+      durationSeconds: z.preprocess(
+        blankToUndefined,
+        z.number().int().min(1, t('workoutSet.durationMin')).optional(),
+      ),
     })
     .superRefine((data, ctx) => {
       if (data.durationSeconds != null) return;

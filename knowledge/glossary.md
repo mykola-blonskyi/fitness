@@ -57,3 +57,24 @@ login's OIDC `sub` for a user, stored on `users.identity_sub`. Deliberately sepa
 ### Hub
 
 The `blonskyi.dev` project. Still a sibling app (the nav rail links to it), but no longer part of authentication — that moved to login (ADR-018).
+
+## UI terminology per locale
+
+Gym and diet terms that a general-purpose translator gets wrong in this domain — "Reps" as company representatives, "Set" as a bundle (or a set of logs), "Training" as classroom training. Reuse these when adding or reviewing `frontend/messages/*.json`.
+
+| en | uk | ru | es |
+| --- | --- | --- | --- |
+| Set (of an exercise) | підхід | подход | serie |
+| Reps | повторення | повторения | repeticiones |
+| Target sets / Target reps | цільові підходи / цільові повторення | целевые подходы / целевые повторения | series objetivo / repeticiones objetivo |
+| Training program | тренувальна програма | тренировочная программа | programa de entrenamiento |
+| Workout | тренування | тренировка | entrenamiento |
+| Food Item | продукт | продукт | alimento |
+| Progress photo | фото прогресу | фото прогресса | foto de progreso |
+| Baseline (session) | базова сесія | базовая сессия | sesión de referencia |
+| Preference | вподобання | предпочтение | preferencia |
+| Log (a weight, a set) | записати | записать | registrar |
+| Core (muscle group) | кор | кор | core |
+| Back (muscle group) | спина | спина | espalda |
+
+Ukrainian and Russian plurals need `one`/`few`/`other` in the ICU message, not just `one`/`other` — `other` carries the 5+ form (`підходів`, `подходов`).

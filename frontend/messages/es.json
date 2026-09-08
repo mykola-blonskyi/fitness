@@ -5,8 +5,8 @@
       "label": "Peso de hoy",
       "unitAriaLabel": "Unidad de peso",
       "saving": "Guardando…",
-      "update": "Actualización",
-      "log": "Registro",
+      "update": "Actualizar",
+      "log": "Registrar",
       "savedOffline": "Guardado sin conexión: se sincronizará automáticamente en cuanto vuelvas a tener conexión.",
       "remove": "Eliminar el pesaje de hoy"
     },
@@ -31,7 +31,7 @@
       "edit": "Editar",
       "openDiet": "Abrir dieta",
       "noDiet": "Aún no hay plan de dieta para hoy.",
-      "evening": "Tarde",
+      "evening": "Noche",
       "workoutWith": "Entrenamiento · {program}",
       "workout": "Entrenamiento",
       "continueWorkout": "Continuar",
@@ -49,7 +49,7 @@
       "noTargetYet": "Anota tu peso de hoy en tu <diary>Diario</diary> para ver tus objetivos diarios de calorías y macronutrientes."
     },
     "perDay": "kcal/día",
-    "macroSummary": "Proteínas {protein}g · Hidratos de carbono {carbs}g · Grasas {fat}g",
+    "macroSummary": "Proteínas {protein} g · Carbohidratos {carbs} g · Grasas {fat} g",
     "mealPosition": "Comida {position}",
     "mealActions": {
       "moveUp": "Mover Comida {position} hacia arriba",
@@ -65,13 +65,13 @@
     },
     "nutritionsInfo": {
       "protein": "Proteína",
-      "carbs": "Hidratos de carbono",
+      "carbs": "Carbohidratos",
       "fat": "Grasa"
     },
     "itemActions": {
-      "rerolling": "Volviendo a tirar los dados…",
-      "reroll": "Volver a lanzar",
-      "swap": "Intercambio"
+      "rerolling": "Buscando otra opción…",
+      "reroll": "Otra opción",
+      "swap": "Cambiar"
     },
     "generateMenuCta": {
       "generating": "Generando…",
@@ -82,18 +82,18 @@
       "regenerate": "Regenerar",
       "confirmMessage": "Esto crea un nuevo menú y descarta cualquier cambio.",
       "regenerating": "Regenerando…",
-      "regenerateMenu": "Menú «Regenerar»",
+      "regenerateMenu": "Regenerar menú",
       "cancel": "Cancelar"
     },
     "generateError": {
       "reviewPreferences": "Revisa tus preferencias"
     },
     "swapPicker": {
-      "searchLabel": "Buscar productos alimenticios {role}",
+      "searchLabel": "Buscar alimentos: {role}",
       "searchPlaceholder": "Buscar…",
       "loading": "Cargando…",
-      "loadError": "No se han podido cargar los productos alimenticios. Inténtalo de nuevo.",
-      "empty": "No hay ningún otro producto alimenticio que cumpla esta función.",
+      "loadError": "No se han podido cargar los alimentos. Inténtalo de nuevo.",
+      "empty": "No hay otros alimentos con esta función.",
       "caloriesPer100g": "{calories} kcal / 100 g"
     },
     "errors": {
@@ -104,12 +104,12 @@
   },
   "ExerciseCategories": {
     "chest": "Pecho",
-    "back": "Atrás",
+    "back": "Espalda",
     "shoulders": "Hombros",
     "biceps": "Bíceps",
     "triceps": "Tríceps",
     "legs": "Piernas",
-    "core": "Núcleo",
+    "core": "Core",
     "cardio": "Cardio",
     "full_body": "Cuerpo completo"
   },
@@ -166,21 +166,21 @@
     "vegetable": "Verdura"
   },
   "Training": {
-    "pageTitle": "Programas de formación",
-    "backLink": "Programas de formación",
+    "pageTitle": "Programas de entrenamiento",
+    "backLink": "Programas de entrenamiento",
     "newProgramHeading": "Nuevo programa",
     "programsHeading": "Programas",
     "noPrograms": "Aún no hay programas.",
     "exerciseCount": "{count, plural, one {# ejercicio} other {# ejercicios}}",
     "deactivate": "Desactivar",
     "activate": "Activar",
-    "archive": "Archivo",
-    "archivedHeading": "Archivado",
+    "archive": "Archivar",
+    "archivedHeading": "Archivados",
     "reactivate": "Reactivar",
     "activeBadge": "Activo",
     "createForm": {
       "titleLabel": "Título",
-      "titlePlaceholder": "p. ej., Empujar/Tirar/Piernas",
+      "titlePlaceholder": "p. ej., Empuje/Tirón/Piernas",
       "creating": "Creando…",
       "submit": "Crear programa"
     },
@@ -189,14 +189,14 @@
     "addExerciseHeading": "Añadir un ejercicio",
     "exerciseRow": {
       "moveUp": "Subir {name}",
-      "moveDown": "Baja {name} hacia abajo",
+      "moveDown": "Bajar {name}",
       "remove": "Eliminar",
       "removeAria": "Eliminar {name}"
     },
     "addExerciseForm": {
       "targetDurationLabel": "Duración prevista (segundos)",
-      "targetSetsLabel": "Conjuntos de objetivos",
-      "targetRepsLabel": "Representantes de Target",
+      "targetSetsLabel": "Series objetivo",
+      "targetRepsLabel": "Repeticiones objetivo",
       "adding": "Añadiendo…",
       "submit": "Añadir ejercicio"
     },
@@ -207,20 +207,20 @@
   },
   "Workouts": {
     "pageTitle": "Entrenamientos",
-    "startHeading": "Empezar una sesión de entrenamiento",
+    "startHeading": "Empezar un entrenamiento",
     "pastHeading": "Entrenamientos anteriores",
     "noWorkoutsYet": "Aún no se ha registrado ningún entrenamiento.",
-    "setsLoggedCount": "{count, plural, one {# conjunto} other {# conjuntos}} registrado",
+    "setsLoggedCount": "{count, plural, one {# serie} other {# series}} registradas",
     "backLink": "Entrenamientos",
-    "setsHeading": "Conjuntos",
+    "setsHeading": "Series",
     "logSetHeading": "Registrar una serie",
     "startForm": {
-      "trainingProgramLabel": "Programa de formación",
-      "adHoc": "Ad hoc (sin programa)",
+      "trainingProgramLabel": "Programa de entrenamiento",
+      "adHoc": "Libre (sin programa)",
       "titleLabel": "Título (opcional)",
-      "titlePlaceholder": "p. ej., día de entrenamiento de fuerza",
-      "starting": "Empezamos…",
-      "submit": "Empezar el entrenamiento"
+      "titlePlaceholder": "p. ej., día de empuje",
+      "starting": "Empezando…",
+      "submit": "Empezar entrenamiento"
     },
     "logSetForm": {
       "durationLabel": "Duración (segundos)",
@@ -228,30 +228,30 @@
       "unitAriaLabel": "Unidad de peso",
       "repsLabel": "Repeticiones",
       "logging": "Registrando…",
-      "submit": "Conjunto de troncos",
+      "submit": "Registrar serie",
       "savedOffline": "Guardado sin conexión: se sincronizará automáticamente en cuanto vuelvas a tener conexión."
     },
     "setList": {
       "noSetsYet": "Aún no se ha registrado ninguna serie.",
-      "setNumber": "Conjunto {number}",
-      "setPending": "Conjunto —",
+      "setNumber": "Serie {number}",
+      "setPending": "Serie —",
       "queuedOffline": "En cola sin conexión"
     },
     "errors": {
-      "startFailed": "No se ha podido iniciar la sesión de entrenamiento. Inténtalo de nuevo.",
+      "startFailed": "No se ha podido empezar el entrenamiento. Inténtalo de nuevo.",
       "logFailed": "No se ha podido registrar esa serie; inténtalo de nuevo."
     }
   },
   "PhotoSessions": {
-    "pageTitle": "Fotos del proceso",
+    "pageTitle": "Fotos de progreso",
     "historyHeading": "Historia",
     "viewGallery": "Ver galería",
     "galleryHeading": "Galería",
     "galleryBackLink": "Fotos",
     "poses": {
-      "front": "Parte delantera",
+      "front": "Frontal",
       "side": "Lateral",
-      "back": "Atrás",
+      "back": "Posterior",
       "unassigned": "Sin asignar"
     },
     "analysisStatus": {
@@ -267,24 +267,24 @@
       "photosLabel": "Fotos (hasta {max})",
       "photosHint": "Delante, de lado y detrás: ya veremos cuál es cuál.",
       "uploading": "Subiendo…",
-      "submit": "Sesión de carga"
+      "submit": "Subir sesión"
     },
     "list": {
-      "empty": "Aún no hay fotos del proceso.",
+      "empty": "Aún no hay fotos de progreso.",
       "needsReview": "Necesita revisión",
       "baseline": "Situación inicial",
       "markBaseline": "Marcar como referencia",
-      "photoAlt": "Foto del avance de {pose}"
+      "photoAlt": "Foto de progreso: {pose}"
     },
     "review": {
       "guessHint": "Hemos adivinado a qué foto corresponde cada una; corrige las que estén mal y, a continuación, confirma.",
-      "poseSrLabel": "Posa para esta foto",
+      "poseSrLabel": "Pose de esta foto",
       "choosePlaceholder": "Elige…",
       "duplicatePoseError": "Cada foto requiere una pose diferente.",
       "confirming": "Confirmando…",
-      "submit": "Confirmar posturas",
+      "submit": "Confirmar poses",
       "saveError": "No se han podido guardar las poses. Inténtalo de nuevo.",
-      "altText": "Foto del avance a la espera de que se revise la pose"
+      "altText": "Foto de progreso pendiente de revisar la pose"
     },
     "retry": {
       "retrying": "Volviendo a intentarlo…",
@@ -302,7 +302,7 @@
     },
     "gallery": {
       "photoCount": "{count, plural, one {# foto} other {# fotos}}",
-      "pendingReviewNotice": "{count, plural, one {# la sesión aún necesita} other {# las sesiones aún necesitan}} revisarse en la página «Fotos» antes de que puedan aparecer aquí.",
+      "pendingReviewNotice": "{count, plural, one {# sesión aún necesita} other {# sesiones aún necesitan}} revisión en la página «Fotos» antes de aparecer aquí.",
       "emptyNoConfirmed": "Aún no hay sesiones confirmadas: confirma las poses de una sesión fotográfica en la página «Fotos» para que aparezca aquí.",
       "coverAlt": "Foto de portada de la sesión"
     },
@@ -317,7 +317,7 @@
     "addCustomHeading": "Añadir un ejercicio personalizado",
     "list": {
       "empty": "No hay ejercicios que se ajusten a este filtro.",
-      "unapprove": "Rechazar",
+      "unapprove": "Anular la aprobación",
       "loadingMore": "Cargando más…"
     },
     "searchForm": {
@@ -325,7 +325,7 @@
       "allCategories": "Todas las categorías",
       "searchLabel": "Buscar",
       "searchPlaceholder": "Nombre del ejercicio…",
-      "submit": "Filtro"
+      "submit": "Filtrar"
     },
     "createForm": {
       "nameLabel": "Nombre",
@@ -351,16 +351,16 @@
     "pageTitle": "Catálogo de alimentos",
     "addCustomHeading": "Añadir un alimento personalizado",
     "list": {
-      "empty": "No hay productos alimenticios que se ajusten a este filtro.",
-      "unapprove": "Rechazar",
+      "empty": "No hay alimentos que se ajusten a este filtro.",
+      "unapprove": "Anular la aprobación",
       "loadingMore": "Cargando más…"
     },
     "searchForm": {
       "categoryLabel": "Categoría",
       "allCategories": "Todas las categorías",
       "searchLabel": "Buscar",
-      "searchPlaceholder": "Nombre del plato…",
-      "submit": "Filtro"
+      "searchPlaceholder": "Nombre del alimento…",
+      "submit": "Filtrar"
     },
     "createForm": {
       "nameLabel": "Nombre",
@@ -369,16 +369,16 @@
       "subcategoryLabel": "Subcategoría",
       "selectSubcategoryPlaceholder": "Selecciona una subcategoría",
       "roleLabel": "Función",
-      "selectRolePlaceholder": "Selecciona un rol",
+      "selectRolePlaceholder": "Selecciona una función",
       "caloriesLabel": "Calorías (por cada 100 g)",
       "proteinLabel": "Proteínas (g por cada 100 g)",
       "carbsLabel": "Hidratos de carbono (g por cada 100 g)",
       "fatLabel": "Grasa (g por cada 100 g)",
       "adding": "Añadiendo…",
-      "submit": "Añadir un producto alimenticio"
+      "submit": "Añadir alimento"
     },
     "errors": {
-      "addFailed": "No se ha podido añadir ese producto alimenticio. Inténtalo de nuevo."
+      "addFailed": "No se ha podido añadir ese alimento. Inténtalo de nuevo."
     }
   },
   "Preferences": {
@@ -395,7 +395,7 @@
     "typeLabels": {
       "allergy": "Alergia",
       "exclude": "Excluir",
-      "favorite": "Favoritos"
+      "favorite": "Favorito"
     },
     "dietList": {
       "empty": "No se ha indicado ningún tipo de dieta.",
@@ -407,7 +407,7 @@
       "unknown": "Desconocido"
     },
     "favoriteList": {
-      "empty": "Todavía no tengo ningún alimento favorito.",
+      "empty": "Aún no hay alimentos favoritos.",
       "remove": "Eliminar",
       "unknown": "Desconocido"
     },
@@ -418,10 +418,10 @@
       "submit": "Añadir"
     },
     "addFavoriteForm": {
-      "searchLabel": "Buscar productos alimenticios",
-      "searchPlaceholder": "Nombre del plato…",
-      "itemLabel": "Producto alimenticio",
-      "selectPlaceholder": "Selecciona un producto alimenticio",
+      "searchLabel": "Buscar alimentos",
+      "searchPlaceholder": "Nombre del alimento…",
+      "itemLabel": "Alimento",
+      "selectPlaceholder": "Selecciona un alimento",
       "adding": "Añadiendo…",
       "submit": "Añadir a favoritos"
     },
@@ -431,26 +431,26 @@
       "allergy": "Alergia",
       "exclude": "Excluir",
       "targetTypeLabel": "Se aplica a",
-      "selectTargetTypePlaceholder": "Selecciona a qué dirigirte",
+      "selectTargetTypePlaceholder": "Elige a qué aplicar",
       "targetCategory": "Toda una categoría",
       "targetSubcategory": "Una subcategoría",
-      "targetRole": "Un papel",
+      "targetRole": "Una función",
       "targetFoodItem": "Un alimento concreto",
       "categoryLabel": "Categoría",
       "selectCategoryPlaceholder": "Selecciona una categoría",
       "subcategoryLabel": "Subcategoría",
       "selectSubcategoryPlaceholder": "Selecciona una subcategoría",
       "roleLabel": "Función",
-      "selectRolePlaceholder": "Selecciona un rol",
-      "searchLabel": "Buscar productos alimenticios",
+      "selectRolePlaceholder": "Selecciona una función",
+      "searchLabel": "Buscar alimentos",
       "searchPlaceholder": "Nombre del alimento…",
-      "itemLabel": "Producto alimenticio",
-      "selectFoodItemPlaceholder": "Selecciona un producto alimenticio",
+      "itemLabel": "Alimento",
+      "selectFoodItemPlaceholder": "Selecciona un alimento",
       "adding": "Añadiendo…",
       "submit": "Añadir preferencia"
     },
     "errors": {
-      "foodSaveFailed": "No se ha podido guardar esa configuración. Inténtalo de nuevo.",
+      "foodSaveFailed": "No se ha podido guardar esa preferencia. Inténtalo de nuevo.",
       "dietSaveFailed": "No se ha podido guardar esa preferencia de dieta. Inténtalo de nuevo."
     }
   },
@@ -490,7 +490,7 @@
     "title": "Completa tu perfil",
     "subtitle": "Unos cuantos datos para que podamos calcular tus objetivos.",
     "saving": "Guardando…",
-    "submit": "Perfil completo",
+    "submit": "Completar perfil",
     "errors": {
       "saveFailed": "No se ha podido guardar tu perfil. Comprueba los datos que has introducido e inténtalo de nuevo."
     }
@@ -498,13 +498,13 @@
   "Admin": {
     "nav": {
       "exercises": "Ejercicios",
-      "food": "Alimentación"
+      "food": "Alimentos"
     },
     "exercisesPage": {
       "title": "Ejercicios sin verificar"
     },
     "foodPage": {
-      "title": "Productos alimenticios no verificados"
+      "title": "Alimentos sin verificar"
     },
     "queue": {
       "empty": "No hay nada que revisar: la cola está vacía.",
@@ -520,8 +520,8 @@
       "approveExerciseFailed": "No se ha podido aprobar este ejercicio. Inténtalo de nuevo.",
       "unapproveExerciseFailed": "No se ha podido anular la aprobación de este ejercicio; inténtalo de nuevo.",
       "deleteExerciseFailed": "No se ha podido eliminar este ejercicio. Inténtalo de nuevo.",
-      "approveFoodFailed": "No se ha podido aprobar este producto alimenticio. Inténtalo de nuevo.",
-      "deleteFoodFailed": "No se ha podido eliminar este producto alimenticio. Inténtalo de nuevo."
+      "approveFoodFailed": "No se ha podido aprobar este alimento. Inténtalo de nuevo.",
+      "deleteFoodFailed": "No se ha podido eliminar este alimento. Inténtalo de nuevo."
     }
   },
   "Home": {
@@ -530,14 +530,14 @@
       "label": "Peso",
       "value": "{weight} {unit}",
       "last": "último {date}",
-      "empty": "Aún no se han realizado los pesajes",
+      "empty": "Aún no hay pesajes",
       "cta": "Anota tu peso"
     },
     "diary": {
       "label": "Diario",
       "loggedToday": "Registrado hoy",
-      "notLoggedToday": "No has iniciado sesión hoy",
-      "cta": "Inicia sesión hoy"
+      "notLoggedToday": "Hoy aún sin registro",
+      "cta": "Registrar hoy"
     },
     "diet": {
       "label": "Dieta",
@@ -548,7 +548,7 @@
       "value": "{total} / {target} kcal hoy"
     },
     "training": {
-      "label": "Formación",
+      "label": "Programas de entrenamiento",
       "activeProgramCount": "{count, plural, one {# programa activo} other {# programas activos}}",
       "empty": "No hay programas activos",
       "cta": "Crear un programa"
@@ -557,16 +557,16 @@
       "label": "Entrenamiento",
       "startedToday": "Ha empezado hoy",
       "last": "Último: {date}",
-      "setsLogged": "{count, plural, one {# conjunto} other {# conjuntos}} registrado",
+      "setsLogged": "{count, plural, one {# serie} other {# series}} registradas",
       "empty": "Aún no hay entrenamientos",
-      "cta": "Empezar una sesión de entrenamiento",
+      "cta": "Empezar un entrenamiento",
       "lastNamed": "Último entrenamiento {date} · {title} · {count, plural, one {# serie} other {# series}}",
       "continue": "Continuar entrenamiento"
     },
     "photos": {
       "label": "Fotos",
-      "needsReview": "{count, plural, one {# Se necesita una reseña} other {# Se necesitan reseñas}}",
-      "allCaughtUp": "Ya estoy al día",
+      "needsReview": "{count, plural, one {# revisión pendiente} other {# revisiones pendientes}}",
+      "allCaughtUp": "Todo al día",
       "cta": "Añadir foto"
     },
     "greeting": "Hola, {name}",
@@ -613,7 +613,7 @@
     "activityLevel": "Nivel de actividad",
     "activityOptions": {
       "sedentary": "Sedentario",
-      "light": "Luz",
+      "light": "Ligero",
       "moderate": "Moderado",
       "active": "Activo",
       "very_active": "Muy activo"
@@ -632,6 +632,9 @@
     "synced": "Sincronizado"
   },
   "Validation": {
+    "common": {
+      "numberRequired": "Introduce un número"
+    },
     "exercise": {
       "nameRequired": "Es obligatorio introducir el nombre",
       "categoryRequired": "Elige una categoría"
@@ -640,12 +643,12 @@
       "nameRequired": "Es obligatorio introducir el nombre",
       "categoryRequired": "Elige una categoría",
       "subcategoryRequired": "Elige una subcategoría",
-      "roleRequired": "Elige un puesto",
+      "roleRequired": "Elige una función",
       "macroMin": "Debe ser 0 o mayor"
     },
     "foodPreference": {
       "typeRequired": "Selecciona un tipo",
-      "targetTypeRequired": "Selecciona a qué dirigirte",
+      "targetTypeRequired": "Elige a qué aplicar",
       "targetRequired": "Elige un objetivo"
     },
     "dietPreference": {
@@ -657,8 +660,8 @@
     "programExercise": {
       "exerciseRequired": "Elige un ejercicio",
       "targetMin": "Debe ser al menos 1",
-      "targetSetsRequired": "Es necesario definir conjuntos de objetivos",
-      "targetRepsRequired": "Es obligatorio indicar el número de representantes"
+      "targetSetsRequired": "Indica las series objetivo",
+      "targetRepsRequired": "Indica las repeticiones objetivo"
     },
     "userProfile": {
       "nameRequired": "Es obligatorio introducir el nombre",
@@ -693,10 +696,10 @@
       "home": "Inicio",
       "diary": "Diario",
       "photos": "Fotos",
-      "training": "Entrenamiento",
-      "workouts": "Sesiones",
+      "training": "Programas",
+      "workouts": "Entrenamientos",
       "exercises": "Ejercicios",
-      "food": "Comida",
+      "food": "Alimentos",
       "diet": "Dieta",
       "settings": "Ajustes",
       "admin": "Admin",
