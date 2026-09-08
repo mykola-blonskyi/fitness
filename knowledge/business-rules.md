@@ -156,6 +156,8 @@ A backend script pulls a subset from Open Food Facts/USDA/wger once, maps source
 
 wger is the exception that proved the rule: it ships ~620 Spanish exercise names but only a dozen Ukrainian and Russian ones, so those two locales stayed English on screen. Their names now come from `backend/src/scripts/data/exercise-translations.uk-ru.json`, applied by `db:seed:exercise-translations` after the wger import, and keyed by wger id so a rebuilt catalog picks them up again.
 
+A third seed, `db:seed:food-table-ru`, covers the CIS/Eastern-European staples (гречка, творог, кефир, сало…) that Open Food Facts and USDA are thin on: a generic Russian-language КБЖУ-per-100 g reference table bundled as `backend/src/scripts/data/food-table-ru.json` (334 rows, source noted in the file). Its names are Russian, so the base English `name` is machine-translated ru→en at import and the Russian original is kept verbatim as the `ru` translation row; uk/es are translated from the Russian, not round-tripped through English. Same unverified-on-import rule as the other sources.
+
 Why: avoids maintaining a recurring sync job and unattended auto-categorization against a taxonomy the external sources don't natively provide.
 
 ---
