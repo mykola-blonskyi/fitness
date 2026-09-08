@@ -117,7 +117,7 @@ Docker Compose, deployed via Coolify (self-hosted) using a GitHub App for the pr
 
 Authentication:
 
-The Next.js frontend is an OIDC client of `login.blonskyi.dev` (authorization code + PKCE, `client_id` `fitness`, redirect URI `/api/auth/callback/login`) — see [ADR-018](docs/decisions.md). It runs its own Auth.js instance with its own `AUTH_SECRET` and issues its own **host-only** session cookie (`authjs.session-token`, no `Domain`, httpOnly, `sameSite: lax`); nothing is shared with any other subdomain. `proxy.ts` reads that cookie and forwards trusted `x-user-id` (login's `sub`) / `x-user-email` headers to NestJS. NestJS is internal-only (private Docker network) and never validates the cookie itself.
+The Next.js frontend is an OIDC client of `login.blonskyi.dev` (authorization code + PKCE, `client_id` `fitness`, redirect URI `/api/auth/callback/login`) — see [ADR-018](docs/decisions.md). It runs its own Auth.js instance with its own `AUTH_SECRET` and issues its own **host-only** session cookie (`fitness.session-token`, no `Domain`, httpOnly, `sameSite: lax`); nothing is shared with any other subdomain. The name is deliberately not Auth.js's default `authjs.session-token`: the Hub sets that name for `.blonskyi.dev`, and a same-named cookie sent alongside this app's would shadow it. `proxy.ts` reads that cookie and forwards trusted `x-user-id` (login's `sub`) / `x-user-email` headers to NestJS. NestJS is internal-only (private Docker network) and never validates the cookie itself.
 
 Authorization:
 
