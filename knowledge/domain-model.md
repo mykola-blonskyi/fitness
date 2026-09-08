@@ -284,8 +284,9 @@ Fixed taxonomies used for browsing (Category/Subcategory) and for diet generatio
 
 Fixed values:
 
-- Category → Subcategory: `meat` (lean_meat, fatty_meat, processed_meat) · `fish` (lean_fish, fatty_fish, shellfish) · `dairy` (low_fat_dairy, full_fat_dairy, fermented_dairy) · `vegetables` (leafy_vegetables, cruciferous_vegetables, starchy_vegetables, other_vegetables) · `fruits` (fresh_fruit, dried_fruit) · `grains` (complex_carbs, simple_carbs) · `legumes` (beans, lentils_and_peas) · `nuts` (tree_nuts, seeds) · `oils` (healthy_oils, saturated_oils) · `eggs` (whole_eggs, egg_whites)
-- Role: `lean_protein`, `fatty_protein`, `plant_protein`, `complex_carb`, `simple_carb`, `vegetable`, `fruit`, `healthy_fat`, `saturated_fat`, `dairy`, `treat`
+- Category → Subcategory: `meat` (lean_meat, fatty_meat, processed_meat) · `fish` (lean_fish, fatty_fish, shellfish) · `dairy` (low_fat_dairy, full_fat_dairy, fermented_dairy) · `vegetables` (leafy_vegetables, cruciferous_vegetables, starchy_vegetables, other_vegetables) · `fruits` (fresh_fruit, dried_fruit) · `grains` (complex_carbs, simple_carbs) · `legumes` (beans, lentils_and_peas) · `nuts` (tree_nuts, seeds) · `oils` (healthy_oils, saturated_oils) · `eggs` (whole_eggs, egg_whites) · `sweets` (confectionery) · `beverages` (alcoholic_beverages, non_alcoholic_beverages)
+- Role: `lean_protein`, `fatty_protein`, `plant_protein`, `complex_carb`, `simple_carb`, `vegetable`, `fruit`, `healthy_fat`, `saturated_fat`, `dairy`, `treat`, `beverage`
+- `sweets`/`beverages` (and the `beverage` role) exist for browsing and logging only — no diet-generation role chain (`diet.types.ts` MEAL_ROLE_CHAINS) ever selects them.
 
 Relationships:
 

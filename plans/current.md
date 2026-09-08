@@ -11,7 +11,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - [x] Scaffold Next.js frontend + NestJS backend per `my-projects/boilerplates/subdomain-app.md` (FITNESS-7)
 - [x] Wire up Hub auth reuse (Auth.js cookie validation in Next.js, `x-user-id`/`x-user-email` forwarding to NestJS) (FITNESS-9) — superseded by Phase 6
 - [x] Register `fitness` project slug + access grant in the Hub's Postgres (FITNESS-9) — superseded by Phase 6
-- [ ] Set up Drizzle schema for User, Daily Log (see ADR-004), Training Program stack, and migration step in CI/CD (User schema + migration-in-CI done via FITNESS-7/8; Daily Log schema done via FITNESS-14; Training Program stack schema not yet started)
+- [x] Set up Drizzle schema for User, Daily Log (see ADR-004), Training Program stack, and migration step in CI/CD (User schema + migration-in-CI via FITNESS-7/8; Daily Log schema via FITNESS-14; Training Program stack schema via FITNESS-18/19)
 
 ---
 
@@ -20,7 +20,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - [x] Exercise catalog (schema + one-time seed import from wger/ExerciseDB + translations) (FITNESS-16)
 - [x] Exercise catalog browse/search + manual creation UI (FITNESS-17)
 - [x] Training Programs, Program Exercises, multiple concurrent active programs (many-to-many `UserActiveProgram`) (FITNESS-18, FITNESS-19)
-- [x] Workout Logs/Sets, started from an active program or ad hoc, online only (FITNESS-20) — offline queue wiring (FITNESS-13's generic mechanism) not yet connected to this feature, tracked as follow-up
+- [x] Workout Logs/Sets, started from an active program or ad hoc (FITNESS-20), with FITNESS-13's generic offline queue wired in via `features/workout-logs/offline.ts` (FITNESS-21)
 - [x] Daily Log + weigh-in tracking (FITNESS-14)
 
 ---
@@ -40,7 +40,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 
 - [x] Presigned upload flow (Photo Session, Progress Photo, private MinIO bucket + presigned GET on read) (FITNESS-22)
 - [x] Redis job queue (plain list, JSON payload — not BullMQ, see ADR-003) between NestJS and the Python worker (FITNESS-23)
-- [ ] Python/FastAPI worker: MediaPipe pose analysis, own MinIO credentials, auto-retry-then-fail (skeleton + stub via FITNESS-23; real `detect` classification via FITNESS-49; real pose-specific `analyze-alignment` + permanent-vs-transient retry semantics + manual retry endpoint/UI via FITNESS-24; progress gallery still pending)
+- [x] Python/FastAPI worker: MediaPipe pose analysis, own MinIO credentials, auto-retry-then-fail (skeleton + stub via FITNESS-23; real `detect` classification via FITNESS-49; real pose-specific `analyze-alignment` + permanent-vs-transient retry semantics + manual retry endpoint/UI via FITNESS-24)
 - [x] Progress gallery grouped by date, baseline comparison (FITNESS-25)
 
 ---
@@ -61,7 +61,7 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - [x] `users.identity_sub` added as its own column with a backfill migration; `users.id` and every FK referencing it are left untouched
 - [x] Identity resolution reconciles on email in `IdentityGuard`, so the owner's first login under a new `sub` keeps their existing row instead of orphaning it
 - [x] Sign-out control added to the header (supersedes ADR-007's no-sign-out decision)
-- [ ] Operational: register the `fitness` client against the deployed login instance and set `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`/a fresh `AUTH_SECRET` in Coolify before deploying
+- [ ] Operational: register the `fitness` client against the deployed login instance and set `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`/a fresh `AUTH_SECRET` in Coolify before deploying — **blocked, and the only work left in this plan**: `login.blonskyi.dev` has no DNS record yet, and production still serves the pre-#78 build (`fitness.blonskyi.dev` redirects to the Hub's `blonskyi.dev/en/login`, not to the OIDC issuer). Deploying is manual, not automatic — see the CI-billing note below.
 
 ---
 
@@ -70,3 +70,4 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - Food/exercise seed data quality: imported items start `is_verified=false` and machine-translated names are unverified — needs an ongoing manual review pass, not a one-time fix
 - Greedy diet-generation heuristic may produce awkward menus at the tails (very low/high calorie targets, sparse Food Preferences) — worth a manual spot-check once seed data exists
 - Shared Postgres/Coolify host with other pet projects — migrations must stay scoped to this project's tables and never run unattended after a failed deploy (see [[business-rules]] "Migrations are a mandatory pre-deploy gate")
+- GitHub Actions billing is failing, so a push to `main` no longer auto-deploys — every release since then has to be triggered by hand in Coolify, which is why production can sit several merged PRs behind `main`

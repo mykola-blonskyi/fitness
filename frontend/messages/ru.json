@@ -114,6 +114,7 @@
     "full_body": "Всё тело"
   },
   "FoodCategories": {
+    "beverages": "Напитки",
     "dairy": "Молочные продукты",
     "eggs": "Яйца",
     "fish": "Рыба",
@@ -123,11 +124,14 @@
     "meat": "Мясо",
     "nuts": "Орехи",
     "oils": "Масла",
+    "sweets": "Сладости",
     "vegetables": "Овощи"
   },
   "FoodSubcategories": {
+    "alcoholic_beverages": "Алкогольные напитки",
     "beans": "Фасоль",
     "complex_carbs": "Сложные углеводы",
+    "confectionery": "Кондитерские изделия",
     "cruciferous_vegetables": "Крестоцветные овощи",
     "dried_fruit": "Сухофрукты",
     "egg_whites": "Яичные белки",
@@ -142,6 +146,7 @@
     "lean_meat": "Постное мясо",
     "lentils_and_peas": "Чечевица и горох",
     "low_fat_dairy": "Нежирные молочные продукты",
+    "non_alcoholic_beverages": "Безалкогольные напитки",
     "other_vegetables": "Другие овощи",
     "processed_meat": "Обработанное мясо",
     "saturated_oils": "Насыщенные масла",
@@ -153,6 +158,7 @@
     "whole_eggs": "Цельные яйца"
   },
   "FoodRoles": {
+    "beverage": "Напиток",
     "complex_carb": "Сложные углеводы",
     "dairy": "Молочные продукты",
     "fatty_protein": "Жирный белок",

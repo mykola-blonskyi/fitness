@@ -114,6 +114,7 @@
     "full_body": "Full body"
   },
   "FoodCategories": {
+    "beverages": "Beverages",
     "dairy": "Dairy",
     "eggs": "Eggs",
     "fish": "Fish",
@@ -123,11 +124,14 @@
     "meat": "Meat",
     "nuts": "Nuts",
     "oils": "Oils",
+    "sweets": "Sweets",
     "vegetables": "Vegetables"
   },
   "FoodSubcategories": {
+    "alcoholic_beverages": "Alcoholic beverages",
     "beans": "Beans",
     "complex_carbs": "Complex carbs",
+    "confectionery": "Confectionery",
     "cruciferous_vegetables": "Cruciferous vegetables",
     "dried_fruit": "Dried fruit",
     "egg_whites": "Egg whites",
@@ -142,6 +146,7 @@
     "lean_meat": "Lean meat",
     "lentils_and_peas": "Lentils and peas",
     "low_fat_dairy": "Low-fat dairy",
+    "non_alcoholic_beverages": "Non-alcoholic beverages",
     "other_vegetables": "Other vegetables",
     "processed_meat": "Processed meat",
     "saturated_oils": "Saturated oils",
@@ -153,6 +158,7 @@
     "whole_eggs": "Whole eggs"
   },
   "FoodRoles": {
+    "beverage": "Beverage",
     "complex_carb": "Complex carb",
     "dairy": "Dairy",
     "fatty_protein": "Fatty protein",

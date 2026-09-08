@@ -25,6 +25,9 @@ out/
 .copilot/
 .codex/
 
+# Session scratch output, not project deliverables
+Claude outputs/
+
 # Claude caches only
 .claude/cache/
 .claude/logs/
@@ -161,6 +164,7 @@ reports/audits/*.tmp.md
 
 .graphify/cache/
 .graphify/tmp/
+graphify-out/
 
 # ============================================================
 # Secrets

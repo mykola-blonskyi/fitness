@@ -72,6 +72,10 @@ const TAXONOMY: Record<string, string[]> = {
   nuts: ['tree_nuts', 'seeds'],
   oils: ['healthy_oils', 'saturated_oils'],
   eggs: ['whole_eggs', 'egg_whites'],
+  // Not diet-generation candidates (no role chain in diet.types.ts picks
+  // them up) - browse/log-only categories fed by seed-food-table-ru.ts.
+  sweets: ['confectionery'],
+  beverages: ['alcoholic_beverages', 'non_alcoholic_beverages'],
 };
 
 const ROLES = [
@@ -86,11 +90,12 @@ const ROLES = [
   'saturated_fat',
   'dairy',
   'treat',
+  'beverage',
 ];
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
-async function upsertTaxonomy(db: Db) {
+export async function upsertTaxonomy(db: Db) {
   const categoryIds = new Map<string, string>();
   const subcategoryIds = new Map<string, string>();
   const roleIds = new Map<string, string>();
@@ -138,7 +143,7 @@ async function upsertTaxonomy(db: Db) {
 // Shared curated-item shape both sources normalize into before insert.
 // ---------------------------------------------------------------------
 
-interface CuratedItem extends Macros {
+export interface CuratedItem extends Macros {
   name: string;
   category: string;
   subcategory: string;
@@ -582,7 +587,7 @@ async function fetchUsdaCategory(
 // hundreds of (item, locale) pairs empirically hits 429s well before any
 // monthly character quota, so this retries on 429 with backoff on top of
 // the fixed inter-call delay in translateMissing below.
-async function translate(
+export async function translate(
   text: string,
   targetLocale: string,
   apiKey: string,
@@ -618,7 +623,7 @@ async function translate(
 // Insert + translate
 // ---------------------------------------------------------------------
 
-async function insertItem(
+export async function insertItem(
   db: Db,
   item: CuratedItem,
   ids: Awaited<ReturnType<typeof upsertTaxonomy>>,

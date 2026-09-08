@@ -114,6 +114,7 @@
     "full_body": "Cuerpo completo"
   },
   "FoodCategories": {
+    "beverages": "Bebidas",
     "dairy": "Lácteos",
     "eggs": "Huevos",
     "fish": "Pescado",
@@ -123,11 +124,14 @@
     "meat": "Carne",
     "nuts": "Frutos secos",
     "oils": "Aceites",
+    "sweets": "Dulces",
     "vegetables": "Verduras"
   },
   "FoodSubcategories": {
+    "alcoholic_beverages": "Bebidas alcohólicas",
     "beans": "Alubias",
     "complex_carbs": "Carbohidratos complejos",
+    "confectionery": "Confitería",
     "cruciferous_vegetables": "Verduras crucíferas",
     "dried_fruit": "Fruta deshidratada",
     "egg_whites": "Claras de huevo",
@@ -142,6 +146,7 @@
     "lean_meat": "Carne magra",
     "lentils_and_peas": "Lentejas y guisantes",
     "low_fat_dairy": "Lácteos desnatados",
+    "non_alcoholic_beverages": "Bebidas sin alcohol",
     "other_vegetables": "Otras verduras",
     "processed_meat": "Carne procesada",
     "saturated_oils": "Aceites saturados",
@@ -153,6 +158,7 @@
     "whole_eggs": "Huevos enteros"
   },
   "FoodRoles": {
+    "beverage": "Bebida",
     "complex_carb": "Carbohidrato complejo",
     "dairy": "Lácteos",
     "fatty_protein": "Proteína grasa",

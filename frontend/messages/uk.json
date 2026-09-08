@@ -114,6 +114,7 @@
     "full_body": "Усе тіло"
   },
   "FoodCategories": {
+    "beverages": "Напої",
     "dairy": "Молочні продукти",
     "eggs": "Яйця",
     "fish": "Риба",
@@ -123,11 +124,14 @@
     "meat": "М’ясо",
     "nuts": "Горіхи",
     "oils": "Олії",
+    "sweets": "Солодощі",
     "vegetables": "Овочі"
   },
   "FoodSubcategories": {
+    "alcoholic_beverages": "Алкогольні напої",
     "beans": "Квасоля",
     "complex_carbs": "Складні вуглеводи",
+    "confectionery": "Кондитерські вироби",
     "cruciferous_vegetables": "Капустяні овочі",
     "dried_fruit": "Сухофрукти",
     "egg_whites": "Яєчні білки",
@@ -142,6 +146,7 @@
     "lean_meat": "Пісне м’ясо",
     "lentils_and_peas": "Сочевиця та горох",
     "low_fat_dairy": "Нежирні молочні продукти",
+    "non_alcoholic_beverages": "Безалкогольні напої",
     "other_vegetables": "Інші овочі",
     "processed_meat": "Оброблене м’ясо",
     "saturated_oils": "Насичені олії",
@@ -153,6 +158,7 @@
     "whole_eggs": "Цілі яйця"
   },
   "FoodRoles": {
+    "beverage": "Напій",
     "complex_carb": "Складні вуглеводи",
     "dairy": "Молочні продукти",
     "fatty_protein": "Жирний білок",
