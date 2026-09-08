@@ -1,14 +1,43 @@
 import { mealTargetsForCount, resolveMealOrder } from './diet.types';
 
 describe('mealTargetsForCount', () => {
-  it('gives every meal an equal share of the day calories', () => {
+  it('prices each meal at what its own macros cost, together no more than the day target', () => {
+    const totals = { calories: 2000, proteinG: 150, carbsG: 200, fatG: 60 };
+    const targets = mealTargetsForCount(4, totals);
+
+    targets.forEach((t) => {
+      expect(t.calories).toBeCloseTo(
+        t.proteinG * 4 + t.carbsG * 4 + t.fatG * 9,
+      );
+    });
+    const dayCalories = targets.reduce((sum, t) => sum + t.calories, 0);
+    expect(dayCalories).toBeLessThanOrEqual(totals.calories);
+    // Front-loaded carbs and fat make the early meals the bigger ones.
+    expect(targets[0].calories).toBeGreaterThan(targets[3].calories);
+  });
+
+  it('scales the day back to the calorie target when the macro targets together cost more', () => {
+    // 200*4 + 200*4 + 60*9 = 2140, over the 2000 calorie target.
+    const targets = mealTargetsForCount(2, {
+      calories: 2000,
+      proteinG: 200,
+      carbsG: 200,
+      fatG: 60,
+    });
+    const dayCalories = targets.reduce((sum, t) => sum + t.calories, 0);
+    expect(dayCalories).toBeCloseTo(2000);
+  });
+
+  it('splits protein equally across meals, summing to the day target', () => {
     const targets = mealTargetsForCount(4, {
       calories: 2000,
       proteinG: 150,
       carbsG: 200,
       fatG: 60,
     });
-    expect(targets.map((t) => t.calories)).toEqual([500, 500, 500, 500]);
+    targets.forEach((t) => expect(t.proteinG).toBeCloseTo(150 / 4));
+    const totalProtein = targets.reduce((sum, t) => sum + t.proteinG, 0);
+    expect(totalProtein).toBeCloseTo(150);
   });
 
   it('applies no carb-free tail and a normal decreasing taper at count 1-2', () => {
@@ -18,16 +47,12 @@ describe('mealTargetsForCount', () => {
       carbsG: 200,
       fatG: 60,
     });
-    // Raw calorie-remainder protein would be 165g here, over the 150g day
-    // target - the single meal absorbs the whole day, so it's rescaled
-    // down to exactly the day target rather than exceeding it.
     expect(one).toHaveLength(1);
     expect(one[0].position).toBe(1);
-    expect(one[0].calories).toBe(2000);
+    expect(one[0].proteinG).toBeCloseTo(150);
     expect(one[0].carbsG).toBe(200);
     expect(one[0].fatG).toBe(60);
     expect(one[0].carbEligible).toBe(true);
-    expect(one[0].proteinG).toBeCloseTo(150);
 
     const two = mealTargetsForCount(2, {
       calories: 2000,
@@ -51,13 +76,15 @@ describe('mealTargetsForCount', () => {
     });
     expect(targets[2].carbEligible).toBe(false);
     expect(targets[2].carbsG).toBe(0);
-    expect(targets[2].fatG).toBe(0);
 
-    // Taper weights 2:1 across the two eligible meals.
+    // Taper weights 2:1 across the two carb-eligible meals.
     expect(targets[0].carbsG).toBeCloseTo(120);
     expect(targets[1].carbsG).toBeCloseTo(60);
-    expect(targets[0].carbsG).toBeGreaterThan(targets[1].carbsG);
+
+    // Fat tapers across every meal, so the tail keeps a small share of it.
+    expect(targets[2].fatG).toBeGreaterThan(0);
     expect(targets[0].fatG).toBeGreaterThan(targets[1].fatG);
+    expect(targets[1].fatG).toBeGreaterThan(targets[2].fatG);
 
     const totalCarbs = targets.reduce((sum, t) => sum + t.carbsG, 0);
     const totalFat = targets.reduce((sum, t) => sum + t.fatG, 0);
@@ -80,11 +107,9 @@ describe('mealTargetsForCount', () => {
       false,
     ]);
     expect(targets[3].carbsG).toBe(0);
-    expect(targets[3].fatG).toBe(0);
     expect(targets[4].carbsG).toBe(0);
-    expect(targets[4].fatG).toBe(0);
 
-    // Strictly decreasing across the 3 eligible meals.
+    // Strictly decreasing across the 3 carb-eligible meals.
     expect(targets[0].carbsG).toBeGreaterThan(targets[1].carbsG);
     expect(targets[1].carbsG).toBeGreaterThan(targets[2].carbsG);
 
@@ -94,39 +119,20 @@ describe('mealTargetsForCount', () => {
     expect(totalFat).toBeCloseTo(70);
   });
 
-  it('increases protein grams as carb/fat taper down, filling the remaining calorie share', () => {
-    const targets = mealTargetsForCount(4, {
-      calories: 2000,
-      proteinG: 150,
-      carbsG: 200,
-      fatG: 60,
-    });
-    // Equal calories + decreasing carb/fat calories means protein must rise.
-    for (let i = 1; i < targets.length; i++) {
-      expect(targets[i].proteinG).toBeGreaterThanOrEqual(
-        targets[i - 1].proteinG,
-      );
-    }
-    expect(targets[3].proteinG).toBeGreaterThan(targets[0].proteinG);
-  });
-
-  it('never lets the day-level protein ceiling exceed the target, even when a steep taper drives an early meal negative before clamping', () => {
-    // pos1's taper share of carbs/fat alone exceeds its equal calorie
-    // share, driving its raw residual deeply negative before the 0-floor.
+  it('keeps every meal reachable even under a steep taper, with no negative or dropped macro share', () => {
+    // pos1 carries 10/55ths of the day's carbs and fat here - under the old
+    // equal-calorie split that alone cost more than the meal's whole share,
+    // which is what drove its protein negative before clamping (ADR-019).
     const targets = mealTargetsForCount(10, {
       calories: 2000,
       proteinG: 150,
       carbsG: 200,
       fatG: 50,
     });
-    const totalProtein = targets.reduce((sum, t) => sum + t.proteinG, 0);
-    expect(totalProtein).toBeLessThanOrEqual(150 + 1e-9);
-    expect(targets.every((t) => t.proteinG >= 0)).toBe(true);
-    for (let i = 1; i < targets.length; i++) {
-      expect(targets[i].proteinG).toBeGreaterThanOrEqual(
-        targets[i - 1].proteinG - 1e-9,
-      );
-    }
+    expect(targets.every((t) => t.proteinG > 0)).toBe(true);
+    expect(targets.reduce((sum, t) => sum + t.proteinG, 0)).toBeCloseTo(150);
+    expect(targets.reduce((sum, t) => sum + t.carbsG, 0)).toBeCloseTo(200);
+    expect(targets.reduce((sum, t) => sum + t.fatG, 0)).toBeCloseTo(50);
   });
 });
 
