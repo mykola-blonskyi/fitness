@@ -18,7 +18,7 @@ export function userProfileSchema(t: ValidationTranslator) {
     gender: z.enum(GENDERS, t('userProfile.genderRequired')),
     dateOfBirth: z.iso.date(t('userProfile.dateInvalid')),
     height: z
-      .number()
+      .number(t('common.numberRequired'))
       .min(30, t('userProfile.heightMin'))
       .max(300, t('userProfile.heightMax')),
     goal: z.enum(GOALS, t('userProfile.goalRequired')),

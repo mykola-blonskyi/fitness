@@ -11,7 +11,9 @@ import type { ValidationTranslator } from '@shared/schemas/validation-translator
 export function weightSchema(t: ValidationTranslator) {
   return z
     .object({
-      weight: z.number().min(0.1, t('weight.mustBePositive')),
+      weight: z
+        .number(t('common.numberRequired'))
+        .min(0.1, t('weight.mustBePositive')),
       unit: z.enum(WEIGHT_UNITS),
     })
     .refine((data) => data.weight <= (data.unit === 'kg' ? MAX_KG : MAX_LB), {

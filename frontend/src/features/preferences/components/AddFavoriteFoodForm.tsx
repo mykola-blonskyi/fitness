@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   createFoodPreferenceSchema,
@@ -10,12 +10,9 @@ import { FieldError } from '@shared/ui/components/FieldError';
 import { useZodForm } from '@shared/libs/use-zod-form';
 import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createFoodPreference } from '@features/preferences/actions';
+import { FoodItemPicker } from '@features/preferences/components/FoodItemPicker';
 
-export function AddFavoriteFoodForm({
-  foodItems,
-}: {
-  foodItems: { id: string; name: string }[];
-}) {
+export function AddFavoriteFoodForm() {
   const t = useTranslations('Preferences.addFavoriteForm');
   const tv = useTranslations('Validation');
   const schema = useMemo(() => createFoodPreferenceSchema(tv), [tv]);
@@ -28,15 +25,6 @@ export function AddFavoriteFoodForm({
   } = useZodForm<CreateFoodPreferenceInput>(schema, {
     defaultValues: { type: 'favorite', targetType: 'food_item', targetId: '' },
   });
-
-  const [foodItemSearch, setFoodItemSearch] = useState('');
-  const filteredFoodItems = foodItemSearch
-    ? foodItems
-        .filter((item) =>
-          item.name.toLowerCase().includes(foodItemSearch.toLowerCase()),
-        )
-        .slice(0, 50)
-    : foodItems.slice(0, 50);
 
   async function onSubmit(input: CreateFoodPreferenceInput) {
     const result = await createFoodPreference({
@@ -53,32 +41,7 @@ export function AddFavoriteFoodForm({
       className="flex w-full max-w-sm flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="favoriteFoodItemSearch" className="label">
-          {t('searchLabel')}
-        </label>
-        <input
-          id="favoriteFoodItemSearch"
-          type="search"
-          value={foodItemSearch}
-          onChange={(e) => setFoodItemSearch(e.target.value)}
-          placeholder={t('searchPlaceholder')}
-          className="input"
-        />
-        <label htmlFor="favoriteTargetId" className="label">
-          {t('itemLabel')}
-        </label>
-        <select
-          id="favoriteTargetId"
-          className="input"
-          {...register('targetId')}
-        >
-          <option value="">{t('selectPlaceholder')}</option>
-          {filteredFoodItems.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
+        <FoodItemPicker id="favoriteTargetId" field={register('targetId')} />
         <FieldError message={errors.targetId?.message} />
       </div>
 

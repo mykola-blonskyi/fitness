@@ -411,6 +411,15 @@
       "remove": "Remove",
       "unknown": "Unknown"
     },
+    "picker": {
+      "searchLabel": "Search food items",
+      "searchPlaceholder": "Food name…",
+      "itemLabel": "Food item",
+      "selectPlaceholder": "Select a food item",
+      "loading": "Loading…",
+      "loadError": "Couldn't load food items — try again.",
+      "empty": "No food items match your search."
+    },
     "addDietForm": {
       "label": "Diet type",
       "placeholder": "Select a diet type",
@@ -418,10 +427,6 @@
       "submit": "Add"
     },
     "addFavoriteForm": {
-      "searchLabel": "Search food items",
-      "searchPlaceholder": "Food name…",
-      "itemLabel": "Food item",
-      "selectPlaceholder": "Select a food item",
       "adding": "Adding…",
       "submit": "Add favorite"
     },
@@ -442,10 +447,6 @@
       "selectSubcategoryPlaceholder": "Select a subcategory",
       "roleLabel": "Role",
       "selectRolePlaceholder": "Select a role",
-      "searchLabel": "Search food items",
-      "searchPlaceholder": "Food name…",
-      "itemLabel": "Food item",
-      "selectFoodItemPlaceholder": "Select a food item",
       "adding": "Adding…",
       "submit": "Add preference"
     },
@@ -632,6 +633,9 @@
     "synced": "Synced"
   },
   "Validation": {
+    "common": {
+      "numberRequired": "Enter a number"
+    },
     "exercise": {
       "nameRequired": "Name is required",
       "categoryRequired": "Choose a category"

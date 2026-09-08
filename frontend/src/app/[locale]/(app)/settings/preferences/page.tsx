@@ -8,9 +8,8 @@ import {
   FoodPreferenceList,
   FavoriteFoodList,
 } from '@features/preferences';
-import type { FoodItem, FoodTaxonomy } from '@features/food-catalog/actions';
+import type { FoodTaxonomy } from '@features/food-catalog/actions';
 import { apiFetch } from '@libs/api-client';
-import type { CursorPage } from '@shared/types/admin';
 import type { DietPreference, FoodPreference } from '@shared/types/preferences';
 
 export default async function PreferencesSettingsPage({
@@ -21,15 +20,11 @@ export default async function PreferencesSettingsPage({
   const { locale } = await params;
   const t = await getTranslations('Preferences');
 
-  const [foodPreferences, dietPreferences, taxonomy, foodItemPage] =
-    await Promise.all([
-      apiFetch<FoodPreference[]>('/food-preferences'),
-      apiFetch<DietPreference[]>('/diet-preferences'),
-      apiFetch<FoodTaxonomy>('/food-items/taxonomy'),
-      // limit=100: the exclusion picker below filters this client-side
-      // and caps its own render at 50 - no need for the picker to paginate.
-      apiFetch<CursorPage<FoodItem>>('/food-items?limit=100'),
-    ]);
+  const [foodPreferences, dietPreferences, taxonomy] = await Promise.all([
+    apiFetch<FoodPreference[]>('/food-preferences'),
+    apiFetch<DietPreference[]>('/diet-preferences'),
+    apiFetch<FoodTaxonomy>('/food-items/taxonomy'),
+  ]);
 
   const exclusionPreferences = foodPreferences.filter(
     (p) => p.type !== 'favorite',
@@ -56,16 +51,13 @@ export default async function PreferencesSettingsPage({
       <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
         <h2 className="text-[15px] font-bold">{t('allergiesHeading')}</h2>
         <FoodPreferenceList preferences={exclusionPreferences} />
-        <AddFoodPreferenceForm
-          taxonomy={taxonomy}
-          foodItems={foodItemPage.items}
-        />
+        <AddFoodPreferenceForm taxonomy={taxonomy} />
       </section>
 
       <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
         <h2 className="text-[15px] font-bold">{t('favoritesHeading')}</h2>
         <FavoriteFoodList preferences={favoritePreferences} />
-        <AddFavoriteFoodForm foodItems={foodItemPage.items} />
+        <AddFavoriteFoodForm />
       </section>
     </main>
   );
