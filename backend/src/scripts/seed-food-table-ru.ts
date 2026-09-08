@@ -12,7 +12,9 @@
 // convention (business-rules.md "Catalog display names..."), so it is
 // machine-translated ru -> en here; the Russian original is stored as the
 // `ru` translation verbatim, and uk/es are translated from the Russian
-// source (not from the English round-trip). Without DEEPL_API_KEY the
+// source (not from the English round-trip), except where
+// data/food-table-ru.names.json overrides a name DeepL got wrong.
+// Without DEEPL_API_KEY the
 // script still imports, storing the Russian name as the base name with a
 // warning - a later run with the key set does not retroactively fix
 // those base names (insertItem never overwrites), so set it up front.
@@ -27,12 +29,23 @@ import {
   type CuratedItem,
 } from './seed-food-catalog';
 import table from './data/food-table-ru.json';
+import nameOverrides from './data/food-table-ru.names.json';
 
 const SOURCE = 'ru_kbju_table';
 const DEEPL_CALL_DELAY_MS = 250;
 // Translated *from* Russian, so 'ru' itself is stored verbatim, never
 // round-tripped through DeepL.
 const TRANSLATED_LOCALES = ['uk', 'es'] as const;
+
+// DeepL misreads many of the table's Russian names as ordinary words
+// (Треска -> "Fever", Сом -> "Monday"), and gets all three target locales
+// wrong at once because each is translated from the same Russian. These
+// are hand-checked replacements for the rows it got wrong; they apply at
+// insert time only, so rows already imported need fixing separately.
+const NAME_OVERRIDES: Record<
+  string,
+  { en: string; uk: string; es: string } | undefined
+> = nameOverrides;
 
 interface TableItem {
   name: string;
@@ -318,9 +331,11 @@ async function main() {
   const deeplApiKey = process.env.DEEPL_API_KEY;
   if (!deeplApiKey) {
     console.warn(
-      'DEEPL_API_KEY not set - base names will be stored in Russian and ' +
-        'no uk/es translations added. Set it before the first run if ' +
-        'possible: base names are never rewritten on a later run.',
+      'DEEPL_API_KEY not set - apart from the rows in ' +
+        'data/food-table-ru.names.json, base names will be stored in ' +
+        'Russian and no uk/es translations added. Set it before the ' +
+        'first run if possible: base names are never rewritten on a ' +
+        'later run.',
     );
   }
 
@@ -342,6 +357,7 @@ async function main() {
       }
 
       const sourceId = tableSourceId(section.key, item.name);
+      const override = NAME_OVERRIDES[sourceId];
       const existing = await db.query.foodCalories.findFirst({
         where: and(
           eq(schema.foodCalories.source, SOURCE),
@@ -355,9 +371,11 @@ async function main() {
         foodCalorieId = existing.id;
         skippedExisting++;
       } else {
-        const englishName = deeplApiKey
-          ? await translateOrNull(item.name, 'en-US', deeplApiKey)
-          : null;
+        const englishName =
+          override?.en ??
+          (deeplApiKey
+            ? await translateOrNull(item.name, 'en-US', deeplApiKey)
+            : null);
         if (deeplApiKey && !englishName) {
           // Better to leave the row for a re-run than to bake a Russian
           // base name in permanently (insertItem never overwrites it).
@@ -390,7 +408,6 @@ async function main() {
       if (await upsertTranslation(db, foodCalorieId, 'ru', item.name))
         translated++;
 
-      if (!deeplApiKey) continue;
       for (const locale of TRANSLATED_LOCALES) {
         const already = await db.query.foodCalorieTranslations.findFirst({
           where: and(
@@ -400,9 +417,13 @@ async function main() {
           columns: { id: true },
         });
         if (already) continue;
-        const name = await translateOrNull(item.name, locale, deeplApiKey);
+        const name =
+          override?.[locale] ??
+          (deeplApiKey
+            ? await translateOrNull(item.name, locale, deeplApiKey)
+            : null);
         if (!name) {
-          translationsFailed++;
+          if (deeplApiKey) translationsFailed++;
           continue;
         }
         if (await upsertTranslation(db, foodCalorieId, locale, name))

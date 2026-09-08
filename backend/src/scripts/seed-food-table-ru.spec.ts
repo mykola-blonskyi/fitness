@@ -1,5 +1,6 @@
 import { classifyTableItem, tableSourceId } from './seed-food-table-ru';
 import table from './data/food-table-ru.json';
+import nameOverrides from './data/food-table-ru.names.json';
 
 const item = (
   name: string,
@@ -160,5 +161,38 @@ describe('tableSourceId', () => {
       section.items.map((row) => tableSourceId(section.key, row.name)),
     );
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe('name overrides', () => {
+  const sourceIds = new Set(
+    table.sections.flatMap((section) =>
+      section.items.map((row) => tableSourceId(section.key, row.name)),
+    ),
+  );
+
+  // A typo'd key would silently leave the bad machine translation in place.
+  it('keys every override to a row that exists in the table', () => {
+    for (const key of Object.keys(nameOverrides)) {
+      expect(sourceIds.has(key)).toBe(true);
+    }
+  });
+
+  it('gives every override all three locales, none left blank', () => {
+    for (const [key, names] of Object.entries(nameOverrides)) {
+      for (const locale of ['en', 'uk', 'es'] as const) {
+        expect(`${key}.${locale}=${names[locale]}`).toBe(
+          `${key}.${locale}=${names[locale].trim()}`,
+        );
+        expect(names[locale].length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('replaces the mistranslations that prompted the file', () => {
+    expect(nameOverrides['fish:треска'].en).toBe('Cod');
+    expect(nameOverrides['fish:сом'].en).toBe('Catfish');
+    expect(nameOverrides['sweets:ирис'].en).toBe('Toffee');
+    expect(nameOverrides['fish:кета'].uk).toBe('Кета');
   });
 });
