@@ -1,0 +1,287 @@
+{
+  "alcoholic_beverages:бренди": {
+    "en": "Brandy",
+    "uk": "Бренді",
+    "es": "Brandy"
+  },
+  "bread:баранки": {
+    "en": "Baranki (bagel rings)",
+    "uk": "Баранки",
+    "es": "Baranki (rosquillas)"
+  },
+  "bread:сушки": {
+    "en": "Sushki (dry bagel rings)",
+    "uk": "Сушки",
+    "es": "Sushki (rosquillas secas)"
+  },
+  "dairy:сыр сулугуни": {
+    "en": "Suluguni cheese",
+    "uk": "Сир сулугуні",
+    "es": "Queso suluguni"
+  },
+  "fish:бычки": {
+    "en": "Gobies",
+    "uk": "Бички",
+    "es": "Gobios"
+  },
+  "fish:горбуша": {
+    "en": "Pink salmon",
+    "uk": "Горбуша",
+    "es": "Salmón rosado"
+  },
+  "fish:кета": {
+    "en": "Chum salmon",
+    "uk": "Кета",
+    "es": "Salmón chum"
+  },
+  "fish:красноперка": {
+    "en": "Rudd",
+    "uk": "Краснопірка",
+    "es": "Escardino"
+  },
+  "fish:ледяная": {
+    "en": "Icefish",
+    "uk": "Крижана риба",
+    "es": "Pez de hielo"
+  },
+  "fish:лещ": {
+    "en": "Bream",
+    "uk": "Лящ",
+    "es": "Brema"
+  },
+  "fish:макрель": {
+    "en": "Chub mackerel",
+    "uk": "Макрель",
+    "es": "Caballa"
+  },
+  "fish:минтай": {
+    "en": "Alaska pollock",
+    "uk": "Мінтай",
+    "es": "Abadejo de Alaska"
+  },
+  "fish:навага": {
+    "en": "Navaga cod",
+    "uk": "Навага",
+    "es": "Bacalao navaga"
+  },
+  "fish:плотва": {
+    "en": "Roach",
+    "uk": "Плітка",
+    "es": "Rutilo"
+  },
+  "fish:сазан": {
+    "en": "Wild carp",
+    "uk": "Сазан",
+    "es": "Carpa salvaje"
+  },
+  "fish:сайра": {
+    "en": "Pacific saury",
+    "uk": "Сайра",
+    "es": "Paparda del Pacífico"
+  },
+  "fish:салака": {
+    "en": "Baltic herring",
+    "uk": "Салака",
+    "es": "Arenque báltico"
+  },
+  "fish:семга": {
+    "en": "Atlantic salmon",
+    "uk": "Сьомга",
+    "es": "Salmón atlántico"
+  },
+  "fish:сиг": {
+    "en": "Whitefish",
+    "uk": "Сиг",
+    "es": "Coregono"
+  },
+  "fish:скумбрия": {
+    "en": "Atlantic mackerel",
+    "uk": "Скумбрія",
+    "es": "Caballa del Atlántico"
+  },
+  "fish:сом": {
+    "en": "Catfish",
+    "uk": "Сом",
+    "es": "Siluro"
+  },
+  "fish:ставрида": {
+    "en": "Horse mackerel",
+    "uk": "Ставрида",
+    "es": "Jurel"
+  },
+  "fish:треска": {
+    "en": "Cod",
+    "uk": "Тріска",
+    "es": "Bacalao"
+  },
+  "fish:угольная рыба": {
+    "en": "Sablefish",
+    "uk": "Вугільна риба",
+    "es": "Bacalao negro"
+  },
+  "fish:хек": {
+    "en": "Hake",
+    "uk": "Хек",
+    "es": "Merluza"
+  },
+  "fish:язык морской": {
+    "en": "Sole",
+    "uk": "Морський язик",
+    "es": "Lenguado"
+  },
+  "fruits:алыча": {
+    "en": "Cherry plum",
+    "uk": "Алича",
+    "es": "Ciruela mirabolana"
+  },
+  "fruits:голубика": {
+    "en": "Bog blueberries",
+    "uk": "Лохина",
+    "es": "Arándanos azules"
+  },
+  "fruits:земляника": {
+    "en": "Wild strawberries",
+    "uk": "Суниці",
+    "es": "Fresas silvestres"
+  },
+  "fruits:облепиха": {
+    "en": "Sea buckthorn",
+    "uk": "Обліпиха",
+    "es": "Espino amarillo"
+  },
+  "fruits:памело": {
+    "en": "Pomelo",
+    "uk": "Помело",
+    "es": "Pomelo"
+  },
+  "fruits:хурма": {
+    "en": "Persimmon",
+    "uk": "Хурма",
+    "es": "Caqui"
+  },
+  "fruits:черника": {
+    "en": "Bilberries",
+    "uk": "Чорниця",
+    "es": "Arándanos negros"
+  },
+  "mushrooms:белые свежие": {
+    "en": "Fresh porcini",
+    "uk": "Білі гриби свіжі",
+    "es": "Boletus frescos"
+  },
+  "mushrooms:белые сушеные": {
+    "en": "Dried porcini",
+    "uk": "Білі гриби сушені",
+    "es": "Boletus secos"
+  },
+  "mushrooms:рыжики свежие": {
+    "en": "Fresh saffron milk caps",
+    "uk": "Рижики свіжі",
+    "es": "Níscalos frescos"
+  },
+  "mushrooms:сыроежки свежие": {
+    "en": "Fresh russulas",
+    "uk": "Сироїжки свіжі",
+    "es": "Rúsulas frescas"
+  },
+  "non_alcoholic_beverages:какао на молоке": {
+    "en": "Cocoa with milk",
+    "uk": "Какао на молоці",
+    "es": "Cacao con leche"
+  },
+  "non_alcoholic_beverages:кола": {
+    "en": "Cola",
+    "uk": "Кола",
+    "es": "Cola"
+  },
+  "nuts_and_dried_fruits:курага": {
+    "en": "Dried apricots (pitted)",
+    "uk": "Курага",
+    "es": "Orejones de albaricoque"
+  },
+  "nuts_and_dried_fruits:урюк": {
+    "en": "Dried apricots (with pits)",
+    "uk": "Урюк",
+    "es": "Albaricoques secos con hueso"
+  },
+  "porridge:ячневые хлопья": {
+    "en": "Barley flakes",
+    "uk": "Ячні пластівці",
+    "es": "Copos de cebada"
+  },
+  "roe:икра кеты зернистая": {
+    "en": "Granular chum salmon roe",
+    "uk": "Ікра кети зерниста",
+    "es": "Huevas de salmón chum en grano"
+  },
+  "roe:икра лещевая пробойная": {
+    "en": "Pressed bream roe",
+    "uk": "Ікра ляща пробійна",
+    "es": "Huevas prensadas de brema"
+  },
+  "roe:икра минтая пробойная": {
+    "en": "Pressed Alaska pollock roe",
+    "uk": "Ікра мінтая пробійна",
+    "es": "Huevas prensadas de abadejo"
+  },
+  "roe:икра осетровая зернистая": {
+    "en": "Granular sturgeon caviar",
+    "uk": "Ікра осетрова зерниста",
+    "es": "Caviar de esturión en grano"
+  },
+  "roe:икра осетровая пробойная": {
+    "en": "Pressed sturgeon caviar",
+    "uk": "Ікра осетрова пробійна",
+    "es": "Caviar de esturión prensado"
+  },
+  "sausages:сардельки говяжьи": {
+    "en": "Beef thick sausages",
+    "uk": "Сардельки яловичі",
+    "es": "Salchichas gruesas de ternera"
+  },
+  "sausages:сардельки свиные": {
+    "en": "Pork thick sausages",
+    "uk": "Сардельки свинячі",
+    "es": "Salchichas gruesas de cerdo"
+  },
+  "sausages:сосиски говяжьи": {
+    "en": "Beef frankfurters",
+    "uk": "Сосиски яловичі",
+    "es": "Salchichas de ternera"
+  },
+  "sausages:сосиски любительские": {
+    "en": "\"Lubitelskaya\" frankfurters",
+    "uk": "Сосиски \"Любительські\"",
+    "es": "Salchichas \"Lubitelskaya\""
+  },
+  "sausages:сосиски свиные": {
+    "en": "Pork frankfurters",
+    "uk": "Сосиски свинячі",
+    "es": "Salchichas de cerdo"
+  },
+  "sweets:ирис": {
+    "en": "Toffee",
+    "uk": "Ірис (цукерки)",
+    "es": "Toffee"
+  },
+  "vegetables:бобы": {
+    "en": "Broad beans",
+    "uk": "Боби",
+    "es": "Habas"
+  },
+  "vegetables:брюква": {
+    "en": "Rutabaga",
+    "uk": "Бруква",
+    "es": "Colinabo"
+  },
+  "vegetables:редька": {
+    "en": "Black radish",
+    "uk": "Редька",
+    "es": "Rábano negro"
+  },
+  "vegetables:салат": {
+    "en": "Lettuce",
+    "uk": "Салат листовий",
+    "es": "Lechuga"
+  }
+}
