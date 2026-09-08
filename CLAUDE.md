@@ -10,7 +10,9 @@ This repository follows the global Claude configuration.
 
 All six phases of `plans/current.md` are implemented and merged into `main`, and every FITNESS work item in Plane is Done or Cancelled — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018).
 
-One thing is outstanding, and it is operational rather than code: the `fitness` OIDC client still has to be registered against the deployed login instance, with `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`/a fresh `AUTH_SECRET` set in Coolify. `login.blonskyi.dev` has no DNS record yet, so this is blocked on that instance existing. Until it ships, production lags `main`: `fitness.blonskyi.dev` still serves the pre-#78 build and redirects to the Hub's `blonskyi.dev/en/login`. GitHub Actions billing is failing, so pushing to `main` does not auto-deploy — releases are triggered by hand in Coolify.
+Production is current with `main` as of 2026-09-08, serving the `11221eb` build. `login.blonskyi.dev` is live, the `fitness` client is registered against it, and signing in now goes to that issuer instead of the Hub. The one path still unproven from outside is the token exchange, which only a real sign-in exercises — so if a login ever fails at the callback rather than at the prompt, suspect `OIDC_CLIENT_SECRET` in Coolify first.
+
+GitHub Actions billing is still failing — no workflow has run since 2026-09-03 — so pushing to `main` does not auto-deploy. Releases are triggered by hand in Coolify, which is why production can sit behind `main` without anything being wrong.
 
 See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
 
