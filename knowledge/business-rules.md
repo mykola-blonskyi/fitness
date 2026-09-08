@@ -154,6 +154,8 @@ Why: the Postgres instance is shared across the user's other pet projects — mi
 
 A backend script pulls a subset from Open Food Facts/USDA/wger once, maps source categories to this project's category/subcategory/role taxonomy via an explicit mapping table, and inserts with `source` + `is_verified=false`. Re-run manually to add more items later. Per-locale names (uk/ru/es) are sourced from the source API's own translations where it provides them (e.g. wger ships community-maintained en/uk/ru/es names natively — used directly rather than re-translated), machine-translated at the same import step for sources that don't (e.g. Open Food Facts/USDA, English-only), and always marked unverified either way — "unverified" reflects that this project's own reviewers haven't checked it, regardless of translation origin.
 
+wger is the exception that proved the rule: it ships ~620 Spanish exercise names but only a dozen Ukrainian and Russian ones, so those two locales stayed English on screen. Their names now come from `backend/src/scripts/data/exercise-translations.uk-ru.json`, applied by `db:seed:exercise-translations` after the wger import, and keyed by wger id so a rebuilt catalog picks them up again.
+
 Why: avoids maintaining a recurring sync job and unattended auto-categorization against a taxonomy the external sources don't natively provide.
 
 ---
