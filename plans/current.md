@@ -4,6 +4,8 @@
 
 Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architecture]]), domain model ([[domain-model]]), and business rules ([[business-rules]]) — full scope in one pass, not a phased MVP. Source grooming note: `~/Documents/obsidian-notes/fit/Grooming plan for fitness.blonskyi.dev project.md`.
 
+**Status — 2026-09-08: closed.** Every item below is built, merged and deployed; the last one open, the OIDC client registration, was verified against production today. New work belongs in `plans/backlog.md` and Plane, not here.
+
 ---
 
 ## Phase 1 — Project scaffolding & auth
@@ -61,13 +63,13 @@ Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architect
 - [x] `users.identity_sub` added as its own column with a backfill migration; `users.id` and every FK referencing it are left untouched
 - [x] Identity resolution reconciles on email in `IdentityGuard`, so the owner's first login under a new `sub` keeps their existing row instead of orphaning it
 - [x] Sign-out control added to the header (supersedes ADR-007's no-sign-out decision)
-- [ ] Operational: register the `fitness` client against the deployed login instance and set `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`/a fresh `AUTH_SECRET` in Coolify before deploying — **blocked, and the only work left in this plan**: `login.blonskyi.dev` has no DNS record yet, and production still serves the pre-#78 build (`fitness.blonskyi.dev` redirects to the Hub's `blonskyi.dev/en/login`, not to the OIDC issuer). Deploying is manual, not automatic — see the CI-billing note below.
+- [x] Operational: `fitness` registered as a client of the deployed login instance, with `OIDC_ISSUER`/`OIDC_CLIENT_SECRET`/a fresh `AUTH_SECRET` set in Coolify. Verified 2026-09-08 — `login.blonskyi.dev` serves its discovery document, production runs the post-#78 build, and a sign-in from `fitness.blonskyi.dev` produces an authorize request the issuer accepts for `client_id=fitness` with the callback URL whitelisted. Only the token exchange is still unproven from outside, since it takes a real login.
 
 ---
 
 ## Risks
 
-- Food/exercise seed data quality: imported items start `is_verified=false` and machine-translated names are unverified — needs an ongoing manual review pass, not a one-time fix
+- Food/exercise seed data quality: catalog rows were bulk-approved in dev and production on 2026-09-08, but their machine-translated names went with them unreviewed (`food_calorie_translations.is_verified` is still false for every row) — needs an ongoing manual review pass, not a one-time fix
 - Greedy diet-generation heuristic may produce awkward menus at the tails (very low/high calorie targets, sparse Food Preferences) — worth a manual spot-check once seed data exists
 - Shared Postgres/Coolify host with other pet projects — migrations must stay scoped to this project's tables and never run unattended after a failed deploy (see [[business-rules]] "Migrations are a mandatory pre-deploy gate")
-- GitHub Actions billing is failing, so a push to `main` no longer auto-deploys — every release since then has to be triggered by hand in Coolify, which is why production can sit several merged PRs behind `main`
+- GitHub Actions billing is failing, so a push to `main` no longer auto-deploys — no workflow has run since 2026-09-03, and every release since then has to be triggered by hand in Coolify, which is why production can sit several merged PRs behind `main`
