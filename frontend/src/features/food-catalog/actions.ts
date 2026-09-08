@@ -41,11 +41,13 @@ export async function listFoodItems(params: {
   category?: string;
   search?: string;
   cursor?: string;
+  limit?: number;
 }): Promise<CursorPage<FoodItem>> {
   const query = new URLSearchParams();
   if (params.category) query.set('category', params.category);
   if (params.search) query.set('search', params.search);
   if (params.cursor) query.set('cursor', params.cursor);
+  if (params.limit) query.set('limit', String(params.limit));
   return apiFetch<CursorPage<FoodItem>>(`/food-items?${query.toString()}`);
 }
 

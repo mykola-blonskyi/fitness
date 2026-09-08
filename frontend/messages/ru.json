@@ -411,6 +411,15 @@
       "remove": "Удалить",
       "unknown": "Неизвестно"
     },
+    "picker": {
+      "searchLabel": "Поиск продуктов",
+      "searchPlaceholder": "Название продукта…",
+      "itemLabel": "Продукт",
+      "selectPlaceholder": "Выберите продукт",
+      "loading": "Загрузка…",
+      "loadError": "Не удалось загрузить продукты — попробуйте ещё раз.",
+      "empty": "Нет продуктов, соответствующих поиску."
+    },
     "addDietForm": {
       "label": "Тип диеты",
       "placeholder": "Выберите тип диеты",
@@ -418,10 +427,6 @@
       "submit": "Добавить"
     },
     "addFavoriteForm": {
-      "searchLabel": "Поиск продуктов",
-      "searchPlaceholder": "Название продукта…",
-      "itemLabel": "Продукт",
-      "selectPlaceholder": "Выберите продукт",
       "adding": "Добавляется…",
       "submit": "Добавить в избранное"
     },
@@ -442,10 +447,6 @@
       "selectSubcategoryPlaceholder": "Выберите подкатегорию",
       "roleLabel": "Роль",
       "selectRolePlaceholder": "Выберите роль",
-      "searchLabel": "Поиск продуктов",
-      "searchPlaceholder": "Название продукта…",
-      "itemLabel": "Продукт",
-      "selectFoodItemPlaceholder": "Выберите продукт",
       "adding": "Добавляется…",
       "submit": "Добавить предпочтение"
     },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   createFoodPreferenceSchema,
@@ -10,14 +10,13 @@ import { FieldError } from '@shared/ui/components/FieldError';
 import { useZodForm } from '@shared/libs/use-zod-form';
 import { applyFormActionError } from '@shared/libs/apply-form-action-error';
 import { createFoodPreference } from '@features/preferences/actions';
+import { FoodItemPicker } from '@features/preferences/components/FoodItemPicker';
 import type { FoodTaxonomy } from '@features/food-catalog/actions';
 
 export function AddFoodPreferenceForm({
   taxonomy,
-  foodItems,
 }: {
   taxonomy: FoodTaxonomy;
-  foodItems: { id: string; name: string }[];
 }) {
   const t = useTranslations('Preferences.addFoodForm');
   const tv = useTranslations('Validation');
@@ -51,20 +50,6 @@ export function AddFoodPreferenceForm({
       label: `${tCategories(category.name)} — ${tSubcategories(subcategory.name)}`,
     })),
   );
-
-  // A plain <select> over the full catalog doesn't scale as it grows
-  // (see knowledge/business-rules.md - the seed is expected to grow via
-  // manual re-runs) - this filters the already-fetched list client-side
-  // rather than adding a new search endpoint, capped so a broad query
-  // still renders a short list.
-  const [foodItemSearch, setFoodItemSearch] = useState('');
-  const filteredFoodItems = foodItemSearch
-    ? foodItems
-        .filter((item) =>
-          item.name.toLowerCase().includes(foodItemSearch.toLowerCase()),
-        )
-        .slice(0, 50)
-    : foodItems.slice(0, 50);
 
   async function onSubmit(input: CreateFoodPreferenceInput) {
     const result = await createFoodPreference(input);
@@ -155,28 +140,7 @@ export function AddFoodPreferenceForm({
 
       {targetType === 'food_item' && (
         <div className="flex flex-col gap-1">
-          <label htmlFor="foodItemSearch" className="label">
-            {t('searchLabel')}
-          </label>
-          <input
-            id="foodItemSearch"
-            type="search"
-            value={foodItemSearch}
-            onChange={(e) => setFoodItemSearch(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            className="input"
-          />
-          <label htmlFor="targetId" className="label">
-            {t('itemLabel')}
-          </label>
-          <select id="targetId" className="input" {...register('targetId')}>
-            <option value="">{t('selectFoodItemPlaceholder')}</option>
-            {filteredFoodItems.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          <FoodItemPicker id="targetId" field={register('targetId')} />
           <FieldError message={errors.targetId?.message} />
         </div>
       )}

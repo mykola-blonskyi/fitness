@@ -10,6 +10,12 @@ vi.mock('@features/preferences/actions', () => ({
   removeFoodPreference: vi.fn(),
 }));
 
+// The picker searches the catalog server-side (FoodItemPicker) rather than
+// filtering a page handed down as a prop.
+vi.mock('@features/food-catalog/actions', () => ({
+  listFoodItems: () => Promise.resolve({ items: foodItems, nextCursor: null }),
+}));
+
 import { AddFavoriteFoodForm } from '@features/preferences/components/AddFavoriteFoodForm';
 import { FavoriteFoodList } from '@features/preferences/components/FavoriteFoodList';
 
@@ -22,11 +28,11 @@ describe('AddFavoriteFoodForm', () => {
   it('submits with type and targetType hardcoded to favorite/food_item', async () => {
     const user = userEvent.setup();
     createFoodPreference.mockResolvedValue({});
-    render(<AddFavoriteFoodForm foodItems={foodItems} />);
+    render(<AddFavoriteFoodForm />);
 
     await user.selectOptions(
-      screen.getByLabelText('Food item'),
-      'Chicken breast',
+      await screen.findByLabelText('Food item'),
+      await screen.findByRole('option', { name: 'Chicken breast' }),
     );
     await user.click(screen.getByRole('button', { name: /add favorite/i }));
 
@@ -43,11 +49,11 @@ describe('AddFavoriteFoodForm', () => {
       error:
         'This Food Item is already excluded or an allergy - remove that first to favorite it',
     });
-    render(<AddFavoriteFoodForm foodItems={foodItems} />);
+    render(<AddFavoriteFoodForm />);
 
     await user.selectOptions(
-      screen.getByLabelText('Food item'),
-      'Chicken breast',
+      await screen.findByLabelText('Food item'),
+      await screen.findByRole('option', { name: 'Chicken breast' }),
     );
     await user.click(screen.getByRole('button', { name: /add favorite/i }));
 

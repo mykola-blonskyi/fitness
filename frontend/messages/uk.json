@@ -411,6 +411,15 @@
       "remove": "Видалити",
       "unknown": "Невідомо"
     },
+    "picker": {
+      "searchLabel": "Пошук продуктів",
+      "searchPlaceholder": "Назва продукту…",
+      "itemLabel": "Продукт",
+      "selectPlaceholder": "Виберіть продукт",
+      "loading": "Завантаження…",
+      "loadError": "Не вдалося завантажити продукти — спробуйте ще раз.",
+      "empty": "Немає продуктів, що відповідають пошуку."
+    },
     "addDietForm": {
       "label": "Тип дієти",
       "placeholder": "Виберіть тип дієти",
@@ -418,10 +427,6 @@
       "submit": "Додати"
     },
     "addFavoriteForm": {
-      "searchLabel": "Пошук продуктів",
-      "searchPlaceholder": "Назва продукту…",
-      "itemLabel": "Продукт",
-      "selectPlaceholder": "Виберіть продукт",
       "adding": "Додається…",
       "submit": "Додати до обраного"
     },
@@ -442,10 +447,6 @@
       "selectSubcategoryPlaceholder": "Виберіть підкатегорію",
       "roleLabel": "Роль",
       "selectRolePlaceholder": "Виберіть роль",
-      "searchLabel": "Пошук продуктів",
-      "searchPlaceholder": "Назва продукту…",
-      "itemLabel": "Продукт",
-      "selectFoodItemPlaceholder": "Виберіть продукт",
       "adding": "Додається…",
       "submit": "Додати вподобання"
     },

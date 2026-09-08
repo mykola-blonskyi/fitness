@@ -411,6 +411,15 @@
       "remove": "Eliminar",
       "unknown": "Desconocido"
     },
+    "picker": {
+      "searchLabel": "Buscar alimentos",
+      "searchPlaceholder": "Nombre del alimento…",
+      "itemLabel": "Alimento",
+      "selectPlaceholder": "Selecciona un alimento",
+      "loading": "Cargando…",
+      "loadError": "No se han podido cargar los alimentos. Inténtalo de nuevo.",
+      "empty": "Ningún alimento coincide con tu búsqueda."
+    },
     "addDietForm": {
       "label": "Tipo de dieta",
       "placeholder": "Selecciona un tipo de dieta",
@@ -418,10 +427,6 @@
       "submit": "Añadir"
     },
     "addFavoriteForm": {
-      "searchLabel": "Buscar alimentos",
-      "searchPlaceholder": "Nombre del alimento…",
-      "itemLabel": "Alimento",
-      "selectPlaceholder": "Selecciona un alimento",
       "adding": "Añadiendo…",
       "submit": "Añadir a favoritos"
     },
@@ -442,10 +447,6 @@
       "selectSubcategoryPlaceholder": "Selecciona una subcategoría",
       "roleLabel": "Función",
       "selectRolePlaceholder": "Selecciona una función",
-      "searchLabel": "Buscar alimentos",
-      "searchPlaceholder": "Nombre del alimento…",
-      "itemLabel": "Alimento",
-      "selectFoodItemPlaceholder": "Selecciona un alimento",
       "adding": "Añadiendo…",
       "submit": "Añadir preferencia"
     },
