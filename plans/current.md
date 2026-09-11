@@ -4,7 +4,51 @@
 
 Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architecture]]), domain model ([[domain-model]]), and business rules ([[business-rules]]) — full scope in one pass, not a phased MVP. Source grooming note: `~/Documents/obsidian-notes/fit/Grooming plan for fitness.blonskyi.dev project.md`.
 
-**Status — 2026-09-08: closed.** Every item below is built, merged and deployed; the last one open, the OIDC client registration, was verified against production today. New work belongs in `plans/backlog.md` and Plane, not here.
+**Status — 2026-09-12.** The original build (Phases 1-6 below) is closed: every item is built, merged and deployed. The active plan is now the menu-composition rework (ADR-020), tracked immediately below.
+
+---
+
+# Active plan — Menu composition rework (ADR-020)
+
+## Goal
+
+Generated plans should read like food a person would actually cook and eat, not a macro-correct list of ingredients. Today every meal is the same four role-slots filled independently from an uncurated pool: no plain rice exists in it, while beef brains, frankfurters, vegetable chips and babyfood carrots do. Target model, slot by slot, is in ADR-020; the vocabulary (Meal Archetype, Meal Slot, Food Family, Serving, Free Food) is in [[glossary]].
+
+Delivered in three phases — a half-migrated model generates worse plans than either end state, so each phase has to stand on its own.
+
+## Phase 1 — The pool and the picking rules
+
+Meal shape stays as it is today. The foods stop being absurd.
+
+- [ ] Food Family taxonomy: table + nullable `food_calories.family_id`, ~20 families per ADR-020
+- [ ] Family classification pass over the ~570 generation-eligible rows — rule-based inference in the seed scripts plus a reviewed override file (`food-families.json`), same pattern as `food-table-ru.names.json`
+- [ ] Curated staples set (~80-120 foods: macros, family, names in all four locales), delivered as a reviewable file **before** seeding
+- [ ] Generation draws only from Food Items that carry a Family (no rule needed for sweets/beverages/flours/offal — they simply have none)
+- [ ] Reclassification: potato + sweet potato -> `complex_carb`/`starchy_vegetable`, beans + lentils -> `plant_protein`, olives -> fat; Category untouched
+- [ ] Dry/raw weight as the canonical form; cooked duplicates get no Family
+- [ ] No Food Item twice in a day (fall back to a repeat only when the Family has nothing else eligible)
+- [ ] At most 2 meals per day drawing from the same protein Family
+- [ ] Free Foods: all non-starchy vegetables get fixed nominal portions, leave the macro fit and the displayed totals, and a flat ~120 kcal vegetable allowance is subtracted from the day's calorie target before fitting
+
+## Phase 2 — The shape of a meal
+
+- [ ] Meal Archetypes (`breakfast`/`main`/`dinner`) + Meal Slots in versioned code, serialisable
+- [ ] Archetype macro weights replace ADR-019's equal-protein split and ADR-016's carb/fat taper
+- [ ] `diet_items.slot_key` + multi-item slots (3-item salad, 1-2 item dinner protein), rendered as one labelled group
+- [ ] Servings (`serving_unit`/`serving_grams` on ~50-80 foods) + whole-unit snapping in the fit
+- [ ] Swap/reroll retargeted from Role to Family; slot-level reroll ("give me another salad")
+- [ ] Favorites narrow per Family instead of per Role (ADR-014 as narrowed by ADR-020)
+
+## Phase 3 — Variants and settings
+
+- [ ] Breakfast and dinner Archetype variants, with `vary` as the default
+- [ ] Profile settings to pin either end of the day to one variant
+- [ ] Meal-level reroll (re-pick the variant and everything in it)
+- [ ] `meal_count` narrowed from 1-6 to 3-6, with stored 1s and 2s bumped to 3
+
+---
+
+# Closed plan — initial build (2026-08 .. 2026-09-08)
 
 ---
 

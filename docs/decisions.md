@@ -170,7 +170,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-08-31
 
-Status: Accepted
+Status: Accepted; narrowed by ADR-020 (2026-09-12) — a favorite restricts its own Food Family, not the whole Role.
 
 `favorite` is a third `food_preference_type` (alongside `allergy`/`exclude`), always targeting a specific Food Item — never a Category/Subcategory/Role, since favoriting a whole taxonomy node wouldn't disambiguate anything a generation role-slot needs. During generation, each role-slot restricts to only the user's favorited, otherwise-eligible items when any exist for that role; a role with none falls back to its full eligible pool, identical to generation with no favorites at all. Implemented as `restrictToFavorites()`, a pure function layered after the existing exclusion-filtered `candidatesByRole` — `greedy-heuristic.ts`'s picking/chain-fallback logic and `swapItem()` are both untouched, so a role favorited only in a fallback chain member (e.g. `fatty_protein` but not `lean_protein`) resolves correctly for free via the chain's existing empty-role fallthrough. The same Food Item can never be both favorited and excluded/allergied at once — rejected at creation, symmetric both directions. `swapItem()`'s replacement picker deliberately does not apply this restriction — a swap should still offer every eligible same-Role item, not just favorites.
 
@@ -194,7 +194,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-09-04
 
-Status: Partially superseded by ADR-019 (2026-09-08) — positional naming and the carb-free tail stand; the equal-calorie split, the calorie-residual protein share and the tail's zero fat target do not.
+Status: Partially superseded by ADR-019 (2026-09-08) — positional naming and the carb-free tail stand; the equal-calorie split, the calorie-residual protein share and the tail's zero fat target do not. The carb-free tail is in turn superseded by ADR-020 (2026-09-12): a dinner has no grain slot because its Archetype says so. Positional "Meal N" naming stands.
 
 Supersedes ADR-015: `meal_type`/`meal_occurrence` are dropped entirely in favor of a single `diet_items.meal_position` integer (1-based, computed fresh at generation time, never persisted as a category). Generated meals are labeled purely by position ("Meal 1".."Meal N", translated per locale) instead of breakfast/lunch/dinner/snack.
 
@@ -246,7 +246,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-09-08
 
-Status: Accepted
+Status: Accepted; the equal-protein split is superseded by ADR-020 (2026-09-12) once Meal Archetypes carry their own macro shares; the joint macro fit itself stands.
 
 Supersedes ADR-016's equal-calorie split, its calorie-residual protein share, and the tail meal's zero fat target. Positional naming, the linear carb taper and the carb-free tail itself are unchanged.
 
@@ -259,3 +259,28 @@ The calorie target stays a hard ceiling but is now enforced once over the whole 
 Measured over 300 randomised menus per meal count against realistic catalogue foods: protein lands within ~4 g of target and carbs/fat within ~7 g at meal counts 3-6, against 19-47 g misses before. At meal counts 1-2 an extreme protein target (310 g/day) still falls short — no single portion of one food can carry it — which is accepted rather than solved by allowing multiple items per role.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-020: Meals are built from Archetypes and Food Families, not from four macro role-slots
+
+Date: 2026-09-12
+
+Status: Accepted (phased — phase 1 in progress)
+
+Narrows ADR-014 (favorites restrict a Food Family, not a whole Role), and supersedes ADR-016's carb-free-tail rule and ADR-019's equal-protein split once phase 2 lands (an Archetype declares its own share of the day's macros). ADR-016/ADR-017's positional "Meal N" labels stand — meals stay numbered, not named.
+
+Every generated meal was the same four slots — one protein, one carb, one vegetable, one fat — filled independently from the whole Role pool. That produces plans that hit their macros and still read as nonsense: the `complex_carb` pool is 34 items of which a third are flours, crackers and branded French breads with no plain rice among them; `lean_protein` offers beef brains, frankfurters and "Potato salad with egg"; `vegetable` offers vegetable chips, babyfood carrots, and garlic as a 100 g salad.
+
+A meal is now a **Meal Archetype** — `breakfast`, `main`, `dinner`, assigned by position (meal 1, the last, and everything between) — composed of **Meal Slots**. A Slot names a **Food Family**, the number of items it draws, the macro it carries and its portion range; several items under one Slot render as one labelled group. Archetypes and Slots are versioned code, serialisable for a later move into rows. Each Archetype declares its relative share of the day's protein/carb/fat, which is what makes dinner light without a separate taper.
+
+Food Family is a new taxonomy level below Subcategory (~20 families) and becomes the unit of interchangeability: slots draw from it, swaps offer within it, favorites narrow inside it. **A Food Item with no Family is never generated** — it stays browsable and loggable, which is how flours, offal, babyfood and branded products leave the pool without a rule of their own. Role keeps its existing meaning for Food Preferences and for sizing portions. Potato and sweet potato move to Role `complex_carb`, beans and lentils to `plant_protein`, olives to a fat; Category is untouched so browsing and category-level exclusions keep working.
+
+Supporting rules: plans are stated in dry/raw weight and cooked duplicates get no Family; no Food Item repeats within a day and at most two meals draw from one protein Family; salads are three items from `salad_vegetable`, at least two of them bulk; all non-starchy vegetables are **Free Foods** — fixed nominal portions, excluded from the macro fit and from displayed totals, paid for by a flat ~120 kcal vegetable allowance subtracted from the day's calorie target before fitting; ~50–80 foods carry a **Serving** (1 egg, 1 spoon, 1 apple) and snap to whole units; breakfast and dinner have Archetype variants, pinnable per profile, defaulting to `vary`; `meal_count` narrows from 1–6 to 3–6. Macro targets still win over nominal portions — a 310 g protein target over 5 meals is ~200 g of chicken per main, not a shortfall.
+
+The pool itself is curated rather than inherited: a hand-authored staples set of ~80–120 foods (reviewed before seeding) plus a Family classification pass over the ~570 generation-eligible catalog rows, machine-proposed in the seed scripts and corrected through a reviewed override file — the same pattern `food-table-ru.names.json` already uses.
+
+Delivered in three phases: (1) the pool and the picking rules — families, staples, curation, reclassification, no-repeat, protein-family variety, free vegetables and the allowance, with today's four-slot meal shape unchanged; (2) the shape of a meal — Archetypes, Slots, grouped multi-item slots, Servings, Archetype macro weights replacing the taper, swap retargeted to Family; (3) variants, the profile settings, meal-level reroll and the `meal_count` restriction.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+

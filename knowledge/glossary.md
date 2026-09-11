@@ -40,11 +40,31 @@ An entry in the food database (`food_calories`), classified by Category → Subc
 
 ### Food Role
 
-The nutritional role a Food Item plays (e.g. `lean_protein`, `complex_carb`, `healthy_fat`). Food Replacement and diet generation both operate on Role, not on Category or Subcategory — two foods with the same Role are considered interchangeable regardless of category.
+The coarse nutritional role a Food Item plays (e.g. `lean_protein`, `complex_carb`, `healthy_fat`). Role is what Food Preferences target ("exclude all complex carbs") and what the macro fit sizes a portion against. It is **not** what decides interchangeability: oatmeal and rice share `complex_carb` but are not substitutes for each other, so generation and Food Replacement match on Food Family instead — see ADR-020.
+
+### Food Family
+
+The finest classification of a Food Item (`poultry`, `white_fish`, `casein_dairy`, `porridge`, `grain_garnish`, `salad_vegetable`, `culinary_oil`, …), sitting under Subcategory. A Meal Slot names the Family it draws from, a swap offers other members of the same Family, and favoriting narrows within a Family rather than across a whole Role. A Food Item with **no** Family is never generated into a plan — it stays browsable and loggable by hand, which is how flours, branded breads, offal and babyfood leave the generation pool without a rule of their own. Introduced by ADR-020.
 
 ### Food Preference
 
-A user's allergy, exclusion, or favorite (`user_food_preferences`), targeting either a whole taxonomy node (Category, Subcategory, or Role) or a single Food Item, via a polymorphic `target_type`/`target_id` pair. Not free text — always a structured reference. **Favorite** is the one exception to the polymorphic targeting: it always targets a specific Food Item, never a Category/Subcategory/Role — see [[business-rules]] "Favorited Food Items narrow diet generation, per role" and ADR-014. The same Food Item can never be both favorited and excluded/allergied at once.
+A user's allergy, exclusion, or favorite (`user_food_preferences`), targeting either a whole taxonomy node (Category, Subcategory, or Role) or a single Food Item, via a polymorphic `target_type`/`target_id` pair. Not free text — always a structured reference. **Favorite** is the one exception to the polymorphic targeting: it always targets a specific Food Item, never a Category/Subcategory/Role — see [[business-rules]] and ADR-014, as narrowed by ADR-020: a favorite restricts its own Food Family, not the whole Role. The same Food Item can never be both favorited and excluded/allergied at once.
+
+### Meal Archetype
+
+The shape of a meal: `breakfast` (porridge + fruit + eggs), `main` (protein + carb + salad + added fat), or `dinner` (slow protein + fruit). Assigned by position — meal 1 is always the breakfast, the last is always the dinner, everything between is a main. An Archetype lists its Meal Slots and declares how much of the day's protein/carb/fat it carries relative to the other meals, which is what makes a dinner light without a separate taper rule. Archetypes live in versioned code, not in rows. See ADR-020.
+
+### Meal Slot
+
+One component of a Meal Archetype — "the carb", "the salad", "the added fat". A Slot names the Food Family it draws from, how many Food Items it takes (one for most, three for a salad, one or two for a dinner protein), the macro it primarily carries, and its portion range. A Slot with several items renders as one labelled group ("Salad: tomato 80 g · cucumber 70 g · onion 20 g") rather than as loose lines. See ADR-020.
+
+### Serving
+
+A Food Item's natural unit and that unit's weight — 1 egg = 55 g, 1 spoon of oil = 15 g, 1 apple = 180 g. Only foods nobody weighs carry one; everything else is planned in grams. Portions of a food that has a Serving are snapped to whole units. See ADR-020.
+
+### Free Food
+
+A Food Item that a plan lists but does not count: all non-starchy vegetables, raw or cooked. They are given fixed nominal portions, excluded from the macro fit and from the Diet's displayed totals, and paid for instead by a flat vegetable allowance subtracted from the day's calorie target before fitting. Potato and sweet potato are carbs, not Free Foods. See ADR-020.
 
 ### login
 
