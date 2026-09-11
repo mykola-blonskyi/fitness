@@ -2,40 +2,15 @@
 // interchangeability. A Food Item with no Family is never generated into a
 // plan, which is how flours, offal, sausages, confectionery and babyfood
 // leave the generation pool without a rule of their own.
+import { isFoodFamily, type FoodFamily } from '../food-items/food-item.types';
 import overrides from './data/food-families.json';
 
-export const FOOD_FAMILIES = [
-  'poultry',
-  'red_meat',
-  'white_fish',
-  'red_fish',
-  'seafood',
-  'eggs',
-  'casein_dairy',
-  'legume_protein',
-  'porridge',
-  'grain_garnish',
-  'starchy_vegetable',
-  'bread',
-  'salad_vegetable',
-  'cooked_vegetable',
-  'berries',
-  'fruit',
-  'culinary_oil',
-  'nuts_seeds',
-  'fatty_fruit',
-] as const;
-
-export type FoodFamily = (typeof FOOD_FAMILIES)[number];
-
-const FAMILY_SET: ReadonlySet<string> = new Set(FOOD_FAMILIES);
-
-export function isFoodFamily(value: string): value is FoodFamily {
-  return FAMILY_SET.has(value);
-}
+export type { FoodFamily };
 
 export const RU_TABLE_SOURCE = 'ru_kbju_table';
 export const OFF_SOURCE = 'open_food_facts';
+export const USDA_SOURCE = 'usda';
+export const FAMILY_SOURCES = [RU_TABLE_SOURCE, OFF_SOURCE, USDA_SOURCE];
 
 // Open Food Facts rows are branded retail products ("Picnic Eggs",
 // "Beurre planta", "GALETTES EXTRA-FINES MAΪS"). ADR-020 puts them outside
@@ -81,12 +56,27 @@ const NOT_A_STAPLE = [
 ];
 
 // `null` is a deliberate "never generate this", distinct from a missing key,
-// which falls through to the inference rules.
+// which falls through to the inference rules. JSON gives back plain strings,
+// so the family names are checked here rather than trusted through a cast.
 const FAMILY_OVERRIDES: Record<string, FoodFamily | null | undefined> =
-  overrides as Record<string, FoodFamily | null>;
+  Object.fromEntries(
+    Object.entries(overrides as Record<string, string | null>).map(
+      ([key, value]) => {
+        if (value !== null && !isFoodFamily(value))
+          throw new Error(
+            `data/food-families.json: "${key}" names an unknown family "${value}".`,
+          );
+        return [key, value];
+      },
+    ),
+  );
 
-const has = (name: string, ...needles: string[]) =>
-  needles.some((needle) => name.includes(needle));
+// Matches seed-food-table-ru.ts's helper of the same name, lowercasing
+// included - the two must not diverge.
+const has = (name: string, ...needles: string[]) => {
+  const lower = name.toLowerCase();
+  return needles.some((needle) => lower.includes(needle));
+};
 
 // sourceId is `${section}:${lowercased ru name}` - see tableSourceId().
 function splitRuSourceId(sourceId: string): [string, string] {
@@ -98,10 +88,11 @@ function splitRuSourceId(sourceId: string): [string, string] {
 
 // Russian names, because that is what the RU table stores; the English base
 // name on those rows is DeepL output and a far weaker signal.
-export function inferRuTableFamily(
+function inferRuTableFamily(
   section: string,
-  name: string,
+  rawName: string,
 ): FoodFamily | null {
+  const name = rawName.toLowerCase();
   switch (section) {
     case 'porridge':
       return 'porridge';
@@ -209,7 +200,7 @@ export function inferRuTableFamily(
 
 // Open Food Facts / USDA rows, which carry an English name and a subcategory
 // but no section.
-export function inferCatalogFamily(
+function inferCatalogFamily(
   subcategory: string,
   name: string,
 ): FoodFamily | null {
@@ -319,9 +310,8 @@ export function resolveFamily(input: FamilyInput): FoodFamily | null {
       return inferRuTableFamily(section, ruName);
     }
     if (source === OFF_SOURCE) return null;
+    if (source === USDA_SOURCE && has(name, ...NOT_A_STAPLE)) return null;
   }
-  const lower = name.toLowerCase();
-  if (NOT_A_STAPLE.some((needle) => lower.includes(needle))) return null;
   return inferCatalogFamily(subcategory, name);
 }
 

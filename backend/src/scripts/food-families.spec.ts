@@ -1,9 +1,10 @@
+import { FOOD_FAMILIES, isFoodFamily } from '../food-items/food-item.types';
 import {
-  FOOD_FAMILIES,
+  FAMILY_SOURCES,
   OFF_SOURCE,
   RU_TABLE_SOURCE,
+  USDA_SOURCE,
   familyOverrideKey,
-  isFoodFamily,
   resolveFamily,
 } from './food-families';
 import { tableSourceId } from './seed-food-table-ru';
@@ -32,6 +33,14 @@ describe('food family overrides', () => {
   // The USDA/Open Food Facts half of this is checked against the live
   // catalog by classify-food-families.ts, which has no bundled fixture to
   // check offline the way the RU table does.
+  it('names a known source in every key', () => {
+    for (const [key] of entries) {
+      expect(
+        FAMILY_SOURCES.some((source) => key.startsWith(`${source}:`)),
+      ).toBe(true);
+    }
+  });
+
   it('keys a real bundled catalog row for every RU-table override', () => {
     const known = new Set(
       table.sections.flatMap((section) =>
@@ -98,7 +107,7 @@ describe('resolveFamily', () => {
 
   it('rejects USDA babyfood and prepared dishes by name', () => {
     const usda = (name: string, subcategory: string) => ({
-      source: 'usda',
+      source: USDA_SOURCE,
       sourceId: '1',
       subcategory,
       name,

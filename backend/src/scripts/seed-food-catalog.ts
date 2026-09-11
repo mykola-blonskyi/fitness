@@ -14,8 +14,8 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
-import type { Macros } from '../food-items/food-item.types';
-import { FOOD_FAMILIES, resolveFamily } from './food-families';
+import { FOOD_FAMILIES, type Macros } from '../food-items/food-item.types';
+import { resolveFamily } from './food-families';
 
 const USER_AGENT = 'FitnessApp-SeedScript/1.0 (+https://fitness.blonskyi.dev)';
 const OFF_BASE_URL = 'https://world.openfoodfacts.org/api/v2/search';
