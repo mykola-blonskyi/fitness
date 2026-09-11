@@ -28,10 +28,11 @@ import {
   upsertTaxonomy,
   type CuratedItem,
 } from './seed-food-catalog';
+import { RU_TABLE_SOURCE } from './food-families';
 import table from './data/food-table-ru.json';
 import nameOverrides from './data/food-table-ru.names.json';
 
-const SOURCE = 'ru_kbju_table';
+const SOURCE = RU_TABLE_SOURCE;
 const DEEPL_CALL_DELAY_MS = 250;
 // Translated *from* Russian, so 'ru' itself is stored verbatim, never
 // round-tripped through DeepL.

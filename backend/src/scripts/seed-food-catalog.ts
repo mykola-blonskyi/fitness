@@ -14,7 +14,8 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
-import type { Macros } from '../food-items/food-item.types';
+import { FOOD_FAMILIES, type Macros } from '../food-items/food-item.types';
+import { resolveFamily } from './food-families';
 
 const USER_AGENT = 'FitnessApp-SeedScript/1.0 (+https://fitness.blonskyi.dev)';
 const OFF_BASE_URL = 'https://world.openfoodfacts.org/api/v2/search';
@@ -99,6 +100,7 @@ export async function upsertTaxonomy(db: Db) {
   const categoryIds = new Map<string, string>();
   const subcategoryIds = new Map<string, string>();
   const roleIds = new Map<string, string>();
+  const familyIds = new Map<string, string>();
 
   for (const categoryName of Object.keys(TAXONOMY)) {
     const [row] = await db
@@ -136,7 +138,19 @@ export async function upsertTaxonomy(db: Db) {
     roleIds.set(roleName, row.id);
   }
 
-  return { categoryIds, subcategoryIds, roleIds };
+  for (const familyName of FOOD_FAMILIES) {
+    const [row] = await db
+      .insert(schema.foodFamilies)
+      .values({ name: familyName })
+      .onConflictDoUpdate({
+        target: schema.foodFamilies.name,
+        set: { name: familyName },
+      })
+      .returning();
+    familyIds.set(familyName, row.id);
+  }
+
+  return { categoryIds, subcategoryIds, roleIds, familyIds };
 }
 
 // ---------------------------------------------------------------------
@@ -635,12 +649,14 @@ export async function insertItem(
   const categoryId = ids.categoryIds.get(item.category)!;
   const subcategoryId = ids.subcategoryIds.get(item.subcategory)!;
   const roleId = ids.roleIds.get(item.role)!;
+  const family = resolveFamily(item);
 
   const values = {
     name: item.name,
     categoryId,
     subcategoryId,
     roleId,
+    familyId: family ? ids.familyIds.get(family)! : null,
     caloriesPer100g: String(item.caloriesPer100g),
     proteinPer100g: String(item.proteinPer100g),
     carbsPer100g: String(item.carbsPer100g),

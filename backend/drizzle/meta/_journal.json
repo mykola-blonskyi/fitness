@@ -176,6 +176,13 @@
       "when": 1788625763781,
       "tag": "0024_add_users_identity_sub",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789169620719,
+      "tag": "0025_parallel_ghost_rider",
+      "breakpoints": true
     }
   ]
 }

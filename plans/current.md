@@ -20,8 +20,9 @@ Delivered in three phases — a half-migrated model generates worse plans than e
 
 Meal shape stays as it is today. The foods stop being absurd.
 
-- [ ] Food Family taxonomy: table + nullable `food_calories.family_id`, ~20 families per ADR-020
-- [ ] Family classification pass over the ~570 generation-eligible rows — rule-based inference in the seed scripts plus a reviewed override file (`food-families.json`), same pattern as `food-table-ru.names.json`
+- [x] Food Family taxonomy: table + nullable `food_calories.family_id`, ~20 families per ADR-020
+- [x] Family classification pass over the ~570 generation-eligible rows — rule-based inference in the seed scripts plus a reviewed override file (`food-families.json`), same pattern as `food-table-ru.names.json`
+  - Deploy note: the migration only adds a nullable `family_id`. Every existing row stays unclassified until `pnpm --filter backend db:classify:food-families` is run against that database, and re-seeding does not do it (`insertItem` never rewrites an existing row's classification). Production needs that run after the migration deploys and **before** generation is restricted to Family-carrying foods.
 - [ ] Curated staples set (~80-120 foods: macros, family, names in all four locales), delivered as a reviewable file **before** seeding
 - [ ] Generation draws only from Food Items that carry a Family (no rule needed for sweets/beverages/flours/offal — they simply have none)
 - [ ] Reclassification: potato + sweet potato -> `complex_carb`/`starchy_vegetable`, beans + lentils -> `plant_protein`, olives -> fat; Category untouched
