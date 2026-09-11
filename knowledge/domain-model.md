@@ -19,7 +19,8 @@ Fields:
 - goal (weight_loss/maintenance/muscle_gain)
 - activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation
 - avatar_url
-- meal_count (1-6, default 3) — how many equal-calorie meal positions diet generation splits a day's calorie target across (see [[business-rules]] and ADR-016)
+- meal_count (3-6, default 3) — how many meals a generated day has; meal 1 takes the breakfast Archetype, the last the dinner Archetype, the rest are mains (ADR-020 narrowed the range from 1-6: below 3 the Archetypes can't produce a plan worth showing)
+- breakfast_variant, dinner_variant (default `vary`) — pins that end of the day to one Archetype variant, or lets generation pick a different one each time (ADR-020)
 - locale (en/uk/ru/es, default en) — the user's stored UI locale preference, set at onboarding and editable in Settings; catalog browse endpoints resolve translated display names against it (see [[business-rules]])
 
 Relationships:
@@ -217,6 +218,8 @@ One food entry within a generated Diet.
 Fields:
 
 - weight_grams (can change after generation via swap/reroll, which rescale it to hold the item's calorie contribution), meal_position (1-based position within the day, "Meal 1".."Meal N" — see ADR-016), order_index (scoped within its meal_position)
+- slot_key (nullable — which Meal Slot of the meal's Archetype this item fills, e.g. `main.salad`; several items sharing one slot_key render as one labelled group. ADR-020)
+- is_counted (Free Foods are listed but excluded from the Diet's totals and from the macro fit — ADR-020)
 
 Relationships:
 
@@ -238,6 +241,18 @@ Fields:
 Relationships:
 
 - many_to_one Diet
+
+---
+
+### Meal Archetype / Meal Slot
+
+Responsibilities:
+
+Code-level domain objects, not tables — the shape of each meal and its components (see [[glossary]]). An Archetype declares its Slots and its relative share of the day's protein/carb/fat; a Slot declares the Food Family it draws from, how many items it takes, the macro it carries, and its portion range. Versioned in code like the Diet Calculation Algorithm registry, and deliberately serialisable so moving them into rows later is a migration rather than a rewrite. Introduced by ADR-020.
+
+Relationships:
+
+- a generated Diet Item records which Slot it filled via `slot_key`; nothing else persists
 
 ---
 
@@ -265,28 +280,31 @@ A catalog entry classified by Category → Subcategory → Role, from Open Food 
 
 Fields:
 
-- name, image_url, protein, carbs, fat, calories (per reference unit)
+- name, image_url, protein, carbs, fat, calories (per reference unit — dry/raw weight for anything cooked before eating, see ADR-020)
 - source (open_food_facts/usda/manual), is_verified
+- family_id (nullable — a Food Item with no Food Family is never generated into a Diet; ADR-020)
+- serving_unit, serving_grams (both nullable — only foods nobody weighs carry a Serving; ADR-020)
 
 Relationships:
 
-- many_to_one Food Category, Food Subcategory, Food Role
+- many_to_one Food Category, Food Subcategory, Food Role, Food Family (nullable)
 - one_to_many Diet Items
 - one_to_many Food Item Translations (per-locale name)
 
 ---
 
-### Food Category / Food Subcategory / Food Role
+### Food Category / Food Subcategory / Food Role / Food Family
 
 Responsibilities:
 
-Fixed taxonomies used for browsing (Category/Subcategory) and for diet generation + Food Replacement matching (Role — see Business Rules: replacement is role-based, same-role foods are interchangeable). Category and Role are independent classifications on the same Food Item, not hierarchical with each other — a `legumes`-category item's Role is `plant_protein`, not derived from its category name.
+Fixed taxonomies. Category/Subcategory drive browsing; Role is what Food Preferences target and what the macro fit sizes against; **Food Family** (ADR-020) is what a Meal Slot draws from, what a swap offers, and what a favorite narrows. Category and Role are independent classifications on the same Food Item, not hierarchical with each other — a `legumes`-category item's Role is `plant_protein`, not derived from its category name. The same independence holds for potato: Category stays `vegetables` (so browsing and "exclude vegetables" keep working) while its Role is `complex_carb` and its Family `starchy_vegetable`.
 
 Fixed values:
 
 - Category → Subcategory: `meat` (lean_meat, fatty_meat, processed_meat) · `fish` (lean_fish, fatty_fish, shellfish) · `dairy` (low_fat_dairy, full_fat_dairy, fermented_dairy) · `vegetables` (leafy_vegetables, cruciferous_vegetables, starchy_vegetables, other_vegetables) · `fruits` (fresh_fruit, dried_fruit) · `grains` (complex_carbs, simple_carbs) · `legumes` (beans, lentils_and_peas) · `nuts` (tree_nuts, seeds) · `oils` (healthy_oils, saturated_oils) · `eggs` (whole_eggs, egg_whites) · `sweets` (confectionery) · `beverages` (alcoholic_beverages, non_alcoholic_beverages)
 - Role: `lean_protein`, `fatty_protein`, `plant_protein`, `complex_carb`, `simple_carb`, `vegetable`, `fruit`, `healthy_fat`, `saturated_fat`, `dairy`, `treat`, `beverage`
-- `sweets`/`beverages` (and the `beverage` role) exist for browsing and logging only — no diet-generation role chain (`diet.types.ts` MEAL_ROLE_CHAINS) ever selects them.
+- Family (ADR-020): proteins — `poultry`, `red_meat`, `white_fish`, `red_fish`, `seafood`, `eggs`, `casein_dairy`, `legume_protein` · carbs — `porridge`, `grain_garnish`, `starchy_vegetable`, `bread` · vegetables — `salad_vegetable`, `cooked_vegetable` · fruit — `berries`, `fruit` · fats — `culinary_oil`, `nuts_seeds`, `fatty_fruit`
+- `sweets`/`beverages` (and the `beverage` role) exist for browsing and logging only. Under ADR-020 they need no special case: nothing selects a Food Item that carries no Family, which is also how flours, branded breads, offal and babyfood stay out of generated plans.
 
 Relationships:
 
