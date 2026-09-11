@@ -286,6 +286,14 @@ export const foodRoles = pgTable('food_roles', {
   name: text('name').notNull().unique(),
 });
 
+// The level below Subcategory that decides interchangeability (ADR-020): a
+// Meal Slot draws from a Family, a swap offers within one. Rows are the
+// fixed FOOD_FAMILIES list in scripts/food-families.ts.
+export const foodFamilies = pgTable('food_families', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull().unique(),
+});
+
 // Food Item (table name `food_calories`). source/sourceId/isVerified follow
 // the same import-idempotency convention as `exercises`. Macro fields are
 // per-100g so Diet Item can scale by weight_grams.
@@ -304,6 +312,9 @@ export const foodCalories = pgTable(
     roleId: uuid('role_id')
       .notNull()
       .references(() => foodRoles.id),
+    // Nullable on purpose: a Food Item with no Family is never generated,
+    // only browsed and logged by hand (ADR-020).
+    familyId: uuid('family_id').references(() => foodFamilies.id),
     caloriesPer100g: numeric('calories_per_100g').notNull(),
     proteinPer100g: numeric('protein_per_100g').notNull(),
     carbsPer100g: numeric('carbs_per_100g').notNull(),
@@ -323,6 +334,7 @@ export const foodCalories = pgTable(
     index().on(table.roleId),
     index().on(table.categoryId),
     index().on(table.subcategoryId),
+    index().on(table.familyId),
   ],
 );
 
