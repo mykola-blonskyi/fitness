@@ -79,6 +79,14 @@ export async function classify(db: Db, dryRun: boolean) {
       .filter((row) => row.source && row.sourceId)
       .map((row) => familyOverrideKey(row.source!, row.sourceId!)),
   );
+  // Reported before the writes so a long run says it up front, but
+  // deliberately NOT a gate. A key that matches no row names a row this
+  // database does not have, so it cannot misclassify anything; and which
+  // USDA rows a catalog holds depends on what the API returned when it was
+  // seeded, so a key that is correct in one environment legitimately matches
+  // nothing in another. Gating here would block production on the one
+  // provably harmless condition, clearable only by deleting a legitimate
+  // entry from a committed file.
   const unmatchedOverrides = familyOverrideKeys.filter(
     (key) => !present.has(key),
   );
@@ -87,11 +95,7 @@ export async function classify(db: Db, dryRun: boolean) {
     (row) => (row.currentFamily ?? null) !== row.family,
   );
 
-  // A stale override key means the file no longer describes this catalog, so
-  // it gates the write rather than being reported after it.
-  const written =
-    !dryRun && unmatchedOverrides.length === 0 && pending.length > 0;
-  if (written) {
+  if (!dryRun && pending.length > 0) {
     const ids = await upsertTaxonomy(db);
     await db.transaction(async (tx) => {
       for (const row of pending) {
@@ -106,7 +110,6 @@ export async function classify(db: Db, dryRun: boolean) {
   return {
     total: resolved.length,
     updated: pending.length,
-    written,
     counts: countByRole(resolved),
     unmatchedOverrides,
   };
@@ -121,13 +124,13 @@ async function main() {
     db,
     dryRun,
   );
-  const blocked = unmatchedOverrides.length > 0;
+  const stale = unmatchedOverrides.length > 0;
 
   const classified = counts.reduce((sum, c) => sum + c.classified, 0);
   console.log(
     `${dryRun ? '[dry run] ' : ''}Food Family classification: ` +
       `${classified}/${total} rows carry a Family, ` +
-      `${updated} ${dryRun || blocked ? 'would change' : 'changed'}.`,
+      `${updated} ${dryRun ? 'would change' : 'changed'}.`,
   );
   console.log('role'.padEnd(16), 'family'.padStart(8), 'none'.padStart(8));
   for (const c of counts) {
@@ -138,16 +141,16 @@ async function main() {
     );
   }
 
-  if (blocked) {
+  if (stale) {
     console.error(
       `\n${unmatchedOverrides.length} entries in data/food-families.json ` +
-        'match no catalog row, so nothing was written:',
+        'match no catalog row in this database (the pass still ran):',
     );
     for (const key of unmatchedOverrides) console.error('   ', key);
   }
 
   await pool.end();
-  if (blocked) process.exitCode = 1;
+  if (stale) process.exitCode = 1;
 }
 
 if (require.main === module) {
