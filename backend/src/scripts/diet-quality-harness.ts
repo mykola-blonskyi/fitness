@@ -106,7 +106,7 @@ function candidatesByRole(catalog: CatalogRow[]): Map<string, FoodCandidate[]> {
   for (const row of catalog) {
     byRole.get(row.role)?.push({
       id: row.id,
-      familyId: row.family,
+      familyName: row.family,
       caloriesPer100g: row.caloriesPer100g,
       proteinPer100g: row.proteinPer100g,
       carbsPer100g: row.carbsPer100g,

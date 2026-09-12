@@ -14,7 +14,7 @@ const leanProtein: FoodCandidate = {
   proteinPer100g: 31,
   carbsPer100g: 0,
   fatPer100g: 3.6,
-  familyId: null,
+  familyName: null,
 };
 const fattyProtein: FoodCandidate = {
   id: 'fatty-protein',
@@ -22,7 +22,7 @@ const fattyProtein: FoodCandidate = {
   proteinPer100g: 26,
   carbsPer100g: 0,
   fatPer100g: 17,
-  familyId: null,
+  familyName: null,
 };
 const complexCarb: FoodCandidate = {
   id: 'complex-carb',
@@ -30,7 +30,7 @@ const complexCarb: FoodCandidate = {
   proteinPer100g: 2.7,
   carbsPer100g: 28,
   fatPer100g: 0.3,
-  familyId: null,
+  familyName: null,
 };
 const vegetable: FoodCandidate = {
   id: 'vegetable',
@@ -38,7 +38,7 @@ const vegetable: FoodCandidate = {
   proteinPer100g: 2,
   carbsPer100g: 5,
   fatPer100g: 0.3,
-  familyId: null,
+  familyName: null,
 };
 const healthyFat: FoodCandidate = {
   id: 'healthy-fat',
@@ -46,7 +46,7 @@ const healthyFat: FoodCandidate = {
   proteinPer100g: 0,
   carbsPer100g: 0,
   fatPer100g: 100,
-  familyId: null,
+  familyName: null,
 };
 
 // Every role in MEAL_ROLE_CHAINS gets a candidate, matching a realistic
@@ -110,6 +110,43 @@ describe('generateDietItems - full pipeline across mealCount 1-6', () => {
       const positionsUsed = new Set(result.items.map((i) => i.mealPosition));
       for (let position = 1; position <= mealCount; position++) {
         expect(positionsUsed.has(position)).toBe(true);
+      }
+    });
+  }
+
+  for (let mealCount = 1; mealCount <= 6; mealCount++) {
+    it(`keeps the ceiling with a three-item free salad per meal at mealCount ${mealCount}`, () => {
+      const pool = fullCandidatePool();
+      // The densest free vegetable in the catalog, so 18 nominal portions
+      // at mealCount 6 cost far more than a flat allowance would cover.
+      pool.set(
+        'vegetable',
+        Array.from({ length: 34 }, (_, i) => ({
+          ...vegetable,
+          id: `free-vegetable-${i + 1}`,
+          caloriesPer100g: 46,
+          familyName: i % 2 === 0 ? 'salad_vegetable' : 'cooked_vegetable',
+        })),
+      );
+
+      const result = generateDietItems({
+        ...targets,
+        mealCount,
+        candidatesByRole: pool,
+      });
+
+      expect(
+        result.totalCalories + result.freeFoodCalories,
+      ).toBeLessThanOrEqual(targets.targetCalories);
+      expect(result.fittedCalorieTarget).toBe(
+        targets.targetCalories - result.freeFoodCalories,
+      );
+      for (let position = 1; position <= mealCount; position++) {
+        const free = result.items.filter(
+          (item) => item.mealPosition === position && !item.isCounted,
+        );
+        expect(free).toHaveLength(3);
+        expect(free.every((item) => item.weightGrams === 80)).toBe(true);
       }
     });
   }
