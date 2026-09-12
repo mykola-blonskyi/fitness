@@ -57,7 +57,7 @@ export function sanitizeOffImageUrl(
 // data; schema.ts's inline comments are documentation of the same set.
 // ---------------------------------------------------------------------
 
-const TAXONOMY: Record<string, string[]> = {
+export const TAXONOMY: Record<string, string[]> = {
   meat: ['lean_meat', 'fatty_meat', 'processed_meat'],
   fish: ['lean_fish', 'fatty_fish', 'shellfish'],
   dairy: ['low_fat_dairy', 'full_fat_dairy', 'fermented_dairy'],
@@ -79,7 +79,7 @@ const TAXONOMY: Record<string, string[]> = {
   beverages: ['alcoholic_beverages', 'non_alcoholic_beverages'],
 };
 
-const ROLES = [
+export const ROLES = [
   'lean_protein',
   'fatty_protein',
   'plant_protein',
@@ -165,6 +165,7 @@ export interface CuratedItem extends Macros {
   source: string;
   sourceId: string;
   imageUrl?: string;
+  isVerified?: boolean;
 }
 
 // ---------------------------------------------------------------------
@@ -664,6 +665,7 @@ export async function insertItem(
     source: item.source,
     sourceId: item.sourceId,
     imageUrl: item.imageUrl,
+    isVerified: item.isVerified ?? false,
   };
   const target = [schema.foodCalories.source, schema.foodCalories.sourceId];
   // `xmax = 0` is Postgres's own tell for "this returned row came from the

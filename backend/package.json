@@ -27,6 +27,7 @@
     "db:seed:exercises": "ts-node -r tsconfig-paths/register src/scripts/seed-exercises.ts",
     "db:seed:food-catalog": "ts-node -r tsconfig-paths/register src/scripts/seed-food-catalog.ts",
     "db:seed:food-table-ru": "ts-node -r tsconfig-paths/register src/scripts/seed-food-table-ru.ts",
+    "db:seed:food-staples": "ts-node -r tsconfig-paths/register src/scripts/seed-food-staples.ts",
     "db:classify:food-families": "ts-node -r tsconfig-paths/register src/scripts/classify-food-families.ts",
     "db:seed:exercise-translations": "ts-node -r tsconfig-paths/register src/scripts/seed-exercise-translations.ts"
   },
