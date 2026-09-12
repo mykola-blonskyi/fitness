@@ -43,6 +43,7 @@ export interface DietItemResponse {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  isCounted: boolean;
 }
 
 // Mirrors backend/src/diets/diet.mapper.ts's DietResponse.
