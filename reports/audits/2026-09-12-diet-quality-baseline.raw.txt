@@ -1,0 +1,42 @@
+catalog: 430 candidates, 176 with a Family; seed 20260912
+  complex_carb       34   16 with a Family
+  fatty_protein      83   29 with a Family
+  healthy_fat        63   24 with a Family
+  lean_protein      112   56 with a Family
+  plant_protein      33    7 with a Family
+  saturated_fat      11    4 with a Family
+  simple_carb        19    4 with a Family
+  vegetable          75   36 with a Family
+
+=== moderate 180P / whole catalog / 300 menus per count ===
+meals	dP	dC	dF	|dP|	|dC|	|dF|	wP	wC	wF	over	repDays	wRep	famDays	wFam	empty
+3	-5.5	2.7	-1.1	5.8	9.1	2.9	53.0	49.0	23.0	0	45	3	17	3	0
+4	-3.2	4.6	-2.0	5.9	11.2	3.9	40.0	43.0	21.0	0	69	4	80	4	0
+5	-11.1	4.6	-1.0	11.8	11.1	4.0	48.0	41.0	14.0	0	126	3	76	4	0
+6	-8.4	2.6	-1.1	9.2	9.0	4.5	53.0	36.0	21.0	0	169	3	90	4	0
+
+=== moderate 180P / Family-carrying only / 300 menus per count ===
+meals	dP	dC	dF	|dP|	|dC|	|dF|	wP	wC	wF	over	repDays	wRep	famDays	wFam	empty
+3	0.2	5.8	-0.5	0.7	5.9	0.6	9.0	20.0	5.0	0	262	3	59	3	0
+4	1.5	9.1	-1.4	2.1	10.2	1.4	18.0	23.0	8.0	0	300	4	140	4	0
+5	-0.1	11.0	-1.3	2.7	11.2	1.4	17.0	28.0	7.0	0	300	5	226	5	0
+6	-0.2	11.7	-0.7	2.4	11.8	1.1	12.0	28.0	7.0	0	300	6	243	6	0
+
+=== ADR-019 310P / whole catalog / 300 menus per count ===
+meals	dP	dC	dF	|dP|	|dC|	|dF|	wP	wC	wF	over	repDays	wRep	famDays	wFam	empty
+3	-15.9	-62.9	-14.9	15.9	62.9	14.9	40.0	105.0	30.0	0	54	3	24	3	0
+4	-24.1	-48.5	-14.7	24.1	48.8	14.8	85.0	95.0	28.0	0	80	4	72	4	0
+5	-25.1	-51.0	-15.3	25.1	51.2	15.3	87.0	86.0	31.0	0	129	3	108	5	0
+6	-26.8	-45.4	-14.6	26.8	45.4	14.6	84.0	75.0	28.0	0	168	3	161	6	0
+
+=== ADR-019 310P / Family-carrying only / 300 menus per count ===
+meals	dP	dC	dF	|dP|	|dC|	|dF|	wP	wC	wF	over	repDays	wRep	famDays	wFam	empty
+3	-12.4	-52.3	-13.2	12.4	52.3	13.2	33.0	86.0	23.0	0	264	3	92	3	0
+4	-15.1	-44.6	-13.8	15.1	44.6	13.8	45.0	76.0	21.0	0	300	4	157	4	0
+5	-13.8	-45.1	-13.9	13.8	45.1	13.9	30.0	67.0	21.0	0	300	5	249	5	0
+6	-14.1	-41.5	-14.0	14.1	41.5	14.0	32.0	62.0	21.0	0	300	5	297	6	0
+
+dP/dC/dF mean signed delta, |d*| mean absolute, w* worst absolute (grams).
+over = menus above the calorie ceiling. repDays = days repeating a Food Item,
+wRep = worst repeat count. famDays = days with >2 meals from one protein
+Family, wFam = worst such count. empty = days that generated nothing.
