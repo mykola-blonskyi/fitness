@@ -130,6 +130,28 @@ describe('resolveFamily', () => {
     ).toBe('poultry');
   });
 
+  it('gives no family to a row with no source', () => {
+    expect(
+      resolveFamily({
+        source: null,
+        sourceId: null,
+        subcategory: 'lean_meat',
+        name: 'Test Chicken Breast',
+      }),
+    ).toBeNull();
+  });
+
+  it('gives no family to a row from a source it does not know', () => {
+    expect(
+      resolveFamily({
+        source: 'some_future_import',
+        sourceId: '1',
+        subcategory: 'lean_meat',
+        name: 'Chicken breast, raw',
+      }),
+    ).toBeNull();
+  });
+
   it('lets an override win over the inference rules', () => {
     expect(resolveFamily(ruRow('vegetables', 'Картофель вареный'))).toBeNull();
     expect(resolveFamily(ruRow('vegetables', 'Картофель молодой'))).toBe(
