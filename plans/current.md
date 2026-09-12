@@ -25,10 +25,11 @@ Meal shape stays as it is today. The foods stop being absurd.
   - Deploy note: the migration only adds a nullable `family_id`. Every existing row stays unclassified until the classification script runs against that database, and re-seeding does not do it (`insertItem` never rewrites an existing row's classification). Production needs that run after the migration deploys and **before** generation is restricted to Family-carrying foods. In a checkout it is `pnpm --filter backend db:classify:food-families`; the deployed image has no ts-node and no `src/`, so on the server it is `node dist/scripts/classify-food-families.js`. Both accept `--dry-run`, which reads only.
 - [ ] Curated staples set (~80-120 foods: macros, family, names in all four locales), delivered as a reviewable file **before** seeding
 - [ ] Generation draws only from Food Items that carry a Family (no rule needed for sweets/beverages/flours/offal — they simply have none)
+  - Must land **after** the two picking rules below, not before. Measured: restricting the pool from 430 candidates to 176 takes days that repeat a Food Item from 169/300 to 300/300 at six meals, and the worst case from the same food in three meals to the same food in all six. See `reports/audits/2026-09-12-diet-quality-baseline.md`.
 - [ ] Reclassification: potato + sweet potato -> `complex_carb`/`starchy_vegetable`, beans + lentils -> `plant_protein`, olives -> fat; Category untouched
 - [ ] Dry/raw weight as the canonical form; cooked duplicates get no Family
-- [ ] No Food Item twice in a day (fall back to a repeat only when the Family has nothing else eligible)
-- [ ] At most 2 meals per day drawing from the same protein Family
+- [x] No Food Item twice in a day (fall back to a repeat only when the Family has nothing else eligible)
+- [x] At most 2 meals per day drawing from the same protein Family
 - [ ] Free Foods: all non-starchy vegetables get fixed nominal portions, leave the macro fit and the displayed totals, and a flat ~120 kcal vegetable allowance is subtracted from the day's calorie target before fitting
 
 ## Phase 2 — The shape of a meal
