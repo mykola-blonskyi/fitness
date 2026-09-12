@@ -34,7 +34,10 @@ Meal shape stays as it is today. The foods stop being absurd.
 - [ ] Dry/raw weight as the canonical form; cooked duplicates get no Family
 - [x] No Food Item twice in a day (fall back to a repeat only when the Family has nothing else eligible)
 - [x] At most 2 meals per day drawing from the same protein Family
-- [ ] Free Foods: all non-starchy vegetables get fixed nominal portions, leave the macro fit and the displayed totals, and a flat ~120 kcal vegetable allowance is subtracted from the day's calorie target before fitting
+- [x] Free Foods: the `salad_vegetable` and `cooked_vegetable` Families get fixed nominal portions, leave the macro fit and the displayed totals, and what they actually supply is subtracted from all four targets before fitting (FITNESS-74)
+  - Not a flat ~120 kcal: measured against the catalog, three nominal portions cost 42-50 kcal per meal, so a flat allowance under-prices the day from 4 meals up (302 kcal at 6) and the calorie ceiling is hard. Subtracting only calories and not the macros made every delta worse; taking all four off restores them. Plate carb delta 5.2/11.9/10.6/10.0 -> 0.8/2.3/2.9/2.7 at 3-6 meals.
+  - Deferred from this ticket: the 80 g/15 g bulk-vs-accent split (no attribute separates onion and parsley from tomato; both sit in `salad_vegetable`) and the favourites bias (contradicts ADR-014's hard filter). Both want FITNESS-71's staples data or a product call.
+  - Deploy gate: production's `family_id` is still null everywhere and the 100 g vegetable floor is gone, so the classification pass must run there before this ships or diets get no vegetables at all.
 
 ## Phase 2 — The shape of a meal
 
