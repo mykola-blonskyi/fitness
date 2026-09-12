@@ -27,8 +27,8 @@ Meal shape stays as it is today. The foods stop being absurd.
 - [ ] Generation draws only from Food Items that carry a Family (no rule needed for sweets/beverages/flours/offal — they simply have none)
 - [ ] Reclassification: potato + sweet potato -> `complex_carb`/`starchy_vegetable`, beans + lentils -> `plant_protein`, olives -> fat; Category untouched
 - [ ] Dry/raw weight as the canonical form; cooked duplicates get no Family
-- [ ] No Food Item twice in a day (fall back to a repeat only when the Family has nothing else eligible)
-- [ ] At most 2 meals per day drawing from the same protein Family
+- [x] No Food Item twice in a day (fall back to a repeat only when the Family has nothing else eligible)
+- [x] At most 2 meals per day drawing from the same protein Family
 - [ ] Free Foods: all non-starchy vegetables get fixed nominal portions, leave the macro fit and the displayed totals, and a flat ~120 kcal vegetable allowance is subtracted from the day's calorie target before fitting
 
 ## Phase 2 — The shape of a meal

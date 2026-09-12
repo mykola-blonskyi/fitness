@@ -52,6 +52,8 @@ const MIN_VEGETABLE_GRAMS = 100;
 // there is one.
 const PROTEIN_FAT_BUDGET_SHARE = 0.7;
 
+const MAX_MEALS_PER_PROTEIN_FAMILY = 2;
+
 const STARTING_PORTION_GRAMS: Record<number, number> = {
   [PROTEIN_CHAIN_INDEX]: 150,
   [CARB_CHAIN_INDEX]: 100,
@@ -196,6 +198,50 @@ function eligibleCandidates(
   return macroPer100g(densest, macro) > 0 ? [densest] : [];
 }
 
+interface DayPicks {
+  foodItemIds: Set<string>;
+  mealsPerProteinFamily: Map<string, number>;
+}
+
+// A repeated item is worse than a third meal from one protein family, so
+// the family cap relaxes before the no-repeat rule does: try unused-and-
+// under-cap first, then just unused, then give up and allow a repeat.
+function dayFilteredCandidates(
+  eligible: FoodCandidate[],
+  chainIndex: number,
+  picked: DayPicks,
+): FoodCandidate[] {
+  const unused = eligible.filter(
+    (candidate) => !picked.foodItemIds.has(candidate.id),
+  );
+
+  if (chainIndex === PROTEIN_CHAIN_INDEX) {
+    const underCap = unused.filter(
+      (candidate) =>
+        candidate.familyId === null ||
+        (picked.mealsPerProteinFamily.get(candidate.familyId) ?? 0) <
+          MAX_MEALS_PER_PROTEIN_FAMILY,
+    );
+    if (underCap.length > 0) return underCap;
+  }
+
+  return unused.length > 0 ? unused : eligible;
+}
+
+function recordPick(
+  picked: DayPicks,
+  candidate: FoodCandidate,
+  chainIndex: number,
+): void {
+  picked.foodItemIds.add(candidate.id);
+  if (chainIndex === PROTEIN_CHAIN_INDEX && candidate.familyId !== null) {
+    picked.mealsPerProteinFamily.set(
+      candidate.familyId,
+      (picked.mealsPerProteinFamily.get(candidate.familyId) ?? 0) + 1,
+    );
+  }
+}
+
 // Coordinate descent: each step resizes one item to the portion that
 // minimises the meal's squared macro error with the others held fixed.
 // Error is measured in calories (a gram of fat counts for 9, a gram of
@@ -274,6 +320,7 @@ function buildMeal(
   target: MealTarget,
   candidatesByRole: Map<string, FoodCandidate[]>,
   pick: <T>(items: T[]) => T,
+  picked: DayPicks,
 ): WorkingItem[] {
   const mealItems: WorkingItem[] = [];
 
@@ -287,10 +334,14 @@ function buildMeal(
       if (!candidates || candidates.length === 0) continue;
       const eligible = eligibleCandidates(candidates, chainIndex, target);
       if (eligible.length === 0) break;
+      const candidate = pick(
+        dayFilteredCandidates(eligible, chainIndex, picked),
+      );
+      recordPick(picked, candidate, chainIndex);
       mealItems.push({
         mealPosition: target.position,
         orderIndex: 0,
-        candidate: pick(eligible),
+        candidate,
         chainIndex,
         weightGrams: STARTING_PORTION_GRAMS[chainIndex],
       });
@@ -317,9 +368,14 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     fatG: input.targetFatG,
   });
 
+  const picked: DayPicks = {
+    foodItemIds: new Set(),
+    mealsPerProteinFamily: new Map(),
+  };
+
   const items: WorkingItem[] = [];
   for (const target of mealTargets) {
-    items.push(...buildMeal(target, input.candidatesByRole, pick));
+    items.push(...buildMeal(target, input.candidatesByRole, pick, picked));
   }
 
   shrinkToCalorieCeiling(items, input.targetCalories);
