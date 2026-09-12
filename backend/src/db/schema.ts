@@ -288,7 +288,7 @@ export const foodRoles = pgTable('food_roles', {
 
 // The level below Subcategory that decides interchangeability (ADR-020): a
 // Meal Slot draws from a Family, a swap offers within one. Rows are the
-// fixed FOOD_FAMILIES list in scripts/food-families.ts.
+// fixed FOOD_FAMILIES list in food-items/food-item.types.ts.
 export const foodFamilies = pgTable('food_families', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull().unique(),
