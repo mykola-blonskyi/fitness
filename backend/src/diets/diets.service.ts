@@ -140,6 +140,7 @@ export class DietsService {
         proteinPer100g: schema.foodCalories.proteinPer100g,
         carbsPer100g: schema.foodCalories.carbsPer100g,
         fatPer100g: schema.foodCalories.fatPer100g,
+        familyId: schema.foodCalories.familyId,
       })
       .from(schema.foodCalories)
       .where(
@@ -172,6 +173,7 @@ export class DietsService {
         proteinPer100g: Number(row.proteinPer100g),
         carbsPer100g: Number(row.carbsPer100g),
         fatPer100g: Number(row.fatPer100g),
+        familyId: row.familyId,
       });
     }
 

@@ -7,6 +7,7 @@ const leanProtein: FoodCandidate = {
   proteinPer100g: 31,
   carbsPer100g: 0,
   fatPer100g: 3.6,
+  familyId: null,
 };
 const fattyProtein: FoodCandidate = {
   id: 'fatty-protein-1',
@@ -14,6 +15,7 @@ const fattyProtein: FoodCandidate = {
   proteinPer100g: 26,
   carbsPer100g: 0,
   fatPer100g: 17,
+  familyId: null,
 };
 const complexCarb: FoodCandidate = {
   id: 'complex-carb-1',
@@ -21,6 +23,7 @@ const complexCarb: FoodCandidate = {
   proteinPer100g: 2.7,
   carbsPer100g: 28,
   fatPer100g: 0.3,
+  familyId: null,
 };
 const vegetable: FoodCandidate = {
   id: 'vegetable-1',
@@ -28,6 +31,7 @@ const vegetable: FoodCandidate = {
   proteinPer100g: 2,
   carbsPer100g: 5,
   fatPer100g: 0.3,
+  familyId: null,
 };
 const healthyFat: FoodCandidate = {
   id: 'healthy-fat-1',
@@ -35,6 +39,7 @@ const healthyFat: FoodCandidate = {
   proteinPer100g: 0,
   carbsPer100g: 0,
   fatPer100g: 100,
+  familyId: null,
 };
 
 function balancedCandidates(): Map<string, FoodCandidate[]> {
@@ -199,6 +204,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 10,
       carbsPer100g: 10,
       fatPer100g: 10,
+      familyId: null,
     };
     const candidates = new Map([
       ['lean_protein', [coarse]],
@@ -265,6 +271,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 25,
       carbsPer100g: 0,
       fatPer100g: 0,
+      familyId: null,
     };
     const carbIsolate: FoodCandidate = {
       id: 'carb-isolate-1',
@@ -272,6 +279,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 0,
       carbsPer100g: 25,
       fatPer100g: 0,
+      familyId: null,
     };
     const candidates = new Map([
       ['lean_protein', [proteinIsolate]],
@@ -307,6 +315,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 0,
       carbsPer100g: 0,
       fatPer100g: 0,
+      familyId: null,
     };
     const candidates = new Map([
       ['lean_protein', [leanProtein]],
@@ -338,6 +347,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 0,
       carbsPer100g: 100,
       fatPer100g: 0,
+      familyId: null,
     };
     const candidates = new Map([
       ['lean_protein', [leanProtein]],
@@ -370,6 +380,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 25,
       carbsPer100g: 0,
       fatPer100g: 0,
+      familyId: null,
     };
     const calorieDenseLowCarb: FoodCandidate = {
       id: 'calorie-dense-low-carb-1',
@@ -377,6 +388,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 0,
       carbsPer100g: 5,
       fatPer100g: 0,
+      familyId: null,
     };
     const candidates = new Map([
       ['lean_protein', [proteinIsolate]],
@@ -416,6 +428,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 25,
       carbsPer100g: 0,
       fatPer100g: 17,
+      familyId: null,
     };
     const candidates = new Map([['lean_protein', [fattyProtein]]]);
 
@@ -461,6 +474,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 0,
       carbsPer100g: 20,
       fatPer100g: 20,
+      familyId: null,
     };
     const result = generateDietItems({
       targetCalories: 100,
@@ -484,6 +498,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 0,
       carbsPer100g: 40,
       fatPer100g: 40,
+      familyId: null,
     };
     const candidates = new Map([
       ['complex_carb', [fattyCarb]],
@@ -529,6 +544,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 2,
       carbsPer100g: 17,
       fatPer100g: 0.1,
+      familyId: null,
     };
 
     const result = generateDietItems({
@@ -552,6 +568,7 @@ describe('generateDietItems', () => {
       proteinPer100g: 5,
       carbsPer100g: 4,
       fatPer100g: 3,
+      familyId: null,
     };
 
     const result = generateDietItems({

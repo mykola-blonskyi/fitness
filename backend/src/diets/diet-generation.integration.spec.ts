@@ -14,6 +14,7 @@ const leanProtein: FoodCandidate = {
   proteinPer100g: 31,
   carbsPer100g: 0,
   fatPer100g: 3.6,
+  familyId: null,
 };
 const fattyProtein: FoodCandidate = {
   id: 'fatty-protein',
@@ -21,6 +22,7 @@ const fattyProtein: FoodCandidate = {
   proteinPer100g: 26,
   carbsPer100g: 0,
   fatPer100g: 17,
+  familyId: null,
 };
 const complexCarb: FoodCandidate = {
   id: 'complex-carb',
@@ -28,6 +30,7 @@ const complexCarb: FoodCandidate = {
   proteinPer100g: 2.7,
   carbsPer100g: 28,
   fatPer100g: 0.3,
+  familyId: null,
 };
 const vegetable: FoodCandidate = {
   id: 'vegetable',
@@ -35,6 +38,7 @@ const vegetable: FoodCandidate = {
   proteinPer100g: 2,
   carbsPer100g: 5,
   fatPer100g: 0.3,
+  familyId: null,
 };
 const healthyFat: FoodCandidate = {
   id: 'healthy-fat',
@@ -42,6 +46,7 @@ const healthyFat: FoodCandidate = {
   proteinPer100g: 0,
   carbsPer100g: 0,
   fatPer100g: 100,
+  familyId: null,
 };
 
 // Every role in MEAL_ROLE_CHAINS gets a candidate, matching a realistic

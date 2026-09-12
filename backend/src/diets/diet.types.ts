@@ -110,6 +110,7 @@ export interface FoodCandidate {
   proteinPer100g: number;
   carbsPer100g: number;
   fatPer100g: number;
+  familyId: string | null;
 }
 
 export interface GeneratedDietItem {
