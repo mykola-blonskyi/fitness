@@ -12,11 +12,6 @@ export const OFF_SOURCE = 'open_food_facts';
 export const USDA_SOURCE = 'usda';
 export const FAMILY_SOURCES = [RU_TABLE_SOURCE, OFF_SOURCE, USDA_SOURCE];
 
-// Open Food Facts rows are branded retail products ("Picnic Eggs",
-// "Beurre planta", "GALETTES EXTRA-FINES MAΪS"). ADR-020 puts them outside
-// the generation pool as a group, so none is inferred into a Family; one
-// that is genuinely a staple is opted back in through the override file.
-//
 // USDA's generic entries are exactly the pool we want, but the same dataset
 // files babyfood, candy, restaurant items and prepared dishes under the same
 // subcategories, and only the name separates them.
@@ -71,9 +66,7 @@ const FAMILY_OVERRIDES: Record<string, FoodFamily | null | undefined> =
     ),
   );
 
-// Matches seed-food-table-ru.ts's helper of the same name, lowercasing
-// included - the two must not diverge.
-const has = (name: string, ...needles: string[]) => {
+export const has = (name: string, ...needles: string[]) => {
   const lower = name.toLowerCase();
   return needles.some((needle) => lower.includes(needle));
 };
@@ -300,19 +293,32 @@ export function familyOverrideKey(source: string, sourceId: string): string {
   return `${source}:${sourceId}`;
 }
 
+// Every branch names its source, and everything else gets no Family. Open
+// Food Facts rows are branded retail products ("Picnic Eggs", "Beurre
+// planta"), which ADR-020 puts outside the pool as a group; a row with no
+// source at all is user-created or predates the imports. Neither has been
+// through a reviewed classification, so neither is guessed at. One that is
+// genuinely a staple is opted back in through the override file, which is
+// why the override lookup happens before the switch.
 export function resolveFamily(input: FamilyInput): FoodFamily | null {
   const { source, sourceId, subcategory, name } = input;
-  if (source && sourceId) {
-    const override = FAMILY_OVERRIDES[familyOverrideKey(source, sourceId)];
-    if (override !== undefined) return override;
-    if (source === RU_TABLE_SOURCE) {
+  if (!source || !sourceId) return null;
+
+  const override = FAMILY_OVERRIDES[familyOverrideKey(source, sourceId)];
+  if (override !== undefined) return override;
+
+  switch (source) {
+    case RU_TABLE_SOURCE: {
       const [section, ruName] = splitRuSourceId(sourceId);
       return inferRuTableFamily(section, ruName);
     }
-    if (source === OFF_SOURCE) return null;
-    if (source === USDA_SOURCE && has(name, ...NOT_A_STAPLE)) return null;
+    case USDA_SOURCE:
+      return has(name, ...NOT_A_STAPLE)
+        ? null
+        : inferCatalogFamily(subcategory, name);
+    default:
+      return null;
   }
-  return inferCatalogFamily(subcategory, name);
 }
 
 export const familyOverrideKeys = Object.keys(FAMILY_OVERRIDES);

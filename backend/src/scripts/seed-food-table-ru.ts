@@ -28,7 +28,7 @@ import {
   upsertTaxonomy,
   type CuratedItem,
 } from './seed-food-catalog';
-import { RU_TABLE_SOURCE } from './food-families';
+import { RU_TABLE_SOURCE, has } from './food-families';
 import table from './data/food-table-ru.json';
 import nameOverrides from './data/food-table-ru.names.json';
 
@@ -67,11 +67,6 @@ export interface Classification {
   subcategory: string;
   role: string;
 }
-
-const has = (name: string, ...needles: string[]) => {
-  const lower = name.toLowerCase();
-  return needles.some((needle) => lower.includes(needle));
-};
 
 // Explicit section -> taxonomy mapping (business-rules.md requires this be
 // explicit, not inferred), refined per item by name and by the same
