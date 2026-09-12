@@ -476,6 +476,9 @@ export const dietItems = pgTable(
     mealPosition: integer('meal_position').notNull(),
     weightGrams: numeric('weight_grams').notNull(),
     orderIndex: integer('order_index').notNull(),
+    // False for a Free Food: still listed and eaten, but left out of the
+    // macro fit and of the Diet's stored totals (ADR-020).
+    isCounted: boolean('is_counted').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

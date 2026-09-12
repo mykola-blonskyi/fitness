@@ -1,0 +1,1 @@
+ALTER TABLE "diet_items" ADD COLUMN "is_counted" boolean DEFAULT true NOT NULL;
