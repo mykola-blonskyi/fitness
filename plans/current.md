@@ -38,6 +38,7 @@ Meal shape stays as it is today. The foods stop being absurd.
 - [ ] `diet_items.slot_key` + multi-item slots (3-item salad, 1-2 item dinner protein), rendered as one labelled group
 - [ ] Servings (`serving_unit`/`serving_grams` on ~50-80 foods) + whole-unit snapping in the fit
 - [ ] Swap/reroll retargeted from Role to Family; slot-level reroll ("give me another salad")
+  - A Family is not a calorie band: `white_fish` spans 0.4-30.7 g fat and 67-331 kcal/100 g, because `red_fish` keys off five salmonid names and every other finfish falls through to it. Offering cod -> sea eel as a swap is a four-fold calorie substitution, so the swap has to filter on Role as well as Family, or `white_fish` has to be split first. Measured in `reports/audits/2026-09-12-food-family-classification.md`.
 - [ ] Favorites narrow per Family instead of per Role (ADR-014 as narrowed by ADR-020)
 
 ## Phase 3 — Variants and settings
