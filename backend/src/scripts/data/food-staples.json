@@ -124,10 +124,10 @@
     "category": "grains",
     "subcategory": "complex_carbs",
     "role": "complex_carb",
-    "caloriesPer100g": 366,
-    "proteinPer100g": 9.5,
-    "carbsPer100g": 74.0,
-    "fatPer100g": 1.5,
+    "caloriesPer100g": 334,
+    "proteinPer100g": 8.2,
+    "carbsPer100g": 76.0,
+    "fatPer100g": 0.9,
     "names": {
       "en": "Rye crispbread",
       "uk": "Житні хлібці",
@@ -710,7 +710,7 @@
       "en": "Banana",
       "uk": "Банан",
       "ru": "Банан",
-      "es": "Plátano"
+      "es": "Plátano (banana)"
     }
   },
   {
@@ -1203,7 +1203,7 @@
       "en": "Pumpkin seeds",
       "uk": "Насіння гарбуза",
       "ru": "Семена тыквы",
-      "es": "Pipas de calabaza"
+      "es": "Semillas de calabaza"
     }
   },
   {
@@ -1220,7 +1220,7 @@
       "en": "Sunflower seeds",
       "uk": "Насіння соняшника",
       "ru": "Семена подсолнечника",
-      "es": "Pipas de girasol"
+      "es": "Semillas de girasol"
     }
   },
   {
@@ -1314,9 +1314,9 @@
     "category": "grains",
     "subcategory": "complex_carbs",
     "role": "complex_carb",
-    "caloriesPer100g": 370,
+    "caloriesPer100g": 379,
     "proteinPer100g": 13.2,
-    "carbsPer100g": 59.8,
+    "carbsPer100g": 67.7,
     "fatPer100g": 6.5,
     "names": {
       "en": "Rolled oats, dry",
@@ -1507,7 +1507,7 @@
     "fatPer100g": 5.0,
     "names": {
       "en": "Beef mince, 5% fat, raw",
-      "uk": "Говяжий фарш, 5% жиру, сирий",
+      "uk": "Гов'яжий фарш, 5% жиру, сирий",
       "ru": "Говяжий фарш, 5% жирности, сырой",
       "es": "Carne picada de vacuno, 5% de grasa, cruda"
     }
@@ -1524,7 +1524,7 @@
     "fatPer100g": 19.5,
     "names": {
       "en": "Beef ribeye, raw",
-      "uk": "Говяжий рибай, сирий",
+      "uk": "Гов'яжий рибай, сирий",
       "ru": "Говяжий рибай, сырой",
       "es": "Entrecot de vacuno, crudo"
     }
@@ -1541,7 +1541,7 @@
     "fatPer100g": 6.3,
     "names": {
       "en": "Beef tenderloin, raw",
-      "uk": "Говяжа вирізка, сира",
+      "uk": "Гов'яжа вирізка, сира",
       "ru": "Говяжья вырезка, сырая",
       "es": "Solomillo de vacuno, crudo"
     }
@@ -1552,10 +1552,10 @@
     "category": "meat",
     "subcategory": "lean_meat",
     "role": "lean_protein",
-    "caloriesPer100g": 165,
-    "proteinPer100g": 20.2,
+    "caloriesPer100g": 128,
+    "proteinPer100g": 20.6,
     "carbsPer100g": 0,
-    "fatPer100g": 8.8,
+    "fatPer100g": 4.5,
     "names": {
       "en": "Lamb leg, lean, raw",
       "uk": "Баранина, нога, нежирна, сира",
@@ -1592,8 +1592,8 @@
     "fatPer100g": 3.4,
     "names": {
       "en": "Veal loin, raw",
-      "uk": "Телятина, філе, сира",
-      "ru": "Телятина, филе, сырая",
+      "uk": "Телятина, корейка, сира",
+      "ru": "Телятина, корейка, сырая",
       "es": "Lomo de ternera, crudo"
     }
   },
@@ -1807,10 +1807,10 @@
     "category": "fish",
     "subcategory": "shellfish",
     "role": "lean_protein",
-    "caloriesPer100g": 69,
-    "proteinPer100g": 12.1,
-    "carbsPer100g": 3.2,
-    "fatPer100g": 0.5,
+    "caloriesPer100g": 88,
+    "proteinPer100g": 16.8,
+    "carbsPer100g": 2.4,
+    "fatPer100g": 0.8,
     "names": {
       "en": "Scallops, raw",
       "uk": "Морські гребінці, сирі",
@@ -1832,7 +1832,7 @@
       "en": "Shrimp, peeled, raw",
       "uk": "Креветки, очищені, сирі",
       "ru": "Креветки, очищенные, сырые",
-      "es": "Camarones pelados, crudos"
+      "es": "Gambas peladas, crudas"
     }
   },
   {
@@ -1985,7 +1985,7 @@
       "en": "Halibut fillet, raw",
       "uk": "Філе палтуса, сире",
       "ru": "Филе палтуса, сырое",
-      "es": "Filete de halibut, crudo"
+      "es": "Filete de fletán (halibut), crudo"
     }
   },
   {
@@ -2002,7 +2002,7 @@
       "en": "Pollock fillet, raw",
       "uk": "Філе минтая, сире",
       "ru": "Филе минтая, сырое",
-      "es": "Filete de abadejo, crudo"
+      "es": "Filete de abadejo de Alaska, crudo"
     }
   },
   {
