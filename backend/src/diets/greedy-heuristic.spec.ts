@@ -620,6 +620,165 @@ describe('generateDietItems', () => {
     expect(drift(result.totalCarbs, 153)).toBeLessThanOrEqual(0.1);
     expect(drift(result.totalFat, 68)).toBeLessThanOrEqual(0.1);
   });
+
+  it('picks a different food item for the same role across a multi-meal day when alternatives exist', () => {
+    const proteins = [0, 1, 2, 3].map((i) => ({
+      ...leanProtein,
+      id: `role-protein-${i}`,
+    }));
+    const carbs = [0, 1, 2, 3].map((i) => ({
+      ...complexCarb,
+      id: `role-carb-${i}`,
+    }));
+    const vegetables = [0, 1, 2, 3].map((i) => ({
+      ...vegetable,
+      id: `role-vegetable-${i}`,
+    }));
+    const fats = [0, 1, 2, 3].map((i) => ({
+      ...healthyFat,
+      id: `role-fat-${i}`,
+    }));
+
+    const result = generateDietItems({
+      targetCalories: 2000,
+      targetProteinG: 150,
+      targetCarbsG: 200,
+      targetFatG: 60,
+      mealCount: 4,
+      candidatesByRole: new Map([
+        ['lean_protein', proteins],
+        ['complex_carb', carbs],
+        ['vegetable', vegetables],
+        ['healthy_fat', fats],
+      ]),
+      pickRandom: (items) => items[0],
+    });
+
+    const foodItemIds = result.items.map((item) => item.foodItemId);
+    expect(new Set(foodItemIds).size).toBe(foodItemIds.length);
+  });
+
+  it('caps a protein family at two meals even when a naive picker would take a third from it', () => {
+    const familyA1: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-a-1',
+      familyId: 'family-a',
+    };
+    const familyA2: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-a-2',
+      familyId: 'family-a',
+    };
+    const familyA3: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-a-3',
+      familyId: 'family-a',
+    };
+    const familyB1: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-b-1',
+      familyId: 'family-b',
+    };
+
+    const result = generateDietItems({
+      targetCalories: 1500,
+      targetProteinG: 120,
+      targetCarbsG: 0,
+      targetFatG: 40,
+      mealCount: 3,
+      candidatesByRole: new Map([
+        ['lean_protein', [familyA1, familyA2, familyA3, familyB1]],
+      ]),
+      pickRandom: (items) => items[0],
+    });
+
+    const familyAMeals = result.items.filter((item) =>
+      [familyA1.id, familyA2.id, familyA3.id].includes(item.foodItemId),
+    ).length;
+    expect(familyAMeals).toBe(2);
+    expect(foodIdsAt(result.items, 3)).toContain(familyB1.id);
+  });
+
+  it('draws a third meal from the same protein family rather than repeating an item once the cap is hit', () => {
+    const familyA1: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-only-a-1',
+      familyId: 'family-only-a',
+    };
+    const familyA2: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-only-a-2',
+      familyId: 'family-only-a',
+    };
+    const familyA3: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-only-a-3',
+      familyId: 'family-only-a',
+    };
+
+    const result = generateDietItems({
+      targetCalories: 1500,
+      targetProteinG: 120,
+      targetCarbsG: 0,
+      targetFatG: 40,
+      mealCount: 3,
+      candidatesByRole: new Map([
+        ['lean_protein', [familyA1, familyA2, familyA3]],
+      ]),
+      pickRandom: (items) => items[0],
+    });
+
+    const foodItemIds = result.items.map((item) => item.foodItemId);
+    expect(new Set(foodItemIds).size).toBe(foodItemIds.length);
+    expect(foodIdsAt(result.items, 3)).toContain(familyA3.id);
+  });
+
+  it('still generates a meal from a single eligible candidate across a 4-meal day', () => {
+    const result = generateDietItems({
+      targetCalories: 1600,
+      targetProteinG: 120,
+      targetCarbsG: 0,
+      targetFatG: 40,
+      mealCount: 4,
+      candidatesByRole: new Map([['lean_protein', [leanProtein]]]),
+    });
+
+    expect(result.items.length).toBeGreaterThan(0);
+    for (let position = 1; position <= 4; position++) {
+      expect(foodIdsAt(result.items, position)).toContain(leanProtein.id);
+    }
+  });
+
+  it('never counts a family-less protein toward the cap, so a third of them still beats a family item', () => {
+    // Ordered so items[0] takes the three family-less candidates first. Were
+    // they pooled under one implicit family, the third meal would hit the cap
+    // and take familyA instead.
+    const noFamily = [1, 2, 3].map((i) => ({
+      ...leanProtein,
+      id: `no-family-${i}`,
+      familyId: null,
+    }));
+    const familyA: FoodCandidate = {
+      ...leanProtein,
+      id: 'family-a-only',
+      familyId: 'family-a',
+    };
+
+    const result = generateDietItems({
+      targetCalories: 1600,
+      targetProteinG: 120,
+      targetCarbsG: 0,
+      targetFatG: 40,
+      mealCount: 4,
+      candidatesByRole: new Map([['lean_protein', [...noFamily, familyA]]]),
+      pickRandom: (items) => items[0],
+    });
+
+    expect(foodIdsAt(result.items, 3)).toContain(noFamily[2].id);
+    expect(foodIdsAt(result.items, 4)).toContain(familyA.id);
+    const foodItemIds = result.items.map((item) => item.foodItemId);
+    expect(new Set(foodItemIds).size).toBe(4);
+  });
 });
 
 describe('gramsForCalories', () => {
