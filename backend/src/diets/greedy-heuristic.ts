@@ -5,9 +5,9 @@
 // that role's share in a sensible portion, fits the portions to the meal's
 // whole protein/carb/fat target at once, then shrinks the day
 // proportionally if it lands over the calorie target. Free Foods (ADR-020)
-// are picked first, at fixed portions, and what they cost comes off the
-// day's calorie target before any of that. Pure function, no I/O - testable
-// without a database.
+// are picked first, at fixed portions, and what they supply comes off the
+// day's calorie and macro targets before any of that. Pure function, no
+// I/O - testable without a database.
 
 import { freeFoodGrams, isFreeFood } from './free-foods';
 import {
@@ -317,7 +317,7 @@ function shrinkToCalorieCeiling(items: WorkingItem[], ceiling: number): void {
 // in the macro fit. Falls short of FREE_ITEMS_PER_MEAL rather than listing
 // one vegetable twice in a meal once the day has exhausted the pool.
 function pickFreeItems(
-  target: MealTarget,
+  position: number,
   candidatesByRole: Map<string, FoodCandidate[]>,
   pick: <T>(items: T[]) => T,
   picked: DayPicks,
@@ -339,7 +339,7 @@ function pickFreeItems(
     );
     recordPick(picked, candidate, VEGETABLE_CHAIN_INDEX);
     mealItems.push({
-      mealPosition: target.position,
+      mealPosition: position,
       orderIndex: 0,
       candidate,
       chainIndex: VEGETABLE_CHAIN_INDEX,
@@ -401,33 +401,43 @@ function buildMeal(
 
 export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
   const pick = input.pickRandom ?? defaultPick;
-  const mealTargets = mealTargetsForCount(input.mealCount, {
-    calories: input.targetCalories,
-    proteinG: input.targetProteinG,
-    carbsG: input.targetCarbsG,
-    fatG: input.targetFatG,
-  });
 
   const picked: DayPicks = {
     foodItemIds: new Set(),
     mealsPerProteinFamily: new Map(),
   };
 
-  const freeItems = mealTargets.flatMap((target) =>
-    pickFreeItems(target, input.candidatesByRole, pick, picked),
-  );
+  const freeItems = Array.from({ length: input.mealCount }, (_, i) =>
+    pickFreeItems(i + 1, input.candidatesByRole, pick, picked),
+  ).flat();
   const mealsWithFreeItems = new Set(
     freeItems.map((item) => item.mealPosition),
   );
 
-  // The calorie target is a hard ceiling, so what the free foods cost has
-  // to be exact: a flat allowance either breaks the ceiling at six meals or
-  // wastes most of itself at three.
+  // What the salad supplies has to come off every target exactly, not just
+  // the calorie one: a flat allowance either breaks the ceiling at six
+  // meals or wastes most of itself at three, and leaving the macro targets
+  // at full asks the counted items to hit them inside a smaller calorie
+  // envelope, which they cannot.
+  const freeTotals = macroTotals(freeItems);
   const freeFoodCalories = calorieTotal(freeItems);
   const fittedCalorieTarget = Math.max(
     0,
     input.targetCalories - freeFoodCalories,
   );
+  const fittedProteinTarget = Math.max(
+    0,
+    input.targetProteinG - freeTotals.protein,
+  );
+  const fittedCarbsTarget = Math.max(0, input.targetCarbsG - freeTotals.carbs);
+  const fittedFatTarget = Math.max(0, input.targetFatG - freeTotals.fat);
+
+  const mealTargets = mealTargetsForCount(input.mealCount, {
+    calories: fittedCalorieTarget,
+    proteinG: fittedProteinTarget,
+    carbsG: fittedCarbsTarget,
+    fatG: fittedFatTarget,
+  });
 
   const countedItems = mealTargets.flatMap((target) =>
     buildMeal(
@@ -470,5 +480,8 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     totalFat: Math.round(totals.fat),
     freeFoodCalories: Math.round(freeFoodCalories),
     fittedCalorieTarget: Math.round(fittedCalorieTarget),
+    fittedProteinTarget: Math.round(fittedProteinTarget),
+    fittedCarbsTarget: Math.round(fittedCarbsTarget),
+    fittedFatTarget: Math.round(fittedFatTarget),
   };
 }

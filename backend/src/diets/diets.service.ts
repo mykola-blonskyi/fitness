@@ -287,6 +287,9 @@ export class DietsService {
             targetFatG: target.fatG,
             freeFoodCalories: generated.freeFoodCalories,
             fittedCalorieTarget: generated.fittedCalorieTarget,
+            fittedProteinTarget: generated.fittedProteinTarget,
+            fittedCarbsTarget: generated.fittedCarbsTarget,
+            fittedFatTarget: generated.fittedFatTarget,
             mealCount: user.mealCount,
           },
         })

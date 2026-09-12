@@ -130,5 +130,10 @@ export interface GeneratedDiet {
   totalCarbs: number;
   totalFat: number;
   freeFoodCalories: number;
+  // What the counted items were fitted to: the day's targets less what the
+  // Free Foods supply, so the whole plate lands on the day's targets.
   fittedCalorieTarget: number;
+  fittedProteinTarget: number;
+  fittedCarbsTarget: number;
+  fittedFatTarget: number;
 }

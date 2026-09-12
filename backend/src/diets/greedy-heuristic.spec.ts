@@ -787,6 +787,27 @@ function poolWithFreeVegetables(count: number): Map<string, FoodCandidate[]> {
   ]);
 }
 
+function plateMacros(
+  items: ReturnType<typeof generateDietItems>['items'],
+  pool: Map<string, FoodCandidate[]>,
+) {
+  const byId = new Map(
+    [...pool.values()].flat().map((candidate) => [candidate.id, candidate]),
+  );
+  const sum = (per100g: (candidate: FoodCandidate) => number) =>
+    items.reduce(
+      (total, item) =>
+        total + (per100g(byId.get(item.foodItemId)!) * item.weightGrams) / 100,
+      0,
+    );
+  return {
+    calories: sum((c) => c.caloriesPer100g),
+    protein: sum((c) => c.proteinPer100g),
+    carbs: sum((c) => c.carbsPer100g),
+    fat: sum((c) => c.fatPer100g),
+  };
+}
+
 function freeItemsAt(
   items: ReturnType<typeof generateDietItems>['items'],
   position: number,
@@ -882,6 +903,42 @@ describe('generateDietItems - Free Foods', () => {
       result.fittedCalorieTarget,
     );
   });
+
+  it('takes what they supply off the macro targets too, and fits to those', () => {
+    const result = generateDietItems({
+      ...target,
+      mealCount: 3,
+      candidatesByRole: poolWithFreeVegetables(12),
+    });
+
+    // 9 items x 80g at 2g protein, 5g carbs, 0.3g fat per 100g.
+    expect(result.fittedProteinTarget).toBe(136);
+    expect(result.fittedCarbsTarget).toBe(164);
+    expect(result.fittedFatTarget).toBe(58);
+    expect(result.totalProtein).toBe(result.fittedProteinTarget);
+    expect(result.totalCarbs).toBe(result.fittedCarbsTarget);
+    expect(result.totalFat).toBe(result.fittedFatTarget);
+  });
+
+  it.each([3, 4, 5, 6])(
+    'lands the whole plate on the day target at mealCount %i',
+    (mealCount) => {
+      const pool = poolWithFreeVegetables(20);
+      const result = generateDietItems({
+        ...target,
+        mealCount,
+        candidatesByRole: pool,
+      });
+
+      const plate = plateMacros(result.items, pool);
+      const missed = (value: number, dayTarget: number) =>
+        Math.abs(value - dayTarget);
+      expect(missed(plate.protein, target.targetProteinG)).toBeLessThan(1);
+      expect(missed(plate.carbs, target.targetCarbsG)).toBeLessThan(1);
+      expect(missed(plate.fat, target.targetFatG)).toBeLessThan(1);
+      expect(plate.calories).toBeLessThanOrEqual(target.targetCalories);
+    },
+  );
 
   it('keeps the calorie ceiling at six meals, where a flat allowance would break it', () => {
     const dense = freeVegetables(20).map((candidate) => ({
