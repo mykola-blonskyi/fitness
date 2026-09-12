@@ -188,8 +188,11 @@ export function measure(
       carbs: max(dc.map(Math.abs)),
       fat: max(df.map(Math.abs)),
     },
-    overCeiling: diets.filter((d) => d.totalCalories > target.targetCalories)
-      .length,
+    // Free Foods are off the totals but still on the plate, so the ceiling
+    // is only honestly measured with what they cost added back.
+    overCeiling: diets.filter(
+      (d) => d.totalCalories + d.freeFoodCalories > target.targetCalories,
+    ).length,
     daysWithRepeat,
     worstRepeat,
     daysOverProteinFamilyCap: daysOverCap,
