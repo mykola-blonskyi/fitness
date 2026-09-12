@@ -3,6 +3,7 @@
 // plan, which is how flours, offal, sausages, confectionery and babyfood
 // leave the generation pool without a rule of their own.
 import { isFoodFamily, type FoodFamily } from '../food-items/food-item.types';
+import { CURATED_SOURCE, STAPLE_FAMILIES } from './food-staples';
 import overrides from './data/food-families.json';
 
 export type { FoodFamily };
@@ -316,6 +317,8 @@ export function resolveFamily(input: FamilyInput): FoodFamily | null {
       return has(name, ...NOT_A_STAPLE)
         ? null
         : inferCatalogFamily(subcategory, name);
+    case CURATED_SOURCE:
+      return STAPLE_FAMILIES[sourceId] ?? null;
     default:
       return null;
   }

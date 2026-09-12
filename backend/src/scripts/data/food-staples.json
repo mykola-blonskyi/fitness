@@ -1,0 +1,2042 @@
+[
+  {
+    "sourceId": "blackberry-raw",
+    "family": "berries",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 43,
+    "proteinPer100g": 1.4,
+    "carbsPer100g": 9.6,
+    "fatPer100g": 0.5,
+    "names": {
+      "en": "Blackberries",
+      "uk": "Ожина",
+      "ru": "Ежевика",
+      "es": "Moras"
+    }
+  },
+  {
+    "sourceId": "blackcurrant-raw",
+    "family": "berries",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 63,
+    "proteinPer100g": 1.4,
+    "carbsPer100g": 15.4,
+    "fatPer100g": 0.4,
+    "names": {
+      "en": "Blackcurrants",
+      "uk": "Чорна смородина",
+      "ru": "Чёрная смородина",
+      "es": "Grosellas negras"
+    }
+  },
+  {
+    "sourceId": "blueberry-raw",
+    "family": "berries",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 57,
+    "proteinPer100g": 0.7,
+    "carbsPer100g": 14.5,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Blueberries",
+      "uk": "Лохина",
+      "ru": "Голубика",
+      "es": "Arándanos azules"
+    }
+  },
+  {
+    "sourceId": "cranberry-raw",
+    "family": "berries",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 46,
+    "proteinPer100g": 0.4,
+    "carbsPer100g": 12.2,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Cranberries",
+      "uk": "Журавлина",
+      "ru": "Клюква",
+      "es": "Arándanos rojos"
+    }
+  },
+  {
+    "sourceId": "raspberry-raw",
+    "family": "berries",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 52,
+    "proteinPer100g": 1.2,
+    "carbsPer100g": 11.9,
+    "fatPer100g": 0.7,
+    "names": {
+      "en": "Raspberries",
+      "uk": "Малина",
+      "ru": "Малина",
+      "es": "Frambuesas"
+    }
+  },
+  {
+    "sourceId": "strawberry-raw",
+    "family": "berries",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 32,
+    "proteinPer100g": 0.7,
+    "carbsPer100g": 7.7,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Strawberries",
+      "uk": "Полуниця",
+      "ru": "Клубника",
+      "es": "Fresas"
+    }
+  },
+  {
+    "sourceId": "rye-bread-wholegrain",
+    "family": "bread",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 210,
+    "proteinPer100g": 6.6,
+    "carbsPer100g": 40.7,
+    "fatPer100g": 1.2,
+    "names": {
+      "en": "Wholegrain rye bread",
+      "uk": "Житній хліб цільнозерновий",
+      "ru": "Ржаной хлеб цельнозерновой",
+      "es": "Pan de centeno integral"
+    }
+  },
+  {
+    "sourceId": "rye-crispbread",
+    "family": "bread",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 334,
+    "proteinPer100g": 8.2,
+    "carbsPer100g": 76.0,
+    "fatPer100g": 0.9,
+    "names": {
+      "en": "Rye crispbread",
+      "uk": "Житні хлібці",
+      "ru": "Ржаные хлебцы",
+      "es": "Pan crujiente de centeno"
+    }
+  },
+  {
+    "sourceId": "wholemeal-pita",
+    "family": "bread",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 266,
+    "proteinPer100g": 9.8,
+    "carbsPer100g": 55.7,
+    "fatPer100g": 1.7,
+    "names": {
+      "en": "Wholemeal pita bread",
+      "uk": "Піта цільнозернова",
+      "ru": "Пита цельнозерновая",
+      "es": "Pan de pita integral"
+    }
+  },
+  {
+    "sourceId": "wholemeal-wheat-bread",
+    "family": "bread",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 247,
+    "proteinPer100g": 12.9,
+    "carbsPer100g": 41.3,
+    "fatPer100g": 3.4,
+    "names": {
+      "en": "Wholemeal wheat bread",
+      "uk": "Пшеничний хліб цільнозерновий",
+      "ru": "Пшеничный хлеб цельнозерновой",
+      "es": "Pan de trigo integral"
+    }
+  },
+  {
+    "sourceId": "cottage-cheese-2",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "low_fat_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 103,
+    "proteinPer100g": 18.0,
+    "carbsPer100g": 3.3,
+    "fatPer100g": 2.0,
+    "names": {
+      "en": "Cottage cheese, 2% fat",
+      "uk": "Кисломолочний сир, 2% жиру",
+      "ru": "Творог, 2% жирности",
+      "es": "Requesón (queso cottage), 2% de grasa"
+    }
+  },
+  {
+    "sourceId": "cottage-cheese-5",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "full_fat_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 121,
+    "proteinPer100g": 17.2,
+    "carbsPer100g": 1.8,
+    "fatPer100g": 5.0,
+    "names": {
+      "en": "Cottage cheese, 5% fat",
+      "uk": "Кисломолочний сир, 5% жиру",
+      "ru": "Творог, 5% жирности",
+      "es": "Requesón (queso cottage), 5% de grasa"
+    }
+  },
+  {
+    "sourceId": "cottage-cheese-9",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "full_fat_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 156,
+    "proteinPer100g": 16.7,
+    "carbsPer100g": 2.0,
+    "fatPer100g": 9.0,
+    "names": {
+      "en": "Cottage cheese, 9% fat",
+      "uk": "Кисломолочний сир, 9% жиру",
+      "ru": "Творог, 9% жирности",
+      "es": "Requesón (queso cottage), 9% de grasa"
+    }
+  },
+  {
+    "sourceId": "greek-yogurt-0",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "fermented_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 59,
+    "proteinPer100g": 10.3,
+    "carbsPer100g": 3.6,
+    "fatPer100g": 0.4,
+    "names": {
+      "en": "Greek yogurt, non-fat",
+      "uk": "Грецький йогурт, 0% жиру",
+      "ru": "Греческий йогурт, 0% жирности",
+      "es": "Yogur griego, desnatado"
+    }
+  },
+  {
+    "sourceId": "greek-yogurt-2",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "fermented_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 73,
+    "proteinPer100g": 9.0,
+    "carbsPer100g": 3.8,
+    "fatPer100g": 2.0,
+    "names": {
+      "en": "Greek yogurt, 2% fat",
+      "uk": "Грецький йогурт, 2% жиру",
+      "ru": "Греческий йогурт, 2% жирности",
+      "es": "Yogur griego, 2% de grasa"
+    }
+  },
+  {
+    "sourceId": "kefir-1",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "fermented_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 40,
+    "proteinPer100g": 3.0,
+    "carbsPer100g": 4.0,
+    "fatPer100g": 1.0,
+    "names": {
+      "en": "Kefir, 1% fat",
+      "uk": "Кефір, 1% жиру",
+      "ru": "Кефир, 1% жирности",
+      "es": "Kéfir, 1% de grasa"
+    }
+  },
+  {
+    "sourceId": "milk-2-5",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "low_fat_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 52,
+    "proteinPer100g": 2.8,
+    "carbsPer100g": 4.7,
+    "fatPer100g": 2.5,
+    "names": {
+      "en": "Milk, 2.5% fat",
+      "uk": "Молоко, 2,5% жиру",
+      "ru": "Молоко, 2,5% жирности",
+      "es": "Leche, 2,5% de grasa"
+    }
+  },
+  {
+    "sourceId": "natural-yogurt-3-2",
+    "family": "casein_dairy",
+    "category": "dairy",
+    "subcategory": "fermented_dairy",
+    "role": "dairy",
+    "caloriesPer100g": 66,
+    "proteinPer100g": 5.0,
+    "carbsPer100g": 3.5,
+    "fatPer100g": 3.2,
+    "names": {
+      "en": "Natural yogurt, 3.2% fat",
+      "uk": "Йогурт натуральний, 3,2% жиру",
+      "ru": "Йогурт натуральный, 3,2% жирности",
+      "es": "Yogur natural, 3,2% de grasa"
+    }
+  },
+  {
+    "sourceId": "asparagus-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 20,
+    "proteinPer100g": 2.2,
+    "carbsPer100g": 3.9,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Asparagus, raw",
+      "uk": "Спаржа, свіжа",
+      "ru": "Спаржа, свежая",
+      "es": "Espárragos, crudos"
+    }
+  },
+  {
+    "sourceId": "beetroot-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 43,
+    "proteinPer100g": 1.6,
+    "carbsPer100g": 9.6,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Beetroot, raw",
+      "uk": "Буряк, свіжий",
+      "ru": "Свёкла, свежая",
+      "es": "Remolacha, cruda"
+    }
+  },
+  {
+    "sourceId": "broccoli-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "cruciferous_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 34,
+    "proteinPer100g": 2.8,
+    "carbsPer100g": 6.6,
+    "fatPer100g": 0.4,
+    "names": {
+      "en": "Broccoli, raw",
+      "uk": "Броколі, свіжа",
+      "ru": "Брокколи, свежая",
+      "es": "Brócoli, crudo"
+    }
+  },
+  {
+    "sourceId": "brussels-sprouts-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "cruciferous_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 43,
+    "proteinPer100g": 3.4,
+    "carbsPer100g": 9.0,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Brussels sprouts, raw",
+      "uk": "Брюссельська капуста, свіжа",
+      "ru": "Брюссельская капуста, свежая",
+      "es": "Coles de Bruselas, crudas"
+    }
+  },
+  {
+    "sourceId": "cauliflower-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "cruciferous_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 25,
+    "proteinPer100g": 1.9,
+    "carbsPer100g": 5.0,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Cauliflower, raw",
+      "uk": "Цвітна капуста, свіжа",
+      "ru": "Цветная капуста, свежая",
+      "es": "Coliflor, cruda"
+    }
+  },
+  {
+    "sourceId": "champignon-mushrooms-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 22,
+    "proteinPer100g": 3.1,
+    "carbsPer100g": 3.3,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Champignon mushrooms, raw",
+      "uk": "Печериці, свіжі",
+      "ru": "Шампиньоны, свежие",
+      "es": "Champiñones, crudos"
+    }
+  },
+  {
+    "sourceId": "eggplant-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 25,
+    "proteinPer100g": 1.0,
+    "carbsPer100g": 5.9,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Eggplant, raw",
+      "uk": "Баклажан, свіжий",
+      "ru": "Баклажан, свежий",
+      "es": "Berenjena, cruda"
+    }
+  },
+  {
+    "sourceId": "green-beans-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 31,
+    "proteinPer100g": 1.8,
+    "carbsPer100g": 7.0,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Green beans, raw",
+      "uk": "Квасоля спаржева, свіжа",
+      "ru": "Фасоль спаржевая, свежая",
+      "es": "Judías verdes, crudas"
+    }
+  },
+  {
+    "sourceId": "zucchini-raw",
+    "family": "cooked_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 17,
+    "proteinPer100g": 1.2,
+    "carbsPer100g": 3.1,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Zucchini, raw",
+      "uk": "Кабачок, свіжий",
+      "ru": "Кабачок, свежий",
+      "es": "Calabacín, crudo"
+    }
+  },
+  {
+    "sourceId": "butter-82",
+    "family": "culinary_oil",
+    "category": "oils",
+    "subcategory": "saturated_oils",
+    "role": "saturated_fat",
+    "caloriesPer100g": 748,
+    "proteinPer100g": 0.8,
+    "carbsPer100g": 0.8,
+    "fatPer100g": 82.0,
+    "names": {
+      "en": "Butter, 82% fat",
+      "uk": "Вершкове масло, 82% жиру",
+      "ru": "Сливочное масло, 82% жирности",
+      "es": "Mantequilla, 82% de grasa"
+    }
+  },
+  {
+    "sourceId": "coconut-oil",
+    "family": "culinary_oil",
+    "category": "oils",
+    "subcategory": "saturated_oils",
+    "role": "saturated_fat",
+    "caloriesPer100g": 892,
+    "proteinPer100g": 0,
+    "carbsPer100g": 0,
+    "fatPer100g": 99.1,
+    "names": {
+      "en": "Coconut oil",
+      "uk": "Кокосова олія",
+      "ru": "Кокосовое масло",
+      "es": "Aceite de coco"
+    }
+  },
+  {
+    "sourceId": "flaxseed-oil",
+    "family": "culinary_oil",
+    "category": "oils",
+    "subcategory": "healthy_oils",
+    "role": "healthy_fat",
+    "caloriesPer100g": 884,
+    "proteinPer100g": 0,
+    "carbsPer100g": 0,
+    "fatPer100g": 100.0,
+    "names": {
+      "en": "Flaxseed oil",
+      "uk": "Лляна олія",
+      "ru": "Льняное масло",
+      "es": "Aceite de linaza"
+    }
+  },
+  {
+    "sourceId": "olive-oil-extra-virgin",
+    "family": "culinary_oil",
+    "category": "oils",
+    "subcategory": "healthy_oils",
+    "role": "healthy_fat",
+    "caloriesPer100g": 884,
+    "proteinPer100g": 0,
+    "carbsPer100g": 0,
+    "fatPer100g": 100.0,
+    "names": {
+      "en": "Extra virgin olive oil",
+      "uk": "Оливкова олія екстра вірджин",
+      "ru": "Оливковое масло нерафинированное (extra virgin)",
+      "es": "Aceite de oliva virgen extra"
+    }
+  },
+  {
+    "sourceId": "rapeseed-oil",
+    "family": "culinary_oil",
+    "category": "oils",
+    "subcategory": "healthy_oils",
+    "role": "healthy_fat",
+    "caloriesPer100g": 884,
+    "proteinPer100g": 0,
+    "carbsPer100g": 0,
+    "fatPer100g": 100.0,
+    "names": {
+      "en": "Rapeseed oil",
+      "uk": "Рапсова олія",
+      "ru": "Рапсовое масло",
+      "es": "Aceite de colza"
+    }
+  },
+  {
+    "sourceId": "sunflower-oil",
+    "family": "culinary_oil",
+    "category": "oils",
+    "subcategory": "healthy_oils",
+    "role": "healthy_fat",
+    "caloriesPer100g": 884,
+    "proteinPer100g": 0,
+    "carbsPer100g": 0,
+    "fatPer100g": 100.0,
+    "names": {
+      "en": "Sunflower oil",
+      "uk": "Соняшникова олія",
+      "ru": "Подсолнечное масло",
+      "es": "Aceite de girasol"
+    }
+  },
+  {
+    "sourceId": "chicken-egg-white-raw",
+    "family": "eggs",
+    "category": "eggs",
+    "subcategory": "egg_whites",
+    "role": "lean_protein",
+    "caloriesPer100g": 52,
+    "proteinPer100g": 10.9,
+    "carbsPer100g": 0.7,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Egg white, raw",
+      "uk": "Яєчний білок, сирий",
+      "ru": "Яичный белок, сырой",
+      "es": "Clara de huevo, cruda"
+    }
+  },
+  {
+    "sourceId": "chicken-egg-whole-raw",
+    "family": "eggs",
+    "category": "eggs",
+    "subcategory": "whole_eggs",
+    "role": "lean_protein",
+    "caloriesPer100g": 143,
+    "proteinPer100g": 12.6,
+    "carbsPer100g": 0.7,
+    "fatPer100g": 9.5,
+    "names": {
+      "en": "Chicken egg, whole, raw",
+      "uk": "Куряче яйце, ціле, сире",
+      "ru": "Куриное яйцо, целое, сырое",
+      "es": "Huevo de gallina, entero, crudo"
+    }
+  },
+  {
+    "sourceId": "duck-egg-whole-raw",
+    "family": "eggs",
+    "category": "eggs",
+    "subcategory": "whole_eggs",
+    "role": "lean_protein",
+    "caloriesPer100g": 185,
+    "proteinPer100g": 12.8,
+    "carbsPer100g": 1.5,
+    "fatPer100g": 13.8,
+    "names": {
+      "en": "Duck egg, whole, raw",
+      "uk": "Качине яйце, ціле, сире",
+      "ru": "Утиное яйцо, целое, сырое",
+      "es": "Huevo de pato, entero, crudo"
+    }
+  },
+  {
+    "sourceId": "quail-egg-whole-raw",
+    "family": "eggs",
+    "category": "eggs",
+    "subcategory": "whole_eggs",
+    "role": "lean_protein",
+    "caloriesPer100g": 158,
+    "proteinPer100g": 13.1,
+    "carbsPer100g": 0.4,
+    "fatPer100g": 11.1,
+    "names": {
+      "en": "Quail egg, whole, raw",
+      "uk": "Перепелине яйце, ціле, сире",
+      "ru": "Перепелиное яйцо, целое, сырое",
+      "es": "Huevo de codorniz, entero, crudo"
+    }
+  },
+  {
+    "sourceId": "avocado-raw",
+    "family": "fatty_fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "healthy_fat",
+    "caloriesPer100g": 160,
+    "proteinPer100g": 2.0,
+    "carbsPer100g": 8.5,
+    "fatPer100g": 14.7,
+    "names": {
+      "en": "Avocado",
+      "uk": "Авокадо",
+      "ru": "Авокадо",
+      "es": "Aguacate"
+    }
+  },
+  {
+    "sourceId": "black-olives",
+    "family": "fatty_fruit",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "healthy_fat",
+    "caloriesPer100g": 115,
+    "proteinPer100g": 0.8,
+    "carbsPer100g": 6.3,
+    "fatPer100g": 10.7,
+    "names": {
+      "en": "Black olives",
+      "uk": "Чорні оливки (маслини)",
+      "ru": "Маслины (чёрные оливки)",
+      "es": "Aceitunas negras"
+    }
+  },
+  {
+    "sourceId": "green-olives",
+    "family": "fatty_fruit",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "healthy_fat",
+    "caloriesPer100g": 145,
+    "proteinPer100g": 1.0,
+    "carbsPer100g": 3.8,
+    "fatPer100g": 15.3,
+    "names": {
+      "en": "Green olives",
+      "uk": "Зелені оливки",
+      "ru": "Зелёные оливки",
+      "es": "Aceitunas verdes"
+    }
+  },
+  {
+    "sourceId": "apple-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 52,
+    "proteinPer100g": 0.3,
+    "carbsPer100g": 13.8,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Apple",
+      "uk": "Яблуко",
+      "ru": "Яблоко",
+      "es": "Manzana"
+    }
+  },
+  {
+    "sourceId": "banana-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 89,
+    "proteinPer100g": 1.1,
+    "carbsPer100g": 22.8,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Banana",
+      "uk": "Банан",
+      "ru": "Банан",
+      "es": "Plátano (banana)"
+    }
+  },
+  {
+    "sourceId": "grapefruit-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 42,
+    "proteinPer100g": 0.8,
+    "carbsPer100g": 10.7,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Grapefruit",
+      "uk": "Грейпфрут",
+      "ru": "Грейпфрут",
+      "es": "Pomelo (toronja)"
+    }
+  },
+  {
+    "sourceId": "kiwi-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 61,
+    "proteinPer100g": 1.1,
+    "carbsPer100g": 14.7,
+    "fatPer100g": 0.5,
+    "names": {
+      "en": "Kiwifruit",
+      "uk": "Ківі",
+      "ru": "Киви",
+      "es": "Kiwi"
+    }
+  },
+  {
+    "sourceId": "mandarin-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 53,
+    "proteinPer100g": 0.8,
+    "carbsPer100g": 13.3,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Mandarin",
+      "uk": "Мандарин",
+      "ru": "Мандарин",
+      "es": "Mandarina"
+    }
+  },
+  {
+    "sourceId": "orange-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 47,
+    "proteinPer100g": 0.9,
+    "carbsPer100g": 11.8,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Orange",
+      "uk": "Апельсин",
+      "ru": "Апельсин",
+      "es": "Naranja"
+    }
+  },
+  {
+    "sourceId": "peach-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 39,
+    "proteinPer100g": 0.9,
+    "carbsPer100g": 9.5,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Peach",
+      "uk": "Персик",
+      "ru": "Персик",
+      "es": "Melocotón"
+    }
+  },
+  {
+    "sourceId": "pear-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 57,
+    "proteinPer100g": 0.4,
+    "carbsPer100g": 15.2,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Pear",
+      "uk": "Груша",
+      "ru": "Груша",
+      "es": "Pera"
+    }
+  },
+  {
+    "sourceId": "plum-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 46,
+    "proteinPer100g": 0.7,
+    "carbsPer100g": 11.4,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Plum",
+      "uk": "Слива",
+      "ru": "Слива",
+      "es": "Ciruela"
+    }
+  },
+  {
+    "sourceId": "sweet-cherry-raw",
+    "family": "fruit",
+    "category": "fruits",
+    "subcategory": "fresh_fruit",
+    "role": "fruit",
+    "caloriesPer100g": 63,
+    "proteinPer100g": 1.1,
+    "carbsPer100g": 16.0,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Sweet cherries",
+      "uk": "Черешня",
+      "ru": "Черешня",
+      "es": "Cerezas"
+    }
+  },
+  {
+    "sourceId": "brown-rice-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 367,
+    "proteinPer100g": 7.9,
+    "carbsPer100g": 76.2,
+    "fatPer100g": 2.9,
+    "names": {
+      "en": "Brown rice, dry",
+      "uk": "Рис коричневий (нешліфований), сухий",
+      "ru": "Рис коричневый (нешлифованный), сухой",
+      "es": "Arroz integral, crudo"
+    }
+  },
+  {
+    "sourceId": "buckwheat-groats-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 343,
+    "proteinPer100g": 12.6,
+    "carbsPer100g": 68.0,
+    "fatPer100g": 3.3,
+    "names": {
+      "en": "Buckwheat groats, dry",
+      "uk": "Гречана крупа, суха",
+      "ru": "Гречневая крупа, сухая",
+      "es": "Trigo sarraceno (alforfón), crudo"
+    }
+  },
+  {
+    "sourceId": "bulgur-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 342,
+    "proteinPer100g": 12.3,
+    "carbsPer100g": 75.9,
+    "fatPer100g": 1.3,
+    "names": {
+      "en": "Bulgur, dry",
+      "uk": "Булгур, сухий",
+      "ru": "Булгур, сухой",
+      "es": "Bulgur, crudo"
+    }
+  },
+  {
+    "sourceId": "couscous-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 376,
+    "proteinPer100g": 12.8,
+    "carbsPer100g": 77.4,
+    "fatPer100g": 0.6,
+    "names": {
+      "en": "Couscous, dry",
+      "uk": "Кускус, сухий",
+      "ru": "Кускус, сухой",
+      "es": "Cuscús, crudo"
+    }
+  },
+  {
+    "sourceId": "durum-pasta-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 371,
+    "proteinPer100g": 13.0,
+    "carbsPer100g": 74.7,
+    "fatPer100g": 1.5,
+    "names": {
+      "en": "Durum wheat pasta, dry",
+      "uk": "Макарони з твердої пшениці, сухі",
+      "ru": "Макароны из твёрдой пшеницы, сухие",
+      "es": "Pasta de trigo duro, cruda"
+    }
+  },
+  {
+    "sourceId": "quinoa-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 368,
+    "proteinPer100g": 14.1,
+    "carbsPer100g": 64.2,
+    "fatPer100g": 6.1,
+    "names": {
+      "en": "Quinoa, dry",
+      "uk": "Кіноа, суха",
+      "ru": "Киноа, сухая",
+      "es": "Quinoa, cruda"
+    }
+  },
+  {
+    "sourceId": "white-rice-long-grain-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 360,
+    "proteinPer100g": 6.6,
+    "carbsPer100g": 79.3,
+    "fatPer100g": 0.6,
+    "names": {
+      "en": "White rice, long grain, dry",
+      "uk": "Рис довгозернистий білий, сухий",
+      "ru": "Рис длиннозёрный белый, сухой",
+      "es": "Arroz blanco de grano largo, crudo"
+    }
+  },
+  {
+    "sourceId": "wholemeal-pasta-dry",
+    "family": "grain_garnish",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 348,
+    "proteinPer100g": 14.6,
+    "carbsPer100g": 71.5,
+    "fatPer100g": 2.5,
+    "names": {
+      "en": "Wholemeal pasta, dry",
+      "uk": "Макарони з цільнозернового борошна, сухі",
+      "ru": "Макароны из цельнозерновой муки, сухие",
+      "es": "Pasta integral, cruda"
+    }
+  },
+  {
+    "sourceId": "chickpeas-dry",
+    "family": "legume_protein",
+    "category": "legumes",
+    "subcategory": "beans",
+    "role": "plant_protein",
+    "caloriesPer100g": 364,
+    "proteinPer100g": 19.3,
+    "carbsPer100g": 60.7,
+    "fatPer100g": 6.0,
+    "names": {
+      "en": "Chickpeas, dry",
+      "uk": "Нут, сухий",
+      "ru": "Нут, сухой",
+      "es": "Garbanzos, secos"
+    }
+  },
+  {
+    "sourceId": "green-lentils-dry",
+    "family": "legume_protein",
+    "category": "legumes",
+    "subcategory": "lentils_and_peas",
+    "role": "plant_protein",
+    "caloriesPer100g": 352,
+    "proteinPer100g": 24.6,
+    "carbsPer100g": 63.4,
+    "fatPer100g": 1.1,
+    "names": {
+      "en": "Green lentils, dry",
+      "uk": "Зелена сочевиця, суха",
+      "ru": "Чечевица зелёная, сухая",
+      "es": "Lentejas verdes, secas"
+    }
+  },
+  {
+    "sourceId": "red-kidney-beans-dry",
+    "family": "legume_protein",
+    "category": "legumes",
+    "subcategory": "beans",
+    "role": "plant_protein",
+    "caloriesPer100g": 337,
+    "proteinPer100g": 22.5,
+    "carbsPer100g": 61.3,
+    "fatPer100g": 1.1,
+    "names": {
+      "en": "Red kidney beans, dry",
+      "uk": "Червона квасоля, суха",
+      "ru": "Красная фасоль, сухая",
+      "es": "Alubias rojas, secas"
+    }
+  },
+  {
+    "sourceId": "red-lentils-dry",
+    "family": "legume_protein",
+    "category": "legumes",
+    "subcategory": "lentils_and_peas",
+    "role": "plant_protein",
+    "caloriesPer100g": 358,
+    "proteinPer100g": 23.9,
+    "carbsPer100g": 63.1,
+    "fatPer100g": 1.1,
+    "names": {
+      "en": "Red lentils, dry",
+      "uk": "Червона сочевиця, суха",
+      "ru": "Чечевица красная, сухая",
+      "es": "Lentejas rojas, secas"
+    }
+  },
+  {
+    "sourceId": "split-peas-dry",
+    "family": "legume_protein",
+    "category": "legumes",
+    "subcategory": "lentils_and_peas",
+    "role": "plant_protein",
+    "caloriesPer100g": 341,
+    "proteinPer100g": 24.6,
+    "carbsPer100g": 60.4,
+    "fatPer100g": 1.2,
+    "names": {
+      "en": "Split peas, dry",
+      "uk": "Горох колотий, сухий",
+      "ru": "Горох колотый, сухой",
+      "es": "Guisantes partidos, secos"
+    }
+  },
+  {
+    "sourceId": "white-beans-dry",
+    "family": "legume_protein",
+    "category": "legumes",
+    "subcategory": "beans",
+    "role": "plant_protein",
+    "caloriesPer100g": 333,
+    "proteinPer100g": 23.4,
+    "carbsPer100g": 60.3,
+    "fatPer100g": 0.9,
+    "names": {
+      "en": "White beans, dry",
+      "uk": "Біла квасоля, суха",
+      "ru": "Белая фасоль, сухая",
+      "es": "Alubias blancas, secas"
+    }
+  },
+  {
+    "sourceId": "almonds",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "tree_nuts",
+    "role": "healthy_fat",
+    "caloriesPer100g": 579,
+    "proteinPer100g": 21.2,
+    "carbsPer100g": 21.6,
+    "fatPer100g": 49.9,
+    "names": {
+      "en": "Almonds",
+      "uk": "Мигдаль",
+      "ru": "Миндаль",
+      "es": "Almendras"
+    }
+  },
+  {
+    "sourceId": "cashews",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "tree_nuts",
+    "role": "healthy_fat",
+    "caloriesPer100g": 553,
+    "proteinPer100g": 18.2,
+    "carbsPer100g": 30.2,
+    "fatPer100g": 43.9,
+    "names": {
+      "en": "Cashews",
+      "uk": "Кеш'ю",
+      "ru": "Кешью",
+      "es": "Anacardos"
+    }
+  },
+  {
+    "sourceId": "chia-seeds",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "seeds",
+    "role": "healthy_fat",
+    "caloriesPer100g": 486,
+    "proteinPer100g": 16.5,
+    "carbsPer100g": 42.1,
+    "fatPer100g": 30.7,
+    "names": {
+      "en": "Chia seeds",
+      "uk": "Насіння чіа",
+      "ru": "Семена чиа",
+      "es": "Semillas de chía"
+    }
+  },
+  {
+    "sourceId": "hazelnuts",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "tree_nuts",
+    "role": "healthy_fat",
+    "caloriesPer100g": 628,
+    "proteinPer100g": 15.0,
+    "carbsPer100g": 16.7,
+    "fatPer100g": 60.8,
+    "names": {
+      "en": "Hazelnuts",
+      "uk": "Лісові горіхи (фундук)",
+      "ru": "Лесные орехи (фундук)",
+      "es": "Avellanas"
+    }
+  },
+  {
+    "sourceId": "peanuts",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "tree_nuts",
+    "role": "healthy_fat",
+    "caloriesPer100g": 567,
+    "proteinPer100g": 25.8,
+    "carbsPer100g": 16.1,
+    "fatPer100g": 49.2,
+    "names": {
+      "en": "Peanuts",
+      "uk": "Арахіс",
+      "ru": "Арахис",
+      "es": "Cacahuetes"
+    }
+  },
+  {
+    "sourceId": "pistachios",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "tree_nuts",
+    "role": "healthy_fat",
+    "caloriesPer100g": 560,
+    "proteinPer100g": 20.2,
+    "carbsPer100g": 27.2,
+    "fatPer100g": 45.3,
+    "names": {
+      "en": "Pistachios",
+      "uk": "Фісташки",
+      "ru": "Фисташки",
+      "es": "Pistachos"
+    }
+  },
+  {
+    "sourceId": "pumpkin-seeds",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "seeds",
+    "role": "healthy_fat",
+    "caloriesPer100g": 559,
+    "proteinPer100g": 30.2,
+    "carbsPer100g": 10.7,
+    "fatPer100g": 49.1,
+    "names": {
+      "en": "Pumpkin seeds",
+      "uk": "Насіння гарбуза",
+      "ru": "Семена тыквы",
+      "es": "Semillas de calabaza"
+    }
+  },
+  {
+    "sourceId": "sunflower-seeds",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "seeds",
+    "role": "healthy_fat",
+    "caloriesPer100g": 584,
+    "proteinPer100g": 20.8,
+    "carbsPer100g": 20.0,
+    "fatPer100g": 51.5,
+    "names": {
+      "en": "Sunflower seeds",
+      "uk": "Насіння соняшника",
+      "ru": "Семена подсолнечника",
+      "es": "Semillas de girasol"
+    }
+  },
+  {
+    "sourceId": "walnuts",
+    "family": "nuts_seeds",
+    "category": "nuts",
+    "subcategory": "tree_nuts",
+    "role": "healthy_fat",
+    "caloriesPer100g": 654,
+    "proteinPer100g": 15.2,
+    "carbsPer100g": 13.7,
+    "fatPer100g": 65.2,
+    "names": {
+      "en": "Walnuts",
+      "uk": "Волоські горіхи",
+      "ru": "Грецкие орехи",
+      "es": "Nueces"
+    }
+  },
+  {
+    "sourceId": "corn-grits-dry",
+    "family": "porridge",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 371,
+    "proteinPer100g": 8.8,
+    "carbsPer100g": 76.9,
+    "fatPer100g": 1.2,
+    "names": {
+      "en": "Corn grits (polenta), dry",
+      "uk": "Кукурудзяна крупа (полента), суха",
+      "ru": "Кукурузная крупа (полента), сухая",
+      "es": "Sémola de maíz (polenta), seca"
+    }
+  },
+  {
+    "sourceId": "millet-groats-dry",
+    "family": "porridge",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 348,
+    "proteinPer100g": 11.5,
+    "carbsPer100g": 66.5,
+    "fatPer100g": 3.3,
+    "names": {
+      "en": "Millet groats, dry",
+      "uk": "Пшоно, сухе",
+      "ru": "Пшено, сухое",
+      "es": "Mijo, seco"
+    }
+  },
+  {
+    "sourceId": "oat-groats-dry",
+    "family": "porridge",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 389,
+    "proteinPer100g": 16.9,
+    "carbsPer100g": 66.3,
+    "fatPer100g": 6.9,
+    "names": {
+      "en": "Whole oat groats, dry",
+      "uk": "Вівсяна крупа (ціле зерно), суха",
+      "ru": "Овсяная крупа (цельное зерно), сухая",
+      "es": "Granos enteros de avena, secos"
+    }
+  },
+  {
+    "sourceId": "pearl-barley-dry",
+    "family": "porridge",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 352,
+    "proteinPer100g": 9.9,
+    "carbsPer100g": 73.7,
+    "fatPer100g": 1.2,
+    "names": {
+      "en": "Pearl barley, dry",
+      "uk": "Перлова крупа, суха",
+      "ru": "Перловая крупа, сухая",
+      "es": "Cebada perlada, seca"
+    }
+  },
+  {
+    "sourceId": "rolled-oats-dry",
+    "family": "porridge",
+    "category": "grains",
+    "subcategory": "complex_carbs",
+    "role": "complex_carb",
+    "caloriesPer100g": 379,
+    "proteinPer100g": 13.2,
+    "carbsPer100g": 67.7,
+    "fatPer100g": 6.5,
+    "names": {
+      "en": "Rolled oats, dry",
+      "uk": "Вівсяні пластівці, сухі",
+      "ru": "Овсяные хлопья, сухие",
+      "es": "Copos de avena, secos"
+    }
+  },
+  {
+    "sourceId": "chicken-breast-raw",
+    "family": "poultry",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 120,
+    "proteinPer100g": 22.5,
+    "carbsPer100g": 0,
+    "fatPer100g": 2.6,
+    "names": {
+      "en": "Chicken breast, skinless, raw",
+      "uk": "Куряча грудка, без шкіри, сира",
+      "ru": "Куриная грудка, без кожи, сырая",
+      "es": "Pechuga de pollo, sin piel, cruda"
+    }
+  },
+  {
+    "sourceId": "chicken-mince-raw",
+    "family": "poultry",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 143,
+    "proteinPer100g": 17.4,
+    "carbsPer100g": 0,
+    "fatPer100g": 8.1,
+    "names": {
+      "en": "Chicken mince, raw",
+      "uk": "Курячий фарш, сирий",
+      "ru": "Куриный фарш, сырой",
+      "es": "Carne picada de pollo, cruda"
+    }
+  },
+  {
+    "sourceId": "chicken-thigh-raw",
+    "family": "poultry",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 143,
+    "proteinPer100g": 18.6,
+    "carbsPer100g": 0,
+    "fatPer100g": 7.5,
+    "names": {
+      "en": "Chicken thigh, boneless and skinless, raw",
+      "uk": "Куряче стегно, без кістки та шкіри, сире",
+      "ru": "Куриное бедро, без кости и кожи, сырое",
+      "es": "Muslo de pollo, deshuesado y sin piel, crudo"
+    }
+  },
+  {
+    "sourceId": "duck-breast-raw",
+    "family": "poultry",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 123,
+    "proteinPer100g": 18.3,
+    "carbsPer100g": 0,
+    "fatPer100g": 4.3,
+    "names": {
+      "en": "Duck breast, skinless, raw",
+      "uk": "Качина грудка, без шкіри, сира",
+      "ru": "Утиная грудка, без кожи, сырая",
+      "es": "Pechuga de pato, sin piel, cruda"
+    }
+  },
+  {
+    "sourceId": "turkey-breast-raw",
+    "family": "poultry",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 104,
+    "proteinPer100g": 23.7,
+    "carbsPer100g": 0,
+    "fatPer100g": 0.7,
+    "names": {
+      "en": "Turkey breast, skinless, raw",
+      "uk": "Індича грудка, без шкіри, сира",
+      "ru": "Грудка индейки, без кожи, сырая",
+      "es": "Pechuga de pavo, sin piel, cruda"
+    }
+  },
+  {
+    "sourceId": "turkey-thigh-raw",
+    "family": "poultry",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 125,
+    "proteinPer100g": 20.0,
+    "carbsPer100g": 0,
+    "fatPer100g": 4.4,
+    "names": {
+      "en": "Turkey thigh, skinless, raw",
+      "uk": "Індиче стегно, без шкіри, сире",
+      "ru": "Бедро индейки, без кожи, сырое",
+      "es": "Muslo de pavo, sin piel, crudo"
+    }
+  },
+  {
+    "sourceId": "chum-salmon-fillet-raw",
+    "family": "red_fish",
+    "category": "fish",
+    "subcategory": "fatty_fish",
+    "role": "fatty_protein",
+    "caloriesPer100g": 138,
+    "proteinPer100g": 21.8,
+    "carbsPer100g": 0,
+    "fatPer100g": 5.6,
+    "names": {
+      "en": "Chum salmon fillet, raw",
+      "uk": "Філе кети, сире",
+      "ru": "Филе кеты, сырое",
+      "es": "Filete de salmón keta, crudo"
+    }
+  },
+  {
+    "sourceId": "pink-salmon-fillet-raw",
+    "family": "red_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 127,
+    "proteinPer100g": 20.5,
+    "carbsPer100g": 0,
+    "fatPer100g": 4.4,
+    "names": {
+      "en": "Pink salmon fillet, raw",
+      "uk": "Філе горбуші, сире",
+      "ru": "Филе горбуши, сырое",
+      "es": "Filete de salmón rosado, crudo"
+    }
+  },
+  {
+    "sourceId": "salmon-fillet-raw",
+    "family": "red_fish",
+    "category": "fish",
+    "subcategory": "fatty_fish",
+    "role": "fatty_protein",
+    "caloriesPer100g": 208,
+    "proteinPer100g": 20.4,
+    "carbsPer100g": 0,
+    "fatPer100g": 13.4,
+    "names": {
+      "en": "Salmon fillet (Atlantic), raw",
+      "uk": "Філе лосося (атлантичного), сире",
+      "ru": "Филе лосося (атлантического), сырое",
+      "es": "Filete de salmón (atlántico), crudo"
+    }
+  },
+  {
+    "sourceId": "trout-fillet-raw",
+    "family": "red_fish",
+    "category": "fish",
+    "subcategory": "fatty_fish",
+    "role": "fatty_protein",
+    "caloriesPer100g": 141,
+    "proteinPer100g": 20.5,
+    "carbsPer100g": 0,
+    "fatPer100g": 6.2,
+    "names": {
+      "en": "Rainbow trout fillet, raw",
+      "uk": "Філе райдужної форелі, сире",
+      "ru": "Филе радужной форели, сырое",
+      "es": "Filete de trucha arcoíris, crudo"
+    }
+  },
+  {
+    "sourceId": "beef-mince-lean-raw",
+    "family": "red_meat",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 137,
+    "proteinPer100g": 21.4,
+    "carbsPer100g": 0,
+    "fatPer100g": 5.0,
+    "names": {
+      "en": "Beef mince, 5% fat, raw",
+      "uk": "Гов'яжий фарш, 5% жиру, сирий",
+      "ru": "Говяжий фарш, 5% жирности, сырой",
+      "es": "Carne picada de vacuno, 5% de grasa, cruda"
+    }
+  },
+  {
+    "sourceId": "beef-ribeye-raw",
+    "family": "red_meat",
+    "category": "meat",
+    "subcategory": "fatty_meat",
+    "role": "fatty_protein",
+    "caloriesPer100g": 250,
+    "proteinPer100g": 18.5,
+    "carbsPer100g": 0,
+    "fatPer100g": 19.5,
+    "names": {
+      "en": "Beef ribeye, raw",
+      "uk": "Гов'яжий рибай, сирий",
+      "ru": "Говяжий рибай, сырой",
+      "es": "Entrecot de vacuno, crudo"
+    }
+  },
+  {
+    "sourceId": "beef-tenderloin-raw",
+    "family": "red_meat",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 142,
+    "proteinPer100g": 20.8,
+    "carbsPer100g": 0,
+    "fatPer100g": 6.3,
+    "names": {
+      "en": "Beef tenderloin, raw",
+      "uk": "Гов'яжа вирізка, сира",
+      "ru": "Говяжья вырезка, сырая",
+      "es": "Solomillo de vacuno, crudo"
+    }
+  },
+  {
+    "sourceId": "lamb-leg-raw",
+    "family": "red_meat",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 128,
+    "proteinPer100g": 20.6,
+    "carbsPer100g": 0,
+    "fatPer100g": 4.5,
+    "names": {
+      "en": "Lamb leg, lean, raw",
+      "uk": "Баранина, нога, нежирна, сира",
+      "ru": "Баранина, нога, нежирная, сырая",
+      "es": "Pierna de cordero, magra, cruda"
+    }
+  },
+  {
+    "sourceId": "pork-tenderloin-raw",
+    "family": "red_meat",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 120,
+    "proteinPer100g": 20.9,
+    "carbsPer100g": 0,
+    "fatPer100g": 3.5,
+    "names": {
+      "en": "Pork tenderloin, raw",
+      "uk": "Свиняча вирізка, сира",
+      "ru": "Свиная вырезка, сырая",
+      "es": "Solomillo de cerdo, crudo"
+    }
+  },
+  {
+    "sourceId": "veal-loin-raw",
+    "family": "red_meat",
+    "category": "meat",
+    "subcategory": "lean_meat",
+    "role": "lean_protein",
+    "caloriesPer100g": 116,
+    "proteinPer100g": 20.2,
+    "carbsPer100g": 0,
+    "fatPer100g": 3.4,
+    "names": {
+      "en": "Veal loin, raw",
+      "uk": "Телятина, корейка, сира",
+      "ru": "Телятина, корейка, сырая",
+      "es": "Lomo de ternera, crudo"
+    }
+  },
+  {
+    "sourceId": "arugula-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 25,
+    "proteinPer100g": 2.6,
+    "carbsPer100g": 3.7,
+    "fatPer100g": 0.7,
+    "names": {
+      "en": "Arugula (rocket)",
+      "uk": "Рукола",
+      "ru": "Руккола",
+      "es": "Rúcula"
+    }
+  },
+  {
+    "sourceId": "bell-pepper-red-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 31,
+    "proteinPer100g": 1.0,
+    "carbsPer100g": 6.0,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Red bell pepper, raw",
+      "uk": "Червоний солодкий перець, свіжий",
+      "ru": "Красный сладкий перец, свежий",
+      "es": "Pimiento rojo, crudo"
+    }
+  },
+  {
+    "sourceId": "carrot-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 41,
+    "proteinPer100g": 0.9,
+    "carbsPer100g": 9.6,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Carrot, raw",
+      "uk": "Морква, свіжа",
+      "ru": "Морковь, свежая",
+      "es": "Zanahoria, cruda"
+    }
+  },
+  {
+    "sourceId": "cucumber-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 15,
+    "proteinPer100g": 0.7,
+    "carbsPer100g": 3.6,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Cucumber, raw",
+      "uk": "Огірок, свіжий",
+      "ru": "Огурец, свежий",
+      "es": "Pepino, crudo"
+    }
+  },
+  {
+    "sourceId": "radish-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "cruciferous_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 16,
+    "proteinPer100g": 0.7,
+    "carbsPer100g": 3.4,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Radish, raw",
+      "uk": "Редиска, свіжа",
+      "ru": "Редис, свежий",
+      "es": "Rábano, crudo"
+    }
+  },
+  {
+    "sourceId": "red-onion-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 40,
+    "proteinPer100g": 1.1,
+    "carbsPer100g": 9.3,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Red onion, raw",
+      "uk": "Червона цибуля, свіжа",
+      "ru": "Красный лук, свежий",
+      "es": "Cebolla roja, cruda"
+    }
+  },
+  {
+    "sourceId": "romaine-lettuce",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 17,
+    "proteinPer100g": 1.2,
+    "carbsPer100g": 3.3,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Romaine lettuce",
+      "uk": "Салат ромен",
+      "ru": "Салат романо",
+      "es": "Lechuga romana"
+    }
+  },
+  {
+    "sourceId": "spinach-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 23,
+    "proteinPer100g": 2.9,
+    "carbsPer100g": 3.6,
+    "fatPer100g": 0.4,
+    "names": {
+      "en": "Spinach, raw",
+      "uk": "Шпинат, свіжий",
+      "ru": "Шпинат, свежий",
+      "es": "Espinacas, crudas"
+    }
+  },
+  {
+    "sourceId": "spring-onion-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 32,
+    "proteinPer100g": 1.8,
+    "carbsPer100g": 7.3,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Spring onion, raw",
+      "uk": "Зелена цибуля, свіжа",
+      "ru": "Зелёный лук, свежий",
+      "es": "Cebolleta, cruda"
+    }
+  },
+  {
+    "sourceId": "tomato-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 18,
+    "proteinPer100g": 0.9,
+    "carbsPer100g": 3.9,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Tomato, raw",
+      "uk": "Помідор, свіжий",
+      "ru": "Помидор, свежий",
+      "es": "Tomate, crudo"
+    }
+  },
+  {
+    "sourceId": "white-cabbage-raw",
+    "family": "salad_vegetable",
+    "category": "vegetables",
+    "subcategory": "cruciferous_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 25,
+    "proteinPer100g": 1.3,
+    "carbsPer100g": 5.8,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "White cabbage, raw",
+      "uk": "Капуста білоголова, свіжа",
+      "ru": "Капуста белокочанная, свежая",
+      "es": "Col blanca, cruda"
+    }
+  },
+  {
+    "sourceId": "mussels-raw",
+    "family": "seafood",
+    "category": "fish",
+    "subcategory": "shellfish",
+    "role": "lean_protein",
+    "caloriesPer100g": 86,
+    "proteinPer100g": 11.9,
+    "carbsPer100g": 3.7,
+    "fatPer100g": 2.2,
+    "names": {
+      "en": "Mussels, shelled, raw",
+      "uk": "М'ясо мідій, сире",
+      "ru": "Мясо мидий, сырое",
+      "es": "Mejillones sin cáscara, crudos"
+    }
+  },
+  {
+    "sourceId": "scallops-raw",
+    "family": "seafood",
+    "category": "fish",
+    "subcategory": "shellfish",
+    "role": "lean_protein",
+    "caloriesPer100g": 88,
+    "proteinPer100g": 16.8,
+    "carbsPer100g": 2.4,
+    "fatPer100g": 0.8,
+    "names": {
+      "en": "Scallops, raw",
+      "uk": "Морські гребінці, сирі",
+      "ru": "Морские гребешки, сырые",
+      "es": "Vieiras, crudas"
+    }
+  },
+  {
+    "sourceId": "shrimp-raw",
+    "family": "seafood",
+    "category": "fish",
+    "subcategory": "shellfish",
+    "role": "lean_protein",
+    "caloriesPer100g": 85,
+    "proteinPer100g": 20.1,
+    "carbsPer100g": 0,
+    "fatPer100g": 0.5,
+    "names": {
+      "en": "Shrimp, peeled, raw",
+      "uk": "Креветки, очищені, сирі",
+      "ru": "Креветки, очищенные, сырые",
+      "es": "Gambas peladas, crudas"
+    }
+  },
+  {
+    "sourceId": "squid-raw",
+    "family": "seafood",
+    "category": "fish",
+    "subcategory": "shellfish",
+    "role": "lean_protein",
+    "caloriesPer100g": 92,
+    "proteinPer100g": 15.6,
+    "carbsPer100g": 3.1,
+    "fatPer100g": 1.4,
+    "names": {
+      "en": "Squid, raw",
+      "uk": "Кальмар, сирий",
+      "ru": "Кальмар, сырой",
+      "es": "Calamar, crudo"
+    }
+  },
+  {
+    "sourceId": "green-peas-fresh",
+    "family": "starchy_vegetable",
+    "category": "vegetables",
+    "subcategory": "starchy_vegetables",
+    "role": "complex_carb",
+    "caloriesPer100g": 81,
+    "proteinPer100g": 5.4,
+    "carbsPer100g": 14.5,
+    "fatPer100g": 0.4,
+    "names": {
+      "en": "Green peas, fresh",
+      "uk": "Зелений горошок, свіжий",
+      "ru": "Зелёный горошек, свежий",
+      "es": "Guisantes verdes, frescos"
+    }
+  },
+  {
+    "sourceId": "potato-raw",
+    "family": "starchy_vegetable",
+    "category": "vegetables",
+    "subcategory": "starchy_vegetables",
+    "role": "complex_carb",
+    "caloriesPer100g": 77,
+    "proteinPer100g": 2.0,
+    "carbsPer100g": 17.5,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Potato, raw",
+      "uk": "Картопля, сира",
+      "ru": "Картофель, сырой",
+      "es": "Patata, cruda"
+    }
+  },
+  {
+    "sourceId": "sweet-corn-raw",
+    "family": "starchy_vegetable",
+    "category": "vegetables",
+    "subcategory": "starchy_vegetables",
+    "role": "complex_carb",
+    "caloriesPer100g": 86,
+    "proteinPer100g": 3.2,
+    "carbsPer100g": 19.0,
+    "fatPer100g": 1.2,
+    "names": {
+      "en": "Sweet corn kernels, raw",
+      "uk": "Зерна солодкої кукурудзи, сирі",
+      "ru": "Зёрна сахарной кукурузы, сырые",
+      "es": "Granos de maíz dulce, crudos"
+    }
+  },
+  {
+    "sourceId": "sweet-potato-raw",
+    "family": "starchy_vegetable",
+    "category": "vegetables",
+    "subcategory": "starchy_vegetables",
+    "role": "complex_carb",
+    "caloriesPer100g": 86,
+    "proteinPer100g": 1.6,
+    "carbsPer100g": 20.1,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Sweet potato, raw",
+      "uk": "Батат, сирий",
+      "ru": "Батат, сырой",
+      "es": "Boniato (batata), crudo"
+    }
+  },
+  {
+    "sourceId": "canned-tuna-in-water",
+    "family": "white_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 116,
+    "proteinPer100g": 25.5,
+    "carbsPer100g": 0,
+    "fatPer100g": 0.8,
+    "names": {
+      "en": "Tuna, canned in water, drained",
+      "uk": "Тунець консервований у власному соку, зціджений",
+      "ru": "Тунец консервированный в собственном соку, без жидкости",
+      "es": "Atún en conserva al natural, escurrido"
+    }
+  },
+  {
+    "sourceId": "cod-fillet-raw",
+    "family": "white_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 82,
+    "proteinPer100g": 17.8,
+    "carbsPer100g": 0,
+    "fatPer100g": 0.7,
+    "names": {
+      "en": "Cod fillet, raw",
+      "uk": "Філе тріски, сире",
+      "ru": "Филе трески, сырое",
+      "es": "Filete de bacalao, crudo"
+    }
+  },
+  {
+    "sourceId": "hake-fillet-raw",
+    "family": "white_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 86,
+    "proteinPer100g": 17.2,
+    "carbsPer100g": 0,
+    "fatPer100g": 1.8,
+    "names": {
+      "en": "Hake fillet, raw",
+      "uk": "Філе хека, сире",
+      "ru": "Филе хека, сырое",
+      "es": "Filete de merluza, crudo"
+    }
+  },
+  {
+    "sourceId": "halibut-fillet-raw",
+    "family": "white_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 111,
+    "proteinPer100g": 20.8,
+    "carbsPer100g": 0,
+    "fatPer100g": 2.3,
+    "names": {
+      "en": "Halibut fillet, raw",
+      "uk": "Філе палтуса, сире",
+      "ru": "Филе палтуса, сырое",
+      "es": "Filete de fletán (halibut), crudo"
+    }
+  },
+  {
+    "sourceId": "pollock-fillet-raw",
+    "family": "white_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 72,
+    "proteinPer100g": 16.5,
+    "carbsPer100g": 0,
+    "fatPer100g": 0.8,
+    "names": {
+      "en": "Pollock fillet, raw",
+      "uk": "Філе минтая, сире",
+      "ru": "Филе минтая, сырое",
+      "es": "Filete de abadejo de Alaska, crudo"
+    }
+  },
+  {
+    "sourceId": "tilapia-fillet-raw",
+    "family": "white_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 96,
+    "proteinPer100g": 20.1,
+    "carbsPer100g": 0,
+    "fatPer100g": 1.7,
+    "names": {
+      "en": "Tilapia fillet, raw",
+      "uk": "Філе тилапії, сире",
+      "ru": "Филе тилапии, сырое",
+      "es": "Filete de tilapia, crudo"
+    }
+  },
+  {
+    "sourceId": "tuna-fillet-raw",
+    "family": "white_fish",
+    "category": "fish",
+    "subcategory": "lean_fish",
+    "role": "lean_protein",
+    "caloriesPer100g": 109,
+    "proteinPer100g": 24.4,
+    "carbsPer100g": 0,
+    "fatPer100g": 0.5,
+    "names": {
+      "en": "Tuna fillet (yellowfin), raw",
+      "uk": "Філе тунця (жовтоперого), сире",
+      "ru": "Филе тунца (желтопёрого), сырое",
+      "es": "Filete de atún de aleta amarilla, crudo"
+    }
+  }
+]
