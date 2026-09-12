@@ -1,0 +1,16 @@
+unit	decision_or_step	verdict	evidence
+frame	Unblocked set is 71/73/74; 72 stays blocked by 71 per Plane blocked_by	VERIFIED	Plane relations: 71 blocked_by 70, blocking 72; 72 blocked_by 70+71; 73,74 blocked_by 70
+frame	70's code is on main so its residual (production deploy) does not block development	VERIFIED	main ce30a43 carries schema+classify; only FITNESS-70 AC1 production half open
+design	73 and 74 serialize; they share buildMeal, diet.types.ts, greedy-heuristic.spec.ts	VERIFIED	read greedy-heuristic.ts and diet.types.ts; 73 needs FoodCandidate.family + day state, 74 rewrites fitPortions/macroTotals/mealTargetsForCount
+design	71 parallelizes; touches only backend/src/scripts	VERIFIED	ticket scope vs file survey
+design	Worktrees have no node_modules in a pnpm workspace	VERIFIED	npx tsc in worktree resolved the wrong binary; harness moved to main checkout
+design	Harness built before the units, baseline captured from pre-change main	VERIFIED	reports/audits/2026-09-12-diet-quality-baseline.md at ce30a43
+design	A curated staple declares its family rather than inferring one	OPEN	resolveFamily default returns null; without a CURATED_SOURCE branch classify-food-families.ts would strip families off every staple
+design	Family cap relaxes before the no-repeat rule	OPEN	ADR-020 wording: fall back to a repeat only when the Family has nothing else eligible
+measure	Family-carrying pool gives ~4x accuracy gain and reproduces ADR-019's numbers	VERIFIED	|dP| 5.8-11.8 to 0.7-2.7; |dF| 2.9-4.5 to 0.6-1.4; worst dP 53 to 9-18
+measure	73 must precede 72; restricting the pool makes every day repeat	VERIFIED	repDays 169/300 to 300/300 at 6 meals; wRep 3 to 6; famDays 90 to 243
+measure	74's cited +12g carb overshoot reproduces only on the Family-carrying pool	VERIFIED	dC at 4/5/6 meals: whole catalog 4.6/4.6/2.6; Family only 9.1/11.0/11.7
+measure	ADR-019's 310P profile is arithmetically impossible, not a fitting defect	VERIFIED	310*4+246*4+68*9 = 2836 kcal against a 2463 ceiling; 373 kcal excess cut from carbs first
+71	Staples file authored and dev seeded	OPEN	delegate running in worktree .claude/worktrees/FITNESS-71
+73	Day-scoped no-repeat and protein-family cap	OPEN	delegate running in worktree .claude/worktrees/FITNESS-73
+74	Free Foods, allowance, three-item salad	NOT STARTED	serialized behind 73
