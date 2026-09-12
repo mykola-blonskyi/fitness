@@ -106,6 +106,7 @@ function candidatesByRole(catalog: CatalogRow[]): Map<string, FoodCandidate[]> {
   for (const row of catalog) {
     byRole.get(row.role)?.push({
       id: row.id,
+      familyId: row.family,
       caloriesPer100g: row.caloriesPer100g,
       proteinPer100g: row.proteinPer100g,
       carbsPer100g: row.carbsPer100g,
@@ -134,7 +135,7 @@ export function measure(
   mealCount: number,
   target: Profile,
   familyById: Map<string, string | null>,
-  proteinRoleIds: Set<string>,
+  proteinItemIds: Set<string>,
 ): QualityStats {
   const mean = (xs: number[]) =>
     xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
@@ -161,7 +162,7 @@ export function measure(
 
     const mealsByFamily = new Map<string, Set<number>>();
     for (const item of diet.items) {
-      if (!proteinRoleIds.has(item.foodItemId)) continue;
+      if (!proteinItemIds.has(item.foodItemId)) continue;
       const family = familyById.get(item.foodItemId);
       if (!family) continue;
       const meals = mealsByFamily.get(family) ?? new Set<number>();
