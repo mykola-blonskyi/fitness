@@ -98,7 +98,7 @@ Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut bu
 
 ## Favorited Food Items narrow diet generation, per Food Family
 
-A Food Preference of type `favorite` always targets a specific Food Item, never a Category/Subcategory/Role. If the user has favorited any eligible (non-excluded) Food Item in a Food Family, only their favorited item(s) in that Family are candidates; every other Family stays whole, unchanged from generation without any favorites. Food Items carrying no Family at all count as one group of their own. Favoriting chicken therefore narrows `poultry` and leaves cod, beef and eggs in the `lean_protein` pool.
+A Food Preference of type `favorite` always targets a specific Food Item, never a Category/Subcategory/Role. If the user has favorited any eligible (non-excluded) Food Item in a Food Family, only their favorited item(s) in that Family are candidates; every other Family stays whole, unchanged from generation without any favorites. Favoriting chicken therefore narrows `poultry` and leaves cod, beef and eggs in the `lean_protein` pool.
 
 The same Food Item can never be both favorited and excluded/allergied at once — adding either is rejected while the other is active for that item.
 

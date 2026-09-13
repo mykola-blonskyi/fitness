@@ -1,8 +1,6 @@
-// ADR-014 as narrowed by ADR-020: a favorite restricts its own Food Family,
-// not the whole Role. Role was the right key while every Role contributed one
-// item per meal; once Role `vegetable` draws three, one favorited vegetable
-// left the whole day with that single item. Pure function, no I/O - mirrors
-// diet-preference-exclusions.ts/swap-candidates.ts.
+// See ADR-021: a favorite restricts its own Food Family, not the whole Role.
+// Pure function, no I/O - mirrors diet-preference-exclusions.ts/
+// swap-candidates.ts.
 export function restrictToFavorites<
   T extends { id: string; familyName: string | null },
 >(

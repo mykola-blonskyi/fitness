@@ -169,9 +169,9 @@ as a larger shortfall. The same 65 g costs the moderate profile a tenth as much,
 because there the fit has room to move.
 
 Relative to the miss it already carries, the change makes that profile 2 to 8
-percent worse. Whether that matters depends on whether a target nobody can hit is
-worth protecting; the moderate profile is the one the 2026-09-12 audit established
-as comparable, and it passes.
+percent worse. The criterion is stated over both profiles, so the change fails it.
+Whether to accept that is a call about whether a target nobody can hit is worth
+protecting, and it belongs to a reviewer.
 
 ## Reproducing this
 

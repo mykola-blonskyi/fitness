@@ -1083,8 +1083,8 @@ describe('generateDietItems - salad composition', () => {
   });
 });
 
-// Reproduces what diets.service.ts does: restrictToFavorites over the whole
-// role map, then generation.
+// The defect lives in the composition, so the spec composes the two the way
+// diets.service.ts does.
 describe('generateDietItems - Free Foods under a favorite', () => {
   const target = {
     targetCalories: 2000,
