@@ -1,6 +1,4 @@
 // See ADR-021: a favorite restricts its own Food Family, not the whole Role.
-// Pure function, no I/O - mirrors diet-preference-exclusions.ts/
-// swap-candidates.ts.
 export function restrictToFavorites<
   T extends { id: string; familyName: string | null },
 >(

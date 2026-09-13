@@ -56,9 +56,8 @@ const PROTEIN_FAT_BUDGET_SHARE = 0.7;
 
 const MAX_MEALS_PER_PROTEIN_FAMILY = 2;
 
-// One preference chain per salad item, read like MEAL_ROLE_CHAINS: first class
-// with anything left wins. Two bulk-only entries is what makes ADR-020's "at
-// least two of three are bulk" hold by construction rather than on average.
+// One preference chain per salad item, like MEAL_ROLE_CHAINS. The two
+// bulk-only entries make ADR-020's "two of three are bulk" structural.
 const SALAD_SLOTS: readonly (readonly FreePortion[])[] = [
   ['bulk'],
   ['bulk'],
