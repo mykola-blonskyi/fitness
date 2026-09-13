@@ -325,3 +325,19 @@ export function resolveFamily(input: FamilyInput): FoodFamily | null {
 }
 
 export const familyOverrideKeys = Object.keys(FAMILY_OVERRIDES);
+
+// Olives share fatty_fruit with avocado, which keeps its existing role, so
+// olives need a name check rather than a blanket family rule.
+const ROLE_BY_FAMILY: Partial<Record<FoodFamily, string>> = {
+  starchy_vegetable: 'complex_carb',
+  legume_protein: 'plant_protein',
+};
+
+export function resolveRoleOverride(
+  family: FoodFamily | null,
+  name: string,
+): string | null {
+  if (family && ROLE_BY_FAMILY[family]) return ROLE_BY_FAMILY[family];
+  if (family === 'fatty_fruit' && has(name, 'olive')) return 'healthy_fat';
+  return null;
+}
