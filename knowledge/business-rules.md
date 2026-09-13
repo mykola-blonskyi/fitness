@@ -72,11 +72,11 @@ A single-item swap or reroll holds that item's calorie contribution — the repl
 
 ## Free Foods are eaten uncounted, and paid for at what they cost
 
-A Food Item is a Free Food if its Food Family is `salad_vegetable` or `cooked_vegetable` — an allowlist, so an item with no Family (or a fatty/starchy one) is always counted. Every meal draws three Free Foods at a fixed 80 g each; they take no part in the portion fit, and their macros are excluded from the Diet's stored totals, so the listed items visibly sum to more than the stated day total. `diet_items.is_counted` carries the distinction, and the API exposes it so the UI can explain it.
+A Food Item is a Free Food if its Food Family is `salad_vegetable`, `accent_vegetable` or `cooked_vegetable` — an allowlist, so an item with no Family (or a fatty/starchy one) is always counted. Every meal draws three Free Foods: two from a bulk Family at 80 g, then an accent at 15 g, falling back to a third bulk item when no accent is available. The first two are bulk-only, so a salad can never hold fewer than two bulk items. They take no part in the portion fit, and their macros are excluded from the Diet's stored totals, so the listed items visibly sum to more than the stated day total. `diet_items.is_counted` carries the distinction, and the API exposes it so the UI can explain it.
 
 What the free items actually supply is subtracted from all four of the day's targets — calories, protein, carbs and fat — before the counted items are fitted, not a flat allowance. Three portions cost 42–50 kcal per meal against the current catalog, which a flat ~120 kcal would overrun at four meals and above, and the calorie target is a hard ceiling. Subtracting the calories alone would leave the counted items chasing the full macro targets inside a smaller calorie envelope, which they cannot reach.
 
-The counted totals therefore land under target by roughly what the free vegetables themselves supply (~27 g protein and ~68 g carbs at six meals): the plate hits its macros, the plan reports only the counted part of it.
+The counted totals therefore land under target by roughly what the free vegetables themselves supply: the plate hits its macros, the plan reports only the counted part of it.
 
 Swapping or rerolling a Free Food rescales its portion to hold calories, as for any other item, instead of keeping the nominal portion.
 
@@ -96,13 +96,13 @@ Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut bu
 
 ---
 
-## Favorited Food Items narrow diet generation, per role
+## Favorited Food Items narrow diet generation, per Food Family
 
-A Food Preference of type `favorite` always targets a specific Food Item, never a Category/Subcategory/Role. For each role-slot generation fills, if the user has favorited any eligible (non-excluded) Food Item belonging to that role, only their favorited item(s) for that role are candidates; if they've favorited nothing in that role, every eligible Food Item for that role remains a candidate, unchanged from generation without any favorites. A role with no favorites of its own still falls back to the full pool even if the user has favorites elsewhere (e.g. favoriting a protein doesn't restrict which vegetable gets picked).
+A Food Preference of type `favorite` always targets a specific Food Item, never a Category/Subcategory/Role. If the user has favorited any eligible (non-excluded) Food Item in a Food Family, only their favorited item(s) in that Family are candidates; every other Family stays whole, unchanged from generation without any favorites. Food Items carrying no Family at all count as one group of their own. Favoriting chicken therefore narrows `poultry` and leaves cod, beef and eggs in the `lean_protein` pool.
 
 The same Food Item can never be both favorited and excluded/allergied at once — adding either is rejected while the other is active for that item.
 
-Why: lets a user say "always use this specific chicken breast, not a random lean protein" without having to exclude every other lean protein by hand, while leaving every role they haven't expressed an opinion on exactly as randomized as before.
+Why: lets a user say "always use this specific chicken breast, not a random lean protein" without having to exclude every other lean protein by hand. Family rather than Role because a Role can fill several slots in one meal — `vegetable` fills three — and narrowing a whole Role left the day with one item served in every meal.
 
 ---
 
