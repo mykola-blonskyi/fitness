@@ -6,6 +6,7 @@ import {
   USDA_SOURCE,
   familyOverrideKey,
   resolveFamily,
+  resolveRoleOverride,
 } from './food-families';
 import { tableSourceId } from './seed-food-table-ru';
 import { countByRole } from './classify-food-families';
@@ -157,6 +158,35 @@ describe('resolveFamily', () => {
     expect(resolveFamily(ruRow('vegetables', 'Картофель молодой'))).toBe(
       'starchy_vegetable',
     );
+  });
+});
+
+describe('resolveRoleOverride', () => {
+  it('moves potato and sweet potato from vegetable to complex_carb', () => {
+    expect(resolveRoleOverride('starchy_vegetable', 'Potato, raw')).toBe(
+      'complex_carb',
+    );
+    expect(resolveRoleOverride('starchy_vegetable', 'Sweet potato, raw')).toBe(
+      'complex_carb',
+    );
+  });
+
+  it('moves beans and lentils from vegetable to plant_protein', () => {
+    expect(resolveRoleOverride('legume_protein', 'White beans, dry')).toBe(
+      'plant_protein',
+    );
+  });
+
+  it('moves olives to a fat but leaves avocado alone', () => {
+    expect(resolveRoleOverride('fatty_fruit', 'Black olives')).toBe(
+      'healthy_fat',
+    );
+    expect(resolveRoleOverride('fatty_fruit', 'Avocado, raw')).toBeNull();
+  });
+
+  it('leaves every other Family unclassified for role', () => {
+    expect(resolveRoleOverride('poultry', 'Chicken breast, raw')).toBeNull();
+    expect(resolveRoleOverride(null, 'Wheat flour')).toBeNull();
   });
 });
 

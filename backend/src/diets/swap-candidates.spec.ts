@@ -26,4 +26,16 @@ describe('isPreferenceExcluded', () => {
     exclusions.subcategory.add('sub-1');
     expect(isPreferenceExcluded(rows[0], exclusions)).toBe(true);
   });
+
+  it('excludes potato by category even though its role is now complex_carb', () => {
+    const potato: SwapCandidateRow = {
+      id: 'potato',
+      categoryId: 'vegetables',
+      subcategoryId: 'starchy-vegetables',
+      roleId: 'complex-carb',
+    };
+    const exclusions = noExclusions();
+    exclusions.category.add('vegetables');
+    expect(isPreferenceExcluded(potato, exclusions)).toBe(true);
+  });
 });

@@ -1,8 +1,8 @@
-// Assigns food_calories.family_id across the whole catalog from the rules in
-// food-families.ts (ADR-020). The seed scripts only ever set a Family on a
-// freshly inserted row - they deliberately never rewrite an existing row's
-// classification - so this is what classifies the already-imported dev and
-// production catalogs, and what re-runs after an override is corrected.
+// Assigns food_calories.family_id and corrects role_id across the whole catalog
+// from the rules in food-families.ts (ADR-020). The seed scripts only ever set
+// these on a freshly inserted row - they deliberately never rewrite an existing
+// row's classification - so this is what reclassifies the already-imported dev
+// and production catalogs, and what re-runs after an override is corrected.
 // Run manually against a checkout:
 //   pnpm --filter backend db:classify:food-families
 // The deployed image has no ts-node and no src/, so on a server it is:
@@ -17,6 +17,7 @@ import {
   familyOverrideKey,
   familyOverrideKeys,
   resolveFamily,
+  resolveRoleOverride,
   type FoodFamily,
 } from './food-families';
 
@@ -54,7 +55,7 @@ export async function classify(db: Db, dryRun: boolean) {
       sourceId: schema.foodCalories.sourceId,
       currentFamily: schema.foodFamilies.name,
       subcategory: schema.foodSubcategories.name,
-      role: schema.foodRoles.name,
+      currentRole: schema.foodRoles.name,
     })
     .from(schema.foodCalories)
     .innerJoin(
@@ -72,7 +73,14 @@ export async function classify(db: Db, dryRun: boolean) {
       eq(schema.foodCalories.familyId, schema.foodFamilies.id),
     );
 
-  const resolved = rows.map((row) => ({ ...row, family: resolveFamily(row) }));
+  const resolved = rows.map((row) => {
+    const family = resolveFamily(row);
+    return {
+      ...row,
+      family,
+      role: resolveRoleOverride(family, row.name) ?? row.currentRole,
+    };
+  });
 
   const present = new Set(
     resolved
@@ -92,7 +100,9 @@ export async function classify(db: Db, dryRun: boolean) {
   );
 
   const pending = resolved.filter(
-    (row) => (row.currentFamily ?? null) !== row.family,
+    (row) =>
+      (row.currentFamily ?? null) !== row.family ||
+      row.role !== row.currentRole,
   );
 
   if (!dryRun && pending.length > 0) {
@@ -101,7 +111,10 @@ export async function classify(db: Db, dryRun: boolean) {
       for (const row of pending) {
         await tx
           .update(schema.foodCalories)
-          .set({ familyId: row.family ? ids.familyIds.get(row.family)! : null })
+          .set({
+            familyId: row.family ? ids.familyIds.get(row.family)! : null,
+            roleId: ids.roleIds.get(row.role)!,
+          })
           .where(eq(schema.foodCalories.id, row.id));
       }
     });

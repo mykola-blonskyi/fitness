@@ -170,6 +170,8 @@ export class DietsService {
       // Excludes 0-calorie items (e.g. water) - greedy-heuristic.ts
       // divides by this value when portion-scaling.
       if (Number(row.caloriesPer100g) <= 0) continue;
+      // Generation is Family-gated; browse and manual logging are not (ADR-020).
+      if (!row.familyName) continue;
       const roleName = roleNameById.get(row.roleId);
       if (!roleName) continue;
       candidatesByRole.get(roleName)!.push({
