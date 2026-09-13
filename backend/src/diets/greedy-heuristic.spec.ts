@@ -1,4 +1,5 @@
 import { generateDietItems, gramsForCalories } from './greedy-heuristic';
+import { restrictToFavorites } from './favorite-restriction';
 import type { FoodCandidate } from './diet.types';
 
 const leanProtein: FoodCandidate = {
@@ -1020,6 +1021,61 @@ describe('generateDietItems - Free Foods', () => {
     expect(result.items.some((item) => item.foodItemId === freeCarb.id)).toBe(
       false,
     );
+  });
+});
+
+// Reproduces what diets.service.ts does: restrictToFavorites over the whole
+// role map, then generation.
+describe('generateDietItems - Free Foods under a favorite', () => {
+  const target = {
+    targetCalories: 2000,
+    targetProteinG: 150,
+    targetCarbsG: 200,
+    targetFatG: 60,
+  };
+
+  function mixedVegetablePool(): Map<string, FoodCandidate[]> {
+    const pool = poolWithFreeVegetables(0);
+    pool.set('vegetable', [
+      ...freeVegetables(6, 'salad_vegetable'),
+      ...freeVegetables(18, 'cooked_vegetable'),
+    ]);
+    return pool;
+  }
+
+  it('still fills every salad when one vegetable is favorited', () => {
+    const pool = mixedVegetablePool();
+    const result = generateDietItems({
+      ...target,
+      mealCount: 6,
+      candidatesByRole: restrictToFavorites(
+        pool,
+        new Set(['salad_vegetable-1']),
+      ),
+      pickRandom: (items) => items[0],
+    });
+
+    for (let position = 1; position <= 6; position++) {
+      const free = freeItemsAt(result.items, position);
+      expect(free).toHaveLength(3);
+      expect(new Set(free.map((item) => item.foodItemId)).size).toBe(3);
+    }
+  });
+
+  it('does not serve the favorited vegetable as the whole day', () => {
+    const pool = mixedVegetablePool();
+    const result = generateDietItems({
+      ...target,
+      mealCount: 6,
+      candidatesByRole: restrictToFavorites(
+        pool,
+        new Set(['salad_vegetable-1']),
+      ),
+      pickRandom: (items) => items[0],
+    });
+
+    const free = result.items.filter((item) => !item.isCounted);
+    expect(new Set(free.map((item) => item.foodItemId)).size).toBe(18);
   });
 });
 
