@@ -1,4 +1,5 @@
 import { generateDietItems, gramsForCalories } from './greedy-heuristic';
+import { restrictToFavorites } from './favorite-restriction';
 import type { FoodCandidate } from './diet.types';
 
 const leanProtein: FoodCandidate = {
@@ -1020,6 +1021,120 @@ describe('generateDietItems - Free Foods', () => {
     expect(result.items.some((item) => item.foodItemId === freeCarb.id)).toBe(
       false,
     );
+  });
+});
+
+describe('generateDietItems - salad composition', () => {
+  const target = {
+    targetCalories: 2000,
+    targetProteinG: 150,
+    targetCarbsG: 200,
+    targetFatG: 60,
+  };
+
+  function saladPool(bulk: number, accent: number) {
+    const pool = poolWithFreeVegetables(0);
+    pool.set('vegetable', [
+      ...freeVegetables(bulk, 'salad_vegetable'),
+      ...freeVegetables(accent, 'accent_vegetable'),
+    ]);
+    return pool;
+  }
+
+  function portionsAt(
+    items: ReturnType<typeof generateDietItems>['items'],
+    position: number,
+  ) {
+    const free = freeItemsAt(items, position);
+    return {
+      bulk: free.filter((item) => item.weightGrams === 80).length,
+      accent: free.filter((item) => item.weightGrams === 15).length,
+    };
+  }
+
+  it('serves two bulk vegetables and one accent at its smaller portion', () => {
+    const result = generateDietItems({
+      ...target,
+      mealCount: 6,
+      candidatesByRole: saladPool(12, 12),
+    });
+
+    for (let position = 1; position <= 6; position++) {
+      expect(portionsAt(result.items, position)).toEqual({
+        bulk: 2,
+        accent: 1,
+      });
+    }
+  });
+
+  it('keeps two bulk items even when bulk runs out before the accents do', () => {
+    const result = generateDietItems({
+      ...target,
+      mealCount: 3,
+      candidatesByRole: saladPool(4, 20),
+    });
+
+    for (let position = 1; position <= 3; position++) {
+      expect(portionsAt(result.items, position)).toEqual({
+        bulk: 2,
+        accent: 1,
+      });
+    }
+  });
+});
+
+// The defect lives in the composition, so the spec composes the two the way
+// diets.service.ts does.
+describe('generateDietItems - Free Foods under a favorite', () => {
+  const target = {
+    targetCalories: 2000,
+    targetProteinG: 150,
+    targetCarbsG: 200,
+    targetFatG: 60,
+  };
+
+  function mixedVegetablePool(): Map<string, FoodCandidate[]> {
+    const pool = poolWithFreeVegetables(0);
+    pool.set('vegetable', [
+      ...freeVegetables(6, 'salad_vegetable'),
+      ...freeVegetables(18, 'cooked_vegetable'),
+    ]);
+    return pool;
+  }
+
+  it('still fills every salad when one vegetable is favorited', () => {
+    const pool = mixedVegetablePool();
+    const result = generateDietItems({
+      ...target,
+      mealCount: 6,
+      candidatesByRole: restrictToFavorites(
+        pool,
+        new Set(['salad_vegetable-1']),
+      ),
+      pickRandom: (items) => items[0],
+    });
+
+    for (let position = 1; position <= 6; position++) {
+      const free = freeItemsAt(result.items, position);
+      expect(free).toHaveLength(3);
+      expect(new Set(free.map((item) => item.foodItemId)).size).toBe(3);
+    }
+  });
+
+  it('does not serve the favorited vegetable as the whole day', () => {
+    const pool = mixedVegetablePool();
+    const result = generateDietItems({
+      ...target,
+      mealCount: 6,
+      candidatesByRole: restrictToFavorites(
+        pool,
+        new Set(['salad_vegetable-1']),
+      ),
+      pickRandom: (items) => items[0],
+    });
+
+    const free = result.items.filter((item) => !item.isCounted);
+    expect(new Set(free.map((item) => item.foodItemId)).size).toBe(18);
   });
 });
 

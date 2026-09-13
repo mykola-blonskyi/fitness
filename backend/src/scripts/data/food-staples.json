@@ -1,5 +1,175 @@
 [
   {
+    "sourceId": "basil-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 23,
+    "proteinPer100g": 3.2,
+    "carbsPer100g": 2.7,
+    "fatPer100g": 0.6,
+    "names": {
+      "en": "Basil, fresh",
+      "uk": "Базилік свіжий",
+      "ru": "Базилик свежий",
+      "es": "Albahaca fresca"
+    }
+  },
+  {
+    "sourceId": "chilli-pepper-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 40,
+    "proteinPer100g": 1.9,
+    "carbsPer100g": 8.8,
+    "fatPer100g": 0.4,
+    "names": {
+      "en": "Chilli pepper, raw",
+      "uk": "Перець чилі",
+      "ru": "Перец чили",
+      "es": "Chile picante"
+    }
+  },
+  {
+    "sourceId": "chives-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 30,
+    "proteinPer100g": 3.3,
+    "carbsPer100g": 4.4,
+    "fatPer100g": 0.7,
+    "names": {
+      "en": "Chives, fresh",
+      "uk": "Шніт-цибуля",
+      "ru": "Шнитт-лук",
+      "es": "Cebollino"
+    }
+  },
+  {
+    "sourceId": "cilantro-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 23,
+    "proteinPer100g": 2.1,
+    "carbsPer100g": 3.7,
+    "fatPer100g": 0.5,
+    "names": {
+      "en": "Cilantro (coriander), fresh",
+      "uk": "Кінза свіжа",
+      "ru": "Кинза свежая",
+      "es": "Cilantro fresco"
+    }
+  },
+  {
+    "sourceId": "dill-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 43,
+    "proteinPer100g": 3.5,
+    "carbsPer100g": 7.0,
+    "fatPer100g": 1.1,
+    "names": {
+      "en": "Dill, fresh",
+      "uk": "Кріп свіжий",
+      "ru": "Укроп свежий",
+      "es": "Eneldo fresco"
+    }
+  },
+  {
+    "sourceId": "mint-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 44,
+    "proteinPer100g": 3.3,
+    "carbsPer100g": 8.4,
+    "fatPer100g": 0.7,
+    "names": {
+      "en": "Mint, fresh",
+      "uk": "М'ята свіжа",
+      "ru": "Мята свежая",
+      "es": "Menta fresca"
+    }
+  },
+  {
+    "sourceId": "parsley-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "leafy_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 36,
+    "proteinPer100g": 3.0,
+    "carbsPer100g": 6.3,
+    "fatPer100g": 0.8,
+    "names": {
+      "en": "Parsley, fresh",
+      "uk": "Петрушка свіжа",
+      "ru": "Петрушка свежая",
+      "es": "Perejil fresco"
+    }
+  },
+  {
+    "sourceId": "red-onion-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 40,
+    "proteinPer100g": 1.1,
+    "carbsPer100g": 9.3,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Red onion, raw",
+      "uk": "Червона цибуля, свіжа",
+      "ru": "Красный лук, свежий",
+      "es": "Cebolla roja, cruda"
+    }
+  },
+  {
+    "sourceId": "shallot-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 72,
+    "proteinPer100g": 2.5,
+    "carbsPer100g": 16.8,
+    "fatPer100g": 0.1,
+    "names": {
+      "en": "Shallot, raw",
+      "uk": "Шалот",
+      "ru": "Лук-шалот",
+      "es": "Chalota"
+    }
+  },
+  {
+    "sourceId": "spring-onion-raw",
+    "family": "accent_vegetable",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 32,
+    "proteinPer100g": 1.8,
+    "carbsPer100g": 7.3,
+    "fatPer100g": 0.2,
+    "names": {
+      "en": "Spring onion, raw",
+      "uk": "Зелена цибуля, свіжа",
+      "ru": "Зелёный лук, свежий",
+      "es": "Cebolleta, cruda"
+    }
+  },
+  {
     "sourceId": "blackberry-raw",
     "family": "berries",
     "category": "fruits",
@@ -1683,23 +1853,6 @@
     }
   },
   {
-    "sourceId": "red-onion-raw",
-    "family": "salad_vegetable",
-    "category": "vegetables",
-    "subcategory": "other_vegetables",
-    "role": "vegetable",
-    "caloriesPer100g": 40,
-    "proteinPer100g": 1.1,
-    "carbsPer100g": 9.3,
-    "fatPer100g": 0.1,
-    "names": {
-      "en": "Red onion, raw",
-      "uk": "Червона цибуля, свіжа",
-      "ru": "Красный лук, свежий",
-      "es": "Cebolla roja, cruda"
-    }
-  },
-  {
     "sourceId": "romaine-lettuce",
     "family": "salad_vegetable",
     "category": "vegetables",
@@ -1731,23 +1884,6 @@
       "uk": "Шпинат, свіжий",
       "ru": "Шпинат, свежий",
       "es": "Espinacas, crudas"
-    }
-  },
-  {
-    "sourceId": "spring-onion-raw",
-    "family": "salad_vegetable",
-    "category": "vegetables",
-    "subcategory": "other_vegetables",
-    "role": "vegetable",
-    "caloriesPer100g": 32,
-    "proteinPer100g": 1.8,
-    "carbsPer100g": 7.3,
-    "fatPer100g": 0.2,
-    "names": {
-      "en": "Spring onion, raw",
-      "uk": "Зелена цибуля, свіжа",
-      "ru": "Зелёный лук, свежий",
-      "es": "Cebolleta, cruda"
     }
   },
   {

@@ -7,9 +7,9 @@ import overrides from './data/food-families.json';
 const SOURCE_ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 describe('staple set composition', () => {
-  it('sets 80..120 total staples', () => {
+  it('sets 80..130 total staples', () => {
     expect(STAPLES.length).toBeGreaterThanOrEqual(80);
-    expect(STAPLES.length).toBeLessThanOrEqual(120);
+    expect(STAPLES.length).toBeLessThanOrEqual(130);
   });
 
   it('gives every Food Family at least three staple members', () => {

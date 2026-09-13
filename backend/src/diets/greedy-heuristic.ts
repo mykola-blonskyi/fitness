@@ -8,7 +8,12 @@
 // come off every target before that fit. Pure function, no I/O - testable
 // without a database.
 
-import { freeFoodGrams, isFreeFood } from './free-foods';
+import {
+  freeFoodGrams,
+  freeFoodPortion,
+  isFreeFood,
+  type FreePortion,
+} from './free-foods';
 import {
   MEAL_ROLE_CHAINS,
   mealTargetsForCount,
@@ -51,7 +56,13 @@ const PROTEIN_FAT_BUDGET_SHARE = 0.7;
 
 const MAX_MEALS_PER_PROTEIN_FAMILY = 2;
 
-const FREE_ITEMS_PER_MEAL = 3;
+// One preference chain per salad item, like MEAL_ROLE_CHAINS. The two
+// bulk-only entries make ADR-020's "two of three are bulk" structural.
+const SALAD_SLOTS: readonly (readonly FreePortion[])[] = [
+  ['bulk'],
+  ['bulk'],
+  ['accent', 'bulk'],
+];
 
 const STARTING_PORTION_GRAMS: Record<number, number> = {
   [PROTEIN_CHAIN_INDEX]: 150,
@@ -312,7 +323,7 @@ function shrinkToCalorieCeiling(items: WorkingItem[], ceiling: number): void {
   }
 }
 
-// Falls short of FREE_ITEMS_PER_MEAL rather than repeat a vegetable in a meal.
+// Leaves a slot empty rather than repeat a vegetable within one meal.
 function pickFreeItems(
   position: number,
   candidatesByRole: Map<string, FoodCandidate[]>,
@@ -326,23 +337,30 @@ function pickFreeItems(
   );
 
   const mealItems: WorkingItem[] = [];
-  for (let i = 0; i < FREE_ITEMS_PER_MEAL; i++) {
+  for (const slot of SALAD_SLOTS) {
     const chosenIds = new Set(mealItems.map((item) => item.candidate.id));
-    const available = free.filter((candidate) => !chosenIds.has(candidate.id));
-    if (available.length === 0) break;
+    for (const portion of slot) {
+      const available = free.filter(
+        (candidate) =>
+          freeFoodPortion(candidate.familyName) === portion &&
+          !chosenIds.has(candidate.id),
+      );
+      if (available.length === 0) continue;
 
-    const candidate = pick(
-      dayFilteredCandidates(available, VEGETABLE_CHAIN_INDEX, picked),
-    );
-    recordPick(picked, candidate, VEGETABLE_CHAIN_INDEX);
-    mealItems.push({
-      mealPosition: position,
-      orderIndex: 0,
-      candidate,
-      chainIndex: VEGETABLE_CHAIN_INDEX,
-      weightGrams: freeFoodGrams(candidate.familyName)!,
-      isCounted: false,
-    });
+      const candidate = pick(
+        dayFilteredCandidates(available, VEGETABLE_CHAIN_INDEX, picked),
+      );
+      recordPick(picked, candidate, VEGETABLE_CHAIN_INDEX);
+      mealItems.push({
+        mealPosition: position,
+        orderIndex: 0,
+        candidate,
+        chainIndex: VEGETABLE_CHAIN_INDEX,
+        weightGrams: freeFoodGrams(candidate.familyName)!,
+        isCounted: false,
+      });
+      break;
+    }
   }
 
   return mealItems;

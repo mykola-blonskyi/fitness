@@ -9,6 +9,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, inArray } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { generateDietItems } from '../diets/greedy-heuristic';
+import { freeFoodPortion } from '../diets/free-foods';
 import {
   MEAL_ROLE_CHAINS,
   type FoodCandidate,
@@ -37,7 +38,7 @@ const PROFILES = [
   },
 ];
 type Profile = (typeof PROFILES)[number];
-const SEED = 20260912;
+const SEED = Number(process.env.SEED ?? 20260912);
 
 function seededPick(seed: number) {
   let state = seed;
@@ -128,6 +129,9 @@ export interface QualityStats {
   daysOverProteinFamilyCap: number;
   worstProteinFamilyMeals: number;
   emptyDays: number;
+  saladMeals: number;
+  saladsUnder2Bulk: number;
+  saladsWithAccent: number;
 }
 
 function plateTotals(
@@ -170,6 +174,9 @@ export function measure(
   let daysOverCap = 0;
   let worstFamilyMeals = 0;
   let emptyDays = 0;
+  let saladMeals = 0;
+  let saladsUnder2Bulk = 0;
+  let saladsWithAccent = 0;
 
   for (const diet of diets) {
     if (diet.items.length === 0) emptyDays++;
@@ -192,6 +199,22 @@ export function measure(
     const worst = max([...mealsByFamily.values()].map((s) => s.size));
     if (worst > 2) daysOverCap++;
     worstFamilyMeals = Math.max(worstFamilyMeals, worst);
+
+    const saladsByMeal = new Map<number, string[]>();
+    for (const item of diet.items) {
+      if (item.isCounted) continue;
+      const family = candidateById.get(item.foodItemId)?.familyName ?? null;
+      const portion = freeFoodPortion(family);
+      if (portion === null) continue;
+      const salad = saladsByMeal.get(item.mealPosition) ?? [];
+      salad.push(portion);
+      saladsByMeal.set(item.mealPosition, salad);
+    }
+    for (const salad of saladsByMeal.values()) {
+      saladMeals++;
+      if (salad.filter((p) => p === 'bulk').length < 2) saladsUnder2Bulk++;
+      if (salad.includes('accent')) saladsWithAccent++;
+    }
   }
 
   return {
@@ -215,6 +238,9 @@ export function measure(
     daysOverProteinFamilyCap: daysOverCap,
     worstProteinFamilyMeals: worstFamilyMeals,
     emptyDays,
+    saladMeals,
+    saladsUnder2Bulk,
+    saladsWithAccent,
   };
 }
 
@@ -261,6 +287,9 @@ async function main() {
     'famDays',
     'wFam',
     'empty',
+    'salads',
+    'lt2bulk',
+    'accent',
   ];
 
   for (const profile of PROFILES) {
@@ -308,6 +337,9 @@ async function main() {
             s.daysOverProteinFamilyCap,
             s.worstProteinFamilyMeals,
             s.emptyDays,
+            s.saladMeals,
+            s.saladsUnder2Bulk,
+            s.saladsWithAccent,
           ].join('\t'),
         );
       }
@@ -320,7 +352,9 @@ async function main() {
       'dP/dC/dF mean signed delta, |d*| mean absolute, w* worst absolute (grams).\n' +
       'over = menus above the calorie ceiling. repDays = days repeating a Food Item,\n' +
       'wRep = worst repeat count. famDays = days with >2 meals from one protein\n' +
-      'Family, wFam = worst such count. empty = days that generated nothing.',
+      'Family, wFam = worst such count. empty = days that generated nothing.\n' +
+      'salads = meals served a Free Food, lt2bulk = those with fewer than two\n' +
+      'bulk items (ADR-020 requires none), accent = those with an accent item.',
   );
 
   await pool.end();

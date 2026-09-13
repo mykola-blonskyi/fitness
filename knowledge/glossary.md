@@ -64,7 +64,7 @@ A Food Item's natural unit and that unit's weight — 1 egg = 55 g, 1 spoon of o
 
 ### Free Food
 
-A Food Item that a plan lists but does not count: all non-starchy vegetables, raw or cooked. They are given fixed nominal portions, excluded from the macro fit and from the Diet's displayed totals, and paid for instead by a flat vegetable allowance subtracted from the day's calorie target before fitting. Potato and sweet potato are carbs, not Free Foods. See ADR-020.
+A Food Item that a plan lists but does not count: the `salad_vegetable`, `accent_vegetable` and `cooked_vegetable` Food Families. They are given fixed nominal portions — 80 g for the two bulk families, 15 g for an accent — excluded from the macro fit and from the Diet's displayed totals, and paid for by subtracting what those portions actually supply, calories and each macro, from the day's targets before fitting. Potato and sweet potato are carbs, not Free Foods. See ADR-020 and ADR-021.
 
 ### login
 

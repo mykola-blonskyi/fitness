@@ -170,7 +170,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-08-31
 
-Status: Accepted; narrowed by ADR-020 (2026-09-12) — a favorite restricts its own Food Family, not the whole Role.
+Status: Accepted; narrowed by ADR-020 (2026-09-12) and implemented as narrowed by ADR-021 (2026-09-13) — a favorite restricts its own Food Family, not the whole Role.
 
 `favorite` is a third `food_preference_type` (alongside `allergy`/`exclude`), always targeting a specific Food Item — never a Category/Subcategory/Role, since favoriting a whole taxonomy node wouldn't disambiguate anything a generation role-slot needs. During generation, each role-slot restricts to only the user's favorited, otherwise-eligible items when any exist for that role; a role with none falls back to its full eligible pool, identical to generation with no favorites at all. Implemented as `restrictToFavorites()`, a pure function layered after the existing exclusion-filtered `candidatesByRole` — `greedy-heuristic.ts`'s picking/chain-fallback logic and `swapItem()` are both untouched, so a role favorited only in a fallback chain member (e.g. `fatty_protein` but not `lean_protein`) resolves correctly for free via the chain's existing empty-role fallthrough. The same Food Item can never be both favorited and excluded/allergied at once — rejected at creation, symmetric both directions. `swapItem()`'s replacement picker deliberately does not apply this restriction — a swap should still offer every eligible same-Role item, not just favorites.
 
@@ -266,7 +266,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-09-12
 
-Status: Accepted (phased — phase 1 in progress)
+Status: Accepted (phased — phase 1 in progress); the bulk/accent half of its salad rule is settled by ADR-021 (2026-09-13)
 
 Narrows ADR-014 (favorites restrict a Food Family, not a whole Role), and supersedes ADR-016's carb-free-tail rule and ADR-019's equal-protein split once phase 2 lands (an Archetype declares its own share of the day's macros). ADR-016/ADR-017's positional "Meal N" labels stand — meals stay numbered, not named.
 
@@ -284,3 +284,22 @@ Delivered in three phases: (1) the pool and the picking rules — families, stap
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
 
+---
+
+## ADR-021: A Free Food's portion class is carried by its Food Family, and favorites narrow by Family
+
+Date: 2026-09-13
+
+Status: Accepted
+
+ADR-020 said a salad is three items with at least two of them bulk, and nothing in the schema separated an onion from a tomato. **Bulk versus accent is a Food Family, `accent_vegetable`, not a Food Item attribute.** `salad_vegetable` and `cooked_vegetable` stay bulk at 80 g; `accent_vegetable` is served at 15 g. One record per Family in `free-foods.ts` carries both the grams and the class, so the two cannot disagree, and a salad is composed from a slot table of `[bulk, bulk, accent-or-bulk]` — the first two slots accept bulk only, which is what makes ADR-020's two-of-three rule hold by construction rather than on average. With no `accent_vegetable` row in a catalog the third slot falls through to bulk and generation is unchanged, so code, staples and a classification pass can land in any order.
+
+A per-item portion column was rejected. `food_families` is unconstrained text seeded from a closed TS list, so a Family value costs no migration, while a column costs one and opens a second classification axis that production must populate, review and keep synced with the first — and production has not yet run the first. The column also represents states that mean nothing (`{ family: 'poultry', freePortionGrams: 15 }`), where a Family cannot. `accent_vegetable` is the first Family whose members are not interchangeable with the Family they left, which is the point: ADR-020 makes Family the unit of interchangeability, and a Family holding both parsley and tomato was mis-drawn.
+
+**ADR-014's hard filter is not softened to a bias; its partition key changes from Role to Family**, which is the narrowing ADR-020 already recorded and parked in phase 2. Within a Family a favorite still wins outright and a Family with no favorite still falls back to its full pool. Role was the right key while every Role contributed one item per meal; Role `vegetable` now contributes three, and one favorited vegetable collapsed the Role to a single item that the day then served in every meal. A bias would not have fixed that, since a weighted pick over a one-item pool still returns that item. This reaches past the salad: favoriting chicken now narrows `poultry` and leaves cod, beef and eggs in the pool, where before it narrowed all of `lean_protein`.
+
+Measured over five seeds and 300 menus per meal count, both pools: the calorie ceiling, the no-repeat rule and the protein-Family cap are unchanged, and no salad in 108,000 held fewer than two bulk items. On the moderate profile the three mean absolute macro deltas cost at most 0.76 g in total, at five meals. On ADR-019's extreme 310P profile they cost 0.78 to 4.16 g, which **fails** the +0.5 g per-macro and +1.0 g total thresholds this change was measured against: a profile whose protein target is unreachable already misses carbs by 42-52 g and has no headroom left to absorb the ~65 g of vegetable the accent slot removes from each meal. Accepted on the judgement that a target nobody can hit is not the one to protect. See `reports/audits/2026-09-13-salad-composition.md`.
+
+Two known divergences are left for phase 2's Archetypes. `isFreeFood` covers `cooked_vegetable`, so a salad can legitimately be three mushrooms; and garlic and ginger stay outside the taxonomy, as cooking aromatics rather than things eaten at 15 g in a raw salad.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
