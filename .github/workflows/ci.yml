@@ -157,6 +157,16 @@ jobs:
     # prove the same thing. ubuntu-latest ships Chrome preinstalled, which
     # chrome-launcher auto-detects, so no separate browser setup step.
     runs-on: ubuntu-latest
+    # Dummy values, not real secrets. `next build` needs them as much as the
+    # server does: it evaluates /api/auth/[...nextauth] to collect page data,
+    # and auth.ts reads OIDC_ISSUER/OIDC_CLIENT_SECRET at module scope.
+    env:
+      OIDC_ISSUER: http://localhost:1
+      OIDC_CLIENT_SECRET: ci-placeholder
+      APP_URL: http://localhost:3000
+      BACKEND_URL: http://localhost:1
+      AUTH_SECRET: ci-placeholder
+      HUB_URL: http://localhost:1
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -169,17 +179,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter frontend build
       - name: Start frontend server
-        # Dummy values, not real secrets - /en/health (the audited route)
-        # doesn't read any of these (proxy.ts returns early for it), but
-        # setting them anyway keeps this job from breaking outright if
-        # the audited route ever changes to one that does.
-        env:
-          OIDC_ISSUER: http://localhost:1
-          OIDC_CLIENT_SECRET: ci-placeholder
-          APP_URL: http://localhost:3000
-          BACKEND_URL: http://localhost:1
-          AUTH_SECRET: ci-placeholder
-          HUB_URL: http://localhost:1
         run: pnpm --filter frontend start &
       - name: Wait for frontend to be ready
         run: |
@@ -224,10 +223,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Coolify deployment
+        # Coolify's /deploy route rejects GET (it answers with a "use POST
+        # instead" handler), despite what some of its own docs show.
         run: |
-          if [ -z "${{ secrets.COOLIFY_WEBHOOK_URL }}" ]; then
-            echo "COOLIFY_WEBHOOK_URL not set yet (fitness isn't registered in Coolify) - skipping."
-            exit 0
-          fi
-          curl --fail --request POST "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
+          curl --fail --show-error --silent --request POST "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
             --header "Authorization: Bearer ${{ secrets.COOLIFY_WEBHOOK_TOKEN }}"
