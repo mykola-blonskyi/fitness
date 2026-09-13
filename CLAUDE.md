@@ -10,9 +10,11 @@ This repository follows the global Claude configuration.
 
 All six phases of `plans/current.md` are implemented and merged into `main`, and every FITNESS work item in Plane is Done or Cancelled — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018).
 
-Production is current with `main` as of 2026-09-08, serving the `11221eb` build. `login.blonskyi.dev` is live, the `fitness` client is registered against it, and signing in now goes to that issuer instead of the Hub. The one path still unproven from outside is the token exchange, which only a real sign-in exercises — so if a login ever fails at the callback rather than at the prompt, suspect `OIDC_CLIENT_SECRET` in Coolify first.
+`login.blonskyi.dev` is live, the `fitness` client is registered against it, and signing in now goes to that issuer instead of the Hub. The one path still unproven from outside is the token exchange, which only a real sign-in exercises — so if a login ever fails at the callback rather than at the prompt, suspect `OIDC_CLIENT_SECRET` in Coolify first.
 
-GitHub Actions billing is still failing — no workflow has run since 2026-09-03 — so pushing to `main` does not auto-deploy. Releases are triggered by hand in Coolify, which is why production can sit behind `main` without anything being wrong.
+Production tracks `main` automatically. A push to `main` runs CI, and the `deploy` job calls Coolify's deploy API using the `COOLIFY_WEBHOOK_URL`/`COOLIFY_WEBHOOK_TOKEN` repo secrets (Coolify token `fitness auto-deploy`, `deploy` ability). A red check therefore means no release, by design — the job used to skip itself when the secrets were missing, which hid the fact that they were never set.
+
+Coolify injects the app's build-time variables into its own image builds, so `docker build -f frontend/Dockerfile` by hand fails on `OIDC_ISSUER` where Coolify succeeds. That is expected, not a broken build.
 
 See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
 
