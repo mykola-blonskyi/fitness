@@ -57,6 +57,11 @@
       "dragHandle": "Перетащить, чтобы изменить порядок приёма пищи {position}"
     },
     "itemSummary": "{weight} г · {calories} ккал · {protein}Б / {carbs}У / {fat}Ж",
+    "freeFood": {
+      "badge": "Не учитывается",
+      "itemSummary": "{weight} г · не учитывается",
+      "dayNote": "Овощи подаются фиксированной порцией и не включены в итоги выше."
+    },
     "algorithmInfo": {
       "calculatedUsing": "Рассчитано с использованием <strong>{name}</strong> ({code})"
     },

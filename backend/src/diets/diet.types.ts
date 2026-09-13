@@ -110,7 +110,7 @@ export interface FoodCandidate {
   proteinPer100g: number;
   carbsPer100g: number;
   fatPer100g: number;
-  familyId: string | null;
+  familyName: string | null;
 }
 
 export interface GeneratedDietItem {
@@ -118,6 +118,7 @@ export interface GeneratedDietItem {
   foodItemId: string;
   weightGrams: number;
   orderIndex: number;
+  isCounted: boolean;
 }
 
 export interface GeneratedDiet {
@@ -126,4 +127,10 @@ export interface GeneratedDiet {
   totalProtein: number;
   totalCarbs: number;
   totalFat: number;
+  freeFoodCalories: number;
+  // The day's targets less what the Free Foods supply (ADR-020).
+  fittedCalorieTarget: number;
+  fittedProteinTarget: number;
+  fittedCarbsTarget: number;
+  fittedFatTarget: number;
 }

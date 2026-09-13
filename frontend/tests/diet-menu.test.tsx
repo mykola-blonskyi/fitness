@@ -70,6 +70,7 @@ function item(overrides: Partial<DietResponse['items'][number]>) {
     proteinG: 8,
     carbsG: 30,
     fatG: 4,
+    isCounted: true,
     ...overrides,
   };
 }
@@ -142,6 +143,53 @@ describe('DietMenu', () => {
     expect(headings).toEqual(['Meal 1', 'Meal 2']);
     expect(screen.getByText('Oats')).toBeInTheDocument();
     expect(screen.getByText('Salmon')).toBeInTheDocument();
+  });
+
+  it('does not show the free-foods note when every item is counted', () => {
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    expect(
+      screen.queryByText(/included in the totals/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('marks a free food as not counted and omits it from the visible macro line, while explaining the rule once near the day total', () => {
+    const dietWithFreeFood: DietResponse = {
+      ...diet,
+      items: [
+        ...diet.items,
+        item({
+          id: 'v1',
+          mealPosition: 1,
+          weightGrams: 80,
+          calories: 30,
+          proteinG: 2,
+          carbsG: 6,
+          fatG: 0,
+          isCounted: false,
+          foodItem: {
+            id: 'f4',
+            name: 'Broccoli',
+            imageUrl: null,
+            role: 'vegetable',
+          },
+        }),
+      ],
+    };
+    renderWithIntl(<DietMenu diet={dietWithFreeFood} />);
+
+    expect(
+      screen.getByText(/included in the totals above/i),
+    ).toBeInTheDocument();
+
+    const broccoliRow = screen
+      .getByText('Broccoli')
+      .closest('li') as HTMLElement;
+    expect(within(broccoliRow).getByText('Not counted')).toBeInTheDocument();
+    expect(
+      within(broccoliRow).getByText('80 g · not counted'),
+    ).toBeInTheDocument();
+    expect(within(broccoliRow).queryByText(/30 kcal/)).not.toBeInTheDocument();
   });
 
   it('renders a third meal position as its own numbered section', () => {

@@ -57,6 +57,11 @@
       "dragHandle": "Arrastrar para reordenar Comida {position}"
     },
     "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}F",
+    "freeFood": {
+      "badge": "No cuenta",
+      "itemSummary": "{weight} g · no cuenta",
+      "dayNote": "Las verduras se sirven en una porción fija y no se incluyen en los totales anteriores."
+    },
     "algorithmInfo": {
       "calculatedUsing": "Calculado utilizando <strong>{name}</strong> ({code})"
     },

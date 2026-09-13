@@ -7,13 +7,14 @@ export type DietCalculationAlgorithmRow =
 // Joined diet_items x food_calories row - per-item macros are always
 // derived at read time from weightGrams x the Food Item's per-100g
 // values, never stored (diet_items only carries weight_grams/meal_position/
-// order_index per knowledge/domain-model.md "Diet Item") - same
+// order_index/is_counted per knowledge/domain-model.md "Diet Item") - same
 // derive-don't-store convention as user.mapper.ts's calculateAge.
 export interface DietItemWithFoodRow {
   id: string;
   mealPosition: number;
   orderIndex: number;
   weightGrams: string;
+  isCounted: boolean;
   foodItemId: string;
   foodItemName: string;
   foodItemImageUrl: string | null;
@@ -29,6 +30,7 @@ export interface DietItemResponse {
   mealPosition: number;
   orderIndex: number;
   weightGrams: number;
+  isCounted: boolean;
   foodItem: {
     id: string;
     name: string;
@@ -66,6 +68,7 @@ function toDietItemResponse(row: DietItemWithFoodRow): DietItemResponse {
     mealPosition: row.mealPosition,
     orderIndex: row.orderIndex,
     weightGrams: grams,
+    isCounted: row.isCounted,
     foodItem: {
       id: row.foodItemId,
       name: row.foodItemName,

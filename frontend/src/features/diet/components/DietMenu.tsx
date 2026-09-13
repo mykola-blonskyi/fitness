@@ -59,6 +59,7 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
   const groups = groupByMealPosition(diet.items, order);
   const interactionsDisabled =
     movingPosition !== undefined || draggingPosition !== undefined;
+  const hasFreeFoods = diet.items.some((item) => !item.isCounted);
 
   async function onMove(mealPosition: number, direction: 'up' | 'down') {
     setMovingPosition(mealPosition);
@@ -134,6 +135,10 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
           })}
         </p>
       </div>
+
+      {hasFreeFoods && (
+        <p className="text-xs text-muted">{t('freeFood.dayNote')}</p>
+      )}
 
       {groups.map((group, index) => (
         <section
@@ -220,23 +225,36 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5"
               >
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{item.foodItem.name}</span>
+                  <span className="flex flex-wrap items-center gap-2 font-medium">
+                    {item.foodItem.name}
+                    {!item.isCounted && (
+                      <span className="rounded-full bg-hover px-2 py-0.5 text-[11px] font-bold text-muted">
+                        {t('freeFood.badge')}
+                      </span>
+                    )}
+                  </span>
                   <span className="text-sm text-muted">
-                    {t('itemSummary', {
-                      weight: item.weightGrams,
-                      calories: item.calories,
-                      protein: item.proteinG,
-                      carbs: item.carbsG,
-                      fat: item.fatG,
-                    })}
+                    {item.isCounted
+                      ? t('itemSummary', {
+                          weight: item.weightGrams,
+                          calories: item.calories,
+                          protein: item.proteinG,
+                          carbs: item.carbsG,
+                          fat: item.fatG,
+                        })
+                      : t('freeFood.itemSummary', {
+                          weight: item.weightGrams,
+                        })}
                   </span>
                 </div>
-                <DietItemActions
-                  dietId={diet.id}
-                  itemId={item.id}
-                  foodItemId={item.foodItem.id}
-                  role={item.foodItem.role}
-                />
+                {item.isCounted && (
+                  <DietItemActions
+                    dietId={diet.id}
+                    itemId={item.id}
+                    foodItemId={item.foodItem.id}
+                    role={item.foodItem.role}
+                  />
+                )}
               </li>
             ))}
           </ul>

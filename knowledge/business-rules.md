@@ -70,6 +70,18 @@ A single-item swap or reroll holds that item's calorie contribution — the repl
 
 ---
 
+## Free Foods are eaten uncounted, and paid for at what they cost
+
+A Food Item is a Free Food if its Food Family is `salad_vegetable` or `cooked_vegetable` — an allowlist, so an item with no Family (or a fatty/starchy one) is always counted. Every meal draws three Free Foods at a fixed 80 g each; they take no part in the portion fit, and their macros are excluded from the Diet's stored totals, so the listed items visibly sum to more than the stated day total. `diet_items.is_counted` carries the distinction, and the API exposes it so the UI can explain it.
+
+What the free items actually supply is subtracted from all four of the day's targets — calories, protein, carbs and fat — before the counted items are fitted, not a flat allowance. Three portions cost 42–50 kcal per meal against the current catalog, which a flat ~120 kcal would overrun at four meals and above, and the calorie target is a hard ceiling. Subtracting the calories alone would leave the counted items chasing the full macro targets inside a smaller calorie envelope, which they cannot reach.
+
+The counted totals therefore land under target by roughly what the free vegetables themselves supply (~27 g protein and ~68 g carbs at six meals): the plate hits its macros, the plan reports only the counted part of it.
+
+Swapping or rerolling a Free Food rescales its portion to hold calories, as for any other item, instead of keeping the nominal portion.
+
+---
+
 ## Food Replacement and diet generation are role-based
 
 Two Food Items are interchangeable only if they share the same Food Role (e.g. Chicken Breast and Turkey Breast are both `lean_protein`). Category and Subcategory are for browsing/filtering only, never for substitution logic.

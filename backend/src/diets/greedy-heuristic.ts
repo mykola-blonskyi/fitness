@@ -4,9 +4,11 @@
 // one Food Item per macro role, preferring candidates dense enough to carry
 // that role's share in a sensible portion, fits the portions to the meal's
 // whole protein/carb/fat target at once, then shrinks the day
-// proportionally if it lands over the calorie target. Pure function, no
-// I/O - testable without a database.
+// proportionally if it lands over the calorie target. Free Foods (ADR-020)
+// come off every target before that fit. Pure function, no I/O - testable
+// without a database.
 
+import { freeFoodGrams, isFreeFood } from './free-foods';
 import {
   MEAL_ROLE_CHAINS,
   mealTargetsForCount,
@@ -41,11 +43,6 @@ const MAX_PORTION_GRAMS: Record<number, number> = {
   [FAT_CHAIN_INDEX]: 80,
 };
 
-// Vegetables are the one role with no macro target of their own, so they
-// need a floor to keep them on the plate when the carb role already covers
-// the meal's carbs.
-const MIN_VEGETABLE_GRAMS = 100;
-
 // A protein source brings its own fat; one that would spend more than this
 // much of the meal's fat budget by itself leaves nothing for the fat role
 // and pushes the day past its fat target, so a leaner sibling wins when
@@ -53,6 +50,8 @@ const MIN_VEGETABLE_GRAMS = 100;
 const PROTEIN_FAT_BUDGET_SHARE = 0.7;
 
 const MAX_MEALS_PER_PROTEIN_FAMILY = 2;
+
+const FREE_ITEMS_PER_MEAL = 3;
 
 const STARTING_PORTION_GRAMS: Record<number, number> = {
   [PROTEIN_CHAIN_INDEX]: 150,
@@ -131,6 +130,7 @@ interface WorkingItem {
   candidate: FoodCandidate;
   chainIndex: number;
   weightGrams: number;
+  isCounted: boolean;
 }
 
 function macroTotals(items: WorkingItem[]): Record<Macro, number> {
@@ -150,10 +150,6 @@ function calorieTotal(items: WorkingItem[]): number {
       sum + (item.candidate.caloriesPer100g * item.weightGrams) / 100,
     0,
   );
-}
-
-function minPortionGrams(chainIndex: number): number {
-  return chainIndex === VEGETABLE_CHAIN_INDEX ? MIN_VEGETABLE_GRAMS : 0;
 }
 
 // Candidates that can carry this meal's share of their own macro within
@@ -218,8 +214,8 @@ function dayFilteredCandidates(
   if (chainIndex === PROTEIN_CHAIN_INDEX) {
     const underCap = unused.filter(
       (candidate) =>
-        candidate.familyId === null ||
-        (picked.mealsPerProteinFamily.get(candidate.familyId) ?? 0) <
+        candidate.familyName === null ||
+        (picked.mealsPerProteinFamily.get(candidate.familyName) ?? 0) <
           MAX_MEALS_PER_PROTEIN_FAMILY,
     );
     if (underCap.length > 0) return underCap;
@@ -234,10 +230,10 @@ function recordPick(
   chainIndex: number,
 ): void {
   picked.foodItemIds.add(candidate.id);
-  if (chainIndex === PROTEIN_CHAIN_INDEX && candidate.familyId !== null) {
+  if (chainIndex === PROTEIN_CHAIN_INDEX && candidate.familyName !== null) {
     picked.mealsPerProteinFamily.set(
-      candidate.familyId,
-      (picked.mealsPerProteinFamily.get(candidate.familyId) ?? 0) + 1,
+      candidate.familyName,
+      (picked.mealsPerProteinFamily.get(candidate.familyName) ?? 0) + 1,
     );
   }
 }
@@ -278,7 +274,7 @@ function fitPortions(items: WorkingItem[], target: MealTarget): void {
 
       const settled = Math.min(
         MAX_PORTION_GRAMS[item.chainIndex],
-        Math.max(minPortionGrams(item.chainIndex), item.weightGrams + step),
+        Math.max(0, item.weightGrams + step),
       );
       largestMove = Math.max(largestMove, Math.abs(settled - item.weightGrams));
       item.weightGrams = settled;
@@ -316,11 +312,48 @@ function shrinkToCalorieCeiling(items: WorkingItem[], ceiling: number): void {
   }
 }
 
+// Falls short of FREE_ITEMS_PER_MEAL rather than repeat a vegetable in a meal.
+function pickFreeItems(
+  position: number,
+  candidatesByRole: Map<string, FoodCandidate[]>,
+  pick: <T>(items: T[]) => T,
+  picked: DayPicks,
+): WorkingItem[] {
+  const free = MEAL_ROLE_CHAINS[VEGETABLE_CHAIN_INDEX].flatMap((role) =>
+    (candidatesByRole.get(role) ?? []).filter((candidate) =>
+      isFreeFood(candidate.familyName),
+    ),
+  );
+
+  const mealItems: WorkingItem[] = [];
+  for (let i = 0; i < FREE_ITEMS_PER_MEAL; i++) {
+    const chosenIds = new Set(mealItems.map((item) => item.candidate.id));
+    const available = free.filter((candidate) => !chosenIds.has(candidate.id));
+    if (available.length === 0) break;
+
+    const candidate = pick(
+      dayFilteredCandidates(available, VEGETABLE_CHAIN_INDEX, picked),
+    );
+    recordPick(picked, candidate, VEGETABLE_CHAIN_INDEX);
+    mealItems.push({
+      mealPosition: position,
+      orderIndex: 0,
+      candidate,
+      chainIndex: VEGETABLE_CHAIN_INDEX,
+      weightGrams: freeFoodGrams(candidate.familyName)!,
+      isCounted: false,
+    });
+  }
+
+  return mealItems;
+}
+
 function buildMeal(
   target: MealTarget,
   candidatesByRole: Map<string, FoodCandidate[]>,
   pick: <T>(items: T[]) => T,
   picked: DayPicks,
+  hasFreeItems: boolean,
 ): WorkingItem[] {
   const mealItems: WorkingItem[] = [];
 
@@ -328,10 +361,13 @@ function buildMeal(
     // A carb-free tail meal (see mealTargetsForCount) never gets a
     // carb-role food at all, not just a zero-sized one.
     if (chainIndex === CARB_CHAIN_INDEX && !target.carbEligible) return;
+    if (chainIndex === VEGETABLE_CHAIN_INDEX && hasFreeItems) return;
 
     for (const role of chain) {
-      const candidates = candidatesByRole.get(role);
-      if (!candidates || candidates.length === 0) continue;
+      const candidates = (candidatesByRole.get(role) ?? []).filter(
+        (candidate) => !isFreeFood(candidate.familyName),
+      );
+      if (candidates.length === 0) continue;
       const eligible = eligibleCandidates(candidates, chainIndex, target);
       if (eligible.length === 0) break;
       const candidate = pick(
@@ -344,6 +380,7 @@ function buildMeal(
         candidate,
         chainIndex,
         weightGrams: STARTING_PORTION_GRAMS[chainIndex],
+        isCounted: true,
       });
       break;
     }
@@ -361,26 +398,57 @@ function buildMeal(
 
 export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
   const pick = input.pickRandom ?? defaultPick;
-  const mealTargets = mealTargetsForCount(input.mealCount, {
-    calories: input.targetCalories,
-    proteinG: input.targetProteinG,
-    carbsG: input.targetCarbsG,
-    fatG: input.targetFatG,
-  });
 
   const picked: DayPicks = {
     foodItemIds: new Set(),
     mealsPerProteinFamily: new Map(),
   };
 
-  const items: WorkingItem[] = [];
-  for (const target of mealTargets) {
-    items.push(...buildMeal(target, input.candidatesByRole, pick, picked));
-  }
+  const freeItems = Array.from({ length: input.mealCount }, (_, i) =>
+    pickFreeItems(i + 1, input.candidatesByRole, pick, picked),
+  ).flat();
+  const mealsWithFreeItems = new Set(
+    freeItems.map((item) => item.mealPosition),
+  );
 
-  shrinkToCalorieCeiling(items, input.targetCalories);
+  // Every target drops, not just calories: the counted items cannot hit
+  // full macros inside the smaller calorie envelope.
+  const freeTotals = macroTotals(freeItems);
+  const freeFoodCalories = calorieTotal(freeItems);
+  const fittedCalorieTarget = Math.max(
+    0,
+    input.targetCalories - freeFoodCalories,
+  );
+  const fittedProteinTarget = Math.max(
+    0,
+    input.targetProteinG - freeTotals.protein,
+  );
+  const fittedCarbsTarget = Math.max(0, input.targetCarbsG - freeTotals.carbs);
+  const fittedFatTarget = Math.max(0, input.targetFatG - freeTotals.fat);
 
-  const kept = items.filter((item) => item.weightGrams >= MIN_WEIGHT_GRAMS);
+  const mealTargets = mealTargetsForCount(input.mealCount, {
+    calories: fittedCalorieTarget,
+    proteinG: fittedProteinTarget,
+    carbsG: fittedCarbsTarget,
+    fatG: fittedFatTarget,
+  });
+
+  const countedItems = mealTargets.flatMap((target) =>
+    buildMeal(
+      target,
+      input.candidatesByRole,
+      pick,
+      picked,
+      mealsWithFreeItems.has(target.position),
+    ),
+  );
+  shrinkToCalorieCeiling(countedItems, fittedCalorieTarget);
+
+  const kept = [...freeItems, ...countedItems]
+    .filter((item) => item.weightGrams >= MIN_WEIGHT_GRAMS)
+    .sort(
+      (a, b) => a.mealPosition - b.mealPosition || a.chainIndex - b.chainIndex,
+    );
   const orderIndexByMeal = new Map<number, number>();
   for (const item of kept) {
     const orderIndex = orderIndexByMeal.get(item.mealPosition) ?? 0;
@@ -388,19 +456,26 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     orderIndexByMeal.set(item.mealPosition, orderIndex + 1);
   }
 
-  const totals = macroTotals(kept);
+  const counted = kept.filter((item) => item.isCounted);
+  const totals = macroTotals(counted);
   const generatedItems: GeneratedDietItem[] = kept.map((item) => ({
     mealPosition: item.mealPosition,
     foodItemId: item.candidate.id,
     weightGrams: item.weightGrams,
     orderIndex: item.orderIndex,
+    isCounted: item.isCounted,
   }));
 
   return {
     items: generatedItems,
-    totalCalories: Math.round(calorieTotal(kept)),
+    totalCalories: Math.round(calorieTotal(counted)),
     totalProtein: Math.round(totals.protein),
     totalCarbs: Math.round(totals.carbs),
     totalFat: Math.round(totals.fat),
+    freeFoodCalories: Math.round(freeFoodCalories),
+    fittedCalorieTarget: Math.round(fittedCalorieTarget),
+    fittedProteinTarget: Math.round(fittedProteinTarget),
+    fittedCarbsTarget: Math.round(fittedCarbsTarget),
+    fittedFatTarget: Math.round(fittedFatTarget),
   };
 }

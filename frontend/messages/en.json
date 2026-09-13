@@ -57,6 +57,11 @@
       "dragHandle": "Drag to reorder Meal {position}"
     },
     "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}F",
+    "freeFood": {
+      "badge": "Not counted",
+      "itemSummary": "{weight} g · not counted",
+      "dayNote": "Vegetables are given a fixed portion and aren't included in the totals above."
+    },
     "algorithmInfo": {
       "calculatedUsing": "Calculated using <strong>{name}</strong> ({code})"
     },

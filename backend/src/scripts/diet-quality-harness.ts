@@ -106,7 +106,7 @@ function candidatesByRole(catalog: CatalogRow[]): Map<string, FoodCandidate[]> {
   for (const row of catalog) {
     byRole.get(row.role)?.push({
       id: row.id,
-      familyId: row.family,
+      familyName: row.family,
       caloriesPer100g: row.caloriesPer100g,
       proteinPer100g: row.proteinPer100g,
       carbsPer100g: row.carbsPer100g,
@@ -130,20 +130,40 @@ export interface QualityStats {
   emptyDays: number;
 }
 
+function plateTotals(
+  diet: GeneratedDiet,
+  candidateById: Map<string, FoodCandidate>,
+) {
+  const sum = (per100g: (candidate: FoodCandidate) => number) =>
+    diet.items.reduce(
+      (total, item) =>
+        total +
+        (per100g(candidateById.get(item.foodItemId)!) * item.weightGrams) / 100,
+      0,
+    );
+  return {
+    calories: sum((c) => c.caloriesPer100g),
+    protein: sum((c) => c.proteinPer100g),
+    carbs: sum((c) => c.carbsPer100g),
+    fat: sum((c) => c.fatPer100g),
+  };
+}
+
 export function measure(
   diets: GeneratedDiet[],
   mealCount: number,
   target: Profile,
-  familyById: Map<string, string | null>,
+  candidateById: Map<string, FoodCandidate>,
   proteinItemIds: Set<string>,
 ): QualityStats {
   const mean = (xs: number[]) =>
     xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
   const max = (xs: number[]) => (xs.length ? Math.max(...xs) : 0);
 
-  const dp = diets.map((d) => d.totalProtein - target.targetProteinG);
-  const dc = diets.map((d) => d.totalCarbs - target.targetCarbsG);
-  const df = diets.map((d) => d.totalFat - target.targetFatG);
+  const plates = diets.map((d) => plateTotals(d, candidateById));
+  const dp = plates.map((p) => p.protein - target.targetProteinG);
+  const dc = plates.map((p) => p.carbs - target.targetCarbsG);
+  const df = plates.map((p) => p.fat - target.targetFatG);
 
   let daysWithRepeat = 0;
   let worstRepeat = 0;
@@ -163,7 +183,7 @@ export function measure(
     const mealsByFamily = new Map<string, Set<number>>();
     for (const item of diet.items) {
       if (!proteinItemIds.has(item.foodItemId)) continue;
-      const family = familyById.get(item.foodItemId);
+      const family = candidateById.get(item.foodItemId)?.familyName;
       if (!family) continue;
       const meals = mealsByFamily.get(family) ?? new Set<number>();
       meals.add(item.mealPosition);
@@ -188,7 +208,7 @@ export function measure(
       carbs: max(dc.map(Math.abs)),
       fat: max(df.map(Math.abs)),
     },
-    overCeiling: diets.filter((d) => d.totalCalories > target.targetCalories)
+    overCeiling: plates.filter((p) => p.calories > target.targetCalories)
       .length,
     daysWithRepeat,
     worstRepeat,
@@ -206,7 +226,9 @@ async function main() {
   const catalog = await loadCatalog(db);
   const byRole = candidatesByRole(catalog);
   const familyOnly = candidatesByRole(catalog.filter((r) => r.family));
-  const familyById = new Map(catalog.map((r) => [r.id, r.family]));
+  const candidateById = new Map(
+    [...byRole.values()].flat().map((c) => [c.id, c] as const),
+  );
   const proteinRoles = new Set(MEAL_ROLE_CHAINS[0]);
   const proteinItemIds = new Set(
     catalog.filter((r) => proteinRoles.has(r.role)).map((r) => r.id),
@@ -264,7 +286,7 @@ async function main() {
           diets,
           mealCount,
           profile,
-          familyById,
+          candidateById,
           proteinItemIds,
         );
         const f = (n: number) => n.toFixed(1);
@@ -293,7 +315,9 @@ async function main() {
   }
 
   console.log(
-    '\ndP/dC/dF mean signed delta, |d*| mean absolute, w* worst absolute (grams).\n' +
+    '\nEvery macro column measures the whole plate - counted items plus the\n' +
+      'Free Foods a Diet leaves out of its stored totals - against the day target.\n' +
+      'dP/dC/dF mean signed delta, |d*| mean absolute, w* worst absolute (grams).\n' +
       'over = menus above the calorie ceiling. repDays = days repeating a Food Item,\n' +
       'wRep = worst repeat count. famDays = days with >2 meals from one protein\n' +
       'Family, wFam = worst such count. empty = days that generated nothing.',

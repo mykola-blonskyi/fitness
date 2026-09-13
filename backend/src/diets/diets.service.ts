@@ -21,6 +21,7 @@ import {
   roleNamesExcludedBy,
 } from './diet-preference-exclusions';
 import { restrictToFavorites } from './favorite-restriction';
+import { sumCountedTotals } from './diet-totals';
 import {
   toDietResponse,
   type DietItemWithFoodRow,
@@ -140,9 +141,13 @@ export class DietsService {
         proteinPer100g: schema.foodCalories.proteinPer100g,
         carbsPer100g: schema.foodCalories.carbsPer100g,
         fatPer100g: schema.foodCalories.fatPer100g,
-        familyId: schema.foodCalories.familyId,
+        familyName: schema.foodFamilies.name,
       })
       .from(schema.foodCalories)
+      .leftJoin(
+        schema.foodFamilies,
+        eq(schema.foodFamilies.id, schema.foodCalories.familyId),
+      )
       .where(
         and(
           inArray(schema.foodCalories.roleId, queryableRoleIds),
@@ -173,7 +178,7 @@ export class DietsService {
         proteinPer100g: Number(row.proteinPer100g),
         carbsPer100g: Number(row.carbsPer100g),
         fatPer100g: Number(row.fatPer100g),
-        familyId: row.familyId,
+        familyName: row.familyName,
       });
     }
 
@@ -280,6 +285,11 @@ export class DietsService {
             targetProteinG: target.proteinG,
             targetCarbsG: target.carbsG,
             targetFatG: target.fatG,
+            freeFoodCalories: generated.freeFoodCalories,
+            fittedCalorieTarget: generated.fittedCalorieTarget,
+            fittedProteinTarget: generated.fittedProteinTarget,
+            fittedCarbsTarget: generated.fittedCarbsTarget,
+            fittedFatTarget: generated.fittedFatTarget,
             mealCount: user.mealCount,
           },
         })
@@ -293,6 +303,7 @@ export class DietsService {
             mealPosition: item.mealPosition,
             weightGrams: item.weightGrams.toString(),
             orderIndex: item.orderIndex,
+            isCounted: item.isCounted,
           })),
         );
       }
@@ -422,6 +433,13 @@ export class DietsService {
       throw new NotFoundException('Diet item not found');
     }
 
+    // A swap never revisits is_counted, so the new food would go uncounted.
+    if (!dietItem.isCounted) {
+      throw new UnprocessableEntityException(
+        'A Free Food is served at a fixed portion and cannot be swapped',
+      );
+    }
+
     const currentFoodItem = await this.db.query.foodCalories.findFirst({
       where: eq(schema.foodCalories.id, dietItem.foodItemId),
     });
@@ -463,6 +481,7 @@ export class DietsService {
       const itemRows = await tx
         .select({
           weightGrams: schema.dietItems.weightGrams,
+          isCounted: schema.dietItems.isCounted,
           caloriesPer100g: schema.foodCalories.caloriesPer100g,
           proteinPer100g: schema.foodCalories.proteinPer100g,
           carbsPer100g: schema.foodCalories.carbsPer100g,
@@ -475,26 +494,15 @@ export class DietsService {
         )
         .where(eq(schema.dietItems.dietId, diet.id));
 
-      const totals = itemRows.reduce(
-        (acc, row) => {
-          const factor = Number(row.weightGrams) / 100;
-          return {
-            calories: acc.calories + Number(row.caloriesPer100g) * factor,
-            protein: acc.protein + Number(row.proteinPer100g) * factor,
-            carbs: acc.carbs + Number(row.carbsPer100g) * factor,
-            fat: acc.fat + Number(row.fatPer100g) * factor,
-          };
-        },
-        { calories: 0, protein: 0, carbs: 0, fat: 0 },
-      );
+      const totals = sumCountedTotals(itemRows);
 
       const [updated] = await tx
         .update(schema.diets)
         .set({
           totalCalories: Math.round(totals.calories).toString(),
-          totalProtein: Math.round(totals.protein).toString(),
-          totalCarbs: Math.round(totals.carbs).toString(),
-          totalFat: Math.round(totals.fat).toString(),
+          totalProtein: Math.round(totals.proteinG).toString(),
+          totalCarbs: Math.round(totals.carbsG).toString(),
+          totalFat: Math.round(totals.fatG).toString(),
         })
         .where(eq(schema.diets.id, diet.id))
         .returning();
@@ -578,6 +586,7 @@ export class DietsService {
         mealPosition: schema.dietItems.mealPosition,
         orderIndex: schema.dietItems.orderIndex,
         weightGrams: schema.dietItems.weightGrams,
+        isCounted: schema.dietItems.isCounted,
         foodItemId: schema.foodCalories.id,
         foodItemName: schema.foodCalories.name,
         translatedName: schema.foodCalorieTranslations.name,
