@@ -34,9 +34,12 @@ Before writing a comment, ask: would removing it leave a future reader confused?
 - Don't narrate the ticket/AC ("per FITNESS-N's acceptance criteria...") — that belongs in the PR description, not the code.
 - Don't restate what the code already says (a well-named field or function doesn't need a sentence repeating its name).
 - Don't explain routine framework/library usage.
+- Don't state the same fact twice. One rule, one home — every other mention is a pointer or nothing.
 - Do keep: a hidden constraint, a workaround for a specific bug/quirk, or a design decision whose reasoning isn't derivable from the code itself — and keep it to one or two lines, not a paragraph.
 
 When dispatching a subagent to implement a ticket in this repo, restate this constraint explicitly in the prompt — don't assume the subagent will infer it from this file alone.
+
+Run an explicit comment pass over the diff before the first commit, and again over a subagent's diff before you accept it. Writing clean is not enough on its own; the over-application above happened while everyone believed they were following the rule. For each surviving comment, cut it to the shortest phrasing that still answers the why.
 
 ## Source of Truth
 
