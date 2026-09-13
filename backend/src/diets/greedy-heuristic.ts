@@ -5,9 +5,8 @@
 // that role's share in a sensible portion, fits the portions to the meal's
 // whole protein/carb/fat target at once, then shrinks the day
 // proportionally if it lands over the calorie target. Free Foods (ADR-020)
-// are picked first, at fixed portions, and what they supply comes off the
-// day's calorie and macro targets before any of that. Pure function, no
-// I/O - testable without a database.
+// come off every target before that fit. Pure function, no I/O - testable
+// without a database.
 
 import { freeFoodGrams, isFreeFood } from './free-foods';
 import {
@@ -313,9 +312,7 @@ function shrinkToCalorieCeiling(items: WorkingItem[], ceiling: number): void {
   }
 }
 
-// The salad: several Free Foods at their nominal portions, taking no part
-// in the macro fit. Falls short of FREE_ITEMS_PER_MEAL rather than listing
-// one vegetable twice in a meal once the day has exhausted the pool.
+// Falls short of FREE_ITEMS_PER_MEAL rather than repeat a vegetable in a meal.
 function pickFreeItems(
   position: number,
   candidatesByRole: Map<string, FoodCandidate[]>,
@@ -414,11 +411,8 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     freeItems.map((item) => item.mealPosition),
   );
 
-  // What the salad supplies has to come off every target exactly, not just
-  // the calorie one: a flat allowance either breaks the ceiling at six
-  // meals or wastes most of itself at three, and leaving the macro targets
-  // at full asks the counted items to hit them inside a smaller calorie
-  // envelope, which they cannot.
+  // Every target drops, not just calories: the counted items cannot hit
+  // full macros inside the smaller calorie envelope.
   const freeTotals = macroTotals(freeItems);
   const freeFoodCalories = calorieTotal(freeItems);
   const fittedCalorieTarget = Math.max(

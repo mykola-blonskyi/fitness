@@ -30,8 +30,6 @@ export interface DietItemResponse {
   mealPosition: number;
   orderIndex: number;
   weightGrams: number;
-  // False for a Free Food: eaten as listed, but its macros are not in the
-  // Diet's totals, so the items visibly sum to more than the day (ADR-020).
   isCounted: boolean;
   foodItem: {
     id: string;

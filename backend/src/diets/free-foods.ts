@@ -1,9 +1,7 @@
 import { isFoodFamily, type FoodFamily } from '../food-items/food-item.types';
 
-// An allowlist of Families rather than "the vegetable Role minus the
-// starchy ones": a Food Item whose Family is unset - the norm until the
-// classification pass has run over a catalog - must stay counted, or
-// potato would be free (ADR-020).
+// An allowlist, not "the vegetable Role minus the starchy ones", so a Food
+// Item with no Family yet stays counted rather than potato going free.
 const NOMINAL_GRAMS: Partial<Record<FoodFamily, number>> = {
   salad_vegetable: 80,
   cooked_vegetable: 80,

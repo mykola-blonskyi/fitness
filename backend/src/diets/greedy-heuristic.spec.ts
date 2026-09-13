@@ -896,7 +896,6 @@ describe('generateDietItems - Free Foods', () => {
       candidatesByRole: poolWithFreeVegetables(12),
     });
 
-    // 9 items x 80g at 25 kcal/100g.
     expect(result.freeFoodCalories).toBe(180);
     expect(result.fittedCalorieTarget).toBe(1820);
     expect(result.totalCalories).toBeLessThanOrEqual(
@@ -911,7 +910,6 @@ describe('generateDietItems - Free Foods', () => {
       candidatesByRole: poolWithFreeVegetables(12),
     });
 
-    // 9 items x 80g at 2g protein, 5g carbs, 0.3g fat per 100g.
     expect(result.fittedProteinTarget).toBe(136);
     expect(result.fittedCarbsTarget).toBe(164);
     expect(result.fittedFatTarget).toBe(58);

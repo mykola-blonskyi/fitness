@@ -130,8 +130,6 @@ export interface QualityStats {
   emptyDays: number;
 }
 
-// Free Foods are off a Diet's stored totals but still on the plate, so
-// quality is only honestly measured with what they supply added back.
 function plateTotals(
   diet: GeneratedDiet,
   candidateById: Map<string, FoodCandidate>,

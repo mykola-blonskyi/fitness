@@ -9,9 +9,6 @@ export interface DietItemMacroRow {
   isCounted: boolean;
 }
 
-// A Diet's totals are the counted items only - a Free Food is listed and
-// eaten but never enters them (ADR-020), so the rendered lines sum to more
-// than the day total by design.
 export function sumCountedTotals(
   rows: readonly DietItemMacroRow[],
 ): DietMacroTotals {

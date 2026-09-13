@@ -433,9 +433,7 @@ export class DietsService {
       throw new NotFoundException('Diet item not found');
     }
 
-    // A swap rescales grams to hold calories and never revisits is_counted,
-    // so swapping a Free Food would leave a counted food eaten uncounted.
-    // Family-aware swap is ADR-020 phase 2.
+    // A swap never revisits is_counted, so the new food would go uncounted.
     if (!dietItem.isCounted) {
       throw new UnprocessableEntityException(
         'A Free Food is served at a fixed portion and cannot be swapped',

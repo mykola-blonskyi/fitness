@@ -117,8 +117,7 @@ describe('generateDietItems - full pipeline across mealCount 1-6', () => {
   for (let mealCount = 1; mealCount <= 6; mealCount++) {
     it(`keeps the ceiling with a three-item free salad per meal at mealCount ${mealCount}`, () => {
       const pool = fullCandidatePool();
-      // The densest free vegetable in the catalog, so 18 nominal portions
-      // at mealCount 6 cost far more than a flat allowance would cover.
+      // The densest free vegetable in the catalog: the worst ceiling case.
       pool.set(
         'vegetable',
         Array.from({ length: 34 }, (_, i) => ({

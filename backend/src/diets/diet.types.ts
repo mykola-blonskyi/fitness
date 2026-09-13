@@ -123,15 +123,12 @@ export interface GeneratedDietItem {
 
 export interface GeneratedDiet {
   items: GeneratedDietItem[];
-  // Free Foods are left out of these - the listed items visibly sum to
-  // more than the day total (ADR-020).
   totalCalories: number;
   totalProtein: number;
   totalCarbs: number;
   totalFat: number;
   freeFoodCalories: number;
-  // What the counted items were fitted to: the day's targets less what the
-  // Free Foods supply, so the whole plate lands on the day's targets.
+  // The day's targets less what the Free Foods supply (ADR-020).
   fittedCalorieTarget: number;
   fittedProteinTarget: number;
   fittedCarbsTarget: number;
