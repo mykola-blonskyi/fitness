@@ -10,7 +10,7 @@ Full history and rationale for this model's shape: `~/Documents/obsidian-notes/p
 
 Responsibilities:
 
-Owns profile data used for calorie/macro calculation; owns Daily Logs, Training Programs, Diets (via Daily Logs), and Food/Diet Preferences. Identity itself is owned by login — this table stores fitness-specific profile fields only, keyed by its own locally generated `id`.
+Owns profile data used for calorie/macro calculation; owns Daily Logs, Training Programs, Diets, and Food/Diet Preferences. Identity itself is owned by login — this table stores fitness-specific profile fields only, keyed by its own locally generated `id`.
 
 Fields:
 
@@ -28,6 +28,7 @@ Relationships:
 - one_to_many Daily Logs
 - one_to_many Training Programs
 - many_to_many active Training Programs (via UserActiveProgram — see Business Rules: multiple concurrent active programs)
+- one_to_many Diets
 - one_to_many Food Preferences, Diet Preferences
 - one_to_many Photo Sessions
 
@@ -47,7 +48,6 @@ Fields:
 Relationships:
 
 - one_to_many Progress Photos
-- one_to_many Diets
 - one_to_many Workout Logs
 
 ---
@@ -194,7 +194,7 @@ Relationships:
 
 Responsibilities:
 
-A single generated meal plan for one Daily Log. Never edited in place — see Business Rules: current diet resolution.
+A user's current generated meal plan, valid until they regenerate it (ADR-022). Regenerating inserts a new Diet; swapping an item edits the existing one in place and re-derives its totals.
 
 Fields:
 
@@ -203,7 +203,7 @@ Fields:
 
 Relationships:
 
-- many_to_one Daily Log
+- many_to_one User
 - many_to_one Diet Calculation Algorithm
 - one_to_many Diet Items
 

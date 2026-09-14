@@ -22,14 +22,14 @@ Full history and rationale behind these choices: `~/Documents/obsidian-notes/pro
 
 ### Frontend
 
-Next.js (App Router), TypeScript, TailwindCSS, ShadCN, next-intl (en/uk/ru/es), TanStack Query, TanStack Virtual, service worker for PWA offline support. Zustand for client-only state that crosses a non-parent-child boundary or must live outside the React tree (e.g. the offline write-queue, FITNESS-13) — see [ADR-008](docs/decisions.md).
+Next.js (App Router), TypeScript, TailwindCSS, next-intl (en/uk/ru/es), TanStack Virtual, service worker for PWA offline support. ShadCN and TanStack Query are deferred and not installed — see [ADR-009](docs/decisions.md). Zustand for client-only state that crosses a non-parent-child boundary or must live outside the React tree (e.g. the offline write-queue, FITNESS-13) — see [ADR-008](docs/decisions.md).
 
 Responsibilities:
 
 - All UI rendering and client-side interaction
 - Runs its own Auth.js instance as an OIDC client of `login.blonskyi.dev` and forwards trusted identity headers to the backend (see Security below) — **no direct database access**, no Server Actions touching Drizzle/Postgres
 - App-wide nav header (see [ADR-007](docs/decisions.md)) — a nav menu scoped to built sections, not a breadcrumb trail. Renders everywhere except `/onboarding`; includes a language switcher (FITNESS-11) — theme toggling is still not part of it
-- Offline: caches active programs/exercises/recent logs for viewing; queues workout-set writes in IndexedDB and flushes them to the API in order once back online
+- Offline: the service worker caches active programs/exercises/recent logs for viewing; workout-set and weight writes queue in IndexedDB and flush to the API in order once back online. The flush runs in the React tree, not the service worker — see [[business-rules]] "PWA offline supports queued writes"
 
 Dependencies:
 
@@ -103,13 +103,13 @@ External systems:
 8. The Python worker runs alignment analysis, writes `progress_photos.analysis_status`/`alignment_data` back.
 9. Frontend polls/reads `analysis_status`; when reading a photo back, NestJS generates a short-lived presigned GET URL after checking ownership.
 
-**Diet generation:** manual trigger only (see [[business-rules]]) → NestJS runs the greedy-heuristic generator against the user's profile, active Diet/Food Preferences, and the Food catalog → writes a new `diets` + `diet_items` row set, linked to the triggering Daily Log.
+**Diet generation:** manual trigger only (see [[business-rules]]) → NestJS runs the greedy-heuristic generator against the user's profile, active Diet/Food Preferences, and the Food catalog → writes a new `diets` + `diet_items` row set scoped to the user, not to a day (see [ADR-022](docs/decisions.md)).
 
 ---
 
 ## Deployment
 
-Docker Compose, deployed via Coolify (self-hosted) using a GitHub App for the private repo. On push to `main`: lint + tests (ESLint, Prettier, frontend/backend test suites) → build → `drizzle migrate` against the shared Postgres instance → deploy the new containers only if migration succeeds (see [[business-rules]] "Migrations are a mandatory pre-deploy gate"). Shares its Postgres instance and Coolify host with the user's other `*.blonskyi.dev` pet projects.
+Docker Compose, deployed via Coolify (self-hosted) using a GitHub App for the private repo. On push to `main`: lint + tests (ESLint, Prettier, frontend/backend test suites) → the `deploy` job POSTs the Coolify webhook → Coolify builds and starts the containers, and the backend container runs `drizzle-kit migrate` as its own entrypoint before serving (see [ADR-005](docs/decisions.md)). A green CI run does not prove the release landed: a failed migration crashloops the new container, Coolify keeps the previous one serving, and `main` still shows a green tick. Shares its Postgres instance and Coolify host with the user's other `*.blonskyi.dev` pet projects.
 
 ---
 
@@ -137,7 +137,7 @@ Photo privacy: the MinIO bucket for progress photos is **private**. No permanent
 
 Error tracking:
 
-Sentry (SaaS, free tier) — see [[decisions]] ADR-006. One Sentry org shared with the user's other `*.blonskyi.dev` pet projects; fitness is its own project within that org. `@sentry/nestjs` on the backend and `@sentry/nextjs` on the frontend (client- and server-side), active in production only — never during local `pnpm dev`, so local testing doesn't consume the shared org's event quota. Only unhandled exceptions and 5xx-class errors are reported; deliberately-thrown 4xx `HttpException`s (validation, 404, 401/403) are not. Events carry only the user's UUID as Sentry `user` context — `sendDefaultPii` is disabled and request bodies are scrubbed, so email, IP, and payload contents (which could include health data like weight or date of birth) never reach the third-party service. Alerting is Sentry's own built-in email notifications. Events are tagged with the deploying commit SHA as the Sentry release, and frontend source maps are uploaded at build time so stack traces resolve to real source, not minified bundle positions. One-off scripts (e.g. `seed-exercises.ts`) are out of scope — they're run interactively and watched, so a crash is already visible without a reporting layer. The Python photo-analysis worker isn't built yet (FITNESS-22/23/24); whether it gets Sentry too is a decision for whenever that work starts.
+Sentry (SaaS, free tier) — see [[decisions]] ADR-006. One Sentry org shared with the user's other `*.blonskyi.dev` pet projects; fitness is its own project within that org. `@sentry/nestjs` on the backend and `@sentry/nextjs` on the frontend (client- and server-side), active in production only — never during local `pnpm dev`, so local testing doesn't consume the shared org's event quota. Only unhandled exceptions and 5xx-class errors are reported; deliberately-thrown 4xx `HttpException`s (validation, 404, 401/403) are not. Events carry only the user's UUID as Sentry `user` context — `sendDefaultPii` is disabled and request bodies are scrubbed, so email, IP, and payload contents (which could include health data like weight or date of birth) never reach the third-party service. Alerting is Sentry's own built-in email notifications. Events are tagged with the deploying commit SHA as the Sentry release, and frontend source maps are uploaded at build time so stack traces resolve to real source, not minified bundle positions. One-off scripts (e.g. `seed-exercises.ts`) are out of scope — they're run interactively and watched, so a crash is already visible without a reporting layer. The Python photo-analysis worker is built, deployed and covered by CI's `worker-test` job, but has no Sentry integration; whether it gets one is still open. Until it does, a dead consumer thread in the worker fails silently.
 
 General log management (structured application logs, aggregation, retention) is intentionally out of scope for now — a separate, deliberate decision when it's actually needed, not bundled into the error-tracking setup above.
 
