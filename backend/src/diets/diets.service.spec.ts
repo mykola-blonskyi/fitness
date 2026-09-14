@@ -1,5 +1,11 @@
+import { UnprocessableEntityException } from '@nestjs/common';
+import type { SQL } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { DietsService } from './diets.service';
+import * as schema from '../db/schema';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
+
+type FoodItemRow = typeof schema.foodCalories.$inferSelect;
 
 function noExclusions(): ExclusionTargets {
   return {
@@ -10,61 +16,135 @@ function noExclusions(): ExclusionTargets {
   };
 }
 
-function buildDb(rows: unknown[]) {
-  return {
-    select: jest.fn().mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        leftJoin: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue(rows),
-        }),
-      }),
-    }),
+function render(where: SQL | undefined): string {
+  return new PgDialect().sqlToQuery(where!).sql;
+}
+
+const foodItem = (overrides: Partial<FoodItemRow> = {}): FoodItemRow => ({
+  id: 'chicken',
+  name: 'Chicken breast',
+  imageUrl: null,
+  categoryId: 'cat-meat',
+  subcategoryId: 'sub-poultry',
+  roleId: 'role-lean-protein',
+  familyId: 'family-poultry',
+  caloriesPer100g: '165',
+  proteinPer100g: '31',
+  carbsPer100g: '0',
+  fatPer100g: '3.6',
+  source: null,
+  sourceId: null,
+  isVerified: false,
+  createdAt: new Date('2026-01-01'),
+  ...overrides,
+});
+
+function buildService(db: unknown): DietsService {
+  const foodPreferencesService = {
+    getFavoriteFoodItemIds: jest.fn().mockResolvedValue(new Set<string>()),
   };
+  return new DietsService(
+    db as never,
+    {} as never,
+    {} as never,
+    foodPreferencesService as never,
+    {} as never,
+    {} as never,
+  );
 }
 
 describe('DietsService.findGenerationCandidatesByRole', () => {
-  it('never returns a Food Item with no Family as a generation candidate', async () => {
-    const rows = [
-      {
-        id: 'wheat-flour',
-        roleId: 'role-complex-carb',
-        caloriesPer100g: '364',
-        proteinPer100g: '10',
-        carbsPer100g: '76',
-        fatPer100g: '1',
-        familyName: null,
-      },
-      {
-        id: 'potato',
-        roleId: 'role-complex-carb',
-        caloriesPer100g: '77',
-        proteinPer100g: '2',
-        carbsPer100g: '17',
-        fatPer100g: '0.1',
-        familyName: 'starchy_vegetable',
-      },
-    ];
-    const db = buildDb(rows);
-    const foodPreferencesService = {
-      getFavoriteFoodItemIds: jest.fn().mockResolvedValue(new Set<string>()),
+  it('asks the database only for Family-classified rows', async () => {
+    let captured: SQL | undefined;
+    const db = {
+      select: () => ({
+        from: () => ({
+          leftJoin: () => ({
+            where: (clause: SQL | undefined) => {
+              captured = clause;
+              return Promise.resolve([]);
+            },
+          }),
+        }),
+      }),
     };
-    const service = new DietsService(
-      db as never,
-      {} as never,
-      {} as never,
-      foodPreferencesService as never,
-      {} as never,
-    );
-    const roleIdByName = new Map([['complex_carb', 'role-complex-carb']]);
 
-    const candidatesByRole = await service['findGenerationCandidatesByRole'](
+    await buildService(db)['findGenerationCandidatesByRole'](
       'user-1',
       noExclusions(),
-      roleIdByName,
+      new Map([['complex_carb', 'role-complex-carb']]),
     );
 
-    expect(candidatesByRole.get('complex_carb')?.map((c) => c.id)).toEqual([
-      'potato',
-    ]);
+    expect(render(captured)).toContain(
+      '"food_calories"."family_id" is not null',
+    );
+  });
+});
+
+describe('DietsService.pickRerollReplacement', () => {
+  async function rerollWhere(): Promise<string> {
+    let captured: SQL | undefined;
+    const db = {
+      query: {
+        foodCalories: {
+          findMany: (config: { where?: SQL }) => {
+            captured = config.where;
+            return Promise.resolve([foodItem({ id: 'cod' })]);
+          },
+        },
+      },
+    };
+
+    await buildService(db)['pickRerollReplacement'](
+      foodItem(),
+      noExclusions(),
+      (items) => items[0],
+    );
+
+    return render(captured);
+  }
+
+  it('asks the database only for Family-classified rows', async () => {
+    expect(await rerollWhere()).toContain(
+      '"food_calories"."family_id" is not null',
+    );
+  });
+
+  it('does not require is_verified, which generation ignores', async () => {
+    expect(await rerollWhere()).not.toContain('is_verified');
+  });
+});
+
+describe('DietsService.resolveExplicitReplacement', () => {
+  function buildDb(replacement: FoodItemRow) {
+    return {
+      query: {
+        foodCalories: { findFirst: () => Promise.resolve(replacement) },
+      },
+    };
+  }
+
+  it('rejects a replacement with no Family', async () => {
+    const db = buildDb(foodItem({ id: 'wheat-flour', familyId: null }));
+
+    await expect(
+      buildService(db)['resolveExplicitReplacement'](
+        'wheat-flour',
+        foodItem(),
+        noExclusions(),
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('accepts a Family-classified replacement in the same role', async () => {
+    const db = buildDb(foodItem({ id: 'cod' }));
+
+    const replacement = await buildService(db)['resolveExplicitReplacement'](
+      'cod',
+      foodItem(),
+      noExclusions(),
+    );
+
+    expect(replacement.id).toBe('cod');
   });
 });
