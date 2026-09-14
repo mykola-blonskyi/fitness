@@ -6,6 +6,7 @@ import {
 } from '@shared/offline/sync-registry';
 import { useOfflineQueueStore } from '@shared/offline/offline-queue-store';
 import { PermanentWriteError } from '@shared/offline/types';
+import { SESSION_EXPIRED_BODY } from '@shared/libs/session-expired';
 
 interface Result {
   error?: string;
@@ -55,8 +56,25 @@ describe('createSyncedWrite', () => {
       },
     );
 
-    await expect(write({ n: 1 })).resolves.toEqual({ queued: true });
+    await expect(write({ n: 1 })).resolves.toEqual({ status: 'queued' });
     expect(useOfflineQueueStore.getState().queue).toHaveLength(1);
+  });
+
+  // proxy.ts answers an expired session's POST with this body. Queueing it
+  // would promise a flush only re-authenticating can ever deliver.
+  it('reports an expired session instead of queueing the write', async () => {
+    clearSyncHandlers();
+    const write = createSyncedWrite<{ n: number }, Result>(
+      'test/session-expired',
+      async () => {
+        throw new Error(SESSION_EXPIRED_BODY);
+      },
+    );
+
+    await expect(write({ n: 1 })).resolves.toEqual({
+      status: 'sessionExpired',
+    });
+    expect(useOfflineQueueStore.getState().queue).toHaveLength(0);
   });
 
   it('registers the raw action as the handler when no getResultError is supplied', async () => {

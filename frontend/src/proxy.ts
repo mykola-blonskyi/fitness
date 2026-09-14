@@ -3,7 +3,11 @@ import createIntlMiddleware from 'next-intl/middleware';
 import * as Sentry from '@sentry/nextjs';
 import { resolveIdentity } from '@libs/identity';
 import { requireEnv } from '@libs/require-env';
-import type { Identity } from '@shared/types/identity';
+import { fetchProfileStatus } from '@libs/profile-status';
+import {
+  SESSION_EXPIRED_BODY,
+  isServerActionRequest,
+} from '@libs/session-expired';
 import { routing } from '@/i18n/routing';
 
 const APP_URL = requireEnv('APP_URL');
@@ -23,22 +27,13 @@ function signInRedirect(req: NextRequest, locale: string) {
   return NextResponse.redirect(signInUrl);
 }
 
-// Never throws - a backend-unreachable or non-2xx response is treated as
-// "not completed" so the caller falls back to the onboarding redirect,
-// not a 500.
-async function hasCompletedProfile(identity: Identity): Promise<boolean> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/users/me`, {
-      headers: {
-        'x-user-id': identity.sub,
-        'x-user-email': identity.email,
-      },
-      cache: 'no-store',
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+// A Server Action POST follows a redirect and hands React unparseable HTML,
+// silently losing the write; session-expired.ts explains the body.
+function sessionExpiredResponse() {
+  return new NextResponse(SESSION_EXPIRED_BODY, {
+    status: 401,
+    headers: { 'content-type': 'text/plain' },
+  });
 }
 
 // api-client.ts reads x-user-id/x-user-email back off the request and
@@ -86,7 +81,9 @@ export async function proxy(req: NextRequest) {
 
   const identity = await resolveIdentity(req);
   if (!identity) {
-    return signInRedirect(req, locale);
+    return isServerActionRequest(req)
+      ? sessionExpiredResponse()
+      : signInRedirect(req, locale);
   }
 
   // Only the UUID, never email - ADR-006, this app handles real health
@@ -99,8 +96,8 @@ export async function proxy(req: NextRequest) {
   // the form in the first place.
   const isOnboarding = req.nextUrl.pathname.split('/').includes('onboarding');
   if (!isOnboarding) {
-    const complete = await hasCompletedProfile(identity);
-    if (!complete) {
+    const status = await fetchProfileStatus(BACKEND_URL, identity);
+    if (status === 'missing') {
       return NextResponse.redirect(new URL(`/${locale}/onboarding`, req.url));
     }
   }

@@ -740,6 +740,7 @@
     "button": "Continue",
     "error": "Could not prepare the sign-in form.",
     "retry": "Try again",
+    "expired": "Your session expired. Sign in again to save this.",
     "signOut": "Sign out"
   },
   "ErrorPage": {

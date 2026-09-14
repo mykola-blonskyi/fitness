@@ -8,10 +8,12 @@
 //    reloading offline" true for whichever page the user last visited
 //    online - no route is special-cased, any visited page qualifies.
 //  - Same-origin build assets (/_next/static/*) and the small fixed set
-//    of app-shell files (manifest, icons, favicon) are cache-first -
+//    of app-shell files (icons, favicon) are cache-first -
 //    the former are content-hashed and therefore immutable, the latter
 //    change rarely and are cheap to keep fresh via the cache's normal
 //    put-on-fetch behavior.
+//    /manifest.webmanifest is excluded: app/manifest.ts derives start_url
+//    and theme_color from cookies, so a cached copy pins them at install.
 //  - Everything else (cross-origin requests, non-GET, API calls) is left
 //    alone and goes straight to the network, unmodified.
 //
@@ -29,18 +31,12 @@
 // This will need revisiting if/when a page starts fetching data
 // client-side after hydration.
 //
-// Known tradeoff, accepted rather than solved here: cached HTML persists
-// in Cache Storage indefinitely (no TTL, no clear-on-logout - this app
-// has no sign-out at all yet, see ADR-007's Consequences), so a shared
-// or borrowed device retains whatever personal data (weight, diary
-// entries) was last cached. ADR-002 only covers progress-photo storage
-// specifically, so this isn't a documented-standard violation, but the
-// same "don't keep sensitive data around longer than needed" spirit
-// applies. Revisit alongside FITNESS-13 or whenever a real sign-out
-// path exists to clear this cache on demand.
+// Cached HTML has no TTL; it is bounded by sign-out instead, which the
+// fetch handler below watches for.
 
 const CACHE_VERSION = 'v1';
 const RUNTIME_CACHE = `fitness-runtime-${CACHE_VERSION}`;
+const SIGN_OUT_PATH = '/api/auth/signout';
 
 self.addEventListener('install', () => {
   // Activate a new SW as soon as it's installed rather than waiting for
@@ -68,10 +64,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Cached navigations are rendered pages with this user's weight and diet
+  // baked in; they must not outlive the session, and this POST is the signal.
+  if (request.method === 'POST' && url.pathname === SIGN_OUT_PATH) {
+    event.waitUntil(caches.delete(RUNTIME_CACHE));
+    return;
+  }
+
+  if (request.method !== 'GET') return;
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request));
@@ -81,7 +84,6 @@ self.addEventListener('fetch', (event) => {
   if (
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/icons/') ||
-    url.pathname === '/manifest.webmanifest' ||
     url.pathname === '/favicon.ico' ||
     url.pathname === '/apple-touch-icon.png'
   ) {

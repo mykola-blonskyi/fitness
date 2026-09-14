@@ -740,6 +740,7 @@
     "button": "Continuar",
     "error": "No se pudo preparar el formulario de inicio de sesión.",
     "retry": "Reintentar",
+    "expired": "Tu sesión ha caducado. Inicia sesión de nuevo para guardarlo.",
     "signOut": "Cerrar sesión"
   },
   "ErrorPage": {
