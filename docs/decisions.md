@@ -42,7 +42,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-08-15
 
-Status: Accepted
+Status: Accepted; narrowed by ADR-022 (2026-09-03) — diets no longer attach to the Daily Log.
 
 The original schema required `diary_entries.weight` NOT NULL, so no daily activity of any kind (photos, diets, workouts) could be logged without also entering a body weight that day — a real UX constraint, and one that's expensive to unwind once other tables depend on it. Renamed to Daily Log, keyed by `(user_id, date)` with `weight` nullable; progress photos, diets, and workout logs attach to the Daily Log regardless of whether a weight was recorded that day. Diet generation and any weight-trend logic must explicitly handle days with no weight value (skip or carry-forward from the last known weigh-in) rather than assuming every Daily Log has one.
 
@@ -301,5 +301,23 @@ A per-item portion column was rejected. `food_families` is unconstrained text se
 Measured over five seeds and 300 menus per meal count, both pools: the calorie ceiling, the no-repeat rule and the protein-Family cap are unchanged, and no salad in 108,000 held fewer than two bulk items. On the moderate profile the three mean absolute macro deltas cost at most 0.76 g in total, at five meals. On ADR-019's extreme 310P profile they cost 0.78 to 4.16 g, which **fails** the +0.5 g per-macro and +1.0 g total thresholds this change was measured against: a profile whose protein target is unreachable already misses carbs by 42-52 g and has no headroom left to absorb the ~65 g of vegetable the accent slot removes from each meal. Accepted on the judgement that a target nobody can hit is not the one to protect. See `reports/audits/2026-09-13-salad-composition.md`.
 
 Two known divergences are left for phase 2's Archetypes. `isFreeFood` covers `cooked_vegetable`, so a salad can legitimately be three mushrooms; and garlic and ginger stay outside the taxonomy, as cooking aromatics rather than things eaten at 15 g in a raw salad.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-022: A Diet is user-scoped and valid until regenerated, not a per-day record
+
+Date: 2026-09-03
+
+Status: Accepted
+
+Narrows ADR-004. Progress photos and workout logs still attach to the Daily Log; diets no longer do.
+
+`diets.daily_log_id` is dropped and replaced by `diets.user_id`. A Diet is a standing plan that stays current until the user regenerates it, so `POST /diets/generate` and `GET /diets/current` take no date at all, and `findCurrent` returns the most recently created row for the user regardless of when it was generated (`ORDER BY created_at DESC LIMIT 1`, served by the `(user_id, created_at)` index). Older rows are kept as history.
+
+The row carries no date of its own, only `created_at`. No query can therefore recover what was planned on a past day, and a Diet generated three weeks ago is still the current one if nothing has replaced it. That is what "valid until regenerated" means here: the endpoints dropped their `:date` param rather than defaulting it to today.
+
+`0020_diet_user_scoped.sql` deletes every `diets` and `diet_items` row before dropping the column instead of backfilling a `user_id` from the old Daily Log. The existing rows were test data and FITNESS-61 allowed clearing them explicitly.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

@@ -127,5 +127,5 @@ Meal shape stays as it is today. The foods stop being absurd.
 
 - Food/exercise seed data quality: catalog rows were bulk-approved in dev and production on 2026-09-08, but their machine-translated names went with them unreviewed (`food_calorie_translations.is_verified` is still false for every row) — needs an ongoing manual review pass, not a one-time fix
 - Greedy diet-generation heuristic may produce awkward menus at the tails (very low/high calorie targets, sparse Food Preferences) — worth a manual spot-check once seed data exists
-- Shared Postgres/Coolify host with other pet projects — migrations must stay scoped to this project's tables and never run unattended after a failed deploy (see [[business-rules]] "Migrations are a mandatory pre-deploy gate")
-- GitHub Actions billing is failing, so a push to `main` no longer auto-deploys — no workflow has run since 2026-09-03, and every release since then has to be triggered by hand in Coolify, which is why production can sit several merged PRs behind `main`
+- Shared Postgres/Coolify host with other pet projects — migrations must stay scoped to this project's tables and never run unattended after a failed deploy (see [[business-rules]] "Migrations run at container boot, not as a separate CI step")
+- Production tracks `main` automatically again: CI runs on push and the `deploy` job POSTs the Coolify webhook. The billing failure that stopped every workflow between 2026-09-03 and 2026-09-13 is resolved

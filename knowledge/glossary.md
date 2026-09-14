@@ -4,7 +4,7 @@
 
 ### Daily Log
 
-The anchor row for a single `(user_id, date)`. Formerly modeled as `diary_entries` with a required weight; corrected so that weight is optional. Progress photos, workout logs, and diets all attach to a Daily Log, none of them require a weigh-in to exist.
+The anchor row for a single `(user_id, date)`. Formerly modeled as `diary_entries` with a required weight; corrected so that weight is optional. Progress photos and workout logs attach to a Daily Log, neither requiring a weigh-in to exist. Diets do not attach to it at all — a Diet is user-scoped (ADR-022).
 
 ### Weigh-In
 
@@ -28,7 +28,7 @@ A record of a completed training session (`workout_logs` + `workout_sets`), opti
 
 ### Diet
 
-A single generated meal plan for one Daily Log (`diets` + `diet_items`). Diets are never edited in place — regenerating creates a new Diet row. The **current diet** for a day is simply the most recently created Diet row for that Daily Log; older ones are kept as history, not marked obsolete.
+A generated meal plan for a user (`diets` + `diet_items`), valid until regenerated. Regenerating creates a new Diet row; swapping an item edits the existing row in place. The **current diet** is the most recently created Diet row for that user, whenever it was generated; older ones are kept as history, not marked obsolete.
 
 ### Diet Calculation Algorithm
 

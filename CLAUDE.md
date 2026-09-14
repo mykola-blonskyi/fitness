@@ -8,7 +8,7 @@ This repository follows the global Claude configuration.
 
 ## Current State
 
-All six phases of `plans/current.md` are implemented and merged into `main`, and every FITNESS work item in Plane is Done or Cancelled — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018).
+All six phases of `plans/current.md` are implemented and merged into `main` — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018). Work continues past those phases on the ADR-020 menu-composition rework; Plane is the live ticket state, not this file.
 
 `login.blonskyi.dev` is live, the `fitness` client is registered against it, and signing in now goes to that issuer instead of the Hub. The one path still unproven from outside is the token exchange, which only a real sign-in exercises — so if a login ever fails at the callback rather than at the prompt, suspect `OIDC_CLIENT_SECRET` in Coolify first.
 

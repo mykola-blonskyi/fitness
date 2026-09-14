@@ -50,7 +50,7 @@ Why: avoids the `diets` table filling with rows nobody asked for, and avoids bur
 
 ## Current diet resolution
 
-The "current" Diet for a Daily Log is the most recently created `diets` row for that Daily Log (`ORDER BY created_at DESC LIMIT 1`). Older Diets for the same Daily Log are kept as history, not marked obsolete or deleted.
+The "current" Diet for a user is the most recently created `diets` row for that user (`ORDER BY created_at DESC LIMIT 1`), whenever it was generated. Older Diets are kept as history, not marked obsolete or deleted. See ADR-022.
 
 Why: no extra state (`is_current` flag) to keep in sync; regenerating is just inserting a new row.
 
@@ -78,7 +78,7 @@ What the free items actually supply is subtracted from all four of the day's tar
 
 The counted totals therefore land under target by roughly what the free vegetables themselves supply: the plate hits its macros, the plan reports only the counted part of it.
 
-Swapping or rerolling a Free Food rescales its portion to hold calories, as for any other item, instead of keeping the nominal portion.
+A Free Food cannot be swapped or rerolled. The endpoint rejects an uncounted item with 422 and the menu shows no swap control for it, since a swap never revisits `is_counted` and would leave the replacement uncounted.
 
 ---
 
@@ -156,11 +156,11 @@ NestJS and the Python worker communicate over a plain Redis list/stream with a J
 
 ---
 
-## Migrations are a mandatory pre-deploy gate
+## Migrations run at container boot, not as a separate CI step
 
-CI/CD runs lint + tests → build → `drizzle migrate` against the shared Postgres instance → deploys the new container only if migration succeeds. A failed migration blocks deploy; the previous version keeps serving traffic.
+The backend container runs `drizzle-kit migrate` as its own entrypoint before serving traffic; CI's `deploy` job only POSTs the Coolify webhook. See ADR-005. A failed migration crashes the new container before it becomes healthy, so Coolify never cuts over and the previous version keeps serving.
 
-Why: the Postgres instance is shared across the user's other pet projects — migrations must never run unattended after a broken deploy.
+A green CI run therefore does not prove the release landed. The check goes green once the webhook is accepted, so a new container crashlooping on a bad migration leaves the old one serving with a green tick on `main`.
 
 ---
 
@@ -200,7 +200,7 @@ Why: this app handles real health data (weight, date of birth, goals) — sendin
 
 ## PWA offline supports queued writes, not just cached reads
 
-The service worker caches active programs/exercises/recent logs for offline viewing, and lets the user log workout sets while offline. Writes queue in IndexedDB and flush to the NestJS API in order once connectivity returns. No conflict resolution is needed since workout sets are append-only, never concurrently edited.
+The service worker caches active programs/exercises/recent logs for offline viewing. Workout sets and weight entries written while offline queue in IndexedDB and flush to the NestJS API in order once connectivity returns. The flush is not the service worker's: it runs in the React tree (`OfflineIndicator`, mounted by `TopBar`) on the `online` event, so a queue drains only while a tab is open. No conflict resolution is needed — workout sets are append-only, and a weight write is a last-write-wins upsert on its own `(user, date)` row.
 
 Why: "gym usage without internet" only holds if the core action (logging a set) works with no signal, not just viewing cached data.
 
