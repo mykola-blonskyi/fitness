@@ -29,7 +29,6 @@ import {
   categoryNamesExcludedBy,
   roleNamesExcludedBy,
 } from './diet-preference-exclusions';
-import { restrictToFavorites } from './favorite-restriction';
 import { sumCountedTotals } from './diet-totals';
 import {
   toDietResponse,
@@ -198,19 +197,22 @@ export class DietsService {
     return { exclusions, roleIdByName: taxonomyIds.roleIdByName };
   }
 
-  // Favorites only ever narrow generate()'s own candidate pool (ADR-014)
-  // - swapItem() deliberately doesn't call this, a swap picker should
-  // still offer every eligible same-Role item, not just favorites.
+  // Favorites are preferred at pick time inside generateDietItems, never
+  // used to narrow the pool. swapItem() deliberately doesn't apply them at
+  // all: a swap picker should offer every eligible same-Role item.
   private async findGenerationCandidatesByRole(
     userId: string,
     exclusions: ExclusionTargets,
     roleIdByName: Map<string, string>,
-  ): Promise<Map<string, FoodCandidate[]>> {
+  ): Promise<{
+    candidatesByRole: Map<string, FoodCandidate[]>;
+    favoriteFoodItemIds: ReadonlySet<string>;
+  }> {
     const [candidatesByRole, favoriteFoodItemIds] = await Promise.all([
       this.findCandidatesByRole(exclusions, roleIdByName),
       this.foodPreferencesService.getFavoriteFoodItemIds(userId),
     ]);
-    return restrictToFavorites(candidatesByRole, favoriteFoodItemIds);
+    return { candidatesByRole, favoriteFoodItemIds };
   }
 
   // Shared by findCurrent()'s and swapItem()'s lookup of the algorithm a
@@ -239,11 +241,12 @@ export class DietsService {
     const algorithm = target.algorithm;
 
     const { exclusions, roleIdByName } = await this.resolveExclusions(userId);
-    const candidatesByRole = await this.findGenerationCandidatesByRole(
-      userId,
-      exclusions,
-      roleIdByName,
-    );
+    const { candidatesByRole, favoriteFoodItemIds } =
+      await this.findGenerationCandidatesByRole(
+        userId,
+        exclusions,
+        roleIdByName,
+      );
     const hasAnyCandidate = [...candidatesByRole.values()].some(
       (candidates) => candidates.length > 0,
     );
@@ -260,6 +263,7 @@ export class DietsService {
       targetFatG: target.fatG,
       mealCount: user.mealCount,
       candidatesByRole,
+      favoriteFoodItemIds,
     });
 
     const dietRow = await this.db.transaction(async (tx) => {

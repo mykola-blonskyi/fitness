@@ -69,7 +69,7 @@ describe('DietsService.findGenerationCandidatesByRole', () => {
       }),
     };
 
-    await buildService(db)['findGenerationCandidatesByRole'](
+    const result = await buildService(db)['findGenerationCandidatesByRole'](
       'user-1',
       noExclusions(),
       new Map([['complex_carb', 'role-complex-carb']]),
@@ -78,6 +78,7 @@ describe('DietsService.findGenerationCandidatesByRole', () => {
     expect(render(captured)).toContain(
       '"food_calories"."family_id" is not null',
     );
+    expect(result.favoriteFoodItemIds).toEqual(new Set());
   });
 });
 

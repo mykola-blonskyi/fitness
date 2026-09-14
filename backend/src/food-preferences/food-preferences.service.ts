@@ -130,10 +130,10 @@ export class FoodPreferencesService {
     return result;
   }
 
-  // Used by diets.service.ts to restrict a generation role-slot to only
-  // the user's favorited items when any exist for that role - see
-  // ADR-014. Always targetType='food_item' (enforced in create()), so
-  // no grouping by targetType is needed here unlike getExclusionTargets.
+  // Used by diets.service.ts to bias generation's pick toward favorited
+  // items when any are eligible for that role. Always targetType='food_item'
+  // (enforced in create()), so no grouping by targetType is needed here
+  // unlike getExclusionTargets.
   async getFavoriteFoodItemIds(userId: string): Promise<Set<string>> {
     const rows = await this.db
       .select({ targetId: schema.foodPreferences.targetId })
@@ -145,6 +145,39 @@ export class FoodPreferencesService {
         ),
       );
     return new Set(rows.map((row) => row.targetId));
+  }
+
+  private async familyIdsForFoodItems(
+    ids: string[],
+  ): Promise<Map<string, string | null>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.db
+      .select({
+        id: schema.foodCalories.id,
+        familyId: schema.foodCalories.familyId,
+      })
+      .from(schema.foodCalories)
+      .where(inArray(schema.foodCalories.id, ids));
+    return new Map(rows.map((row) => [row.id, row.familyId]));
+  }
+
+  // A favorite on a Food Item with no Family can never reach generation
+  // (ADR-020), so the UI marks it rather than pretending it counts.
+  private computeAffectsGeneration(
+    type: FoodPreferenceType,
+    targetId: string,
+    familyIdByFoodItemId: Map<string, string | null>,
+  ): boolean {
+    return type !== 'favorite' || familyIdByFoodItemId.get(targetId) != null;
+  }
+
+  private async affectsGenerationOf(
+    type: FoodPreferenceType,
+    targetId: string,
+  ): Promise<boolean> {
+    if (type !== 'favorite') return true;
+    const familyIds = await this.familyIdsForFoodItems([targetId]);
+    return this.computeAffectsGeneration(type, targetId, familyIds);
   }
 
   async list(userId: string): Promise<FoodPreferenceResponse[]> {
@@ -170,10 +203,21 @@ export class FoodPreferencesService {
       );
     }
 
+    const favoriteFoodItemIds = rows
+      .filter((row) => row.type === 'favorite')
+      .map((row) => row.targetId);
+    const familyIdByFoodItemId =
+      await this.familyIdsForFoodItems(favoriteFoodItemIds);
+
     return rows.map((row) =>
       toFoodPreferenceResponse(
         row,
         namesByTargetType.get(row.targetType)?.get(row.targetId) ?? null,
+        this.computeAffectsGeneration(
+          row.type,
+          row.targetId,
+          familyIdByFoodItemId,
+        ),
       ),
     );
   }
@@ -246,7 +290,11 @@ export class FoodPreferencesService {
       })
       .returning();
 
-    return toFoodPreferenceResponse(inserted, targetName);
+    return toFoodPreferenceResponse(
+      inserted,
+      targetName,
+      await this.affectsGenerationOf(dto.type, dto.targetId),
+    );
   }
 
   async remove(userId: string, id: string): Promise<FoodPreferenceResponse> {
@@ -269,6 +317,10 @@ export class FoodPreferencesService {
         existing.targetId,
       ])
     ).get(existing.targetId);
-    return toFoodPreferenceResponse(existing, targetName ?? null);
+    return toFoodPreferenceResponse(
+      existing,
+      targetName ?? null,
+      await this.affectsGenerationOf(existing.type, existing.targetId),
+    );
   }
 }

@@ -421,6 +421,7 @@
     },
     "favoriteList": {
       "empty": "Aún no hay alimentos favoritos.",
+      "notGenerated": "Aún no se usa en los menús generados.",
       "remove": "Eliminar",
       "unknown": "Desconocido"
     },

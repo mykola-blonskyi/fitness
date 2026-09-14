@@ -81,6 +81,7 @@ describe('FavoriteFoodList', () => {
             targetType: 'food_item',
             targetId: '11111111-1111-4111-8111-111111111111',
             targetName: 'Chicken breast',
+            affectsGeneration: true,
           },
         ]}
       />,
@@ -88,5 +89,29 @@ describe('FavoriteFoodList', () => {
 
     expect(screen.getByText('Chicken breast')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
+    expect(
+      screen.queryByText('Not used in generated menus yet.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a note when the favorite has no Food Family and cannot affect generation', () => {
+    render(
+      <FavoriteFoodList
+        preferences={[
+          {
+            id: 'pref-2',
+            type: 'favorite',
+            targetType: 'food_item',
+            targetId: '33333333-3333-4333-8333-333333333333',
+            targetName: 'Branded protein bar',
+            affectsGeneration: false,
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByText('Not used in generated menus yet.'),
+    ).toBeInTheDocument();
   });
 });

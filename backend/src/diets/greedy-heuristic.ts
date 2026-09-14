@@ -82,11 +82,14 @@ export interface GreedyHeuristicInput {
   // 1-6, validated at the point mealCount is set; not re-validated here.
   mealCount: number;
   candidatesByRole: Map<string, FoodCandidate[]>;
+  // Optional so the existing specs need not thread it; generate() always
+  // supplies it.
+  favoriteFoodItemIds?: ReadonlySet<string>;
   // Injectable so tests can pick deterministically; defaults to random.
-  pickRandom?: <T>(items: T[]) => T;
+  pickRandom?: <T extends { id: string }>(items: T[]) => T;
 }
 
-function defaultPick<T>(items: T[]): T {
+function defaultPick<T extends { id: string }>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
@@ -327,7 +330,7 @@ function shrinkToCalorieCeiling(items: WorkingItem[], ceiling: number): void {
 function pickFreeItems(
   position: number,
   candidatesByRole: Map<string, FoodCandidate[]>,
-  pick: <T>(items: T[]) => T,
+  pick: <T extends { id: string }>(items: T[]) => T,
   picked: DayPicks,
 ): WorkingItem[] {
   const free = MEAL_ROLE_CHAINS[VEGETABLE_CHAIN_INDEX].flatMap((role) =>
@@ -369,7 +372,7 @@ function pickFreeItems(
 function buildMeal(
   target: MealTarget,
   candidatesByRole: Map<string, FoodCandidate[]>,
-  pick: <T>(items: T[]) => T,
+  pick: <T extends { id: string }>(items: T[]) => T,
   picked: DayPicks,
   hasFreeItems: boolean,
 ): WorkingItem[] {
@@ -415,7 +418,12 @@ function buildMeal(
 }
 
 export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
-  const pick = input.pickRandom ?? defaultPick;
+  const rawPick = input.pickRandom ?? defaultPick;
+  const favoriteFoodItemIds = input.favoriteFoodItemIds ?? new Set<string>();
+  const pick = <T extends { id: string }>(items: T[]): T => {
+    const favorites = items.filter((item) => favoriteFoodItemIds.has(item.id));
+    return rawPick(favorites.length > 0 ? favorites : items);
+  };
 
   const picked: DayPicks = {
     foodItemIds: new Set(),
