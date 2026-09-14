@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ListFoodItemsDto } from '../food-items/dto/list-food-items.dto';
 import type { FoodItemPage } from '../food-items/food-items.service';
 import { CurrentUser } from '../identity/current-user.decorator';
@@ -41,8 +50,8 @@ export class DietsController {
   @Post(':dietId/items/:itemId/swap')
   async swapItem(
     @CurrentUser() identity: Identity,
-    @Param('dietId') dietId: string,
-    @Param('itemId') itemId: string,
+    @Param('dietId', ParseUUIDPipe) dietId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
     @Body() dto: SwapDietItemDto,
   ): Promise<DietResponse> {
     return this.dietsService.swapItem(
@@ -56,7 +65,7 @@ export class DietsController {
   @Put(':dietId/meals/reorder')
   async reorderMeals(
     @CurrentUser() identity: Identity,
-    @Param('dietId') dietId: string,
+    @Param('dietId', ParseUUIDPipe) dietId: string,
     @Body() dto: ReorderDietMealsDto,
   ): Promise<DietResponse> {
     return this.dietsService.reorderMeals(identity.userId, dietId, dto);

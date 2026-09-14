@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -165,7 +165,8 @@ export class TrainingProgramsService {
 
   // orderIndex is server-assigned (never client-supplied) as max(existing)
   // + 1, not existing.length, so a slot freed by a prior removeExercise()
-  // can't collide with one still in use.
+  // can't collide with one still in use - computed as a subquery inside the
+  // insert so the read and the write are one round trip, not two racing ones.
   async addExercise(
     userId: string,
     programId: string,
@@ -182,21 +183,12 @@ export class TrainingProgramsService {
 
     const targets = resolveProgramExerciseTargets(exercise.category, dto);
 
-    const existing = await this.db
-      .select({ orderIndex: schema.programExercises.orderIndex })
-      .from(schema.programExercises)
-      .where(eq(schema.programExercises.trainingProgramId, programId));
-    const nextOrderIndex =
-      existing.length === 0
-        ? 0
-        : Math.max(...existing.map((row) => row.orderIndex)) + 1;
-
     const [inserted] = await this.db
       .insert(schema.programExercises)
       .values({
         trainingProgramId: programId,
         exerciseId: dto.exerciseId,
-        orderIndex: nextOrderIndex,
+        orderIndex: sql<number>`(SELECT COALESCE(MAX(${schema.programExercises.orderIndex}), -1) + 1 FROM ${schema.programExercises} WHERE ${schema.programExercises.trainingProgramId} = ${programId})`,
         targetSets: targets.targetSets,
         targetReps: targets.targetReps,
         targetDurationSeconds: targets.targetDurationSeconds,

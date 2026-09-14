@@ -9,6 +9,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import { isUniqueViolation } from '../shared/db-errors';
 import { resolveUserLocale } from '../shared/locale';
 import type { CreateFoodPreferenceDto } from './dto/create-food-preference.dto';
 import {
@@ -280,15 +281,23 @@ export class FoodPreferencesService {
       throw new ConflictException('This preference already exists');
     }
 
-    const [inserted] = await this.db
-      .insert(schema.foodPreferences)
-      .values({
-        userId,
-        type: dto.type,
-        targetType: dto.targetType,
-        targetId: dto.targetId,
-      })
-      .returning();
+    let inserted: typeof schema.foodPreferences.$inferSelect;
+    try {
+      [inserted] = await this.db
+        .insert(schema.foodPreferences)
+        .values({
+          userId,
+          type: dto.type,
+          targetType: dto.targetType,
+          targetId: dto.targetId,
+        })
+        .returning();
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new ConflictException('This preference already exists');
+      }
+      throw err;
+    }
 
     return toFoodPreferenceResponse(
       inserted,

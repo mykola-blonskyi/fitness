@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -164,7 +164,9 @@ export class WorkoutLogsService {
   }
 
   // setNumber is server-assigned per (workoutLogId, exerciseId) as
-  // max(existing) + 1, same convention as programExercises' orderIndex.
+  // max(existing) + 1, same convention as programExercises' orderIndex -
+  // computed as a subquery inside the insert so the read and the write are
+  // one round trip, not two racing ones.
   async logSet(
     userId: string,
     workoutLogId: string,
@@ -181,26 +183,12 @@ export class WorkoutLogsService {
 
     const values = resolveWorkoutSetValues(exercise.category, dto);
 
-    const existing = await this.db
-      .select({ setNumber: schema.workoutSets.setNumber })
-      .from(schema.workoutSets)
-      .where(
-        and(
-          eq(schema.workoutSets.workoutLogId, workoutLogId),
-          eq(schema.workoutSets.exerciseId, dto.exerciseId),
-        ),
-      );
-    const nextSetNumber =
-      existing.length === 0
-        ? 1
-        : Math.max(...existing.map((row) => row.setNumber)) + 1;
-
     const [inserted] = await this.db
       .insert(schema.workoutSets)
       .values({
         workoutLogId,
         exerciseId: dto.exerciseId,
-        setNumber: nextSetNumber,
+        setNumber: sql<number>`(SELECT COALESCE(MAX(${schema.workoutSets.setNumber}), 0) + 1 FROM ${schema.workoutSets} WHERE ${schema.workoutSets.workoutLogId} = ${workoutLogId} AND ${schema.workoutSets.exerciseId} = ${dto.exerciseId})`,
         weight: values.weight == null ? null : values.weight.toString(),
         weightUnit: values.weightUnit,
         reps: values.reps,
