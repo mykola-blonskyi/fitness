@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { requireEnv } from '@libs/require-env';
 import { NAV_GROUPS } from '@shared/ui/shell/navigation';
 import { NavLink } from '@shared/ui/shell/NavLink';
+
+const HUB_URL = requireEnv('HUB_URL');
 
 // Desktop navigation: full rail from lg, icon-only rail from md, hidden
 // below md where MobileTabs takes over.
@@ -51,7 +54,7 @@ export function Rail({
       })}
 
       <a
-        href={`${process.env.HUB_URL}/${locale}`}
+        href={`${HUB_URL}/${locale}`}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-auto hidden items-center justify-between rounded-ctl border border-line bg-surface px-2.5 py-2 text-xs text-muted transition-colors hover:text-ink lg:flex"

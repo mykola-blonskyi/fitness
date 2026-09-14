@@ -1,12 +1,15 @@
 'use client';
 
+import { isSessionExpiredError } from '@libs/session-expired';
 import { registerSyncHandler } from './sync-registry';
 import { useOfflineQueueStore } from './offline-queue-store';
 import { PermanentWriteError } from './types';
 import type { SyncHandler } from './types';
 
 export type SyncedWriteOutcome<TResult> =
-  { queued: true } | { queued: false; result: TResult };
+  | { status: 'saved'; result: TResult }
+  | { status: 'queued' }
+  | { status: 'sessionExpired' };
 
 export interface CreateSyncedWriteOptions<TResult> {
   // Server Actions resolve with `{ error }` on a refusal (form-action.ts)
@@ -42,17 +45,20 @@ export function createSyncedWrite<TPayload, TResult>(
     // Known offline - skip the round-trip; it can only time out.
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       enqueue(type, payload);
-      return { queued: true };
+      return { status: 'queued' };
     }
 
     try {
       const result = await action(payload);
-      return { queued: false, result };
-    } catch {
+      return { status: 'saved', result };
+    } catch (err) {
+      // Queueing an expired session would promise a flush that can never
+      // happen; only the user re-authenticating clears it.
+      if (isSessionExpiredError(err)) return { status: 'sessionExpired' };
       // A rejection means a retry can still clear it (offline, a backend
       // that is down or redeploying); a refusal resolves with `{ error }`.
       enqueue(type, payload);
-      return { queued: true };
+      return { status: 'queued' };
     }
   };
 }

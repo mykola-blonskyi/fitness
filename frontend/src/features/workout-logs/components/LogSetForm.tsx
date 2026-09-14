@@ -29,6 +29,7 @@ export function LogSetForm({
   const [queued, setQueued] = useState(false);
   const [rememberedUnit, rememberUnit] = useLastWeightUnit(defaultWeightUnit);
   const t = useTranslations('Workouts.logSetForm');
+  const tSignIn = useTranslations('SignIn');
   const tv = useTranslations('Validation');
   const schema = useMemo(() => logWorkoutSetSchema(tv), [tv]);
 
@@ -67,10 +68,14 @@ export function LogSetForm({
     });
     // Unlike WeightForm (one value per day), sets are logged back-to-back -
     // clear the form but keep the unit selection for the next set.
-    if (outcome.queued) {
+    if (outcome.status === 'queued') {
       setQueued(true);
       reset({ unit: rememberedUnit });
       setSelectedExercise(null);
+      return;
+    }
+    if (outcome.status === 'sessionExpired') {
+      setError('root', { message: tSignIn('expired') });
       return;
     }
     if (!applyFormActionError(setError, outcome.result)) {

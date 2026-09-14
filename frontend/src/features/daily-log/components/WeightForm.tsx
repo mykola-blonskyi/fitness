@@ -24,6 +24,7 @@ export function WeightForm({
   // immediately (FITNESS-13) - cleared on the next submit attempt so it
   // never lingers past a subsequent successful/errored save.
   const t = useTranslations('Diary.weightForm');
+  const tSignIn = useTranslations('SignIn');
   const tv = useTranslations('Validation');
   const schema = useMemo(() => weightSchema(tv), [tv]);
   const [queued, setQueued] = useState(false);
@@ -48,12 +49,16 @@ export function WeightForm({
   async function onSubmit(input: WeightInput) {
     setQueued(false);
     const outcome = await syncedSetWeight({ date, input });
-    if (outcome.queued) {
+    if (outcome.status === 'queued') {
       // Offline (or the request just failed on the network) - the
       // write is safely in IndexedDB and will flush automatically once
       // connectivity returns (see OfflineIndicator in the header for
       // sync status), not lost.
       setQueued(true);
+      return;
+    }
+    if (outcome.status === 'sessionExpired') {
+      setError('root', { message: tSignIn('expired') });
       return;
     }
     applyFormActionError(setError, outcome.result);
