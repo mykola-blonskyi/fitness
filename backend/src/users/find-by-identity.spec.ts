@@ -1,3 +1,5 @@
+import { PgDialect } from 'drizzle-orm/pg-core';
+import type { SQL } from 'drizzle-orm';
 import { UsersService } from './users.service';
 import type { UserRow } from './user.mapper';
 
@@ -71,6 +73,26 @@ describe('UsersService.findByIdentity', () => {
       expect.objectContaining({ identitySub: 'sub-new' }),
     );
     expect(user?.id).toBe('local-1');
+  });
+
+  // The db mock returns its canned row whatever the predicate, so asserting
+  // on the returned user would pass with no restriction at all.
+  it('restricts the email fallback to rows still holding their backfilled sub', async () => {
+    const findFirst = jest
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+    const { db } = buildDb(findFirst);
+
+    await new UsersService(db as never).findByIdentity(
+      'sub-new',
+      'user@example.com',
+    );
+
+    const [{ where }] = findFirst.mock.calls[1] as [{ where: SQL }];
+    const { sql } = new PgDialect().sqlToQuery(where);
+    expect(sql).toContain('lower(');
+    expect(sql).toContain('::text');
   });
 
   it('returns null when neither the sub nor the email matches', async () => {

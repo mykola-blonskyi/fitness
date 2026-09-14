@@ -41,11 +41,24 @@ async function hasCompletedProfile(identity: Identity): Promise<boolean> {
   }
 }
 
+// api-client.ts reads x-user-id/x-user-email back off the request and
+// cannot tell a value this proxy set from one the client sent, so they are
+// dropped on every path before anything is forwarded upstream.
+function forward(req: NextRequest, extra?: Record<string, string>) {
+  const headers = new Headers(req.headers);
+  headers.delete('x-user-id');
+  headers.delete('x-user-email');
+  for (const [key, value] of Object.entries(extra ?? {})) {
+    headers.set(key, value);
+  }
+  return NextResponse.next({ request: { headers } });
+}
+
 export async function proxy(req: NextRequest) {
   // Health checks stay public for infra monitoring (Coolify etc. have no
   // session cookie to present).
   if (HEALTH_PATH.test(req.nextUrl.pathname)) {
-    return NextResponse.next();
+    return forward(req);
   }
 
   // Runs first so locale detection/redirect/cookie-persistence happens
@@ -64,7 +77,11 @@ export async function proxy(req: NextRequest) {
   // The sign-in page itself must never be gated, or an unauthenticated
   // visit redirects to it forever.
   if (SIGN_IN_PATH.test(req.nextUrl.pathname)) {
-    return intlResponse;
+    const response = forward(req);
+    for (const cookie of intlResponse.cookies.getAll()) {
+      response.cookies.set(cookie);
+    }
+    return response;
   }
 
   const identity = await resolveIdentity(req);
@@ -93,12 +110,11 @@ export async function proxy(req: NextRequest) {
   // NextResponse.next({request}) call, so it's rebuilt here, replicating
   // next-intl's own X-NEXT-INTL-LOCALE header (its documented contract
   // for a composed proxy - getRequestConfig reads this server-side).
-  const headers = new Headers(req.headers);
-  headers.set('x-user-id', identity.sub);
-  headers.set('x-user-email', identity.email);
-  headers.set('X-NEXT-INTL-LOCALE', locale);
-
-  const response = NextResponse.next({ request: { headers } });
+  const response = forward(req, {
+    'x-user-id': identity.sub,
+    'x-user-email': identity.email,
+    'X-NEXT-INTL-LOCALE': locale,
+  });
   for (const cookie of intlResponse.cookies.getAll()) {
     response.cookies.set(cookie);
   }
@@ -106,8 +122,13 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Excludes API routes (Auth.js's own /api/auth/* included), Next.js
-  // internals, and static files — routes outside this matcher must call
-  // resolveIdentity() themselves rather than relying on this proxy.
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  // Every exclusion is anchored to the first path segment. A bare `.*\..*`
+  // also excludes app routes whose dynamic segment holds a dot
+  // (`/en/workouts/a.b`), and an unproxied route forwards the client's own
+  // x-user-id to NestJS, which trusts it unconditionally.
+  // Next requires these to be static string literals, so proxy-matcher.test.ts
+  // reads this file rather than importing the value.
+  matcher: [
+    '/((?!api/|_next/|_vercel/|favicon\\.ico$|sw\\.js$|manifest\\.webmanifest$|apple-touch-icon\\.png$|icons/|[^/]+\\.svg$).*)',
+  ],
 };

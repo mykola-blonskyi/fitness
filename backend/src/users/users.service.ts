@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -36,10 +36,15 @@ export class UsersService {
       return toUserResponse(bySub);
     }
 
-    // Case-insensitive: login's email claim casing isn't guaranteed to match
-    // whatever case a pre-conversion row happened to be stored in.
+    // identity_sub = id restricts this to rows migration 0024 backfilled and
+    // no login has reconciled. On email alone, any `sub` claiming a known
+    // address takes over that account. db:check:identity-migration reports
+    // when the last row clears and this branch can go.
     const byEmail = await this.db.query.users.findFirst({
-      where: eq(sql`lower(${schema.users.email})`, email.toLowerCase()),
+      where: and(
+        eq(sql`lower(${schema.users.email})`, email.toLowerCase()),
+        eq(schema.users.identitySub, sql`${schema.users.id}::text`),
+      ),
     });
     if (!byEmail) {
       return null;
