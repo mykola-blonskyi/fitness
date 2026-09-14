@@ -25,6 +25,7 @@ const item: AdminFoodItem = {
   proteinPer100g: 12.4,
   carbsPer100g: 3.1,
   fatPer100g: 2,
+  createdAt: '2026-01-01T00:00:00.000Z',
 };
 
 describe('AdminFoodItemQueue nutrition summary', () => {
