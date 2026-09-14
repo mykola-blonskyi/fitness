@@ -124,7 +124,9 @@ class _FakeRedis:
 def _run_loop(monkeypatch, outcomes):
     client = _FakeRedis([*outcomes, KeyboardInterrupt()])
     monkeypatch.setattr(
-        queue_consumer.redis.Redis, "from_url", staticmethod(lambda url: client)
+        queue_consumer.redis.Redis,
+        "from_url",
+        staticmethod(lambda url, **kwargs: client),
     )
     slept = []
     monkeypatch.setattr(
@@ -133,6 +135,27 @@ def _run_loop(monkeypatch, outcomes):
     with pytest.raises(KeyboardInterrupt):
         queue_consumer.consume_forever()
     return client, slept
+
+
+def test_the_client_gets_a_connect_timeout_but_no_command_timeout(monkeypatch):
+    calls = []
+
+    def from_url(url, **kwargs):
+        calls.append((url, kwargs))
+        return _FakeRedis([KeyboardInterrupt()])
+
+    monkeypatch.setattr(
+        queue_consumer.redis.Redis, "from_url", staticmethod(from_url)
+    )
+
+    with pytest.raises(KeyboardInterrupt):
+        queue_consumer.consume_forever()
+
+    [(url, kwargs)] = calls
+    assert url == queue_consumer.config.REDIS_URL
+    assert kwargs == {
+        "socket_connect_timeout": queue_consumer.config.REDIS_CONNECT_TIMEOUT_SECONDS
+    }
 
 
 def test_loop_survives_a_redis_error_and_keeps_consuming(monkeypatch):

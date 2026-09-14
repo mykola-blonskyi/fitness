@@ -1,6 +1,6 @@
 import pytest
 
-from app import db
+from app import config, db
 
 
 class FakeCursor:
@@ -44,10 +44,28 @@ class FakeConnection:
 def connect(monkeypatch):
     def factory(rowcount):
         conn = FakeConnection(rowcount)
-        monkeypatch.setattr(db.psycopg, "connect", lambda url: conn)
+        monkeypatch.setattr(db.psycopg, "connect", lambda url, **kwargs: conn)
         return conn
 
     return factory
+
+
+def test_connect_sets_a_connection_and_statement_timeout(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        db.psycopg,
+        "connect",
+        lambda url, **kwargs: calls.append((url, kwargs)),
+    )
+
+    db._connect()
+
+    [(url, kwargs)] = calls
+    assert url == config.DATABASE_URL
+    assert kwargs == {
+        "connect_timeout": config.DB_CONNECT_TIMEOUT_SECONDS,
+        "options": f"-c statement_timeout={config.DB_STATEMENT_TIMEOUT_MS}",
+    }
 
 
 RESULTS = [
