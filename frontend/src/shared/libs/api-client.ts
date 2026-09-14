@@ -6,8 +6,9 @@ export class ApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    options?: ErrorOptions,
   ) {
-    super(message);
+    super(message, options);
   }
 }
 
@@ -35,16 +36,26 @@ export async function apiFetch<T>(
   // data and Sentry is a third-party service.
   if (sub) Sentry.setUser({ id: sub });
 
-  const res = await fetch(`${process.env.BACKEND_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(sub ? { 'x-user-id': sub } : {}),
-      ...(email ? { 'x-user-email': email } : {}),
-      ...init?.headers,
-    },
-    cache: 'no-store',
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.BACKEND_URL}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(sub ? { 'x-user-id': sub } : {}),
+        ...(email ? { 'x-user-email': email } : {}),
+        ...init?.headers,
+      },
+      cache: 'no-store',
+    });
+  } catch (err) {
+    // A refused connection throws a bare TypeError with no status, which
+    // form-action.ts would swallow and the offline queue would read as a
+    // refusal on the merits.
+    throw new ApiError(503, `API request to ${path} could not be sent`, {
+      cause: err,
+    });
+  }
 
   if (!res.ok) {
     // NestJS's HttpException body carries a `message` (string or, for

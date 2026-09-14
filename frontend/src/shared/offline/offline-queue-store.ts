@@ -23,6 +23,9 @@ const idbStorage: StateStorage = {
 
 interface OfflineQueueState {
   queue: QueuedWrite[];
+  // Refused writes, kept so useSyncStatus.ts can surface them. Not
+  // persisted: with no dismiss affordance, a reload is how the notice clears.
+  dropped: QueuedWrite[];
   isSyncing: boolean;
   // Persist's IndexedDB read is async; draining before it resolves could
   // stomp on writes queued in a previous session. useOfflineSync.ts
@@ -43,6 +46,7 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
   persist(
     (set, get) => ({
       queue: [],
+      dropped: [],
       isSyncing: false,
       hasHydrated: false,
       setHasHydrated: (hydrated) => set({ hasHydrated: hydrated }),
@@ -51,7 +55,7 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
       setOwnerUserId: (userId) => {
         const current = get().ownerUserId;
         if (current !== null && current !== userId) {
-          set({ queue: [], ownerUserId: userId });
+          set({ queue: [], dropped: [], ownerUserId: userId });
         } else {
           set({ ownerUserId: userId });
         }
@@ -74,8 +78,9 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
 
         set({ isSyncing: true });
         try {
-          const { remaining } = await drainQueue(
-            get().queue,
+          const queued = get().queue;
+          const { remaining, dropped } = await drainQueue(
+            queued,
             getSyncHandler,
             (item, err) => {
               // Dropped items are unexpected failures, not routine
@@ -85,7 +90,18 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
               });
             },
           );
-          set({ queue: remaining });
+          const retained = new Set(remaining.map((item) => item.id));
+          const settled = new Set(
+            queued
+              .filter((item) => !retained.has(item.id))
+              .map((item) => item.id),
+          );
+          // Recompute against the live queue, not the snapshot: a write
+          // enqueued while the drain was in flight has to survive it.
+          set((state) => ({
+            queue: state.queue.filter((item) => !settled.has(item.id)),
+            dropped: [...state.dropped, ...dropped],
+          }));
         } finally {
           set({ isSyncing: false });
         }

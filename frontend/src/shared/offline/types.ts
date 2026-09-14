@@ -8,11 +8,13 @@ export interface QueuedWrite<TPayload = unknown> {
   createdAt: number;
 }
 
-// Replays a write via the same Server Action used online; resolves on
-// success, throws on failure (network vs. app error is distinguished by
-// network-error.ts's isNetworkError).
+// Replays a write through the same Server Action the online path uses.
 export type SyncHandler<TPayload = unknown, TResult = unknown> = (
   payload: TPayload,
 ) => Promise<TResult>;
 
-export type SyncStatus = 'offline' | 'syncing' | 'synced';
+// A refusal on the merits (validation, 4xx): a replay fails the same way,
+// so drain-queue.ts drops it. No status survives the Server Action boundary.
+export class PermanentWriteError extends Error {}
+
+export type SyncStatus = 'offline' | 'syncing' | 'synced' | 'failed';

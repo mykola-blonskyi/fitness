@@ -2,19 +2,16 @@
 
 import { registerSyncHandler } from './sync-registry';
 import { useOfflineQueueStore } from './offline-queue-store';
-import { isNetworkError } from './network-error';
+import { PermanentWriteError } from './types';
 import type { SyncHandler } from './types';
 
 export type SyncedWriteOutcome<TResult> =
   { queued: true } | { queued: false; result: TResult };
 
 export interface CreateSyncedWriteOptions<TResult> {
-  // Many Server Actions resolve with `{ error }` on failure instead of
-  // throwing (shared/libs/form-action.ts), but drain-queue.ts detects
-  // failure by a thrown error. Supply this to convert a resolved-but-
-  // failed result into a throw for replay only; the immediate path below
-  // still returns the raw result, so existing per-field error handling
-  // keeps working.
+  // Server Actions resolve with `{ error }` on a refusal (form-action.ts)
+  // but drain-queue.ts detects failure by a throw. Converts one to the
+  // other for replay only; the immediate path still returns the raw result.
   getResultError?: (result: TResult) => string | undefined;
 }
 
@@ -33,7 +30,7 @@ export function createSyncedWrite<TPayload, TResult>(
     ? async (payload) => {
         const result = await action(payload);
         const error = getResultError(result);
-        if (error) throw new Error(error);
+        if (error) throw new PermanentWriteError(error);
         return result;
       }
     : action;
@@ -51,14 +48,11 @@ export function createSyncedWrite<TPayload, TResult>(
     try {
       const result = await action(payload);
       return { queued: false, result };
-    } catch (err) {
-      // Fallback for when navigator.onLine lags reality (a connection
-      // that just dropped, or a flaky network the browser hasn't noticed).
-      if (isNetworkError(err)) {
-        enqueue(type, payload);
-        return { queued: true };
-      }
-      throw err;
+    } catch {
+      // A rejection means a retry can still clear it (offline, a backend
+      // that is down or redeploying); a refusal resolves with `{ error }`.
+      enqueue(type, payload);
+      return { queued: true };
     }
   };
 }
