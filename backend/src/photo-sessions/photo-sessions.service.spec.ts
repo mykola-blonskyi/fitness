@@ -1,5 +1,13 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { DatabaseError } from 'pg';
 import { PhotoSessionsService } from './photo-sessions.service';
+import type { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
+
+function uniqueViolation(): DatabaseError {
+  const err = new DatabaseError('duplicate key', 0, 'error');
+  err.code = '23505';
+  return err;
+}
 
 function buildDb(overrides: { findFirst: jest.Mock; photos: unknown[] }) {
   const txDelete = jest
@@ -112,5 +120,36 @@ describe('PhotoSessionsService.remove', () => {
     );
     expect(removeObject).not.toHaveBeenCalled();
     expect(db.transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('PhotoSessionsService.confirm', () => {
+  const dto: ConfirmPhotoSessionDto = {
+    photos: [{ objectKey: 'progress-photos/user-1/photo-1' }],
+  };
+  const storageService = {
+    ownsObjectKey: jest.fn().mockReturnValue(true),
+    objectExists: jest.fn().mockResolvedValue(true),
+  };
+  const dailyLogsService = {
+    findOrCreate: jest.fn().mockResolvedValue({ id: 'daily-1' }),
+  };
+  const photoAnalysisQueueService = {
+    pushDetectJob: jest.fn().mockResolvedValue(undefined),
+  };
+
+  it('turns a replayed confirm into a 409 instead of an unhandled unique violation', async () => {
+    const db = { transaction: jest.fn().mockRejectedValue(uniqueViolation()) };
+    const service = new PhotoSessionsService(
+      db as never,
+      dailyLogsService as never,
+      storageService as never,
+      photoAnalysisQueueService as never,
+    );
+
+    await expect(service.confirm('user-1', '2026-09-14', dto)).rejects.toThrow(
+      ConflictException,
+    );
+    expect(photoAnalysisQueueService.pushDetectJob).not.toHaveBeenCalled();
   });
 });

@@ -8,6 +8,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import { isUniqueViolation } from '../shared/db-errors';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { toUserResponse, UserResponse } from './user.mapper';
@@ -71,23 +72,31 @@ export class UsersService {
       throw new ConflictException('Profile already exists');
     }
 
-    const [created] = await this.db
-      .insert(schema.users)
-      .values({
-        identitySub: sub,
-        email,
-        name: dto.name,
-        gender: dto.gender,
-        dateOfBirth: dto.dateOfBirth,
-        height: dto.height.toString(),
-        goal: dto.goal,
-        activityLevel: dto.activityLevel,
-        avatarUrl: dto.avatarUrl,
-        ...(dto.mealCount !== undefined ? { mealCount: dto.mealCount } : {}),
-        locale: dto.locale,
-        defaultWeightUnit: dto.defaultWeightUnit,
-      })
-      .returning();
+    let created: typeof schema.users.$inferSelect;
+    try {
+      [created] = await this.db
+        .insert(schema.users)
+        .values({
+          identitySub: sub,
+          email,
+          name: dto.name,
+          gender: dto.gender,
+          dateOfBirth: dto.dateOfBirth,
+          height: dto.height.toString(),
+          goal: dto.goal,
+          activityLevel: dto.activityLevel,
+          avatarUrl: dto.avatarUrl,
+          ...(dto.mealCount !== undefined ? { mealCount: dto.mealCount } : {}),
+          locale: dto.locale,
+          defaultWeightUnit: dto.defaultWeightUnit,
+        })
+        .returning();
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new ConflictException('Profile already exists');
+      }
+      throw err;
+    }
 
     return toUserResponse(created);
   }

@@ -4,7 +4,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import {
-  assertRealisticWeight,
+  assertRealisticBodyWeight,
   convertWeight,
   type WeightUnit,
 } from '../shared/weight-unit';
@@ -79,7 +79,7 @@ export class DailyLogsService {
     weight: number,
     unit: WeightUnit,
   ): Promise<DailyLogResponse> {
-    assertRealisticWeight(weight, unit);
+    assertRealisticBodyWeight(weight, unit);
 
     const [row] = await this.db
       .insert(schema.dailyLogs)

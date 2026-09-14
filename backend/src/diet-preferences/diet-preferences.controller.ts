@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import { CreateDietPreferenceDto } from './dto/create-diet-preference.dto';
@@ -34,7 +42,7 @@ export class DietPreferencesController {
   @Delete(':id')
   async remove(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<DietPreferenceResponse> {
     return this.dietPreferencesService.remove(identity.userId, id);
   }

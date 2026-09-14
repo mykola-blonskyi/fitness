@@ -110,12 +110,23 @@ export class AdminExercisesService {
       throw new NotFoundException('Exercise not found');
     }
 
-    const [{ value: usageCount }] = await this.db
-      .select({ value: count() })
-      .from(schema.programExercises)
-      .where(eq(schema.programExercises.exerciseId, id));
+    const [[{ value: programExerciseCount }], [{ value: workoutSetCount }]] =
+      await Promise.all([
+        this.db
+          .select({ value: count() })
+          .from(schema.programExercises)
+          .where(eq(schema.programExercises.exerciseId, id)),
+        this.db
+          .select({ value: count() })
+          .from(schema.workoutSets)
+          .where(eq(schema.workoutSets.exerciseId, id)),
+      ]);
 
-    const guard = checkDeleteGuard('exercise', 'program exercise', usageCount);
+    const guard = checkDeleteGuard(
+      'exercise',
+      'reference',
+      programExerciseCount + workoutSetCount,
+    );
     if (!guard.allowed) {
       throw new ConflictException(guard.reason);
     }

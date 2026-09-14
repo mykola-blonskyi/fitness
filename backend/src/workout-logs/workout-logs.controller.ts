@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
@@ -25,7 +32,7 @@ export class WorkoutLogsController {
   @Get(':id')
   async findOne(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<WorkoutLogResponse> {
     return this.workoutLogsService.findOne(identity.userId, id);
   }
@@ -43,7 +50,7 @@ export class WorkoutLogsController {
   @Post(':id/sets')
   async logSet(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: LogWorkoutSetDto,
   ): Promise<WorkoutSetResponse> {
     return this.workoutLogsService.logSet(identity.userId, id, dto);

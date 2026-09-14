@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Put,
@@ -39,7 +40,7 @@ export class TrainingProgramsController {
   @Get(':id')
   async findOne(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.findOne(identity.userId, id);
   }
@@ -55,7 +56,7 @@ export class TrainingProgramsController {
   @Post(':id/exercises')
   async addExercise(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AddProgramExerciseDto,
   ): Promise<ProgramExerciseResponse> {
     return this.trainingProgramsService.addExercise(identity.userId, id, dto);
@@ -64,7 +65,7 @@ export class TrainingProgramsController {
   @Put(':id/exercises/reorder')
   async reorderExercises(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReorderProgramExercisesDto,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.reorderExercises(
@@ -77,8 +78,8 @@ export class TrainingProgramsController {
   @Delete(':id/exercises/:programExerciseId')
   async removeExercise(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
-    @Param('programExerciseId') programExerciseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('programExerciseId', ParseUUIDPipe) programExerciseId: string,
   ): Promise<ProgramExerciseResponse> {
     return this.trainingProgramsService.removeExercise(
       identity.userId,
@@ -90,7 +91,7 @@ export class TrainingProgramsController {
   @Patch(':id/archive')
   async archive(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.archive(identity.userId, id);
   }
@@ -98,7 +99,7 @@ export class TrainingProgramsController {
   @Patch(':id/reactivate')
   async reactivate(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.reactivate(identity.userId, id);
   }
@@ -107,7 +108,7 @@ export class TrainingProgramsController {
   @Patch(':id/activate')
   async activate(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.activate(identity.userId, id);
   }
@@ -115,7 +116,7 @@ export class TrainingProgramsController {
   @Patch(':id/deactivate')
   async deactivate(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<TrainingProgramResponse> {
     return this.trainingProgramsService.deactivate(identity.userId, id);
   }

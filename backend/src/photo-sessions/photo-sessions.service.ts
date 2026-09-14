@@ -115,8 +115,10 @@ export class PhotoSessionsService {
 
     // Photos are already verified present in storage by this point, so the
     // session skips straight past `uploading` - see ADR-013.
-    const { session, insertedPhotos } = await this.db.transaction(
-      async (tx) => {
+    let session: typeof schema.photoSessions.$inferSelect;
+    let insertedPhotos: (typeof schema.progressPhotos.$inferSelect)[];
+    try {
+      ({ session, insertedPhotos } = await this.db.transaction(async (tx) => {
         const [session] = await tx
           .insert(schema.photoSessions)
           .values({ userId, date, status: 'detecting' })
@@ -134,8 +136,15 @@ export class PhotoSessionsService {
           .returning();
 
         return { session, insertedPhotos };
-      },
-    );
+      }));
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new ConflictException(
+          'A photo in this request was already uploaded',
+        );
+      }
+      throw err;
+    }
 
     await this.photoAnalysisQueueService.pushDetectJob(
       session.id,

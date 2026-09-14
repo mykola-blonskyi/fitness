@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
   UseGuards,
@@ -30,18 +31,22 @@ export class AdminFoodItemsController {
   }
 
   @Post(':id/approve')
-  async approve(@Param('id') id: string): Promise<AdminFoodItemResponse> {
+  async approve(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<AdminFoodItemResponse> {
     return this.adminFoodItemsService.setVerified(id, true);
   }
 
   @Post(':id/unapprove')
-  async unapprove(@Param('id') id: string): Promise<AdminFoodItemResponse> {
+  async unapprove(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<AdminFoodItemResponse> {
     return this.adminFoodItemsService.setVerified(id, false);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.adminFoodItemsService.remove(id);
   }
 }

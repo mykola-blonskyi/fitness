@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -48,7 +49,7 @@ export class PhotoSessionsController {
   @Get('photos/:photoId/view')
   async getPhotoViewUrl(
     @CurrentUser() identity: Identity,
-    @Param('photoId') photoId: string,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
   ): Promise<PhotoViewUrlResponse> {
     return this.photoSessionsService.getPhotoViewUrl(identity.userId, photoId);
   }
@@ -56,7 +57,7 @@ export class PhotoSessionsController {
   @Post('photos/:photoId/retry-analysis')
   async retryAnalysis(
     @CurrentUser() identity: Identity,
-    @Param('photoId') photoId: string,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
   ): Promise<ProgressPhotoResponse> {
     return this.photoSessionsService.retryAnalysis(identity.userId, photoId);
   }
@@ -64,7 +65,7 @@ export class PhotoSessionsController {
   @Get(':id')
   async findOne(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<PhotoSessionResponse> {
     return this.photoSessionsService.findOne(identity.userId, id);
   }
@@ -72,7 +73,7 @@ export class PhotoSessionsController {
   @Patch(':id/review')
   async confirmReview(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ConfirmReviewDto,
   ): Promise<PhotoSessionResponse> {
     return this.photoSessionsService.confirmReview(identity.userId, id, dto);
@@ -81,7 +82,7 @@ export class PhotoSessionsController {
   @Patch(':id/baseline')
   async setBaseline(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<PhotoSessionResponse> {
     return this.photoSessionsService.setBaseline(identity.userId, id);
   }
@@ -89,7 +90,7 @@ export class PhotoSessionsController {
   @Delete(':id')
   async remove(
     @CurrentUser() identity: Identity,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<PhotoSessionResponse> {
     return this.photoSessionsService.remove(identity.userId, id);
   }
