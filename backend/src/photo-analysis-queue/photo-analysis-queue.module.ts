@@ -3,11 +3,20 @@ import Redis from 'ioredis';
 import { REDIS_CLIENT } from './photo-analysis-queue.constants';
 import { PhotoAnalysisQueueService } from './photo-analysis-queue.service';
 
+const REDIS_TIMEOUT_MS = 5_000;
+
 @Module({
   providers: [
     {
       provide: REDIS_CLIENT,
-      useFactory: () => new Redis(process.env.REDIS_URL!),
+      // ioredis buffers commands while disconnected by default, so a down
+      // Redis would hang the post-commit push instead of failing the request.
+      useFactory: () =>
+        new Redis(process.env.REDIS_URL!, {
+          enableOfflineQueue: false,
+          connectTimeout: REDIS_TIMEOUT_MS,
+          commandTimeout: REDIS_TIMEOUT_MS,
+        }),
     },
     PhotoAnalysisQueueService,
   ],

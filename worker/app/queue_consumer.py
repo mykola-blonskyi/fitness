@@ -9,7 +9,7 @@ from .analyze_alignment_job import (
     mark_analyze_alignment_failed,
     process_analyze_alignment_job,
 )
-from .detect_job import process_detect_job
+from .detect_job import mark_detect_failed, process_detect_job
 from .errors import PermanentJobError
 
 logger = logging.getLogger(__name__)
@@ -19,9 +19,22 @@ JOB_HANDLERS = {
     "analyze-alignment": process_analyze_alignment_job,
 }
 
-# Optional per-type hook run once a job has exhausted its retries, so the
-# permanent failure is recorded somewhere the user can see it.
-JOB_FAILURE_HANDLERS = {"analyze-alignment": mark_analyze_alignment_failed}
+# Run once a job has exhausted its retries, so the permanent failure is recorded
+# somewhere the user can see it.
+JOB_FAILURE_HANDLERS = {
+    "analyze-alignment": mark_analyze_alignment_failed,
+    "detect": mark_detect_failed,
+}
+
+_last_tick = time.monotonic()
+_job_in_flight = False
+
+
+def is_consuming() -> bool:
+    return (
+        _job_in_flight
+        or time.monotonic() - _last_tick < config.CONSUMER_STALE_AFTER_SECONDS
+    )
 
 
 def _process_with_retry(job: dict) -> None:
@@ -62,16 +75,28 @@ def _process_with_retry(job: dict) -> None:
 
 
 def consume_forever() -> None:
+    global _last_tick, _job_in_flight
     client = redis.Redis.from_url(config.REDIS_URL)
     logger.info("photo-analysis queue consumer started")
     while True:
-        item = client.brpop([config.QUEUE_KEY], timeout=config.BRPOP_TIMEOUT_SECONDS)
-        if item is None:
-            continue
-        _, payload = item
+        _last_tick = time.monotonic()
         try:
-            job = json.loads(payload)
-        except json.JSONDecodeError:
-            logger.exception("dropping malformed job payload: %r", payload)
-            continue
-        _process_with_retry(job)
+            item = client.brpop(
+                [config.QUEUE_KEY], timeout=config.BRPOP_TIMEOUT_SECONDS
+            )
+            if item is None:
+                continue
+            _, payload = item
+            try:
+                job = json.loads(payload)
+            except json.JSONDecodeError:
+                logger.exception("dropping malformed job payload: %r", payload)
+                continue
+            _job_in_flight = True
+            try:
+                _process_with_retry(job)
+            finally:
+                _job_in_flight = False
+        except Exception:
+            logger.exception("queue consumer loop failed, backing off")
+            time.sleep(config.CONSUMER_ERROR_BACKOFF_SECONDS)

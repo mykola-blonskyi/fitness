@@ -1,13 +1,37 @@
 import json
+import logging
 
 import psycopg
 
 from . import config
 
+logger = logging.getLogger(__name__)
+
+# Guarded on `detecting` so a redelivered job cannot pull a reviewed session back.
+_LEAVE_DETECTING_SQL = """
+    UPDATE photo_sessions
+    SET status = 'needs_review', updated_at = now()
+    WHERE id = %s AND status = 'detecting'
+"""
+
+_CLEAR_POSE_SQL = "UPDATE progress_photos SET pose = NULL WHERE id = %s"
+
 
 def write_detect_result(session_id: str, results: list[dict]) -> None:
     with psycopg.connect(config.DATABASE_URL) as conn:
         with conn.cursor() as cur:
+            cur.execute(_LEAVE_DETECTING_SQL, (session_id,))
+            if cur.rowcount == 0:
+                logger.info(
+                    "session %s is no longer detecting, dropping detect result",
+                    session_id,
+                )
+                conn.rollback()
+                return
+            # The (photo_session_id, pose) unique index is checked per statement,
+            # so a swapped pair has to pass through null.
+            for result in results:
+                cur.execute(_CLEAR_POSE_SQL, (result["photo_id"],))
             for result in results:
                 cur.execute(
                     """
@@ -21,14 +45,18 @@ def write_detect_result(session_id: str, results: list[dict]) -> None:
                         result["photo_id"],
                     ),
                 )
-            cur.execute(
-                """
-                UPDATE photo_sessions
-                SET status = 'needs_review', updated_at = now()
-                WHERE id = %s
-                """,
-                (session_id,),
-            )
+        conn.commit()
+
+
+def clear_detect_result(session_id: str, photo_ids: list[str]) -> None:
+    with psycopg.connect(config.DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(_LEAVE_DETECTING_SQL, (session_id,))
+            if cur.rowcount == 0:
+                conn.rollback()
+                return
+            for photo_id in photo_ids:
+                cur.execute(_CLEAR_POSE_SQL, (photo_id,))
         conn.commit()
 
 

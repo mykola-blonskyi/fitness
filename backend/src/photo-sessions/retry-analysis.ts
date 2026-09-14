@@ -7,15 +7,24 @@ import type {
 type AnalysisStatus = (typeof photoAnalysisStatusEnum.enumValues)[number];
 type PhotoSessionStatus = (typeof photoSessionStatusEnum.enumValues)[number];
 
-// A manual retry only makes sense once the alignment stage has actually
-// given up (`failed`) on a session whose poses are final (`confirmed`).
+// `pending` and `processing` are retryable because nothing moves them on their
+// own: a dead worker or a push that never reached Redis strands the photo there.
+const RETRYABLE_ANALYSIS_STATUSES: readonly AnalysisStatus[] = [
+  'pending',
+  'processing',
+  'failed',
+];
+
 export function assertRetryableAnalysis(
   analysisStatus: AnalysisStatus,
   sessionStatus: PhotoSessionStatus,
 ): void {
-  if (analysisStatus !== 'failed' || sessionStatus !== 'confirmed') {
+  if (
+    !RETRYABLE_ANALYSIS_STATUSES.includes(analysisStatus) ||
+    sessionStatus !== 'confirmed'
+  ) {
     throw new BadRequestException(
-      'Only a failed analysis on a confirmed session can be retried',
+      'Only an unfinished analysis on a confirmed session can be retried',
     );
   }
 }

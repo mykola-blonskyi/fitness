@@ -112,7 +112,7 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
                   >
                     {tAnalysis(photo.analysisStatus)}
                   </span>
-                  {photo.analysisStatus === 'failed' && (
+                  {photo.analysisStatus !== 'completed' && (
                     <RetryAnalysisButton photoId={photo.id} />
                   )}
                 </>

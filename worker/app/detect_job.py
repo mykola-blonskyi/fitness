@@ -41,3 +41,11 @@ def process_detect_job(job: dict) -> None:
         session_id,
         {a["photo_id"]: (a["pose"], round(a["confidence"], 2)) for a in assignment},
     )
+
+
+# needs_review, not a terminal failed state: the review step already resolves a
+# session with no pose suggestions by manual assignment (business-rules.md).
+def mark_detect_failed(job: dict) -> None:
+    db.clear_detect_result(
+        job["sessionId"], [photo["photoId"] for photo in job["photos"]]
+    )
