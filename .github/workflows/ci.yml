@@ -243,7 +243,10 @@ jobs:
         # dies after the image build leaves main drifting under a green tick.
         timeout-minutes: 26
         run: |
-          for _ in $(seq 1 75); do
+          # Deadline rather than an iteration count, so the loop always ends
+          # inside timeout-minutes and the error below is what CI reports.
+          deadline=$(( $(date +%s) + 1500 ))
+          while [ "$(date +%s)" -lt "$deadline" ]; do
             live=$(curl --silent --fail --max-time 15 https://fitness.blonskyi.dev/en/health \
               | tr '>' '\n' | grep 'name="release"' \
               | grep -oE '[0-9a-f]{40}|unknown' | head -1) || true
