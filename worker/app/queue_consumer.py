@@ -74,7 +74,12 @@ def _process_with_retry(job: dict) -> None:
 
 def consume_forever() -> None:
     global _last_tick, _job_in_flight
-    client = redis.Redis.from_url(config.REDIS_URL)
+    # No socket_timeout: redis-py applies it to BRPOP's own response wait,
+    # where it would race BRPOP_TIMEOUT_SECONDS and raise instead of returning.
+    client = redis.Redis.from_url(
+        config.REDIS_URL,
+        socket_connect_timeout=config.REDIS_CONNECT_TIMEOUT_SECONDS,
+    )
     logger.info("photo-analysis queue consumer started")
     while True:
         _last_tick = time.monotonic()

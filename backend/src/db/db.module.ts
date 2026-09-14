@@ -6,13 +6,20 @@ import * as schema from './schema';
 export const DB = 'DB';
 const PG_POOL = 'PG_POOL';
 
+const CONNECTION_TIMEOUT_MS = 10_000;
+const STATEMENT_TIMEOUT_MS = 30_000;
+
 @Global()
 @Module({
   providers: [
     {
       provide: PG_POOL,
       useFactory: () =>
-        new Pool({ connectionString: process.env.DATABASE_URL }),
+        new Pool({
+          connectionString: process.env.DATABASE_URL,
+          connectionTimeoutMillis: CONNECTION_TIMEOUT_MS,
+          statement_timeout: STATEMENT_TIMEOUT_MS,
+        }),
     },
     {
       provide: DB,

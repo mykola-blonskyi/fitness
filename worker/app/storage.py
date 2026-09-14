@@ -1,8 +1,16 @@
+import urllib3
 from minio import Minio
 from minio.error import S3Error
 
 from . import config
 from .errors import PermanentJobError
+
+_http_client = urllib3.PoolManager(
+    timeout=urllib3.Timeout(
+        connect=config.MINIO_CONNECT_TIMEOUT_SECONDS,
+        read=config.MINIO_REQUEST_TIMEOUT_SECONDS,
+    )
+)
 
 _client = Minio(
     f"{config.MINIO_ENDPOINT}:{config.MINIO_PORT}"
@@ -11,6 +19,7 @@ _client = Minio(
     access_key=config.MINIO_ACCESS_KEY,
     secret_key=config.MINIO_SECRET_KEY,
     secure=config.MINIO_USE_SSL,
+    http_client=_http_client,
 )
 
 

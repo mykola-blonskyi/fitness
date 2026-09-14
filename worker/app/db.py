@@ -17,8 +17,16 @@ _LEAVE_DETECTING_SQL = """
 _CLEAR_POSE_SQL = "UPDATE progress_photos SET pose = NULL WHERE id = %s"
 
 
+def _connect() -> psycopg.Connection:
+    return psycopg.connect(
+        config.DATABASE_URL,
+        connect_timeout=config.DB_CONNECT_TIMEOUT_SECONDS,
+        options=f"-c statement_timeout={config.DB_STATEMENT_TIMEOUT_MS}",
+    )
+
+
 def write_detect_result(session_id: str, results: list[dict]) -> None:
-    with psycopg.connect(config.DATABASE_URL) as conn:
+    with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(_LEAVE_DETECTING_SQL, (session_id,))
             if cur.rowcount == 0:
@@ -49,7 +57,7 @@ def write_detect_result(session_id: str, results: list[dict]) -> None:
 
 
 def clear_detect_result(session_id: str, photo_ids: list[str]) -> None:
-    with psycopg.connect(config.DATABASE_URL) as conn:
+    with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(_LEAVE_DETECTING_SQL, (session_id,))
             if cur.rowcount == 0:
@@ -61,7 +69,7 @@ def clear_detect_result(session_id: str, photo_ids: list[str]) -> None:
 
 
 def fetch_landmarks(photo_id: str) -> list | None:
-    with psycopg.connect(config.DATABASE_URL) as conn:
+    with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT pose_landmarks FROM progress_photos WHERE id = %s",
@@ -76,7 +84,7 @@ def fetch_landmarks(photo_id: str) -> list | None:
 
 
 def set_analysis_status(photo_id: str, status: str) -> None:
-    with psycopg.connect(config.DATABASE_URL) as conn:
+    with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 "UPDATE progress_photos SET analysis_status = %s WHERE id = %s",
@@ -86,7 +94,7 @@ def set_analysis_status(photo_id: str, status: str) -> None:
 
 
 def write_alignment_result(photo_id: str, alignment_data: dict) -> None:
-    with psycopg.connect(config.DATABASE_URL) as conn:
+    with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """

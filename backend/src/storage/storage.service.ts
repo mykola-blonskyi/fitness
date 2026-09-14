@@ -1,9 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { Agent as HttpAgent } from 'node:http';
+import { Agent as HttpsAgent } from 'node:https';
 import { Injectable } from '@nestjs/common';
 import { Client, S3Error } from 'minio';
 
 const UPLOAD_URL_EXPIRY_SECONDS = 15 * 60;
 const READ_URL_EXPIRY_SECONDS = 5 * 60;
+// minio-js exposes no connect/request timeout of its own, only a socket-level
+// idle timeout via a custom agent - so this one value bounds both phases.
+const REQUEST_TIMEOUT_MS = 30_000;
 
 // Presigned URLs only, per docs/decisions.md ADR-002 - the bucket itself
 // is private and provisioned out of band (same one-time-setup convention
@@ -15,12 +20,15 @@ export class StorageService {
 
   constructor() {
     this.bucket = process.env.MINIO_BUCKET ?? 'fitness-progress-photos';
+    const useSSL = process.env.MINIO_USE_SSL !== 'false';
+    const Agent = useSSL ? HttpsAgent : HttpAgent;
     this.client = new Client({
       endPoint: process.env.MINIO_ENDPOINT!,
       port: process.env.MINIO_PORT ? Number(process.env.MINIO_PORT) : undefined,
-      useSSL: process.env.MINIO_USE_SSL !== 'false',
+      useSSL,
       accessKey: process.env.MINIO_ACCESS_KEY!,
       secretKey: process.env.MINIO_SECRET_KEY!,
+      transportAgent: new Agent({ timeout: REQUEST_TIMEOUT_MS }),
     });
   }
 
