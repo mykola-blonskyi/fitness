@@ -18,19 +18,19 @@ export const NutritionsInfo = async ({
       <div className="flex flex-col">
         <span className="kicker">{t('protein')}</span>
         <span className="font-display text-[22px] font-extrabold tabular-nums tracking-tight">
-          {proteinG}g
+          {t('gramsValue', { value: proteinG })}
         </span>
       </div>
       <div className="flex flex-col">
         <span className="kicker">{t('carbs')}</span>
         <span className="font-display text-[22px] font-extrabold tabular-nums tracking-tight">
-          {carbsG}g
+          {t('gramsValue', { value: carbsG })}
         </span>
       </div>
       <div className="flex flex-col">
         <span className="kicker">{t('fat')}</span>
         <span className="font-display text-[22px] font-extrabold tabular-nums tracking-tight">
-          {fatG}g
+          {t('gramsValue', { value: fatG })}
         </span>
       </div>
     </div>

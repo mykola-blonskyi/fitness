@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getFormatter, getTranslations } from 'next-intl/server';
 import {
   DeleteSessionButton,
   SessionComparison,
@@ -15,6 +15,7 @@ export default async function PhotoGalleryDetailPage({
 }) {
   const { locale, id } = await params;
   const t = await getTranslations('PhotoSessions');
+  const format = await getFormatter();
   const sessions = await apiFetch<PhotoSession[]>('/photo-sessions');
 
   const session = sessions.find((candidate) => candidate.id === id);
@@ -36,7 +37,11 @@ export default async function PhotoGalleryDetailPage({
             &larr; {t('galleryHeading')}
           </Link>
           <h1 className="text-2xl font-extrabold md:text-[26px]">
-            {session.date}
+            {format.dateTime(new Date(session.date + 'T00:00:00Z'), {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'short',
+            })}
           </h1>
         </div>
         <DeleteSessionButton

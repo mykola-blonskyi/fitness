@@ -27,6 +27,8 @@
       "weighIn": "Weigh-in",
       "weighInHint": "Not logged yet — use the field above",
       "meal": "Meal {position}",
+      "calories": "{value} kcal",
+      "itemSummary": "{weight} g · {calories} kcal",
       "meals": "Meals",
       "edit": "Edit",
       "openDiet": "Open diet",
@@ -71,7 +73,8 @@
     "nutritionsInfo": {
       "protein": "Protein",
       "carbs": "Carbs",
-      "fat": "Fat"
+      "fat": "Fat",
+      "gramsValue": "{value}g"
     },
     "itemActions": {
       "rerolling": "Rerolling…",
@@ -366,7 +369,11 @@
       "empty": "No food items match this filter.",
       "unapprove": "Unapprove",
       "loadingMore": "Loading more…",
-      "loadError": "Couldn't load food items — try again."
+      "loadError": "Couldn't load food items — try again.",
+      "caloriesPer100g": "{value} kcal",
+      "proteinPer100g": "{value, number}g P",
+      "carbsPer100g": "{value, number}g C",
+      "fatPer100g": "{value, number}g F"
     },
     "searchForm": {
       "categoryLabel": "Category",
@@ -530,7 +537,8 @@
       "cancel": "Cancel",
       "loadingMore": "Loading more…",
       "loadError": "Couldn't load more — try again.",
-      "manualSource": "manual"
+      "manualSource": "manual",
+      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · F {fat, number}g"
     },
     "errors": {
       "approveExerciseFailed": "Couldn't approve this exercise — try again.",
@@ -600,12 +608,14 @@
       "protein": "Protein",
       "carbs": "Carbs",
       "fat": "Fat",
-      "basedOn": "{algorithm} · {weight} {unit} weigh-in"
+      "basedOn": "{algorithm} · {weight} {unit} weigh-in",
+      "value": "{planned} / {target} g"
     },
     "plan": {
       "label": "Today's plan · {kcal} kcal",
       "labelEmpty": "Today's plan",
       "meal": "Meal {position}",
+      "calories": "{value} kcal",
       "remaining": "{count, plural, one {# more meal} other {# more meals}}",
       "open": "Open diet"
     }

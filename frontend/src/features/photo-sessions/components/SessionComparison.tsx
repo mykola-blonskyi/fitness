@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getFormatter, getTranslations } from 'next-intl/server';
 import type {
   PhotoSession,
   ProgressPhoto,
@@ -27,6 +27,12 @@ export async function SessionComparison({
   baseline: PhotoSession | null;
 }) {
   const t = await getTranslations('PhotoSessions.comparison');
+  const format = await getFormatter();
+  const shortDate = (iso: string) =>
+    format.dateTime(new Date(iso + 'T00:00:00Z'), {
+      day: 'numeric',
+      month: 'short',
+    });
 
   if (!baseline) {
     return (
@@ -60,7 +66,7 @@ export async function SessionComparison({
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
       <div className="flex flex-col gap-4">
         <h2 className="text-sm font-medium text-muted">
-          {t('baselineHeading', { date: baseline.date })}
+          {t('baselineHeading', { date: shortDate(baseline.date) })}
         </h2>
         {pairsWithUrls.map((pair) => (
           <PhotoSlot
@@ -71,7 +77,9 @@ export async function SessionComparison({
         ))}
       </div>
       <div className="flex flex-col gap-4">
-        <h2 className="text-sm font-medium text-muted">{session.date}</h2>
+        <h2 className="text-sm font-medium text-muted">
+          {shortDate(session.date)}
+        </h2>
         {pairsWithUrls.map((pair) => (
           <PhotoSlot
             key={pair.pose}

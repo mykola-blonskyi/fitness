@@ -27,6 +27,8 @@
       "weighIn": "Зважування",
       "weighInHint": "Ще не записано — скористайтесь полем вище",
       "meal": "Прийом їжі {position}",
+      "calories": "{value} ккал",
+      "itemSummary": "{weight} г · {calories} ккал",
       "meals": "Прийоми їжі",
       "edit": "Змінити",
       "openDiet": "Відкрити дієту",
@@ -71,7 +73,8 @@
     "nutritionsInfo": {
       "protein": "Білки",
       "carbs": "Вуглеводи",
-      "fat": "Жири"
+      "fat": "Жири",
+      "gramsValue": "{value}г"
     },
     "itemActions": {
       "rerolling": "Підбираємо…",
@@ -366,7 +369,11 @@
       "empty": "За цим фільтром продуктів не знайдено.",
       "unapprove": "Скасувати затвердження",
       "loadingMore": "Завантажуємо ще…",
-      "loadError": "Не вдалося завантажити продукти — спробуйте ще раз."
+      "loadError": "Не вдалося завантажити продукти — спробуйте ще раз.",
+      "caloriesPer100g": "{value} ккал",
+      "proteinPer100g": "{value, number}г Б",
+      "carbsPer100g": "{value, number}г В",
+      "fatPer100g": "{value, number}г Ж"
     },
     "searchForm": {
       "categoryLabel": "Категорія",
@@ -530,7 +537,8 @@
       "cancel": "Скасувати",
       "loadingMore": "Завантажуємо ще…",
       "loadError": "Не вдалося завантажити ще — спробуйте ще раз.",
-      "manualSource": "вручну"
+      "manualSource": "вручну",
+      "nutritionSummary": "{calories} ккал · Б {protein, number}г · В {carbs, number}г · Ж {fat, number}г"
     },
     "errors": {
       "approveExerciseFailed": "Не вдалося затвердити цю вправу — спробуйте ще раз.",
@@ -600,12 +608,14 @@
       "protein": "Білки",
       "carbs": "Вуглеводи",
       "fat": "Жири",
-      "basedOn": "{algorithm} · зважування {weight} {unit}"
+      "basedOn": "{algorithm} · зважування {weight} {unit}",
+      "value": "{planned} / {target} г"
     },
     "plan": {
       "label": "План на сьогодні · {kcal} ккал",
       "labelEmpty": "План на сьогодні",
       "meal": "Прийом їжі {position}",
+      "calories": "{value} ккал",
       "remaining": "{count, plural, one {ще # прийом} few {ще # прийоми} other {ще # прийомів}}",
       "open": "Відкрити дієту"
     }

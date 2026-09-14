@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getFormatter, getTranslations } from 'next-intl/server';
 import type { PhotoSession } from '@features/photo-sessions/actions';
 import { fetchPhotoViewUrl } from '@features/photo-sessions/photo-view-url';
 import { groupSessionsByDate } from '@features/photo-sessions/session-grouping';
@@ -14,6 +14,7 @@ export async function GalleryList({
   locale: string;
 }) {
   const t = await getTranslations('PhotoSessions.gallery');
+  const format = await getFormatter();
   // Only confirmed sessions have final poses/are baseline-eligible - see
   // knowledge/business-rules.md "Photo pose is machine-suggested, then confirmed".
   const confirmed = sessions.filter(
@@ -42,7 +43,12 @@ export async function GalleryList({
       )}
       {groups.map((group) => (
         <section key={group.date} className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-muted">{group.date}</h2>
+          <h2 className="text-sm font-medium text-muted">
+            {format.dateTime(new Date(group.date + 'T00:00:00Z'), {
+              day: 'numeric',
+              month: 'short',
+            })}
+          </h2>
           <ul className="flex flex-col gap-2">
             {group.sessions.map((session) => (
               <GalleryRow key={session.id} session={session} locale={locale} />

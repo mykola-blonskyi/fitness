@@ -3,10 +3,22 @@ import { NextIntlClientProvider } from 'next-intl';
 import type { ReactElement } from 'react';
 import messages from '../../messages/en.json';
 
-export function renderWithIntl(ui: ReactElement, options?: RenderOptions) {
+interface RenderWithIntlOptions extends RenderOptions {
+  locale?: string;
+  messages?: Record<string, unknown>;
+}
+
+export function renderWithIntl(
+  ui: ReactElement,
+  {
+    locale = 'en',
+    messages: localeMessages = messages,
+    ...options
+  }: RenderWithIntlOptions = {},
+) {
   return render(ui, {
     wrapper: ({ children }) => (
-      <NextIntlClientProvider locale="en" messages={messages}>
+      <NextIntlClientProvider locale={locale} messages={localeMessages}>
         {children}
       </NextIntlClientProvider>
     ),
