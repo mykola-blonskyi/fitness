@@ -89,7 +89,7 @@ describe('UsersService.findByIdentity', () => {
       'user@example.com',
     );
 
-    const { where } = findFirst.mock.calls[1][0] as { where: SQL };
+    const [{ where }] = findFirst.mock.calls[1] as [{ where: SQL }];
     const { sql } = new PgDialect().sqlToQuery(where);
     expect(sql).toContain('lower(');
     expect(sql).toContain('::text');

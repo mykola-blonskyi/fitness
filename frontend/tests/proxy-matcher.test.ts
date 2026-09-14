@@ -1,7 +1,16 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PROXY_MATCHER } from '@libs/proxy-matcher';
 
-const pattern = new RegExp(`^${PROXY_MATCHER}$`);
+// Next requires config.matcher entries to be static string literals, and
+// proxy.ts can't be imported here (next-intl pulls in next/server), so the
+// literal is read out of the source rather than duplicated. Under jsdom
+// import.meta.url is not a file: URL, hence the cwd-relative read.
+const source = readFileSync(join(process.cwd(), 'src/proxy.ts'), 'utf8');
+const literal = /matcher: \[\s*'([^']+)'/.exec(source)?.[1];
+if (!literal) throw new Error('no matcher literal found in proxy.ts');
+
+const pattern = new RegExp(`^${literal.replace(/\\\\/g, '\\')}$`);
 const matches = (pathname: string) => pattern.test(pathname);
 
 describe('proxy matcher', () => {
