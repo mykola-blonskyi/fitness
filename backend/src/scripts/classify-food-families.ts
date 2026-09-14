@@ -130,6 +130,9 @@ export async function classify(db: Db, dryRun: boolean) {
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
+  // On the boot path an unmatched override means the file is ahead of this
+  // database's catalog, not that the pass failed - it must not block startup.
+  const allowStale = process.argv.includes('--allow-stale-overrides');
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const db = drizzle(pool, { schema });
 
@@ -163,7 +166,7 @@ async function main() {
   }
 
   await pool.end();
-  if (stale) process.exitCode = 1;
+  if (stale && !allowStale) process.exitCode = 1;
 }
 
 if (require.main === module) {
