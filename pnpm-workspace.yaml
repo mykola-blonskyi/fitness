@@ -9,3 +9,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: false
+overrides:
+  # @nestjs/platform-express pins multer 2.2.0 and no 11.x release moves off it.
+  multer: ^2.3.0
