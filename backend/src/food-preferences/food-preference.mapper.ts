@@ -13,6 +13,9 @@ export interface FoodPreferenceResponse {
   // deleted after the preference was created (categories/roles are fixed
   // seed data that's never deleted, but food_calories rows aren't).
   targetName: string | null;
+  // false only for a favorite whose target Food Item has no Family yet
+  // (ADR-020) - it can't affect generation until it's classified.
+  affectsGeneration: boolean;
 }
 
 export interface FoodPreferenceRow {
@@ -25,6 +28,7 @@ export interface FoodPreferenceRow {
 export function toFoodPreferenceResponse(
   row: FoodPreferenceRow,
   targetName: string | null,
+  affectsGeneration: boolean,
 ): FoodPreferenceResponse {
   return {
     id: row.id,
@@ -32,5 +36,6 @@ export function toFoodPreferenceResponse(
     targetType: row.targetType,
     targetId: row.targetId,
     targetName,
+    affectsGeneration,
   };
 }

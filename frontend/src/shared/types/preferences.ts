@@ -27,6 +27,7 @@ export interface FoodPreference {
   targetType: FoodPreferenceTargetType;
   targetId: string;
   targetName: string | null;
+  affectsGeneration: boolean;
 }
 
 // Mirrors backend/src/diet-preferences/diet-preference.mapper.ts's

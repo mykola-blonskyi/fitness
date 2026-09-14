@@ -19,15 +19,20 @@ export const FavoriteFoodList = ({ preferences }: FavoriteFoodListProps) => {
           key={preference.id}
           className="flex items-center justify-between rounded-ctl border border-line-soft bg-surface-2 px-3 py-2.5"
         >
-          <span className="text-sm">
-            {preference.targetName === null
-              ? t('unknown')
-              : foodPreferenceTargetLabel(
-                  preference.targetType,
-                  preference.targetName,
-                  tTaxonomy,
-                )}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-sm">
+              {preference.targetName === null
+                ? t('unknown')
+                : foodPreferenceTargetLabel(
+                    preference.targetType,
+                    preference.targetName,
+                    tTaxonomy,
+                  )}
+            </span>
+            {preference.affectsGeneration === false && (
+              <span className="text-xs text-muted">{t('notGenerated')}</span>
+            )}
+          </div>
           <form action={removeFoodPreference.bind(null, preference.id)}>
             <button
               type="submit"
