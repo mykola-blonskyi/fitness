@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 // Uses the browser's own online/offline signal rather than e.g. a
 // periodic ping - same signal the service worker already relies on
 // (public/sw.js); a false positive just means a write fails once and
-// gets re-queued (network-error.ts).
+// gets re-queued (create-synced-write.ts).
 //
 // Guard is `typeof window`, not `typeof navigator`: Node 19+ ships a
 // built-in `navigator` with no `onLine`, so the old check read as

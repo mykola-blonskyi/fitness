@@ -329,7 +329,8 @@
     "list": {
       "empty": "No exercises match this filter.",
       "unapprove": "Unapprove",
-      "loadingMore": "Loading more…"
+      "loadingMore": "Loading more…",
+      "loadError": "Couldn't load exercises — try again."
     },
     "searchForm": {
       "categoryLabel": "Category",
@@ -364,7 +365,8 @@
     "list": {
       "empty": "No food items match this filter.",
       "unapprove": "Unapprove",
-      "loadingMore": "Loading more…"
+      "loadingMore": "Loading more…",
+      "loadError": "Couldn't load food items — try again."
     },
     "searchForm": {
       "categoryLabel": "Category",
@@ -526,6 +528,7 @@
       "confirm": "Confirm",
       "cancel": "Cancel",
       "loadingMore": "Loading more…",
+      "loadError": "Couldn't load more — try again.",
       "manualSource": "manual"
     },
     "errors": {
@@ -641,7 +644,8 @@
   "OfflineIndicator": {
     "offline": "Offline",
     "syncing": "Syncing…",
-    "synced": "Synced"
+    "synced": "Synced",
+    "failed": "{count, plural, one {# write not saved} other {# writes not saved}}"
   },
   "Validation": {
     "common": {

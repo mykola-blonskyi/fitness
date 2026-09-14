@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import type { ZodType } from 'zod';
+import { ApiError } from '@shared/libs/api-client';
 import { firstFieldErrors } from '@shared/schemas/zod-errors';
 
 export interface FormActionError<TInput> {
@@ -14,10 +15,10 @@ export interface FormActionError<TInput> {
 // call plus whatever success-path work is caller-specific (revalidatePath,
 // setting a `success` flag, or nothing at all for onboarding, which
 // redirects outside this helper - see completeOnboarding for why), and
-// its return value is passed straight through. A thrown error is
-// swallowed into `errorMessage`, never re-thrown - callers that need to
-// distinguish a specific status (clearWeight's already-cleared 404 case)
-// don't use this helper.
+// its return value is passed straight through. A backend rejection is
+// swallowed into `errorMessage` - callers that need to distinguish a
+// specific status (clearWeight's already-cleared 404 case) don't use
+// this helper.
 //
 // No `formData` option ever gets passed to withServerActionInstrumentation
 // here - see completeOnboarding's comment for why (ADR-006, PII).
@@ -46,7 +47,10 @@ export async function submitFormAction<TInput, TResult>({
 
     try {
       return await mutate(parsed.data);
-    } catch {
+    } catch (err) {
+      // A 5xx must reject, not resolve with `{ error }`: drain-queue.ts
+      // reads a resolved failure as a refusal and discards the write.
+      if (err instanceof ApiError && err.status >= 500) throw err;
       return { error: errorMessage };
     }
   });

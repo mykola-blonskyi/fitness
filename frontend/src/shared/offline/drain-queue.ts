@@ -1,12 +1,8 @@
-import { isNetworkError } from './network-error';
+import { PermanentWriteError } from './types';
 import type { QueuedWrite, SyncHandler } from './types';
 
 export interface DrainResult {
-  // Not yet attempted: a network failure stopped the drain, or the
-  // item's type has no registered handler yet (sync-registry.ts).
   remaining: QueuedWrite[];
-  // Removed because their handler threw a non-network error - a poison
-  // item that would otherwise block everything queued behind it.
   dropped: QueuedWrite[];
 }
 
@@ -20,23 +16,28 @@ export async function drainQueue(
 ): Promise<DrainResult> {
   const remaining = [...queue];
   const dropped: QueuedWrite[] = [];
+  const rotated = new Set<string>();
 
   while (remaining.length > 0) {
     const item = remaining[0];
     const handler = resolveHandler(item.type);
 
     if (!handler) {
-      // No handler registered yet - leave it (and everything behind it) queued.
-      break;
+      // A route's handlers register only when its offline.ts is imported,
+      // and Next code-splits per route - an unknown type must not block the rest.
+      if (rotated.has(item.id)) break;
+      rotated.add(item.id);
+      remaining.shift();
+      remaining.push(item);
+      continue;
     }
 
     try {
       await handler(item.payload);
       remaining.shift();
     } catch (err) {
-      if (isNetworkError(err)) {
-        // Still offline mid-drain - stop; useOfflineSync's online
-        // listener retries the rest later.
+      if (!(err instanceof PermanentWriteError)) {
+        // Keep it and everything behind it - the queue replays in order.
         break;
       }
       onDropped?.(item, err);

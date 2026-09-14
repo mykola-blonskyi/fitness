@@ -25,6 +25,7 @@ export function AdminExerciseQueue({
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState<string | undefined>();
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
@@ -41,10 +42,15 @@ export function AdminExerciseQueue({
 
   async function loadMore(after: string) {
     setLoadingMore(true);
-    const page = await listAdminExercises(after);
-    setItems((prev) => [...prev, ...page.items]);
-    setCursor(page.nextCursor);
-    setLoadingMore(false);
+    try {
+      const page = await listAdminExercises(after);
+      setItems((prev) => [...prev, ...page.items]);
+      setCursor(page.nextCursor);
+    } catch {
+      setLoadError(t('loadError'));
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   // The standard TanStack Virtual infinite-load trigger: fetch the next
@@ -53,12 +59,12 @@ export function AdminExerciseQueue({
   // actually returned - not off `items`, which can shrink mid-scroll as
   // rows are approved/deleted - so pagination never skips or repeats.
   useEffect(() => {
-    if (!lastVirtualItem || loadingMore || !cursor) return;
+    if (!lastVirtualItem || loadingMore || loadError || !cursor) return;
     if (lastVirtualItem.index >= items.length - 1) {
       void loadMore(cursor);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastVirtualItem?.index, items.length, cursor, loadingMore]);
+  }, [lastVirtualItem?.index, items.length, cursor, loadingMore, loadError]);
 
   function setPending(id: string, pending: boolean) {
     setPendingIds((prev) => {
@@ -199,6 +205,9 @@ export function AdminExerciseQueue({
         <p className="py-3 text-center text-sm text-muted">
           {t('loadingMore')}
         </p>
+      )}
+      {loadError && (
+        <p className="py-3 text-center text-sm text-danger">{loadError}</p>
       )}
     </div>
   );

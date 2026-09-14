@@ -1,15 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { createSyncedWrite } from '@shared/offline/create-synced-write';
 import {
   clearSyncHandlers,
   getSyncHandler,
 } from '@shared/offline/sync-registry';
+import { useOfflineQueueStore } from '@shared/offline/offline-queue-store';
+import { PermanentWriteError } from '@shared/offline/types';
 
 interface Result {
   error?: string;
 }
 
 describe('createSyncedWrite', () => {
+  afterEach(() => {
+    useOfflineQueueStore.setState({ queue: [] });
+  });
+
   // Regression coverage for a real bug caught in review: setWeight (and
   // every other Server Action built on shared/libs/form-action.ts's
   // submitFormAction) resolves with `{ error }` on a genuine backend
@@ -37,7 +43,20 @@ describe('createSyncedWrite', () => {
     );
 
     const handler = getSyncHandler('test/failure')!;
-    await expect(handler({ n: 1 })).rejects.toThrow('rejected by server');
+    await expect(handler({ n: 1 })).rejects.toThrow(PermanentWriteError);
+  });
+
+  it('queues the write when the action rejects instead of losing it', async () => {
+    clearSyncHandlers();
+    const write = createSyncedWrite<{ n: number }, Result>(
+      'test/rejects',
+      async () => {
+        throw new Error('An error occurred in the Server Components render');
+      },
+    );
+
+    await expect(write({ n: 1 })).resolves.toEqual({ queued: true });
+    expect(useOfflineQueueStore.getState().queue).toHaveLength(1);
   });
 
   it('registers the raw action as the handler when no getResultError is supplied', async () => {

@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { drainQueue } from '@shared/offline/drain-queue';
-import { isNetworkError } from '@shared/offline/network-error';
+import { PermanentWriteError } from '@shared/offline/types';
 import {
   clearSyncHandlers,
   getSyncHandler,
@@ -16,30 +16,6 @@ function write(id: string, type = 'test/write'): QueuedWrite {
 function payloadId(payload: unknown): string {
   return (payload as { id: string }).id;
 }
-
-describe('isNetworkError', () => {
-  it('recognizes a failed-fetch TypeError', () => {
-    expect(isNetworkError(new TypeError('Failed to fetch'))).toBe(true);
-  });
-
-  it('recognizes Firefox/Safari network error wording', () => {
-    expect(
-      isNetworkError(
-        new TypeError('NetworkError when attempting to fetch resource'),
-      ),
-    ).toBe(true);
-  });
-
-  it('does not classify a validation/application error as a network error', () => {
-    expect(isNetworkError(new Error('Weight must be greater than 0'))).toBe(
-      false,
-    );
-  });
-
-  it('does not classify an unrelated TypeError as a network error', () => {
-    expect(isNetworkError(new TypeError('Cannot read properties'))).toBe(false);
-  });
-});
 
 describe('sync-registry', () => {
   it('returns the handler that was registered for a type', () => {
@@ -78,7 +54,7 @@ describe('drainQueue', () => {
     expect(dropped).toEqual([]);
   });
 
-  it('stops on a network error and leaves the failed item plus everything after it queued', async () => {
+  it('stops on a transient failure and leaves the failed item plus everything after it queued', async () => {
     const calls: string[] = [];
     const handler: SyncHandler = vi
       .fn()
@@ -98,12 +74,12 @@ describe('drainQueue', () => {
     expect(dropped).toEqual([]);
   });
 
-  it('drops an item that fails with a non-network error and keeps draining the rest', async () => {
+  it('drops an item the server refused outright and keeps draining the rest', async () => {
     const calls: string[] = [];
     const handler: SyncHandler = vi
       .fn()
       .mockImplementationOnce(async () => {
-        throw new Error('rejected by server');
+        throw new PermanentWriteError('rejected by server');
       })
       .mockImplementationOnce(async (payload) => {
         calls.push(payloadId(payload));
@@ -122,6 +98,46 @@ describe('drainQueue', () => {
     expect(dropped.map((item) => item.id)).toEqual(['a']);
     expect(onDropped).toHaveBeenCalledTimes(1);
     expect(onDropped).toHaveBeenCalledWith(items[0], expect.any(Error));
+  });
+
+  it('retains a write the backend failed to accept rather than dropping it', async () => {
+    // A 502 from a redeploying backend reaches the client as an opaque
+    // rejection, not a TypeError.
+    const handler: SyncHandler = vi.fn(async () => {
+      throw new Error('An error occurred in the Server Components render');
+    });
+
+    const onDropped = vi.fn();
+    const items = [write('a'), write('b')];
+    const { remaining, dropped } = await drainQueue(
+      items,
+      () => handler,
+      onDropped,
+    );
+
+    expect(remaining.map((item) => item.id)).toEqual(['a', 'b']);
+    expect(dropped).toEqual([]);
+    expect(onDropped).not.toHaveBeenCalled();
+  });
+
+  it('moves a write with no handler behind the writes that have one', async () => {
+    const calls: string[] = [];
+    const handler: SyncHandler = vi.fn(async (payload) => {
+      calls.push(payloadId(payload));
+    });
+
+    const items = [
+      write('weight', 'daily-log/set-weight'),
+      write('set-1'),
+      write('set-2'),
+    ];
+    const { remaining, dropped } = await drainQueue(items, (type) =>
+      type === 'test/write' ? handler : undefined,
+    );
+
+    expect(calls).toEqual(['set-1', 'set-2']);
+    expect(remaining.map((item) => item.id)).toEqual(['weight']);
+    expect(dropped).toEqual([]);
   });
 
   it('leaves everything queued when a type has no registered handler', async () => {
@@ -148,6 +164,40 @@ describe('drainQueue', () => {
   });
 });
 
+describe('offline-queue-store drain', () => {
+  afterEach(() => {
+    clearSyncHandlers();
+    useOfflineQueueStore.setState({ queue: [], dropped: [] });
+  });
+
+  it('keeps a write enqueued while the drain was in flight', async () => {
+    registerSyncHandler('test/write', async () => {
+      useOfflineQueueStore.getState().enqueue('test/write', { id: 'b' });
+    });
+    useOfflineQueueStore.setState({ queue: [write('a')], dropped: [] });
+
+    await useOfflineQueueStore.getState().drain();
+
+    expect(
+      useOfflineQueueStore.getState().queue.map((item) => item.payload),
+    ).toEqual([{ id: 'b' }]);
+  });
+
+  it('keeps refused writes so the user can be told they never landed', async () => {
+    registerSyncHandler('test/write', async () => {
+      throw new PermanentWriteError('rejected by server');
+    });
+    useOfflineQueueStore.setState({ queue: [write('a')], dropped: [] });
+
+    await useOfflineQueueStore.getState().drain();
+
+    expect(useOfflineQueueStore.getState().queue).toEqual([]);
+    expect(
+      useOfflineQueueStore.getState().dropped.map((item) => item.id),
+    ).toEqual(['a']);
+  });
+});
+
 describe('offline-queue-store ownerUserId', () => {
   it('accepts the first user seen with no data loss', () => {
     useOfflineQueueStore.setState({ ownerUserId: null, queue: [write('a')] });
@@ -160,10 +210,12 @@ describe('offline-queue-store ownerUserId', () => {
     useOfflineQueueStore.setState({
       ownerUserId: 'user-a',
       queue: [write('a'), write('b')],
+      dropped: [write('c')],
     });
     useOfflineQueueStore.getState().setOwnerUserId('user-b');
     expect(useOfflineQueueStore.getState().ownerUserId).toBe('user-b');
     expect(useOfflineQueueStore.getState().queue).toEqual([]);
+    expect(useOfflineQueueStore.getState().dropped).toEqual([]);
   });
 
   it('is a no-op for the same user', () => {

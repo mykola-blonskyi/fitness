@@ -329,7 +329,8 @@
     "list": {
       "empty": "No hay ejercicios que se ajusten a este filtro.",
       "unapprove": "Anular la aprobación",
-      "loadingMore": "Cargando más…"
+      "loadingMore": "Cargando más…",
+      "loadError": "No se han podido cargar los ejercicios. Inténtalo de nuevo."
     },
     "searchForm": {
       "categoryLabel": "Categoría",
@@ -364,7 +365,8 @@
     "list": {
       "empty": "No hay alimentos que se ajusten a este filtro.",
       "unapprove": "Anular la aprobación",
-      "loadingMore": "Cargando más…"
+      "loadingMore": "Cargando más…",
+      "loadError": "No se han podido cargar los alimentos. Inténtalo de nuevo."
     },
     "searchForm": {
       "categoryLabel": "Categoría",
@@ -526,6 +528,7 @@
       "confirm": "Confirmar",
       "cancel": "Cancelar",
       "loadingMore": "Cargando más…",
+      "loadError": "No se ha podido cargar más. Inténtalo de nuevo.",
       "manualSource": "manual"
     },
     "errors": {
@@ -641,7 +644,8 @@
   "OfflineIndicator": {
     "offline": "Sin conexión",
     "syncing": "Sincronizando…",
-    "synced": "Sincronizado"
+    "synced": "Sincronizado",
+    "failed": "{count, plural, one {# cambio sin guardar} other {# cambios sin guardar}}"
   },
   "Validation": {
     "common": {

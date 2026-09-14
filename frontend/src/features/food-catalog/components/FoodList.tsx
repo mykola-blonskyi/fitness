@@ -29,6 +29,7 @@ export const FoodList = ({
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState<string | undefined>();
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -42,25 +43,30 @@ export const FoodList = ({
 
   async function loadMore(after: string) {
     setLoadingMore(true);
-    const page = await listFoodItems({
-      category,
-      search,
-      cursor: after,
-    });
-    setItems((prev) => [...prev, ...page.items]);
-    setCursor(page.nextCursor);
-    setLoadingMore(false);
+    try {
+      const page = await listFoodItems({
+        category,
+        search,
+        cursor: after,
+      });
+      setItems((prev) => [...prev, ...page.items]);
+      setCursor(page.nextCursor);
+    } catch {
+      setLoadError(t('loadError'));
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   // Same infinite-load trigger as AdminExerciseQueue: fetch the next page
   // once the last rendered row scrolls into view.
   useEffect(() => {
-    if (!lastVirtualItem || loadingMore || !cursor) return;
+    if (!lastVirtualItem || loadingMore || loadError || !cursor) return;
     if (lastVirtualItem.index >= items.length - 1) {
       void loadMore(cursor);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastVirtualItem?.index, items.length, cursor, loadingMore]);
+  }, [lastVirtualItem?.index, items.length, cursor, loadingMore, loadError]);
 
   if (items.length === 0) {
     return <p className="py-6 text-sm text-muted">{t('empty')}</p>;
@@ -131,6 +137,9 @@ export const FoodList = ({
         <p className="py-3 text-center text-sm text-muted">
           {t('loadingMore')}
         </p>
+      )}
+      {loadError && (
+        <p className="py-3 text-center text-sm text-danger">{loadError}</p>
       )}
     </div>
   );
