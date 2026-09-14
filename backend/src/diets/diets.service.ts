@@ -5,13 +5,22 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray, notInArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, ne } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { CalorieTargetsService } from '../calorie-targets/calorie-targets.service';
 import { DietPreferencesService } from '../diet-preferences/diet-preferences.service';
 import type { DietType } from '../diet-preferences/diet-preference.types';
+import type { ListFoodItemsDto } from '../food-items/dto/list-food-items.dto';
+import {
+  generationEligibleWhere,
+  generationIneligibility,
+} from '../food-items/food-eligibility';
+import {
+  FoodItemsService,
+  type FoodItemPage,
+} from '../food-items/food-items.service';
 import { FoodPreferencesService } from '../food-preferences/food-preferences.service';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
 import { resolveUserLocale } from '../shared/locale';
@@ -34,7 +43,6 @@ import {
 } from './diet.types';
 import { ReorderDietMealsDto } from './dto/reorder-diet-meals.dto';
 import { generateDietItems, gramsForCalories } from './greedy-heuristic';
-import { isPreferenceExcluded } from './swap-candidates';
 
 function defaultPick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
@@ -50,6 +58,7 @@ export class DietsService {
     private readonly calorieTargetsService: CalorieTargetsService,
     private readonly foodPreferencesService: FoodPreferencesService,
     private readonly dietPreferencesService: DietPreferencesService,
+    private readonly foodItemsService: FoodItemsService,
   ) {}
 
   private async getTaxonomyIdMaps(): Promise<{
@@ -112,10 +121,6 @@ export class DietsService {
   ): Promise<Map<string, FoodCandidate[]>> {
     const roleNames = [...new Set(MEAL_ROLE_CHAINS.flat())];
 
-    const excludedFoodItems = [...exclusions.food_item];
-    const excludedCategories = [...exclusions.category];
-    const excludedSubcategories = [...exclusions.subcategory];
-
     const candidatesByRole = new Map<string, FoodCandidate[]>();
     const roleNameById = new Map<string, string>();
     for (const roleName of roleNames) {
@@ -151,18 +156,7 @@ export class DietsService {
       .where(
         and(
           inArray(schema.foodCalories.roleId, queryableRoleIds),
-          excludedFoodItems.length > 0
-            ? notInArray(schema.foodCalories.id, excludedFoodItems)
-            : undefined,
-          excludedCategories.length > 0
-            ? notInArray(schema.foodCalories.categoryId, excludedCategories)
-            : undefined,
-          excludedSubcategories.length > 0
-            ? notInArray(
-                schema.foodCalories.subcategoryId,
-                excludedSubcategories,
-              )
-            : undefined,
+          generationEligibleWhere(exclusions),
         ),
       );
 
@@ -170,8 +164,6 @@ export class DietsService {
       // Excludes 0-calorie items (e.g. water) - greedy-heuristic.ts
       // divides by this value when portion-scaling.
       if (Number(row.caloriesPer100g) <= 0) continue;
-      // Generation is Family-gated; browse and manual logging are not (ADR-020).
-      if (!row.familyName) continue;
       const roleName = roleNameById.get(row.roleId);
       if (!roleName) continue;
       candidatesByRole.get(roleName)!.push({
@@ -187,9 +179,8 @@ export class DietsService {
     return candidatesByRole;
   }
 
-  // Shared by generate()'s candidate query and swapItem()'s violation
-  // check, so "excluded during generation" and "rejected on swap" can
-  // never drift apart.
+  // Shared by generation, the swap picker and swapItem()'s own check, so
+  // "excluded during generation" and "rejected on swap" cannot drift apart.
   private async resolveExclusions(userId: string): Promise<{
     exclusions: ExclusionTargets;
     roleIdByName: Map<string, string>;
@@ -366,7 +357,13 @@ export class DietsService {
         'That food item has no calories and cannot be portioned into a menu',
       );
     }
-    if (isPreferenceExcluded(replacement, exclusions)) {
+    const ineligibility = generationIneligibility(replacement, exclusions);
+    if (ineligibility === 'no_family') {
+      throw new UnprocessableEntityException(
+        'That food item is never used in a generated menu and cannot replace this one',
+      );
+    }
+    if (ineligibility === 'preference_excluded') {
       throw new UnprocessableEntityException(
         'This replacement violates an active food preference',
       );
@@ -385,21 +382,11 @@ export class DietsService {
       );
     }
 
-    const excludedFoodItems = [...exclusions.food_item, currentFoodItem.id];
-    const excludedCategories = [...exclusions.category];
-    const excludedSubcategories = [...exclusions.subcategory];
-
     const sameRoleRows = await this.db.query.foodCalories.findMany({
       where: and(
         eq(schema.foodCalories.roleId, currentFoodItem.roleId),
-        eq(schema.foodCalories.isVerified, true),
-        notInArray(schema.foodCalories.id, excludedFoodItems),
-        excludedCategories.length > 0
-          ? notInArray(schema.foodCalories.categoryId, excludedCategories)
-          : undefined,
-        excludedSubcategories.length > 0
-          ? notInArray(schema.foodCalories.subcategoryId, excludedSubcategories)
-          : undefined,
+        ne(schema.foodCalories.id, currentFoodItem.id),
+        generationEligibleWhere(exclusions),
       ),
     });
     // 0-calorie items can't be portion-scaled - same exclusion generate makes.
@@ -412,6 +399,16 @@ export class DietsService {
       );
     }
     return pickRandom(candidates);
+  }
+
+  // Narrowed to what swapItem() will actually accept, so the picker cannot
+  // offer an item that then 422s.
+  async listSwapCandidates(
+    userId: string,
+    params: ListFoodItemsDto,
+  ): Promise<FoodItemPage> {
+    const { exclusions } = await this.resolveExclusions(userId);
+    return this.foodItemsService.list(userId, params, exclusions);
   }
 
   // Omitted foodItemId = reroll (random same-Role candidate); either way

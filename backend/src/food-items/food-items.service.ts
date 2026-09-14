@@ -4,6 +4,8 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { decodeCursor, encodeCursor } from '../admin/cursor-pagination';
+import type { ExclusionTargets } from '../food-preferences/food-preference.types';
+import { generationEligibleWhere } from './food-eligibility';
 import type { CreateFoodItemDto } from './dto/create-food-item.dto';
 import type { ListFoodItemsDto } from './dto/list-food-items.dto';
 import { resolveUserLocale } from '../shared/locale';
@@ -52,7 +54,14 @@ export class FoodItemsService {
   // Newest-first (unlike the admin queue's oldest-first FIFO): a food
   // item created via the form below then lands on page 1 right away,
   // instead of at the tail of the full scroll.
-  async list(userId: string, params: ListFoodItemsDto): Promise<FoodItemPage> {
+  //
+  // Exclusions narrow the page to what generation would accept, for the
+  // swap picker; browsing and logging a food stay unrestricted (ADR-020).
+  async list(
+    userId: string,
+    params: ListFoodItemsDto,
+    exclusions?: ExclusionTargets,
+  ): Promise<FoodItemPage> {
     const locale = await resolveUserLocale(this.db, userId);
     const limit = params.limit ?? DEFAULT_LIMIT;
     const cursor = params.cursor ? decodeCursor(params.cursor) : null;
@@ -91,6 +100,7 @@ export class FoodItemsService {
       .where(
         and(
           eq(schema.foodCalories.isVerified, true),
+          exclusions ? generationEligibleWhere(exclusions) : undefined,
           params.category
             ? eq(schema.foodCategories.name, params.category)
             : undefined,

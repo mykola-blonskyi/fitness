@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { ListFoodItemsDto } from '../food-items/dto/list-food-items.dto';
+import type { FoodItemPage } from '../food-items/food-items.service';
 import { CurrentUser } from '../identity/current-user.decorator';
 import type { Identity } from '../identity/identity.types';
 import type { DietResponse } from './diet.mapper';
@@ -24,6 +26,14 @@ export class DietsController {
   @Get('current')
   async getCurrent(@CurrentUser() identity: Identity): Promise<DietResponse> {
     return this.dietsService.findCurrent(identity.userId);
+  }
+
+  @Get('swap-candidates')
+  async listSwapCandidates(
+    @CurrentUser() identity: Identity,
+    @Query() query: ListFoodItemsDto,
+  ): Promise<FoodItemPage> {
+    return this.dietsService.listSwapCandidates(identity.userId, query);
   }
 
   // Unlike generate(), this edits the existing Diet row in place rather

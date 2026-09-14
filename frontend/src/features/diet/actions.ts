@@ -181,7 +181,7 @@ export async function listSwapCandidates(
       const query = new URLSearchParams({ role });
       if (search) query.set('search', search);
       const page = await apiFetch<CursorPage<FoodItem>>(
-        `/food-items?${query.toString()}`,
+        `/diets/swap-candidates?${query.toString()}`,
       );
       return page.items;
     },
