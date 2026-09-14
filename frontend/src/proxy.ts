@@ -3,6 +3,7 @@ import createIntlMiddleware from 'next-intl/middleware';
 import * as Sentry from '@sentry/nextjs';
 import { resolveIdentity } from '@libs/identity';
 import { requireEnv } from '@libs/require-env';
+import { PROXY_MATCHER } from '@libs/proxy-matcher';
 import type { Identity } from '@shared/types/identity';
 import { routing } from '@/i18n/routing';
 
@@ -106,8 +107,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Excludes API routes (Auth.js's own /api/auth/* included), Next.js
-  // internals, and static files — routes outside this matcher must call
-  // resolveIdentity() themselves rather than relying on this proxy.
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  matcher: [PROXY_MATCHER],
 };
