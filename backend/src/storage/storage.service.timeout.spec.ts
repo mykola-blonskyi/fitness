@@ -1,7 +1,14 @@
-import { Client } from 'minio';
+import { Client, type ClientOptions } from 'minio';
 import { StorageService } from './storage.service';
 
 jest.mock('minio');
+
+// Agent carries `options` at runtime, but @types/node does not declare it.
+function agentTimeout(options: ClientOptions): number | undefined {
+  const agent = options.transportAgent as unknown as
+    { options?: { timeout?: number } } | undefined;
+  return agent?.options?.timeout;
+}
 
 describe('StorageService client construction', () => {
   beforeEach(() => {
@@ -16,10 +23,8 @@ describe('StorageService client construction', () => {
 
     new StorageService();
 
-    const options = jest.mocked(Client).mock.calls[0][0] as {
-      transportAgent: { options: { timeout: number } };
-    };
-    expect(options.transportAgent.options.timeout).toBe(30_000);
+    const options = jest.mocked(Client).mock.calls[0][0];
+    expect(agentTimeout(options)).toBe(30_000);
   });
 
   it('picks a plain HTTP agent when TLS is disabled', () => {
@@ -27,11 +32,8 @@ describe('StorageService client construction', () => {
 
     new StorageService();
 
-    const options = jest.mocked(Client).mock.calls[0][0] as {
-      transportAgent: { options: { timeout: number } };
-      useSSL: boolean;
-    };
+    const options = jest.mocked(Client).mock.calls[0][0];
     expect(options.useSSL).toBe(false);
-    expect(options.transportAgent.options.timeout).toBe(30_000);
+    expect(agentTimeout(options)).toBe(30_000);
   });
 });
