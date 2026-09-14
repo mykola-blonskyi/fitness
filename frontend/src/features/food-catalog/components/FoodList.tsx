@@ -113,10 +113,26 @@ export const FoodList = ({
               </p>
 
               <div className="flex shrink-0 items-center gap-3 text-xs text-muted">
-                <span>{Math.round(item.caloriesPer100g)} kcal</span>
-                <span>{item.proteinPer100g.toFixed(1)}g P</span>
-                <span>{item.carbsPer100g.toFixed(1)}g C</span>
-                <span>{item.fatPer100g.toFixed(1)}g F</span>
+                <span>
+                  {t('caloriesPer100g', {
+                    value: Math.round(item.caloriesPer100g),
+                  })}
+                </span>
+                <span>
+                  {t('proteinPer100g', {
+                    value: Math.round(item.proteinPer100g * 10) / 10,
+                  })}
+                </span>
+                <span>
+                  {t('carbsPer100g', {
+                    value: Math.round(item.carbsPer100g * 10) / 10,
+                  })}
+                </span>
+                <span>
+                  {t('fatPer100g', {
+                    value: Math.round(item.fatPer100g * 10) / 10,
+                  })}
+                </span>
               </div>
 
               {profile.isAdmin && item.isVerified && (

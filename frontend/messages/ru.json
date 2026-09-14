@@ -27,6 +27,8 @@
       "weighIn": "Взвешивание",
       "weighInHint": "Ещё не записано — используйте поле выше",
       "meal": "Приём пищи {position}",
+      "calories": "{value} ккал",
+      "itemSummary": "{weight} г · {calories} ккал",
       "meals": "Приёмы пищи",
       "edit": "Изменить",
       "openDiet": "Открыть диету",
@@ -71,7 +73,8 @@
     "nutritionsInfo": {
       "protein": "Белки",
       "carbs": "Углеводы",
-      "fat": "Жиры"
+      "fat": "Жиры",
+      "gramsValue": "{value}г"
     },
     "itemActions": {
       "rerolling": "Подбираем…",
@@ -366,7 +369,11 @@
       "empty": "По этому фильтру продуктов не найдено.",
       "unapprove": "Отменить утверждение",
       "loadingMore": "Загружаем ещё…",
-      "loadError": "Не удалось загрузить продукты — попробуйте ещё раз."
+      "loadError": "Не удалось загрузить продукты — попробуйте ещё раз.",
+      "caloriesPer100g": "{value} ккал",
+      "proteinPer100g": "{value, number}г Б",
+      "carbsPer100g": "{value, number}г У",
+      "fatPer100g": "{value, number}г Ж"
     },
     "searchForm": {
       "categoryLabel": "Категория",
@@ -530,7 +537,8 @@
       "cancel": "Отменить",
       "loadingMore": "Загружаем ещё…",
       "loadError": "Не удалось загрузить ещё — попробуйте ещё раз.",
-      "manualSource": "вручную"
+      "manualSource": "вручную",
+      "nutritionSummary": "{calories} ккал · Б {protein, number}г · У {carbs, number}г · Ж {fat, number}г"
     },
     "errors": {
       "approveExerciseFailed": "Не удалось утвердить это упражнение — попробуйте ещё раз.",
@@ -600,12 +608,14 @@
       "protein": "Белки",
       "carbs": "Углеводы",
       "fat": "Жиры",
-      "basedOn": "{algorithm} · взвешивание {weight} {unit}"
+      "basedOn": "{algorithm} · взвешивание {weight} {unit}",
+      "value": "{planned} / {target} г"
     },
     "plan": {
       "label": "План на сегодня · {kcal} ккал",
       "labelEmpty": "План на сегодня",
       "meal": "Приём пищи {position}",
+      "calories": "{value} ккал",
       "remaining": "{count, plural, one {ещё # приём} few {ещё # приёма} other {ещё # приёмов}}",
       "open": "Открыть диету"
     }

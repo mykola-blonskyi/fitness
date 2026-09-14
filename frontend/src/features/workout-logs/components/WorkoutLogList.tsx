@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getFormatter, getTranslations } from 'next-intl/server';
 import type { WorkoutLog } from '@shared/types/workout-log';
 
 interface WorkoutLogListProps {
@@ -12,6 +12,7 @@ export const WorkoutLogList = async ({
   locale,
 }: WorkoutLogListProps) => {
   const t = await getTranslations('Workouts');
+  const format = await getFormatter();
   if (workoutLogs.length === 0) {
     return <p className="text-sm text-muted">{t('noWorkoutsYet')}</p>;
   }
@@ -29,7 +30,12 @@ export const WorkoutLogList = async ({
           >
             <span className="flex items-center justify-between gap-3">
               <span className="text-sm font-medium">{log.title}</span>
-              <span className="text-sm text-muted">{log.date}</span>
+              <span className="text-sm text-muted">
+                {format.dateTime(new Date(log.date + 'T00:00:00Z'), {
+                  day: 'numeric',
+                  month: 'short',
+                })}
+              </span>
             </span>
             <span className="text-sm text-muted">
               {t('setsLoggedCount', { count: log.sets.length })}

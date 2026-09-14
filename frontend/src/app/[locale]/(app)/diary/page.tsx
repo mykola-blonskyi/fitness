@@ -189,7 +189,7 @@ export default async function DiaryPage({
               <div className="flex items-center justify-between gap-3">
                 <b className="font-display text-[15px] font-bold">
                   {t('timeline.meal', { position: meal.position })} ·{' '}
-                  {Math.round(calories)} kcal
+                  {t('timeline.calories', { value: Math.round(calories) })}
                 </b>
                 <Link href={`/${locale}/diet`} className="btn-ghost btn-sm">
                   {t('timeline.edit')}
@@ -202,7 +202,10 @@ export default async function DiaryPage({
                 >
                   <span className="min-w-0 truncate">{item.foodItem.name}</span>
                   <span className="whitespace-nowrap text-muted">
-                    {item.weightGrams} g · {Math.round(item.calories)} kcal
+                    {t('timeline.itemSummary', {
+                      weight: item.weightGrams,
+                      calories: Math.round(item.calories),
+                    })}
                   </span>
                 </div>
               ))}

@@ -27,6 +27,8 @@
       "weighIn": "Pesaje",
       "weighInHint": "Sin registrar — usa el campo de arriba",
       "meal": "Comida {position}",
+      "calories": "{value} kcal",
+      "itemSummary": "{weight} g · {calories} kcal",
       "meals": "Comidas",
       "edit": "Editar",
       "openDiet": "Abrir dieta",
@@ -56,7 +58,7 @@
       "moveDown": "Mover Comida {position} hacia abajo",
       "dragHandle": "Arrastrar para reordenar Comida {position}"
     },
-    "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}F",
+    "itemSummary": "{weight} g · {calories} kcal · {protein}P / {carbs}C / {fat}G",
     "freeFood": {
       "badge": "No cuenta",
       "itemSummary": "{weight} g · no cuenta",
@@ -71,7 +73,8 @@
     "nutritionsInfo": {
       "protein": "Proteína",
       "carbs": "Carbohidratos",
-      "fat": "Grasa"
+      "fat": "Grasa",
+      "gramsValue": "{value}g"
     },
     "itemActions": {
       "rerolling": "Buscando otra opción…",
@@ -366,7 +369,11 @@
       "empty": "No hay alimentos que se ajusten a este filtro.",
       "unapprove": "Anular la aprobación",
       "loadingMore": "Cargando más…",
-      "loadError": "No se han podido cargar los alimentos. Inténtalo de nuevo."
+      "loadError": "No se han podido cargar los alimentos. Inténtalo de nuevo.",
+      "caloriesPer100g": "{value} kcal",
+      "proteinPer100g": "{value, number}g P",
+      "carbsPer100g": "{value, number}g C",
+      "fatPer100g": "{value, number}g G"
     },
     "searchForm": {
       "categoryLabel": "Categoría",
@@ -530,7 +537,8 @@
       "cancel": "Cancelar",
       "loadingMore": "Cargando más…",
       "loadError": "No se ha podido cargar más. Inténtalo de nuevo.",
-      "manualSource": "manual"
+      "manualSource": "manual",
+      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · G {fat, number}g"
     },
     "errors": {
       "approveExerciseFailed": "No se ha podido aprobar este ejercicio. Inténtalo de nuevo.",
@@ -600,12 +608,14 @@
       "protein": "Proteína",
       "carbs": "Carbohidratos",
       "fat": "Grasa",
-      "basedOn": "{algorithm} · pesaje de {weight} {unit}"
+      "basedOn": "{algorithm} · pesaje de {weight} {unit}",
+      "value": "{planned} / {target} g"
     },
     "plan": {
       "label": "Plan de hoy · {kcal} kcal",
       "labelEmpty": "Plan de hoy",
       "meal": "Comida {position}",
+      "calories": "{value} kcal",
       "remaining": "{count, plural, one {# comida más} other {# comidas más}}",
       "open": "Abrir dieta"
     }

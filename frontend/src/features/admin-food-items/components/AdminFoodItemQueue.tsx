@@ -146,11 +146,13 @@ export function AdminFoodItemQueue({
                   {tRoles(item.role)}
                 </p>
                 <p className="truncate text-xs text-muted">
-                  {Math.round(item.caloriesPer100g)} kcal &middot; P{' '}
-                  {item.proteinPer100g.toFixed(1)}g &middot; C{' '}
-                  {item.carbsPer100g.toFixed(1)}g &middot; F{' '}
-                  {item.fatPer100g.toFixed(1)}g &middot;{' '}
-                  {item.source ?? t('manualSource')}
+                  {t('nutritionSummary', {
+                    calories: Math.round(item.caloriesPer100g),
+                    protein: Math.round(item.proteinPer100g * 10) / 10,
+                    carbs: Math.round(item.carbsPer100g * 10) / 10,
+                    fat: Math.round(item.fatPer100g * 10) / 10,
+                  })}{' '}
+                  &middot; {item.source ?? t('manualSource')}
                   {item.sourceId ? ` #${item.sourceId}` : ''}
                 </p>
                 {rowErrors[item.id] && (

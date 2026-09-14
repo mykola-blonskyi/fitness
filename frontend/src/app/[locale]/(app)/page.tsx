@@ -85,11 +85,13 @@ function MacroBar({
   label,
   planned,
   target,
+  valueLabel,
   colorClass,
 }: {
   label: string;
   planned: number;
   target: number;
+  valueLabel: string;
   colorClass: string;
 }) {
   const ratio = target > 0 ? Math.min(1, planned / target) : 0;
@@ -103,7 +105,7 @@ function MacroBar({
         />
       </div>
       <b className="whitespace-nowrap font-semibold tabular-nums text-muted">
-        {Math.round(planned)} / {Math.round(target)} g
+        {valueLabel}
       </b>
     </div>
   );
@@ -240,18 +242,30 @@ async function MacrosTile() {
             label={t('macros.protein')}
             planned={diet?.totalProtein ?? 0}
             target={calorieTarget.proteinG}
+            valueLabel={t('macros.value', {
+              planned: Math.round(diet?.totalProtein ?? 0),
+              target: Math.round(calorieTarget.proteinG),
+            })}
             colorClass="bg-accent"
           />
           <MacroBar
             label={t('macros.carbs')}
             planned={diet?.totalCarbs ?? 0}
             target={calorieTarget.carbsG}
+            valueLabel={t('macros.value', {
+              planned: Math.round(diet?.totalCarbs ?? 0),
+              target: Math.round(calorieTarget.carbsG),
+            })}
             colorClass="bg-accent-2"
           />
           <MacroBar
             label={t('macros.fat')}
             planned={diet?.totalFat ?? 0}
             target={calorieTarget.fatG}
+            valueLabel={t('macros.value', {
+              planned: Math.round(diet?.totalFat ?? 0),
+              target: Math.round(calorieTarget.fatG),
+            })}
             colorClass="bg-accent-3"
           />
           <span className="text-xs text-muted">
@@ -443,7 +457,7 @@ async function PlanTile({ locale }: { locale: string }) {
                 {meal.names.join(', ')}
               </span>
               <span className="whitespace-nowrap text-muted">
-                {Math.round(meal.calories)} kcal
+                {t('plan.calories', { value: Math.round(meal.calories) })}
               </span>
             </div>
           ))}
@@ -451,7 +465,7 @@ async function PlanTile({ locale }: { locale: string }) {
             <div className="flex items-center justify-between gap-3 border-t border-line-soft py-2 text-[13px]">
               <span>{t('plan.remaining', { count: meals.length - 3 })}</span>
               <span className="whitespace-nowrap text-muted">
-                {Math.round(remainingCalories)} kcal
+                {t('plan.calories', { value: Math.round(remainingCalories) })}
               </span>
             </div>
           )}

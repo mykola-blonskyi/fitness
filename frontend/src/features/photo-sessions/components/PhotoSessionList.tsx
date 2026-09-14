@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import { getFormatter, getTranslations } from 'next-intl/server';
 import {
   setBaseline,
   type AnalysisStatus,
@@ -38,10 +38,11 @@ export async function PhotoSessionList({
 }
 
 async function PhotoSessionRow({ session }: { session: PhotoSession }) {
-  const [t, tPoses, tAnalysis, photosWithUrls] = await Promise.all([
+  const [t, tPoses, tAnalysis, format, photosWithUrls] = await Promise.all([
     getTranslations('PhotoSessions.list'),
     getTranslations('PhotoSessions.poses'),
     getTranslations('PhotoSessions.analysisStatus'),
+    getFormatter(),
     Promise.all(
       session.photos.map(async (photo) => ({
         photo,
@@ -55,7 +56,12 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
     <li className="flex flex-col gap-3 border-b border-line pb-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{session.date}</span>
+          <span className="text-sm font-medium">
+            {format.dateTime(new Date(session.date + 'T00:00:00Z'), {
+              day: 'numeric',
+              month: 'short',
+            })}
+          </span>
           {session.status === 'needs_review' && (
             <span className="rounded bg-warn-soft px-2 py-1 text-xs font-medium text-warn">
               {t('needsReview')}

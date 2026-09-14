@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getFormatter, getTranslations } from 'next-intl/server';
 import { LogSetForm, WorkoutSetList } from '@features/workout-logs';
 import type { Exercise } from '@shared/types/exercise';
 import type { WorkoutLog } from '@shared/types/workout-log';
@@ -15,6 +15,7 @@ export default async function WorkoutLogDetailPage({
 }) {
   const { locale, id } = await params;
   const t = await getTranslations('Workouts');
+  const format = await getFormatter();
 
   let workoutLog: WorkoutLog;
   try {
@@ -48,7 +49,12 @@ export default async function WorkoutLogDetailPage({
         <h1 className="text-2xl font-extrabold md:text-[26px]">
           {workoutLog.title}
         </h1>
-        <p className="text-sm text-muted">{workoutLog.date}</p>
+        <p className="text-sm text-muted">
+          {format.dateTime(new Date(workoutLog.date + 'T00:00:00Z'), {
+            day: 'numeric',
+            month: 'short',
+          })}
+        </p>
       </div>
 
       <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
