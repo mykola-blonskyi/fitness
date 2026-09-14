@@ -2,12 +2,21 @@ import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import {
   setBaseline,
+  type AnalysisStatus,
   type PhotoPose,
   type PhotoSession,
 } from '@features/photo-sessions/actions';
 import { fetchPhotoViewUrl } from '@features/photo-sessions/photo-view-url';
 import { PhotoSessionReview } from './PhotoSessionReview';
 import { RetryAnalysisButton } from './RetryAnalysisButton';
+
+// Mirrors RETRYABLE_ANALYSIS_STATUSES in retry-analysis.ts: offering a
+// status assertRetryableAnalysis rejects means the button 400s on click.
+const RETRYABLE_ANALYSIS_STATUSES: readonly AnalysisStatus[] = [
+  'pending',
+  'processing',
+  'failed',
+];
 
 export async function PhotoSessionList({
   sessions,
@@ -112,9 +121,9 @@ async function PhotoSessionRow({ session }: { session: PhotoSession }) {
                   >
                     {tAnalysis(photo.analysisStatus)}
                   </span>
-                  {photo.analysisStatus !== 'completed' && (
-                    <RetryAnalysisButton photoId={photo.id} />
-                  )}
+                  {RETRYABLE_ANALYSIS_STATUSES.includes(
+                    photo.analysisStatus,
+                  ) && <RetryAnalysisButton photoId={photo.id} />}
                 </>
               )}
             </div>

@@ -19,8 +19,6 @@ JOB_HANDLERS = {
     "analyze-alignment": process_analyze_alignment_job,
 }
 
-# Run once a job has exhausted its retries, so the permanent failure is recorded
-# somewhere the user can see it.
 JOB_FAILURE_HANDLERS = {
     "analyze-alignment": mark_analyze_alignment_failed,
     "detect": mark_detect_failed,
