@@ -118,27 +118,25 @@ export class PhotoSessionsService {
     let session: typeof schema.photoSessions.$inferSelect;
     let insertedPhotos: (typeof schema.progressPhotos.$inferSelect)[];
     try {
-      ({ session, insertedPhotos } = await this.db.transaction(
-        async (tx) => {
-          const [session] = await tx
-            .insert(schema.photoSessions)
-            .values({ userId, date, status: 'detecting' })
-            .returning();
+      ({ session, insertedPhotos } = await this.db.transaction(async (tx) => {
+        const [session] = await tx
+          .insert(schema.photoSessions)
+          .values({ userId, date, status: 'detecting' })
+          .returning();
 
-          const insertedPhotos = await tx
-            .insert(schema.progressPhotos)
-            .values(
-              objectKeys.map((objectKey) => ({
-                photoSessionId: session.id,
-                dailyLogId: dailyLog.id,
-                objectKey,
-              })),
-            )
-            .returning();
+        const insertedPhotos = await tx
+          .insert(schema.progressPhotos)
+          .values(
+            objectKeys.map((objectKey) => ({
+              photoSessionId: session.id,
+              dailyLogId: dailyLog.id,
+              objectKey,
+            })),
+          )
+          .returning();
 
-          return { session, insertedPhotos };
-        },
-      ));
+        return { session, insertedPhotos };
+      }));
     } catch (err) {
       if (isUniqueViolation(err)) {
         throw new ConflictException(

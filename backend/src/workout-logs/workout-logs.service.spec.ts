@@ -77,7 +77,9 @@ describe('WorkoutLogsService.logSet', () => {
     const result = await service.logSet('user-1', 'log-1', dto);
 
     expect(db.select).toHaveBeenCalledTimes(1);
-    const [insertedValues] = db.values.mock.calls[0];
+    const [insertedValues] = db.values.mock.calls[0] as [
+      Record<string, unknown>,
+    ];
     expect(insertedValues).toMatchObject({
       workoutLogId: 'log-1',
       exerciseId: 'exercise-1',

@@ -23,9 +23,7 @@ describe('AdminGuard', () => {
     const findFirst = jest.fn().mockResolvedValue({ isAdmin: true });
     const guard = new AdminGuard({ query: { users: { findFirst } } } as never);
 
-    await expect(guard.canActivate(buildContext(identity))).resolves.toBe(
-      true,
-    );
+    await expect(guard.canActivate(buildContext(identity))).resolves.toBe(true);
   });
 
   it('rejects a non-admin with 403', async () => {

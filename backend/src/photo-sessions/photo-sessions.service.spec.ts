@@ -147,9 +147,9 @@ describe('PhotoSessionsService.confirm', () => {
       photoAnalysisQueueService as never,
     );
 
-    await expect(
-      service.confirm('user-1', '2026-09-14', dto),
-    ).rejects.toThrow(ConflictException);
+    await expect(service.confirm('user-1', '2026-09-14', dto)).rejects.toThrow(
+      ConflictException,
+    );
     expect(photoAnalysisQueueService.pushDetectJob).not.toHaveBeenCalled();
   });
 });

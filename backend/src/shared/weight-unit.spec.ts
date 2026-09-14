@@ -11,9 +11,7 @@ describe('assertRealisticWeight', () => {
   });
 
   it('rejects a weight above the ceiling', () => {
-    expect(() => assertRealisticWeight(501, 'kg')).toThrow(
-      BadRequestException,
-    );
+    expect(() => assertRealisticWeight(501, 'kg')).toThrow(BadRequestException);
     expect(() => assertRealisticWeight(1101, 'lb')).toThrow(
       BadRequestException,
     );

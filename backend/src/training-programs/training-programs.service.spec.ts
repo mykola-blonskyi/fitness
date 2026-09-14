@@ -53,7 +53,9 @@ describe('TrainingProgramsService.addExercise', () => {
 
     const result = await service.addExercise('user-1', 'program-1', dto);
 
-    const [insertedValues] = db.values.mock.calls[0];
+    const [insertedValues] = db.values.mock.calls[0] as [
+      Record<string, unknown>,
+    ];
     expect(insertedValues).toMatchObject({
       trainingProgramId: 'program-1',
       exerciseId: 'exercise-1',
