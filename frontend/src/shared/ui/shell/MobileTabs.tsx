@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CloseIcon, MoreIcon } from '@shared/ui/icons';
@@ -21,6 +21,24 @@ export function MobileTabs({
   const t = useTranslations('Header');
   const [open, setOpen] = useState(false);
   const active = useActiveNavKey();
+  const panelId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const dismiss = useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current?.querySelector('a')?.focus();
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') dismiss();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, dismiss]);
 
   const tabs = MOBILE_TAB_KEYS.map((key) =>
     NAV_ITEMS.find((item) => item.key === key)!,
@@ -37,7 +55,7 @@ export function MobileTabs({
       {open && (
         <div
           className="fixed inset-0 z-30 bg-black/40 md:hidden"
-          onClick={() => setOpen(false)}
+          onClick={dismiss}
           aria-hidden="true"
         />
       )}
@@ -46,12 +64,16 @@ export function MobileTabs({
         className="sticky bottom-0 z-40 md:hidden"
       >
         {open && (
-          <div className="card mx-3 mb-2 flex flex-col gap-1 p-2">
+          <div
+            id={panelId}
+            ref={panelRef}
+            className="card mx-3 mb-2 flex flex-col gap-1 p-2"
+          >
             <div className="flex items-center justify-between px-2 py-1">
               <span className="kicker">{t('nav.more')}</span>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={dismiss}
                 aria-label={t('closeMore')}
                 className="flex size-9 items-center justify-center rounded-ctl hover:bg-hover"
               >
@@ -87,9 +109,11 @@ export function MobileTabs({
             </NavLink>
           ))}
           <button
+            ref={triggerRef}
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
+            aria-controls={panelId}
             className={`${tabClass} ${moreIsActive ? tabActiveClass : ''}`}
           >
             <MoreIcon className="size-5" />

@@ -7,6 +7,7 @@ import { moveDietMeal, reorderDietMeals } from '@features/diet/actions';
 import type { DietItemResponse, DietResponse } from '@features/diet/actions';
 import { DietItemActions } from '@features/diet/components/DietItemActions';
 import { RegenerateButton } from '@features/diet/components/RegenerateButton';
+import { FieldError } from '@shared/ui/components/FieldError';
 import { ArrowDownIcon, ArrowUpIcon } from '@shared/ui/icons';
 
 function arraysEqual(a: number[], b: number[]) {
@@ -37,6 +38,7 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
   const t = useTranslations('Diet');
   const router = useRouter();
   const [movingPosition, setMovingPosition] = useState<number | undefined>();
+  const [error, setError] = useState<string | undefined>();
 
   // Local, optimistic copy of mealOrder so a drag can reflow the list live
   // as the pointer moves over other sections, without waiting on a round
@@ -62,10 +64,16 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
   const hasFreeFoods = diet.items.some((item) => !item.isCounted);
 
   async function onMove(mealPosition: number, direction: 'up' | 'down') {
+    setError(undefined);
     setMovingPosition(mealPosition);
-    await moveDietMeal(diet.id, mealPosition, direction);
-    router.refresh();
-    setMovingPosition(undefined);
+    try {
+      await moveDietMeal(diet.id, mealPosition, direction);
+      router.refresh();
+    } catch {
+      setError(t('errors.generic'));
+    } finally {
+      setMovingPosition(undefined);
+    }
   }
 
   function onDragHandlePointerDown(
@@ -109,9 +117,14 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
   async function onDragHandlePointerUp() {
     if (draggingPosition === undefined) return;
     setDraggingPosition(undefined);
-    if (!arraysEqual(order, diet.mealOrder)) {
+    if (arraysEqual(order, diet.mealOrder)) return;
+    setError(undefined);
+    try {
       await reorderDietMeals(diet.id, order);
       router.refresh();
+    } catch {
+      setOrder(diet.mealOrder);
+      setError(t('errors.generic'));
     }
   }
 
@@ -139,6 +152,8 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
       {hasFreeFoods && (
         <p className="text-xs text-muted">{t('freeFood.dayNote')}</p>
       )}
+
+      <FieldError message={error} />
 
       {groups.map((group, index) => (
         <section

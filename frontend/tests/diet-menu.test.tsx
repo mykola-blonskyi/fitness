@@ -283,6 +283,53 @@ describe('DietMenu', () => {
     expect(reorderDietMeals).toHaveBeenCalledWith('diet-1', [2, 1]);
   });
 
+  it('a rejected move leaves the reorder controls usable and reports the failure', async () => {
+    const user = userEvent.setup();
+    moveDietMeal.mockRejectedValueOnce(new Error('network down'));
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    await user.click(screen.getByRole('button', { name: 'Move Meal 1 down' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /something went wrong/i,
+    );
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 1 down' }),
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Move Meal 2 up' }),
+    ).not.toBeDisabled();
+    expect(screen.getByTitle('Drag to reorder Meal 1')).not.toHaveClass(
+      'pointer-events-none',
+    );
+  });
+
+  it('a rejected drop rolls the list back to the order the server still holds', async () => {
+    reorderDietMeals.mockRejectedValueOnce(new Error('network down'));
+    renderWithIntl(<DietMenu diet={diet} />);
+    const handle = screen.getByTitle('Drag to reorder Meal 1');
+
+    fireEvent.pointerDown(handle, {
+      pointerId: 1,
+      button: 0,
+      pointerType: 'mouse',
+      clientY: 40,
+    });
+    fireEvent.pointerMove(handle, {
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientY: 150,
+    });
+    fireEvent.pointerUp(handle, { pointerId: 1, pointerType: 'mouse' });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /something went wrong/i,
+    );
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
+    ).toEqual(['Meal 1', 'Meal 2']);
+  });
+
   it('releasing a drag without crossing another section does not call reorderDietMeals', () => {
     renderWithIntl(<DietMenu diet={diet} />);
     const handle = screen.getByTitle('Drag to reorder Meal 1');
