@@ -736,5 +736,19 @@
     "error": "Could not prepare the sign-in form.",
     "retry": "Try again",
     "signOut": "Sign out"
+  },
+  "ErrorPage": {
+    "title": "Something went wrong",
+    "body": "We couldn't load this page. It may be a temporary hiccup — try again.",
+    "retry": "Try again",
+    "reference": "Reference: {digest}"
+  },
+  "NotFoundPage": {
+    "title": "Page not found",
+    "body": "This page doesn't exist, or you don't have access to it.",
+    "home": "Back to home"
+  },
+  "Loading": {
+    "label": "Loading…"
   }
 }

@@ -736,5 +736,19 @@
     "error": "No se pudo preparar el formulario de inicio de sesión.",
     "retry": "Reintentar",
     "signOut": "Cerrar sesión"
+  },
+  "ErrorPage": {
+    "title": "Algo ha salido mal",
+    "body": "No se ha podido cargar esta página. Puede ser un fallo temporal. Inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "reference": "Referencia: {digest}"
+  },
+  "NotFoundPage": {
+    "title": "Página no encontrada",
+    "body": "Esta página no existe o no tienes acceso a ella.",
+    "home": "Volver al inicio"
+  },
+  "Loading": {
+    "label": "Cargando…"
   }
 }

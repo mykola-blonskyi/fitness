@@ -51,56 +51,61 @@ export function ThemeSwitcher() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div
-        role="radiogroup"
-        aria-label={t('themeLabel')}
-        className="grid grid-cols-2 gap-3 md:grid-cols-4"
-      >
-        {SWATCHES.map((swatch) => {
-          const selected = theme === swatch.theme;
-          return (
-            <button
-              key={swatch.theme}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => setTheme(swatch.theme)}
-              className={`flex flex-col gap-2 rounded-card border-2 p-2 text-left transition-colors ${
-                selected ? 'border-ink' : 'border-line hover:border-muted'
-              }`}
-            >
-              <span
-                className="grid h-[72px] grid-cols-[28%_1fr] gap-1.5 rounded-ctl p-2"
-                style={{ background: swatch.bg }}
-                aria-hidden="true"
+      {/* fieldset keeps its min-inline-size: min-content default, so the
+          grid lives on an inner div rather than on the fieldset itself. */}
+      <fieldset className="min-w-0">
+        <legend className="sr-only">{t('themeLabel')}</legend>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {SWATCHES.map((swatch) => {
+            const selected = theme === swatch.theme;
+            return (
+              <label
+                key={swatch.theme}
+                className={`flex cursor-pointer flex-col gap-2 rounded-card border-2 p-2 text-left transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink ${
+                  selected ? 'border-ink' : 'border-line hover:border-muted'
+                }`}
               >
-                <span
-                  className="rounded-md"
-                  style={{ background: swatch.side }}
+                <input
+                  type="radio"
+                  name="theme"
+                  value={swatch.theme}
+                  checked={selected}
+                  onChange={() => setTheme(swatch.theme)}
+                  className="sr-only"
                 />
-                <span className="flex flex-col gap-1.5">
+                <span
+                  className="grid h-[72px] grid-cols-[28%_1fr] gap-1.5 rounded-ctl p-2"
+                  style={{ background: swatch.bg }}
+                  aria-hidden="true"
+                >
                   <span
-                    className="h-2.5 rounded"
-                    style={{ background: swatch.accent }}
+                    className="rounded-md"
+                    style={{ background: swatch.side }}
                   />
-                  <span
-                    className="h-2.5 rounded"
-                    style={{ background: swatch.card }}
-                  />
-                  <span
-                    className="h-2.5 rounded"
-                    style={{ background: swatch.card }}
-                  />
+                  <span className="flex flex-col gap-1.5">
+                    <span
+                      className="h-2.5 rounded"
+                      style={{ background: swatch.accent }}
+                    />
+                    <span
+                      className="h-2.5 rounded"
+                      style={{ background: swatch.card }}
+                    />
+                    <span
+                      className="h-2.5 rounded"
+                      style={{ background: swatch.card }}
+                    />
+                  </span>
                 </span>
-              </span>
-              <span className="flex items-center justify-between px-1 text-xs font-semibold">
-                {t(`themes.${swatch.theme}`)}
-                {selected && <CheckIcon className="size-4" />}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                <span className="flex items-center justify-between px-1 text-xs font-semibold">
+                  {t(`themes.${swatch.theme}`)}
+                  {selected && <CheckIcon className="size-4" />}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-ctl border border-line px-3 py-2">
         <span className="flex flex-col">
