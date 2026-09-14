@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { Client } from 'minio';
+import { Client, S3Error } from 'minio';
 
 const UPLOAD_URL_EXPIRY_SECONDS = 15 * 60;
 const READ_URL_EXPIRY_SECONDS = 5 * 60;
@@ -55,8 +55,14 @@ export class StorageService {
     try {
       await this.client.statObject(this.bucket, objectKey);
       return true;
-    } catch {
-      return false;
+    } catch (err) {
+      if (
+        err instanceof S3Error &&
+        (err.code === 'NotFound' || err.code === 'NoSuchKey')
+      ) {
+        return false;
+      }
+      throw err;
     }
   }
 

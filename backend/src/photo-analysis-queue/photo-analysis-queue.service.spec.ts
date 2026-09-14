@@ -1,7 +1,10 @@
 import { Test } from '@nestjs/testing';
+import Redis from 'ioredis';
 import { PhotoAnalysisQueueModule } from './photo-analysis-queue.module';
 import { REDIS_CLIENT } from './photo-analysis-queue.constants';
 import { PhotoAnalysisQueueService } from './photo-analysis-queue.service';
+
+jest.mock('ioredis');
 
 // Regression: the REDIS_CLIENT token used to live in the module file, which
 // imported the service, which imported the token back - a circular import
@@ -29,5 +32,20 @@ describe('PhotoAnalysisQueueModule', () => {
         photos: [{ photoId: 'p1', objectKey: 'progress-photos/p1.jpg' }],
       }),
     );
+  });
+
+  it('builds a client that rejects commands while Redis is down', async () => {
+    process.env.REDIS_URL = 'redis://queue:6379';
+    jest.mocked(Redis).mockClear();
+
+    await Test.createTestingModule({
+      imports: [PhotoAnalysisQueueModule],
+    }).compile();
+
+    expect(Redis).toHaveBeenCalledWith('redis://queue:6379', {
+      enableOfflineQueue: false,
+      connectTimeout: 5_000,
+      commandTimeout: 5_000,
+    });
   });
 });

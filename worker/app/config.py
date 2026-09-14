@@ -3,6 +3,9 @@ import os
 REDIS_URL = os.environ["REDIS_URL"]
 QUEUE_KEY = "photo_analysis_jobs"
 BRPOP_TIMEOUT_SECONDS = 5
+# The loop ticks once per BRPOP timeout; three missed in a row means wedged.
+CONSUMER_STALE_AFTER_SECONDS = BRPOP_TIMEOUT_SECONDS * 3
+CONSUMER_ERROR_BACKOFF_SECONDS = 2
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 

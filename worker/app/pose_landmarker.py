@@ -16,6 +16,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
 
+from .errors import PermanentJobError
+
 _MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
     "pose_landmarker_full/float16/1/pose_landmarker_full.task"
@@ -66,7 +68,12 @@ def detect_landmarks(image_bytes: bytes) -> list[dict] | None:
     # photo tagged "rotate 90" is fed to the model sideways, so shoulders
     # end up stacked vertically instead of spread horizontally and every
     # geometry feature in pose_geometry.py comes out meaningless.
-    image = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes)))
+    try:
+        image = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes)))
+    except OSError as err:
+        # Pillow raises UnidentifiedImageError (an OSError) for a format it
+        # has no decoder for, HEIC being the one phones actually produce.
+        raise PermanentJobError("photo is not a decodable image") from err
     image = image.convert("RGB")
     mp_image = mp.Image(
         image_format=mp.ImageFormat.SRGB, data=np.asarray(image)
