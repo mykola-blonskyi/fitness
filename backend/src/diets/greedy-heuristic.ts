@@ -504,7 +504,9 @@ function buildMeal(
         target,
         selection.favoriteFoodItemIds,
       );
-      if (eligible.length === 0) break;
+      // Not break: a role whose candidates carry none of the macro must hand
+      // the slot to the next role in the chain, not abandon the slot.
+      if (eligible.length === 0) continue;
       const candidate = chooseCandidate(
         eligible,
         chainIndex,
