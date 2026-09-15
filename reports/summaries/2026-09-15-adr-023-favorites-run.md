@@ -4,8 +4,16 @@ Period: 2026-09-15
 
 Owner: Mykola Blonskyi
 
-Scope: implement ADR-023 (favorites narrow the macro slot; a Food Family can
-prefer a meal position) in `backend/src/diets/`.
+Scope: implement ADR-023 in `backend/src/diets/`, delivered as the three
+stacked PRs the ADR's mirror entry names.
+
+| PR | What |
+|---|---|
+| #118 | Favorites narrow the macro slot; casein prefers the last meal |
+| #119 | A role carrying none of its macro falls through to the next |
+| #120 | Role `dairy` joins the protein chain |
+
+All three merged and deployed on 2026-09-15.
 
 ---
 
@@ -31,9 +39,11 @@ prefer a meal position) in `backend/src/diets/`.
 
 ## In Progress
 
-- [ ] This is the third of the three stacked PRs the ADR's mirror entry
-  names. The chain-tail `break` fix and `dairy`/`fruit` joining
-  `MEAL_ROLE_CHAINS` are not done.
+- [ ] Nothing from this ADR. Two items it listed as not-done remain open:
+  branded scans without a Food Family stay unusable, and `affectsGeneration`
+  still tests only `familyId != null`, so it keeps telling the user that
+  items count when generation cannot reach them. That marker matters more
+  after #120, since `dairy` became reachable while `fruit` did not.
 
 ---
 
@@ -62,6 +72,22 @@ exactly that, so the test was inverted rather than kept.
 Generation always sees a name. Optional only so the pure-function specs need
 not thread a field they do not exercise.
 
+**Fruit was held back, dairy was not.** The ADR's third PR was planned as
+"dairy and fruit joining the chains". Dairy had an unambiguous home, since
+#118 had already made the protein slot a Category-filtered pool and `dairy`
+sits in the animal set. Fruit did not. The carb chain is a walk that stops at
+the first role with an eligible candidate, and `complex_carb` always has one,
+so appending fruit there would be reached essentially never. Unioning the carb
+pool instead would let an apple be the carb of any meal on macro fit alone.
+Put to the owner as a product call; the answer was to defer fruit to ADR-020
+phase 2's dinner Archetype, which already specifies "slow protein + fruit".
+
+**The casein rule shipped inert and was switched on two PRs later.** #118 added
+the Meal Affinity with passing unit tests, but every `casein_dairy` row carries
+Role `dairy` and no chain contained it, so nothing in production reached the
+rule. #120 is what made it live. Worth recording because the tests were green
+throughout and told us nothing about reachability.
+
 **The ADR text ships with the code.** `docs/decisions.md`,
 `knowledge/business-rules.md` and `knowledge/glossary.md` were already written
 before this run and describe all five causes, including the two the other two
@@ -85,9 +111,7 @@ diff reviewable, not because this PR implements all of it.
 - `MEAL_ROLE_CHAINS` is what ADR-020 phase 2 replaces with Archetypes and
   Slots. The protein-pool change lands inside a structure that is scheduled
   to be rewritten, which ADR-023 accepts explicitly.
-- `casein_dairy` affinity is inert in production. Those rows carry Role
-  `dairy`, which no `MEAL_ROLE_CHAINS` entry contains, so nothing reaches the
-  rule until the second PR in the stack lands. It is unit-tested, not live.
-- The chain-tail `break` bug is untouched here by design, one PR per change.
-  It still applies to the carb and fat chains. The protein chain no longer
-  walks role by role, so it is unaffected.
+- Role `fruit` stays ungeneratable, and with it sixteen curated staples.
+  Deferred deliberately, not overlooked.
+- `affectsGeneration` still reports unreachable items as counting, which is
+  now the largest honesty gap left in this area.
