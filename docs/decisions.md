@@ -366,6 +366,6 @@ Corrects the mushroom divergence ADR-020 and ADR-021 parked for phase 2, and two
 
 **`MAX_MEALS_PER_PROTEIN_FAMILY` binds under a hard narrow.** ADR-023's "no per-item cap applies" stands; this is a Family cap, and it now filters the favorites before the round-robin picks among them. Once every favorite Family is spent the slot hands back to the wider pool rather than repeating a favorite, which is why a day with two favorited proteins serves each twice and draws the fifth meal from the pool.
 
-Production's `food_calories.family_id` is only rewritten by the classification pass, so `node dist/scripts/classify-food-families.js` has to run after the deploy for mushrooms to move. Diets already generated keep their items until regenerated.
+`food_calories.family_id` is only rewritten by the classification pass, and `backend/Dockerfile`'s `CMD` already runs it on every boot, so the deploy moved the rows itself. Production reported 10 changed. Diets already generated keep their items until regenerated.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
