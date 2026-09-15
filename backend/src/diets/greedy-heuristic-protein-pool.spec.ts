@@ -51,8 +51,6 @@ describe('generateDietItems - the protein pool (ADR-023)', () => {
     expect(proteinPoolOffered(ANIMAL)).toEqual([eggProtein.id]);
   });
 
-  // The chain walk this replaced stopped at the first non-empty role, so a
-  // vegetarian's dairy in lean_protein hid plant_protein entirely.
   it('offers legumes alongside eggs once a diet type has removed meat and fish', () => {
     expect(proteinPoolOffered(ANIMAL_AND_PLANT)).toEqual([
       eggProtein.id,

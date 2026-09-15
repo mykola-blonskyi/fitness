@@ -101,8 +101,6 @@ export interface GreedyHeuristicInput {
   // Optional so the existing specs need not thread it; generate() always
   // supplies it.
   favoriteFoodItemIds?: ReadonlySet<string>;
-  // Category names the protein slot may draw from. Omitted leaves the pool
-  // unfiltered, which only the pure-function specs do.
   proteinCategories?: ReadonlySet<string>;
   // Injectable so tests can pick deterministically; defaults to random.
   pickRandom?: <T extends { id: string }>(items: T[]) => T;
@@ -289,8 +287,8 @@ function recordPick(
   }
 }
 
-// null hands the caller back to the normal pool. A hard slot overrides the
-// no-repeat and protein-family rules on purpose - round-robin is the rule.
+// A hard slot overrides the no-repeat and protein-family rules on purpose:
+// round-robin over the favorites is the rule.
 function narrowToFavorites(
   eligible: FoodCandidate[],
   chainIndex: number,
@@ -314,7 +312,6 @@ function narrowToFavorites(
   return unspent.length > 0 ? unspent : null;
 }
 
-// Falls back to the whole pool, so an affinity reorders but never empties.
 function preferByMealAffinity(
   candidates: FoodCandidate[],
   isLastMeal: boolean,

@@ -412,9 +412,8 @@ export class DietsService {
       );
     }
 
-    // Reroll honours the favorites rule that produced the menu; an explicit
-    // swap deliberately does not, since narrowing a list the user opened on
-    // purpose is hostile (ADR-023).
+    // Reroll honours favorites; an explicit swap deliberately does not,
+    // since narrowing a list the user opened on purpose is hostile (ADR-023).
     const favoriteFoodItemIds =
       await this.foodPreferencesService.getFavoriteFoodItemIds(userId);
     const favorites = candidates.filter((row) =>

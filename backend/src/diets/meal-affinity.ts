@@ -2,8 +2,8 @@ import { isFoodFamily, type FoodFamily } from '../food-items/food-item.types';
 
 export type MealAffinity = 'last_meal';
 
-// Per Family rather than per Food Item: every casein dairy belongs at the
-// end of the day for the same reason, and no user can be asked to tag it.
+// Per Family, not per Food Item: no user can be asked to tag their cottage
+// cheese, and every casein dairy belongs at the end of the day anyway.
 const MEAL_AFFINITY: Partial<Record<FoodFamily, MealAffinity>> = {
   casein_dairy: 'last_meal',
 };
