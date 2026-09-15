@@ -109,7 +109,7 @@ Meal shape stays as it is today. The foods stop being absurd.
 - [x] PWA manifest + service worker offline caching (FITNESS-12)
 - [x] Generic IndexedDB offline write-queue + sync + offline/syncing/synced indicator, reusable by any feature's write endpoint; wired up to the daily-log weight entry Server Action as the concrete example (FITNESS-13)
 - [x] Coolify/Docker Compose deployment, CI/CD gates (lint, prettier, tests, migration-before-deploy) — live at fitness.blonskyi.dev (FITNESS-8)
-- [x] Plane workspace (FITNESS) ticket setup: Modules = specs above, Work items = individual tickets, branch-per-ticket workflow
+- [x] Ticket setup: originally a Plane workspace (FITNESS), retired 2026-09-15 for GitHub issues plus the `docs/tickets/` export; branch-per-ticket workflow unchanged
 
 ---
 

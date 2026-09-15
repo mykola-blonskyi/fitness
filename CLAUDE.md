@@ -8,7 +8,7 @@ This repository follows the global Claude configuration.
 
 ## Current State
 
-All six phases of `plans/current.md` are implemented and merged into `main` — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018). Work continues past those phases on the ADR-020 menu-composition rework; Plane is the live ticket state, not this file.
+All six phases of `plans/current.md` are implemented and merged into `main` — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018). Work continues past those phases on the ADR-020 menu-composition rework; GitHub issues are the live ticket state, not this file.
 
 `login.blonskyi.dev` is live, the `fitness` client is registered against it, and signing in now goes to that issuer instead of the Hub. The one path still unproven from outside is the token exchange, which only a real sign-in exercises — so if a login ever fails at the callback rather than at the prompt, suspect `OIDC_CLIENT_SECRET` in Coolify first.
 
@@ -16,7 +16,7 @@ Production tracks `main` automatically. A push to `main` runs CI, and the `deplo
 
 Coolify injects the app's build-time variables into its own image builds, so `docker build -f frontend/Dockerfile` by hand fails on `OIDC_ISSUER` where Coolify succeeds. That is expected, not a broken build.
 
-See `plans/current.md` for the phased plan and Plane (`docs/agents/issue-tracker.md`) for live ticket status.
+See `plans/current.md` for the phased plan and GitHub issues for live ticket status.
 
 Common commands (run from repo root):
 
@@ -114,7 +114,11 @@ Additional project-specific instructions may exist in:
 
 ### Issue tracker
 
-Specs and tickets live in Plane (`plane.blonskyi.dev`, workspace `blonskyi`, project `FITNESS`). See `docs/agents/issue-tracker.md`.
+Specs and tickets live in GitHub issues on this repo (`gh issue list`). `docs/tickets/` holds the
+2026-09-15 export of the retired Plane instance — one markdown file per work item, indexed by
+`docs/tickets/README.md`. Those files are history: the five that were still open when Plane was
+retired became issues #124-#128, and nothing else should be reopened from them. Ticket ids in old
+commits and PR bodies (`FITNESS-NN`) resolve to `docs/tickets/FITNESS-NN-*.md`.
 
 ### Domain docs
 
