@@ -62,7 +62,7 @@ Meals are identified purely by position (`meal_position`, 1-based, "Meal 1".."Me
 
 Protein is split equally across meals; carbohydrates taper down by position across the carb-eligible meals and fat tapers across all meals (meal 1 gets the largest share). Each meal's calorie budget is what its own macros cost, so meals differ in size rather than each taking `totalCalories / mealCount`. Once `meal_count` is 3 or more, the last meal gets no carb-role food at all; past 3, the last two don't — the carbs those meals would have carried are redistributed across the rest, not dropped. See ADR-016 and ADR-019.
 
-The day's calorie target is a hard ceiling: a menu may land under it, never over. Macro grams are fitted two-sided and may land slightly either side of target — an earlier rule capped each macro at its target, which is what left carbs starved whenever a meal's other content pushed calories up. Candidate choice is macro-aware: a food too dilute to carry its role's share in a sensible portion is passed over for a denser one from the same role, and a protein source whose own fat would eat most of the meal's fat budget loses to a leaner sibling when there is one.
+The day's calorie target is a hard ceiling: a menu may land under it, never over. Macro grams are fitted two-sided and may land slightly either side of target — an earlier rule capped each macro at its target, which is what left carbs starved whenever a meal's other content pushed calories up. Candidate choice is macro-aware: a food too dilute to carry its role's share in a sensible portion is passed over for a denser one from the same role, and a protein source whose own fat would eat most of the meal's fat budget loses to a leaner sibling when there is one. Where a slot draws from several Roles in order, a Role whose candidates carry none of the macro it promises hands the slot to the next Role rather than leaving the meal without that macro.
 
 Why: this is a recommendation feature, not a medical prescription — but the macro grams are the point of a diet, so "close enough" applies to all four numbers, not to calories alone.
 
@@ -104,7 +104,7 @@ The protein and carb slots narrow hard. If either holds an eligible favorite, on
 
 The vegetable and fat slots take the soft rule. A favorite goes first and may repeat twice, then the normal pool opens.
 
-A slot with no favorite draws its normal pool. The protein pool is animal plus fish by Category. `legumes` and `nuts` join it once a diet type excludes `meat` or `fish`.
+A slot with no favorite draws its normal pool. The protein pool is one pool across `lean_protein`, `fatty_protein`, `plant_protein` and `dairy`, filtered to animal plus fish by Category; `legumes` and `nuts` join it once a diet type excludes `meat` or `fish`. Role `fruit` is drawn by no slot, so its Food Items are browsable and loggable but never generated.
 
 A favorite raises the protein fat budget from 0.7 to 2.0 times the meal's fat target. A favorite still has to pass the density and portion filters, so one too dilute to carry its slot at any portion is passed over.
 
