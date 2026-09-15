@@ -79,6 +79,16 @@ describe('resolveFamily', () => {
     }
   });
 
+  it('gives the RU mushrooms section its own family, not a salad vegetable', () => {
+    expect(resolveFamily(ruRow('mushrooms', 'Шампиньоны свежие'))).toBe(
+      'mushroom',
+    );
+    expect(resolveFamily(ruRow('mushrooms', 'Сыроежки свежие'))).toBe(
+      'mushroom',
+    );
+    expect(resolveFamily(ruRow('mushrooms', 'Белые сушеные'))).toBeNull();
+  });
+
   it('keeps offal, sausages, flours and confectionery out of the pool', () => {
     expect(resolveFamily(ruRow('meat', 'Говяжьи Мозги'))).toBeNull();
     expect(resolveFamily(ruRow('sausages', 'Сосиски Молочные'))).toBeNull();
