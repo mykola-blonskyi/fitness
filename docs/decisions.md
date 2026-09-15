@@ -294,6 +294,8 @@ Date: 2026-09-13
 
 Status: Partially superseded by ADR-023 (2026-09-15) — the Free Food portion class stays on the Food Family and the bulk/bulk/accent salad slots stand; favorites no longer narrow by Family. Its measurement of why Role was the wrong key is what ADR-023 built the slot rule on.
 
+Correction (2026-09-15, ADR-024): the mushroom divergence this ADR's own ADR-020 note parked for phase 2 is closed early. Mushrooms left `cooked_vegetable`, so a salad can no longer be three mushrooms.
+
 ADR-020 said a salad is three items with at least two of them bulk, and nothing in the schema separated an onion from a tomato. **Bulk versus accent is a Food Family, `accent_vegetable`, not a Food Item attribute.** `salad_vegetable` and `cooked_vegetable` stay bulk at 80 g; `accent_vegetable` is served at 15 g. One record per Family in `free-foods.ts` carries both the grams and the class, so the two cannot disagree, and a salad is composed from a slot table of `[bulk, bulk, accent-or-bulk]` — the first two slots accept bulk only, which is what makes ADR-020's two-of-three rule hold by construction rather than on average. With no `accent_vegetable` row in a catalog the third slot falls through to bulk and generation is unchanged, so code, staples and a classification pass can land in any order.
 
 A per-item portion column was rejected. `food_families` is unconstrained text seeded from a closed TS list, so a Family value costs no migration, while a column costs one and opens a second classification axis that production must populate, review and keep synced with the first — and production has not yet run the first. The column also represents states that mean nothing (`{ family: 'poultry', freePortionGrams: 15 }`), where a Family cannot. `accent_vegetable` is the first Family whose members are not interchangeable with the Family they left, which is the point: ADR-020 makes Family the unit of interchangeability, and a Family holding both parsley and tomato was mis-drawn.
@@ -302,7 +304,7 @@ A per-item portion column was rejected. `food_families` is unconstrained text se
 
 Measured over five seeds and 300 menus per meal count, both pools: the calorie ceiling, the no-repeat rule and the protein-Family cap are unchanged, and no salad in 108,000 held fewer than two bulk items. On the moderate profile the three mean absolute macro deltas cost at most 0.76 g in total, at five meals. On ADR-019's extreme 310P profile they cost 0.78 to 4.16 g, which **fails** the +0.5 g per-macro and +1.0 g total thresholds this change was measured against: a profile whose protein target is unreachable already misses carbs by 42-52 g and has no headroom left to absorb the ~65 g of vegetable the accent slot removes from each meal. Accepted on the judgement that a target nobody can hit is not the one to protect. See `reports/audits/2026-09-13-salad-composition.md`.
 
-Two known divergences are left for phase 2's Archetypes. `isFreeFood` covers `cooked_vegetable`, so a salad can legitimately be three mushrooms; and garlic and ginger stay outside the taxonomy, as cooking aromatics rather than things eaten at 15 g in a raw salad.
+One known divergence is left for phase 2's Archetypes: garlic and ginger stay outside the taxonomy, as cooking aromatics rather than things eaten at 15 g in a raw salad. The three-mushroom salad this listed alongside it is closed by ADR-024.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
 
@@ -330,7 +332,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-09-15
 
-Status: Accepted
+Status: Accepted; two rules corrected by ADR-024 (2026-09-15) — the protein fat budget ranks a slot's pool instead of gating the catalog, and the protein Family cap binds under a hard narrow
 
 Supersedes ADR-014's and ADR-021's partition key and ADR-014's swap exemption. Implements the "slow protein at dinner" half of ADR-020's `dinner` Archetype before phase 2.
 
@@ -345,5 +347,25 @@ A favorite raises `PROTEIN_FAT_BUDGET_SHARE` from 0.7 to 2.0 times the meal's fa
 `MEAL_AFFINITY` is a `Partial<Record<FoodFamily, …>>`, the same shape `free-foods.ts` uses for `FREE_FOODS`. It carries `last_meal` for `casein_dairy` and no entry for the other 19 families in `FOOD_FAMILIES` (`backend/src/food-items/food-item.types.ts`). The generator deprioritizes casein outside the last meal and prefers it at the last meal. An affinity never blocks a pick, so it cannot empty a slot. The generator resolves "last meal" by position when it builds the plan, so a later reorder stays a display concern.
 
 Reroll obeys favorites, because "give me another one like this" has to honor the rule that produced the menu. Explicit swap still offers every eligible same-Role item, because narrowing a list the user opened on purpose is hostile.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-024: Mushrooms are their own Family, and the protein fat budget ranks a pool instead of gating the catalog
+
+Date: 2026-09-15
+
+Status: Accepted
+
+Corrects the mushroom divergence ADR-020 and ADR-021 parked for phase 2, and two rules in ADR-023.
+
+**Mushrooms are a `mushroom` Food Family, absent from the `FREE_FOODS` allowlist.** The RU table's whole `mushrooms` section resolved to `cooked_vegetable`, which put eleven raw wild mushrooms among the fifty-six bulk Free Foods and served a measured 1.37 mushroom portions a day. Dried mushrooms keep their `null`. The curated staples set gains oyster and porcini rows, so the new Family carries the three members every Family owes. A `mushroom` row is browsable, loggable and swappable, and no slot generates it.
+
+**The protein fat budget is applied to the pool a slot has already narrowed to, not to the catalog before narrowing.** Fat tapers by meal position, so in a five-meal day the last meal's share is a fifteenth of the day's fat. Gating every candidate on that share left 28 of 237 proteins standing by meal 5, all of them near-zero fat, and a hard-narrowed favorite slot then had one item to rotate over. With three protein favorites set, `casein_dairy` took 80% of meals. It now takes 40%. The budget itself is unchanged, 0.7 of the meal's fat target and 2.0 for a favorite, and it still never empties a slot.
+
+**`MAX_MEALS_PER_PROTEIN_FAMILY` binds under a hard narrow.** ADR-023's "no per-item cap applies" stands; this is a Family cap, and it now filters the favorites before the round-robin picks among them. Once every favorite Family is spent the slot hands back to the wider pool rather than repeating a favorite, which is why a day with two favorited proteins serves each twice and draws the fifth meal from the pool.
+
+Production's `food_calories.family_id` is only rewritten by the classification pass, so `node dist/scripts/classify-food-families.js` has to run after the deploy for mushrooms to move. Diets already generated keep their items until regenerated.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

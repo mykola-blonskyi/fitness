@@ -190,7 +190,6 @@ function eligibleCandidates(
   candidates: FoodCandidate[],
   chainIndex: number,
   target: MealTarget,
-  favoriteFoodItemIds: ReadonlySet<string>,
 ): FoodCandidate[] {
   const macro = macroForChain(chainIndex);
   if (macro === null) return candidates;
@@ -206,17 +205,6 @@ function eligibleCandidates(
     );
   });
 
-  if (chainIndex === PROTEIN_CHAIN_INDEX) {
-    const lean = reachable.filter(
-      (candidate) =>
-        (neededGrams / candidate.proteinPer100g) * candidate.fatPer100g <=
-        target.fatG *
-          (favoriteFoodItemIds.has(candidate.id)
-            ? FAVORITE_PROTEIN_FAT_BUDGET_SHARE
-            : PROTEIN_FAT_BUDGET_SHARE),
-    );
-    if (lean.length > 0) return lean;
-  }
   if (reachable.length > 0) return reachable;
 
   const densest = candidates.reduce((best, candidate) =>
@@ -252,11 +240,8 @@ function dayFilteredCandidates(
   );
 
   if (chainIndex === PROTEIN_CHAIN_INDEX) {
-    const underCap = unused.filter(
-      (candidate) =>
-        candidate.familyName === null ||
-        (picked.mealsPerProteinFamily.get(candidate.familyName) ?? 0) <
-          MAX_MEALS_PER_PROTEIN_FAMILY,
+    const underCap = unused.filter((candidate) =>
+      underProteinFamilyCap(candidate, picked),
     );
     if (underCap.length > 0) return underCap;
   }
@@ -285,8 +270,21 @@ function recordPick(
   }
 }
 
-// A hard slot overrides the no-repeat and protein-family rules on purpose:
-// round-robin over the favorites is the rule.
+function underProteinFamilyCap(
+  candidate: FoodCandidate,
+  picked: DayPicks,
+): boolean {
+  return (
+    candidate.familyName === null ||
+    (picked.mealsPerProteinFamily.get(candidate.familyName) ?? 0) <
+      MAX_MEALS_PER_PROTEIN_FAMILY
+  );
+}
+
+// A hard slot overrides the no-repeat rule on purpose: round-robin over the
+// favorites is the rule. The protein family cap still binds, so two
+// favorited proteins of one family cannot take the whole day; once every
+// favorite family is spent the slot goes back to the wider pool.
 function narrowToFavorites(
   eligible: FoodCandidate[],
   chainIndex: number,
@@ -294,9 +292,15 @@ function narrowToFavorites(
 ): FoodCandidate[] | null {
   const uses = (candidate: FoodCandidate) =>
     selection.picked.favoriteUses.get(candidate.id) ?? 0;
-  const favorites = eligible.filter((candidate) =>
+  const eligibleFavorites = eligible.filter((candidate) =>
     selection.favoriteFoodItemIds.has(candidate.id),
   );
+  const favorites =
+    chainIndex === PROTEIN_CHAIN_INDEX
+      ? eligibleFavorites.filter((candidate) =>
+          underProteinFamilyCap(candidate, selection.picked),
+        )
+      : eligibleFavorites;
   if (favorites.length === 0) return null;
 
   if (FAVORITE_NARROWING[chainIndex] === 'hard') {
@@ -321,15 +325,41 @@ function preferByMealAffinity(
   return preferred.length > 0 ? preferred : candidates;
 }
 
+// A preference over the pool the slot already narrowed to, not a filter over
+// the catalog. The meal fat share tapers to almost nothing by the last meal,
+// so gating every candidate on it left only skim dairy in the rotation.
+function preferLeanProtein(
+  pool: FoodCandidate[],
+  target: MealTarget,
+  favoriteFoodItemIds: ReadonlySet<string>,
+): FoodCandidate[] {
+  const lean = pool.filter(
+    (candidate) =>
+      (target.proteinG / candidate.proteinPer100g) * candidate.fatPer100g <=
+      target.fatG *
+        (favoriteFoodItemIds.has(candidate.id)
+          ? FAVORITE_PROTEIN_FAT_BUDGET_SHARE
+          : PROTEIN_FAT_BUDGET_SHARE),
+  );
+  return lean.length > 0 ? lean : pool;
+}
+
+// target is absent for the Free Food slots, picked before the meal targets
+// exist and never the protein chain.
 function chooseCandidate(
   available: FoodCandidate[],
   chainIndex: number,
   selection: Selection,
   isLastMeal: boolean,
+  target?: MealTarget,
 ): FoodCandidate {
-  const pool =
+  const narrowed =
     narrowToFavorites(available, chainIndex, selection) ??
     dayFilteredCandidates(available, chainIndex, selection.picked);
+  const pool =
+    chainIndex === PROTEIN_CHAIN_INDEX && target !== undefined
+      ? preferLeanProtein(narrowed, target, selection.favoriteFoodItemIds)
+      : narrowed;
   const candidate = selection.rawPick(preferByMealAffinity(pool, isLastMeal));
   recordPick(selection, candidate, chainIndex);
   return candidate;
@@ -496,12 +526,7 @@ function buildMeal(
         (candidate) => !isFreeFood(candidate.familyName),
       );
       if (candidates.length === 0) continue;
-      const eligible = eligibleCandidates(
-        candidates,
-        chainIndex,
-        target,
-        selection.favoriteFoodItemIds,
-      );
+      const eligible = eligibleCandidates(candidates, chainIndex, target);
       // Not break: a role whose candidates carry none of the macro must hand
       // the slot to the next role in the chain, not abandon the slot.
       if (eligible.length === 0) continue;
@@ -510,6 +535,7 @@ function buildMeal(
         chainIndex,
         selection,
         isLastMeal,
+        target,
       );
       mealItems.push({
         mealPosition: target.position,

@@ -137,6 +137,62 @@ describe('generateDietItems - favorites narrow the macro slot (ADR-023)', () => 
     expect(asPlainCandidate.items[0].foodItemId).toBe(proteinA.id);
   });
 
+  it('keeps a fatty favorite in the rotation once the meal fat share tapers', () => {
+    const fatty: FoodCandidate = {
+      id: 'protein-fatty',
+      caloriesPer100g: 235,
+      proteinPer100g: 25,
+      carbsPer100g: 0,
+      fatPer100g: 15,
+      familyName: null,
+    };
+
+    const result = generateDietItems({
+      ...baseTarget,
+      mealCount: 4,
+      candidatesByRole: new Map([['lean_protein', [proteinA, fatty]]]),
+      favoriteFoodItemIds: new Set([proteinA.id, fatty.id]),
+      pickRandom: first,
+    });
+
+    expect(proteinIdsByMeal(result)).toEqual([
+      proteinA.id,
+      fatty.id,
+      proteinA.id,
+      fatty.id,
+    ]);
+  });
+
+  it('stops a favorited protein Family at the meal cap and reopens the pool', () => {
+    const caseinA: FoodCandidate = {
+      ...proteinA,
+      id: 'protein-casein-a',
+      familyName: 'casein_dairy',
+    };
+    const caseinB: FoodCandidate = { ...caseinA, id: 'protein-casein-b' };
+    const poultry: FoodCandidate = {
+      ...proteinA,
+      id: 'protein-poultry',
+      familyName: 'poultry',
+    };
+
+    const result = generateDietItems({
+      ...baseTarget,
+      mealCount: 3,
+      candidatesByRole: new Map([
+        ['lean_protein', [caseinA, caseinB, poultry]],
+      ]),
+      favoriteFoodItemIds: new Set([caseinA.id, caseinB.id]),
+      pickRandom: first,
+    });
+
+    expect(proteinIdsByMeal(result)).toEqual([
+      caseinA.id,
+      caseinB.id,
+      poultry.id,
+    ]);
+  });
+
   it('lets a fat-slot favorite repeat twice, then opens the normal pool', () => {
     const oilFavorite: FoodCandidate = {
       id: 'oil-favorite',

@@ -16,6 +16,7 @@ describe('free foods', () => {
   it('counts a vegetable Family that is not on the allowlist', () => {
     expect(isFreeFood('starchy_vegetable')).toBe(false);
     expect(isFreeFood('fatty_fruit')).toBe(false);
+    expect(isFreeFood('mushroom')).toBe(false);
     expect(freeFoodGrams('starchy_vegetable')).toBeNull();
     expect(freeFoodPortion('starchy_vegetable')).toBeNull();
   });

@@ -29,6 +29,7 @@ export const FOOD_FAMILIES = [
   'salad_vegetable',
   'accent_vegetable',
   'cooked_vegetable',
+  'mushroom',
   'berries',
   'fruit',
   'culinary_oil',
