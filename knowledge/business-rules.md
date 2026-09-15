@@ -96,13 +96,25 @@ Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut bu
 
 ---
 
-## Favorited Food Items narrow diet generation, per Food Family
+## Favorited Food Items narrow the macro slot they belong to
 
-A Food Preference of type `favorite` always targets a specific Food Item, never a Category/Subcategory/Role. If the user has favorited any eligible (non-excluded) Food Item in a Food Family, only their favorited item(s) in that Family are candidates; every other Family stays whole, unchanged from generation without any favorites. Favoriting chicken therefore narrows `poultry` and leaves cod, beef and eggs in the `lean_protein` pool.
+A Food Preference of type `favorite` always targets a specific Food Item, never a Category, Subcategory, or Role. A favorite narrows the macro slot it belongs to (protein, carb, vegetable, or fat), not its Food Family.
+
+The protein and carb slots narrow hard. If either holds an eligible favorite, only favorites fill it. Favorites are used round-robin, so every favorite appears before any favorite repeats, and no per-item cap applies.
+
+The vegetable and fat slots take the soft rule. A favorite goes first and may repeat twice, then the normal pool opens.
+
+A slot with no favorite draws its normal pool. The protein pool is animal plus fish by Category. `legumes` and `nuts` join it once a diet type excludes `meat` or `fish`.
+
+A favorite raises the protein fat budget from 0.7 to 2.0 times the meal's fat target. A favorite still has to pass the density and portion filters, so one too dilute to carry its slot at any portion is passed over.
+
+A Food Family can prefer a meal position. `casein_dairy` prefers the last meal and is deprioritized in every other meal. An affinity never blocks a pick. The generator resolves the position when it builds the plan, so reordering meals afterwards does not move food between them.
+
+Reroll restricts to favorites. Explicit swap does not.
 
 The same Food Item can never be both favorited and excluded/allergied at once — adding either is rejected while the other is active for that item.
 
-Why: lets a user say "always use this specific chicken breast, not a random lean protein" without having to exclude every other lean protein by hand. Family rather than Role because a Role can fill several slots in one meal — `vegetable` fills three — and narrowing a whole Role left the day with one item served in every meal.
+Why: lets a user say "build my menu from these foods" and have it hold, instead of seeing one favorite survive per day. Slot rather than Family because Family narrowing only took 56 candidates to 49 in production, and slot is the only level a user can name without knowing the taxonomy. The vegetable and fat slots stay soft because they take three items per meal, and a hard narrow there serves the same two vegetables all day. See ADR-023.
 
 ---
 
