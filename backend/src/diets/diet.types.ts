@@ -2,7 +2,7 @@
 // balanced plate. Each inner array is a fallback chain, tried in order until
 // a role has an eligible candidate after Food Preference exclusion.
 export const MEAL_ROLE_CHAINS: readonly (readonly string[])[] = [
-  ['lean_protein', 'fatty_protein', 'plant_protein'],
+  ['lean_protein', 'fatty_protein', 'plant_protein', 'dairy'],
   ['complex_carb', 'simple_carb'],
   ['vegetable'],
   ['healthy_fat', 'saturated_fat'],
