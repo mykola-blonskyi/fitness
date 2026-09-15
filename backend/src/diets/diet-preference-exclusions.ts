@@ -32,6 +32,22 @@ export function categoryNamesExcludedBy(
   return names;
 }
 
+// Legumes and nuts join the protein slot only once a diet type has removed
+// meat or fish, so an omnivore is never served lentils as a main (ADR-023).
+const ANIMAL_PROTEIN_CATEGORIES = ['meat', 'fish', 'dairy', 'eggs'];
+const PLANT_PROTEIN_CATEGORIES = ['legumes', 'nuts'];
+
+export function proteinCategoriesFor(
+  dietTypes: readonly DietType[],
+): Set<string> {
+  const excluded = categoryNamesExcludedBy(dietTypes);
+  const names = new Set(ANIMAL_PROTEIN_CATEGORIES);
+  if (excluded.has('meat') || excluded.has('fish')) {
+    for (const name of PLANT_PROTEIN_CATEGORIES) names.add(name);
+  }
+  return names;
+}
+
 export function roleNamesExcludedBy(
   dietTypes: readonly DietType[],
 ): Set<string> {

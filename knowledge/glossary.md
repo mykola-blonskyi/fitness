@@ -44,11 +44,15 @@ The coarse nutritional role a Food Item plays (e.g. `lean_protein`, `complex_car
 
 ### Food Family
 
-The finest classification of a Food Item (`poultry`, `white_fish`, `casein_dairy`, `porridge`, `grain_garnish`, `salad_vegetable`, `culinary_oil`, …), sitting under Subcategory. A Meal Slot names the Family it draws from, a swap offers other members of the same Family, and favoriting narrows within a Family rather than across a whole Role. A Food Item with **no** Family is never generated into a plan — it stays browsable and loggable by hand, which is how flours, branded breads, offal and babyfood leave the generation pool without a rule of their own. Introduced by ADR-020.
+The finest classification of a Food Item (`poultry`, `white_fish`, `casein_dairy`, `porridge`, `grain_garnish`, `salad_vegetable`, `culinary_oil`, …), sitting under Subcategory. A Meal Slot names the Family it draws from and a swap offers other members of the same Family. A Family can also prefer a meal position. `casein_dairy` prefers the last meal, see ADR-023. Favoriting does **not** narrow by Family. It narrows the macro slot. A Food Item with **no** Family is never generated into a plan — it stays browsable and loggable by hand, which is how flours, branded breads, offal and babyfood leave the generation pool without a rule of their own. Introduced by ADR-020.
 
 ### Food Preference
 
-A user's allergy, exclusion, or favorite (`user_food_preferences`), targeting either a whole taxonomy node (Category, Subcategory, or Role) or a single Food Item, via a polymorphic `target_type`/`target_id` pair. Not free text — always a structured reference. **Favorite** is the one exception to the polymorphic targeting: it always targets a specific Food Item, never a Category/Subcategory/Role — see [[business-rules]] and ADR-014, as narrowed by ADR-020: a favorite restricts its own Food Family, not the whole Role. The same Food Item can never be both favorited and excluded/allergied at once.
+A user's allergy, exclusion, or favorite (`user_food_preferences`), targeting either a whole taxonomy node (Category, Subcategory, or Role) or a single Food Item, via a polymorphic `target_type`/`target_id` pair. Not free text — always a structured reference. **Favorite** is the one exception to the polymorphic targeting: it always targets a specific Food Item, never a Category/Subcategory/Role — see [[business-rules]] and ADR-023. A favorite restricts the macro slot it belongs to. The protein and carb slots take favorites only. The vegetable and fat slots take a favorite first and then the normal pool. The same Food Item can never be both favorited and excluded/allergied at once.
+
+### Meal Affinity
+
+A Food Family's preference for a meal position, held per Family alongside its Free Food portion class rather than on the Food Item. `casein_dairy` is `last_meal`. Every other Family has no affinity, and the macro fit alone places it. An affinity is a preference, never a block, so it cannot leave a slot empty. The generator resolves the position when it builds the plan, so a later reorder does not move food between meals. See ADR-023.
 
 ### Meal Archetype
 

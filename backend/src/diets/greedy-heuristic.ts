@@ -14,6 +14,7 @@ import {
   isFreeFood,
   type FreePortion,
 } from './free-foods';
+import { mealAffinity } from './meal-affinity';
 import {
   MEAL_ROLE_CHAINS,
   mealTargetsForCount,
@@ -54,6 +55,21 @@ const MAX_PORTION_GRAMS: Record<number, number> = {
 // there is one.
 const PROTEIN_FAT_BUDGET_SHARE = 0.7;
 
+// Looser, not waived: at a high protein target the 0.7 share left cottage
+// cheese the only qualifying favorite (ADR-023).
+const FAVORITE_PROTEIN_FAT_BUDGET_SHARE = 2.0;
+
+// Protein and carb take one item a meal, so a hard narrow still varies the
+// day. Vegetable and fat take three, where it would not (ADR-021).
+const FAVORITE_NARROWING: Record<number, 'hard' | 'soft'> = {
+  [PROTEIN_CHAIN_INDEX]: 'hard',
+  [CARB_CHAIN_INDEX]: 'hard',
+  [VEGETABLE_CHAIN_INDEX]: 'soft',
+  [FAT_CHAIN_INDEX]: 'soft',
+};
+
+const SOFT_FAVORITE_REPEATS = 2;
+
 const MAX_MEALS_PER_PROTEIN_FAMILY = 2;
 
 // One preference chain per salad item, like MEAL_ROLE_CHAINS. The two
@@ -85,6 +101,7 @@ export interface GreedyHeuristicInput {
   // Optional so the existing specs need not thread it; generate() always
   // supplies it.
   favoriteFoodItemIds?: ReadonlySet<string>;
+  proteinCategories?: ReadonlySet<string>;
   // Injectable so tests can pick deterministically; defaults to random.
   pickRandom?: <T extends { id: string }>(items: T[]) => T;
 }
@@ -175,6 +192,7 @@ function eligibleCandidates(
   candidates: FoodCandidate[],
   chainIndex: number,
   target: MealTarget,
+  favoriteFoodItemIds: ReadonlySet<string>,
 ): FoodCandidate[] {
   const macro = macroForChain(chainIndex);
   if (macro === null) return candidates;
@@ -194,7 +212,10 @@ function eligibleCandidates(
     const lean = reachable.filter(
       (candidate) =>
         (neededGrams / candidate.proteinPer100g) * candidate.fatPer100g <=
-        target.fatG * PROTEIN_FAT_BUDGET_SHARE,
+        target.fatG *
+          (favoriteFoodItemIds.has(candidate.id)
+            ? FAVORITE_PROTEIN_FAT_BUDGET_SHARE
+            : PROTEIN_FAT_BUDGET_SHARE),
     );
     if (lean.length > 0) return lean;
   }
@@ -211,6 +232,13 @@ function eligibleCandidates(
 interface DayPicks {
   foodItemIds: Set<string>;
   mealsPerProteinFamily: Map<string, number>;
+  favoriteUses: Map<string, number>;
+}
+
+interface Selection {
+  rawPick: <T extends { id: string }>(items: T[]) => T;
+  favoriteFoodItemIds: ReadonlySet<string>;
+  picked: DayPicks;
 }
 
 // A repeated item is worse than a third meal from one protein family, so
@@ -239,10 +267,11 @@ function dayFilteredCandidates(
 }
 
 function recordPick(
-  picked: DayPicks,
+  selection: Selection,
   candidate: FoodCandidate,
   chainIndex: number,
 ): void {
+  const { picked } = selection;
   picked.foodItemIds.add(candidate.id);
   if (chainIndex === PROTEIN_CHAIN_INDEX && candidate.familyName !== null) {
     picked.mealsPerProteinFamily.set(
@@ -250,6 +279,62 @@ function recordPick(
       (picked.mealsPerProteinFamily.get(candidate.familyName) ?? 0) + 1,
     );
   }
+  if (selection.favoriteFoodItemIds.has(candidate.id)) {
+    picked.favoriteUses.set(
+      candidate.id,
+      (picked.favoriteUses.get(candidate.id) ?? 0) + 1,
+    );
+  }
+}
+
+// A hard slot overrides the no-repeat and protein-family rules on purpose:
+// round-robin over the favorites is the rule.
+function narrowToFavorites(
+  eligible: FoodCandidate[],
+  chainIndex: number,
+  selection: Selection,
+): FoodCandidate[] | null {
+  const uses = (candidate: FoodCandidate) =>
+    selection.picked.favoriteUses.get(candidate.id) ?? 0;
+  const favorites = eligible.filter((candidate) =>
+    selection.favoriteFoodItemIds.has(candidate.id),
+  );
+  if (favorites.length === 0) return null;
+
+  if (FAVORITE_NARROWING[chainIndex] === 'hard') {
+    const fewest = Math.min(...favorites.map(uses));
+    return favorites.filter((candidate) => uses(candidate) === fewest);
+  }
+
+  const unspent = favorites.filter(
+    (candidate) => uses(candidate) < SOFT_FAVORITE_REPEATS,
+  );
+  return unspent.length > 0 ? unspent : null;
+}
+
+function preferByMealAffinity(
+  candidates: FoodCandidate[],
+  isLastMeal: boolean,
+): FoodCandidate[] {
+  const preferred = candidates.filter(
+    (candidate) =>
+      (mealAffinity(candidate.familyName) === 'last_meal') === isLastMeal,
+  );
+  return preferred.length > 0 ? preferred : candidates;
+}
+
+function chooseCandidate(
+  available: FoodCandidate[],
+  chainIndex: number,
+  selection: Selection,
+  isLastMeal: boolean,
+): FoodCandidate {
+  const pool =
+    narrowToFavorites(available, chainIndex, selection) ??
+    dayFilteredCandidates(available, chainIndex, selection.picked);
+  const candidate = selection.rawPick(preferByMealAffinity(pool, isLastMeal));
+  recordPick(selection, candidate, chainIndex);
+  return candidate;
 }
 
 // Coordinate descent: each step resizes one item to the portion that
@@ -330,8 +415,8 @@ function shrinkToCalorieCeiling(items: WorkingItem[], ceiling: number): void {
 function pickFreeItems(
   position: number,
   candidatesByRole: Map<string, FoodCandidate[]>,
-  pick: <T extends { id: string }>(items: T[]) => T,
-  picked: DayPicks,
+  selection: Selection,
+  isLastMeal: boolean,
 ): WorkingItem[] {
   const free = MEAL_ROLE_CHAINS[VEGETABLE_CHAIN_INDEX].flatMap((role) =>
     (candidatesByRole.get(role) ?? []).filter((candidate) =>
@@ -350,10 +435,12 @@ function pickFreeItems(
       );
       if (available.length === 0) continue;
 
-      const candidate = pick(
-        dayFilteredCandidates(available, VEGETABLE_CHAIN_INDEX, picked),
+      const candidate = chooseCandidate(
+        available,
+        VEGETABLE_CHAIN_INDEX,
+        selection,
+        isLastMeal,
       );
-      recordPick(picked, candidate, VEGETABLE_CHAIN_INDEX);
       mealItems.push({
         mealPosition: position,
         orderIndex: 0,
@@ -369,12 +456,29 @@ function pickFreeItems(
   return mealItems;
 }
 
+// One pool across the whole chain, not the first non-empty role in it: a
+// vegetarian's dairy in lean_protein hid plant_protein entirely (ADR-023).
+function proteinPool(
+  chain: readonly string[],
+  candidatesByRole: Map<string, FoodCandidate[]>,
+  proteinCategories: ReadonlySet<string> | undefined,
+): FoodCandidate[] {
+  const pool = chain.flatMap((role) => candidatesByRole.get(role) ?? []);
+  if (proteinCategories === undefined) return pool;
+  return pool.filter(
+    (candidate) =>
+      candidate.categoryName == null ||
+      proteinCategories.has(candidate.categoryName),
+  );
+}
+
 function buildMeal(
   target: MealTarget,
   candidatesByRole: Map<string, FoodCandidate[]>,
-  pick: <T extends { id: string }>(items: T[]) => T,
-  picked: DayPicks,
+  selection: Selection,
   hasFreeItems: boolean,
+  isLastMeal: boolean,
+  proteinCategories: ReadonlySet<string> | undefined,
 ): WorkingItem[] {
   const mealItems: WorkingItem[] = [];
 
@@ -384,17 +488,29 @@ function buildMeal(
     if (chainIndex === CARB_CHAIN_INDEX && !target.carbEligible) return;
     if (chainIndex === VEGETABLE_CHAIN_INDEX && hasFreeItems) return;
 
-    for (const role of chain) {
-      const candidates = (candidatesByRole.get(role) ?? []).filter(
+    const pools =
+      chainIndex === PROTEIN_CHAIN_INDEX
+        ? [proteinPool(chain, candidatesByRole, proteinCategories)]
+        : chain.map((role) => candidatesByRole.get(role) ?? []);
+
+    for (const pool of pools) {
+      const candidates = pool.filter(
         (candidate) => !isFreeFood(candidate.familyName),
       );
       if (candidates.length === 0) continue;
-      const eligible = eligibleCandidates(candidates, chainIndex, target);
-      if (eligible.length === 0) break;
-      const candidate = pick(
-        dayFilteredCandidates(eligible, chainIndex, picked),
+      const eligible = eligibleCandidates(
+        candidates,
+        chainIndex,
+        target,
+        selection.favoriteFoodItemIds,
       );
-      recordPick(picked, candidate, chainIndex);
+      if (eligible.length === 0) break;
+      const candidate = chooseCandidate(
+        eligible,
+        chainIndex,
+        selection,
+        isLastMeal,
+      );
       mealItems.push({
         mealPosition: target.position,
         orderIndex: 0,
@@ -418,20 +534,19 @@ function buildMeal(
 }
 
 export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
-  const rawPick = input.pickRandom ?? defaultPick;
-  const favoriteFoodItemIds = input.favoriteFoodItemIds ?? new Set<string>();
-  const pick = <T extends { id: string }>(items: T[]): T => {
-    const favorites = items.filter((item) => favoriteFoodItemIds.has(item.id));
-    return rawPick(favorites.length > 0 ? favorites : items);
+  const selection: Selection = {
+    rawPick: input.pickRandom ?? defaultPick,
+    favoriteFoodItemIds: input.favoriteFoodItemIds ?? new Set<string>(),
+    picked: {
+      foodItemIds: new Set(),
+      mealsPerProteinFamily: new Map(),
+      favoriteUses: new Map(),
+    },
   };
-
-  const picked: DayPicks = {
-    foodItemIds: new Set(),
-    mealsPerProteinFamily: new Map(),
-  };
+  const isLastMeal = (position: number) => position === input.mealCount;
 
   const freeItems = Array.from({ length: input.mealCount }, (_, i) =>
-    pickFreeItems(i + 1, input.candidatesByRole, pick, picked),
+    pickFreeItems(i + 1, input.candidatesByRole, selection, isLastMeal(i + 1)),
   ).flat();
   const mealsWithFreeItems = new Set(
     freeItems.map((item) => item.mealPosition),
@@ -463,9 +578,10 @@ export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
     buildMeal(
       target,
       input.candidatesByRole,
-      pick,
-      picked,
+      selection,
       mealsWithFreeItems.has(target.position),
+      isLastMeal(target.position),
+      input.proteinCategories,
     ),
   );
   shrinkToCalorieCeiling(countedItems, fittedCalorieTarget);

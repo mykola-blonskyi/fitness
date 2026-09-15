@@ -58,14 +58,16 @@ describe('DietsService.findGenerationCandidatesByRole', () => {
     let captured: SQL | undefined;
     const db = {
       select: () => ({
-        from: () => ({
-          leftJoin: () => ({
+        from: () => {
+          const joined = {
+            leftJoin: () => joined,
             where: (clause: SQL | undefined) => {
               captured = clause;
               return Promise.resolve([]);
             },
-          }),
-        }),
+          };
+          return joined;
+        },
       }),
     };
 
@@ -97,12 +99,30 @@ describe('DietsService.pickRerollReplacement', () => {
     };
 
     await buildService(db)['pickRerollReplacement'](
+      'user-1',
       foodItem(),
       noExclusions(),
       (items) => items[0],
     );
 
     return render(captured);
+  }
+
+  function rerollService(rows: FoodItemRow[], favorites: Set<string>) {
+    const db = {
+      query: {
+        foodCalories: { findMany: () => Promise.resolve(rows) },
+      },
+    };
+    const service = buildService(db);
+    (
+      service as unknown as {
+        foodPreferencesService: { getFavoriteFoodItemIds: jest.Mock };
+      }
+    ).foodPreferencesService.getFavoriteFoodItemIds.mockResolvedValue(
+      favorites,
+    );
+    return service;
   }
 
   it('asks the database only for Family-classified rows', async () => {
@@ -113,6 +133,34 @@ describe('DietsService.pickRerollReplacement', () => {
 
   it('does not require is_verified, which generation ignores', async () => {
     expect(await rerollWhere()).not.toContain('is_verified');
+  });
+
+  it('rerolls into a favorite when the role holds one', async () => {
+    const rows = [foodItem({ id: 'cod' }), foodItem({ id: 'turkey' })];
+    const service = rerollService(rows, new Set(['turkey']));
+
+    const replacement = await service['pickRerollReplacement'](
+      'user-1',
+      foodItem(),
+      noExclusions(),
+      (items) => items[0],
+    );
+
+    expect(replacement.id).toBe('turkey');
+  });
+
+  it('rerolls into the whole role when it holds no favorite', async () => {
+    const rows = [foodItem({ id: 'cod' }), foodItem({ id: 'turkey' })];
+    const service = rerollService(rows, new Set(['salmon']));
+
+    const replacement = await service['pickRerollReplacement'](
+      'user-1',
+      foodItem(),
+      noExclusions(),
+      (items) => items[0],
+    );
+
+    expect(replacement.id).toBe('cod');
   });
 });
 

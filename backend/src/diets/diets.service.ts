@@ -27,6 +27,7 @@ import { resolveUserLocale } from '../shared/locale';
 import { UsersService } from '../users/users.service';
 import {
   categoryNamesExcludedBy,
+  proteinCategoriesFor,
   roleNamesExcludedBy,
 } from './diet-preference-exclusions';
 import { sumCountedTotals } from './diet-totals';
@@ -86,7 +87,7 @@ export class DietsService {
     base: ExclusionTargets,
     categoryIdByName: Map<string, string>,
     roleIdByName: Map<string, string>,
-  ): Promise<ExclusionTargets> {
+  ): Promise<{ merged: ExclusionTargets; dietTypes: DietType[] }> {
     const dietPreferences = await this.dietPreferencesService.list(userId);
     const dietTypes: DietType[] = dietPreferences.map((p) => p.dietType);
 
@@ -106,7 +107,7 @@ export class DietsService {
       if (id) merged.role.add(id);
     }
 
-    return merged;
+    return { merged, dietTypes };
   }
 
   // A whole-role exclusion short-circuits to an empty candidate list
@@ -146,11 +147,16 @@ export class DietsService {
         carbsPer100g: schema.foodCalories.carbsPer100g,
         fatPer100g: schema.foodCalories.fatPer100g,
         familyName: schema.foodFamilies.name,
+        categoryName: schema.foodCategories.name,
       })
       .from(schema.foodCalories)
       .leftJoin(
         schema.foodFamilies,
         eq(schema.foodFamilies.id, schema.foodCalories.familyId),
+      )
+      .leftJoin(
+        schema.foodCategories,
+        eq(schema.foodCategories.id, schema.foodCalories.categoryId),
       )
       .where(
         and(
@@ -172,6 +178,7 @@ export class DietsService {
         carbsPer100g: Number(row.carbsPer100g),
         fatPer100g: Number(row.fatPer100g),
         familyName: row.familyName,
+        categoryName: row.categoryName,
       });
     }
 
@@ -183,23 +190,22 @@ export class DietsService {
   private async resolveExclusions(userId: string): Promise<{
     exclusions: ExclusionTargets;
     roleIdByName: Map<string, string>;
+    dietTypes: DietType[];
   }> {
     const [foodPreferenceExclusions, taxonomyIds] = await Promise.all([
       this.foodPreferencesService.getExclusionTargets(userId),
       this.getTaxonomyIdMaps(),
     ]);
-    const exclusions = await this.withDietPreferenceExclusions(
-      userId,
-      foodPreferenceExclusions,
-      taxonomyIds.categoryIdByName,
-      taxonomyIds.roleIdByName,
-    );
-    return { exclusions, roleIdByName: taxonomyIds.roleIdByName };
+    const { merged: exclusions, dietTypes } =
+      await this.withDietPreferenceExclusions(
+        userId,
+        foodPreferenceExclusions,
+        taxonomyIds.categoryIdByName,
+        taxonomyIds.roleIdByName,
+      );
+    return { exclusions, roleIdByName: taxonomyIds.roleIdByName, dietTypes };
   }
 
-  // Favorites are preferred at pick time inside generateDietItems, never
-  // used to narrow the pool. swapItem() deliberately doesn't apply them at
-  // all: a swap picker should offer every eligible same-Role item.
   private async findGenerationCandidatesByRole(
     userId: string,
     exclusions: ExclusionTargets,
@@ -240,7 +246,8 @@ export class DietsService {
     const target = await this.calorieTargetsService.computeForUser(userId);
     const algorithm = target.algorithm;
 
-    const { exclusions, roleIdByName } = await this.resolveExclusions(userId);
+    const { exclusions, roleIdByName, dietTypes } =
+      await this.resolveExclusions(userId);
     const { candidatesByRole, favoriteFoodItemIds } =
       await this.findGenerationCandidatesByRole(
         userId,
@@ -264,6 +271,7 @@ export class DietsService {
       mealCount: user.mealCount,
       candidatesByRole,
       favoriteFoodItemIds,
+      proteinCategories: proteinCategoriesFor(dietTypes),
     });
 
     const dietRow = await this.db.transaction(async (tx) => {
@@ -376,6 +384,7 @@ export class DietsService {
   }
 
   private async pickRerollReplacement(
+    userId: string,
     currentFoodItem: FoodItemRow,
     exclusions: ExclusionTargets,
     pickRandom: <T>(items: T[]) => T,
@@ -402,7 +411,15 @@ export class DietsService {
         'No other food item in this role matches your preferences',
       );
     }
-    return pickRandom(candidates);
+
+    // Reroll honours favorites; an explicit swap deliberately does not,
+    // since narrowing a list the user opened on purpose is hostile (ADR-023).
+    const favoriteFoodItemIds =
+      await this.foodPreferencesService.getFavoriteFoodItemIds(userId);
+    const favorites = candidates.filter((row) =>
+      favoriteFoodItemIds.has(row.id),
+    );
+    return pickRandom(favorites.length > 0 ? favorites : candidates);
   }
 
   // Narrowed to what swapItem() will actually accept, so the picker cannot
@@ -460,6 +477,7 @@ export class DietsService {
           exclusions,
         )
       : await this.pickRerollReplacement(
+          userId,
           currentFoodItem,
           exclusions,
           pickRandom,

@@ -321,3 +321,27 @@ The row carries no date of its own, only `created_at`. No query can therefore re
 `0020_diet_user_scoped.sql` deletes every `diets` and `diet_items` row before dropping the column instead of backfilling a `user_id` from the old Daily Log. The existing rows were test data and FITNESS-61 allowed clearing them explicitly.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-023: Favorites narrow the macro slot, and a Food Family can prefer a meal position
+
+Date: 2026-09-15
+
+Status: Accepted
+
+Supersedes ADR-014's and ADR-021's partition key and ADR-014's swap exemption. Implements the "slow protein at dinner" half of ADR-020's `dinner` Archetype before phase 2.
+
+A favorite narrows the **macro slot** it belongs to (protein, carb, vegetable, or fat), not its Food Family. #112 measured Family narrowing in production and found it narrowed 56 candidates to 49, then replaced it with a bias inside `pick`. That bias was too weak for the opposite reason. It runs after the density, fat-budget and day-rule filters, and those filters have already removed every favorite by the time it reads them. The slot is also the only level a user can name, because nobody knows their pickles are `accent_vegetable`.
+
+The protein and carb slots narrow **hard**. If either holds an eligible favorite, only favorites fill it. They are used round-robin, so every favorite appears before any favorite repeats, and no per-item cap applies. The vegetable and fat slots take the **soft** rule instead. A favorite goes first and may repeat twice, then the normal pool opens. Those two slots take three items per meal. ADR-021 records what a hard narrow does to them. One favorited vegetable ends up served in every meal.
+
+A slot with no favorite draws its normal pool. For protein that pool is animal plus fish by Category. `legumes` and `nuts` join it as soon as a diet type excludes `meat` or `fish`, so a vegetarian gets lentils rather than only dairy and eggs.
+
+A favorite raises `PROTEIN_FAT_BUDGET_SHARE` from 0.7 to 2.0 times the meal's fat target. It does not skip the check. At a protein target of about 285 g a day, the 0.7 budget admits only the leanest protein. That left cottage cheese as the one qualifying favorite, and the casein rule below puts cottage cheese at dinner. At 2.0 turkey qualifies, and 449 g of egg per meal still does not. A favorite still has to pass the density and portion filters unchanged. The day's fat target stays a target. Calories remain the only hard ceiling.
+
+`MEAL_AFFINITY` is a `Partial<Record<FoodFamily, …>>`, the same shape `free-foods.ts` uses for `FREE_FOODS`. It carries `last_meal` for `casein_dairy` and no entry for the other 19 families in `FOOD_FAMILIES` (`backend/src/food-items/food-item.types.ts`). The generator deprioritizes casein outside the last meal and prefers it at the last meal. An affinity never blocks a pick, so it cannot empty a slot. The generator resolves "last meal" by position when it builds the plan, so a later reorder stays a display concern.
+
+Reroll obeys favorites, because "give me another one like this" has to honor the rule that produced the menu. Explicit swap still offers every eligible same-Role item, because narrowing a list the user opened on purpose is hostile.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

@@ -111,6 +111,9 @@ export interface FoodCandidate {
   carbsPer100g: number;
   fatPer100g: number;
   familyName: string | null;
+  // food_calories.category_id is NOT NULL, so generation always sees a
+  // name; optional only so the pure-function specs need not thread it.
+  categoryName?: string | null;
 }
 
 export interface GeneratedDietItem {
