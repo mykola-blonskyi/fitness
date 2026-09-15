@@ -1,12 +1,18 @@
-// One role per macro group (protein/carb/vegetable/fat) so every meal is a
-// balanced plate. Each inner array is a fallback chain, tried in order until
-// a role has an eligible candidate after Food Preference exclusion.
+// One entry per macro group, indexed by the *_CHAIN_INDEX constants below.
+// The carb, vegetable and fat entries are fallback chains, tried in order
+// until a role yields an eligible candidate. The protein entry is drawn as
+// one Category-filtered pool instead, not walked - see ADR-023.
 export const MEAL_ROLE_CHAINS: readonly (readonly string[])[] = [
   ['lean_protein', 'fatty_protein', 'plant_protein', 'dairy'],
   ['complex_carb', 'simple_carb'],
   ['vegetable'],
   ['healthy_fat', 'saturated_fat'],
 ];
+
+export const PROTEIN_CHAIN_INDEX = 0;
+export const CARB_CHAIN_INDEX = 1;
+export const VEGETABLE_CHAIN_INDEX = 2;
+export const FAT_CHAIN_INDEX = 3;
 
 const PROTEIN_KCAL_PER_G = 4;
 const CARB_KCAL_PER_G = 4;

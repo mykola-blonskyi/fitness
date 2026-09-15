@@ -18,77 +18,100 @@ describe('FoodPreferencesService.list', () => {
     { id: 'food-1', name: 'Chicken Breast', translatedName: null },
   ];
 
-  function buildDb(
-    prefRows: unknown[],
-    nameRows: unknown[],
-    familyRows: unknown[],
-  ) {
-    const select = jest
-      .fn()
-      .mockReturnValueOnce({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue(prefRows),
-        }),
-      })
-      .mockReturnValueOnce({
-        from: jest.fn().mockReturnValue({
-          leftJoin: jest.fn().mockReturnValue({
-            where: jest.fn().mockResolvedValue(nameRows),
-          }),
-        }),
-      })
-      .mockReturnValueOnce({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue(familyRows),
-        }),
-      });
+  function chain(rows: unknown[]) {
+    const node = {
+      leftJoin: () => node,
+      where: () => Promise.resolve(rows),
+    };
+    return { from: () => node };
+  }
+
+  function buildDb(...results: unknown[][]) {
+    const select = jest.fn();
+    for (const rows of results) select.mockReturnValueOnce(chain(rows));
     return { select };
   }
 
+  const favorite = [
+    {
+      id: 'pref-1',
+      type: 'favorite',
+      targetType: 'food_item',
+      targetId: 'food-1',
+    },
+  ];
+
+  const facts = (overrides: Record<string, unknown> = {}) => [
+    {
+      id: 'food-1',
+      familyId: 'family-1',
+      caloriesPer100g: '165',
+      roleName: 'lean_protein',
+      categoryName: 'meat',
+      ...overrides,
+    },
+  ];
+
+  async function affectsGeneration(
+    factRows: unknown[],
+    dietRows: unknown[] = [],
+    prefRows: unknown[] = favorite,
+  ): Promise<boolean> {
+    const db = buildDb(prefRows, foodItemNameRows, factRows, dietRows);
+    const service = new FoodPreferencesService(db as never);
+    const [result] = await service.list('user-1');
+    return result.affectsGeneration;
+  }
+
+  it('marks a reachable favorite as affecting generation', async () => {
+    expect(await affectsGeneration(facts())).toBe(true);
+  });
+
   it('marks a favorite with no Family as not affecting generation', async () => {
-    const prefRows = [
-      {
-        id: 'pref-1',
-        type: 'favorite',
-        targetType: 'food_item',
-        targetId: 'food-1',
-      },
-    ];
-    const db = buildDb(prefRows, foodItemNameRows, [
-      { id: 'food-1', familyId: null },
-    ]);
-    const service = new FoodPreferencesService(db as never);
-
-    const result = await service.list('user-1');
-
-    expect(result).toEqual([
-      expect.objectContaining({ id: 'pref-1', affectsGeneration: false }),
-    ]);
+    expect(await affectsGeneration(facts({ familyId: null }))).toBe(false);
   });
 
-  it('marks a favorite with a Family as affecting generation', async () => {
-    const prefRows = [
-      {
-        id: 'pref-1',
-        type: 'favorite',
-        targetType: 'food_item',
-        targetId: 'food-1',
-      },
-    ];
-    const db = buildDb(prefRows, foodItemNameRows, [
-      { id: 'food-1', familyId: 'family-1' },
-    ]);
-    const service = new FoodPreferencesService(db as never);
-
-    const result = await service.list('user-1');
-
-    expect(result).toEqual([
-      expect.objectContaining({ id: 'pref-1', affectsGeneration: true }),
-    ]);
+  // Role fruit is in no MEAL_ROLE_CHAINS entry, so generation never queries
+  // it. familyId alone reported these as counting.
+  it('marks a favorite whose Role no slot draws as not affecting generation', async () => {
+    expect(await affectsGeneration(facts({ roleName: 'fruit' }))).toBe(false);
   });
 
-  it('marks an exclude row as affecting generation regardless of family', async () => {
-    const prefRows = [
+  it('counts a Role dairy favorite, which the protein slot draws since ADR-023', async () => {
+    expect(
+      await affectsGeneration(
+        facts({ roleName: 'dairy', categoryName: 'dairy' }),
+      ),
+    ).toBe(true);
+  });
+
+  it('marks a zero-calorie favorite as not affecting generation', async () => {
+    expect(await affectsGeneration(facts({ caloriesPer100g: '0' }))).toBe(
+      false,
+    );
+  });
+
+  it('marks a favorite its own diet type excludes as not affecting generation', async () => {
+    expect(await affectsGeneration(facts(), [{ dietType: 'vegetarian' }])).toBe(
+      false,
+    );
+  });
+
+  // The protein pool is animal plus fish until a diet type removes one,
+  // so the same legume is unreachable for an omnivore and reachable here.
+  it('counts a legume favorite only once the protein pool opens to plants', async () => {
+    const lentils = facts({
+      roleName: 'plant_protein',
+      categoryName: 'legumes',
+    });
+    expect(await affectsGeneration(lentils)).toBe(false);
+    expect(await affectsGeneration(lentils, [{ dietType: 'vegetarian' }])).toBe(
+      true,
+    );
+  });
+
+  it('marks an exclude row as affecting generation regardless of reachability', async () => {
+    const excludeRow = [
       {
         id: 'pref-2',
         type: 'exclude',
@@ -96,14 +119,7 @@ describe('FoodPreferencesService.list', () => {
         targetId: 'food-1',
       },
     ];
-    const db = buildDb(prefRows, foodItemNameRows, []);
-    const service = new FoodPreferencesService(db as never);
-
-    const result = await service.list('user-1');
-
-    expect(result).toEqual([
-      expect.objectContaining({ id: 'pref-2', affectsGeneration: true }),
-    ]);
+    expect(await affectsGeneration([], [], excludeRow)).toBe(true);
   });
 });
 

@@ -16,7 +16,11 @@ import {
 } from './free-foods';
 import { mealAffinity } from './meal-affinity';
 import {
+  CARB_CHAIN_INDEX,
+  FAT_CHAIN_INDEX,
   MEAL_ROLE_CHAINS,
+  PROTEIN_CHAIN_INDEX,
+  VEGETABLE_CHAIN_INDEX,
   mealTargetsForCount,
   type FoodCandidate,
   type GeneratedDiet,
@@ -25,12 +29,6 @@ import {
 } from './diet.types';
 
 const MIN_WEIGHT_GRAMS = 1;
-
-// MEAL_ROLE_CHAINS index per macro group - see diet.types.ts.
-const PROTEIN_CHAIN_INDEX = 0;
-const CARB_CHAIN_INDEX = 1;
-const VEGETABLE_CHAIN_INDEX = 2;
-const FAT_CHAIN_INDEX = 3;
 
 const MACROS = ['protein', 'carbs', 'fat'] as const;
 type Macro = (typeof MACROS)[number];

@@ -10,6 +10,11 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { isUniqueViolation } from '../shared/db-errors';
+import type { DietType } from '../diet-preferences/diet-preference.types';
+import {
+  isGenerationReachable,
+  type ReachabilityFacts,
+} from '../food-items/food-eligibility';
 import { resolveUserLocale } from '../shared/locale';
 import type { CreateFoodPreferenceDto } from './dto/create-food-preference.dto';
 import {
@@ -148,37 +153,73 @@ export class FoodPreferencesService {
     return new Set(rows.map((row) => row.targetId));
   }
 
-  private async familyIdsForFoodItems(
+  private async reachabilityFactsForFoodItems(
     ids: string[],
-  ): Promise<Map<string, string | null>> {
+  ): Promise<Map<string, ReachabilityFacts>> {
     if (ids.length === 0) return new Map();
     const rows = await this.db
       .select({
         id: schema.foodCalories.id,
         familyId: schema.foodCalories.familyId,
+        caloriesPer100g: schema.foodCalories.caloriesPer100g,
+        roleName: schema.foodRoles.name,
+        categoryName: schema.foodCategories.name,
       })
       .from(schema.foodCalories)
+      .leftJoin(
+        schema.foodRoles,
+        eq(schema.foodRoles.id, schema.foodCalories.roleId),
+      )
+      .leftJoin(
+        schema.foodCategories,
+        eq(schema.foodCategories.id, schema.foodCalories.categoryId),
+      )
       .where(inArray(schema.foodCalories.id, ids));
-    return new Map(rows.map((row) => [row.id, row.familyId]));
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          familyId: row.familyId,
+          caloriesPer100g: Number(row.caloriesPer100g),
+          roleName: row.roleName,
+          categoryName: row.categoryName,
+        },
+      ]),
+    );
   }
 
-  // A favorite on a Food Item with no Family can never reach generation
-  // (ADR-020), so the UI marks it rather than pretending it counts.
+  private async dietTypesFor(userId: string): Promise<DietType[]> {
+    const rows = await this.db
+      .select({ dietType: schema.dietPreferences.dietType })
+      .from(schema.dietPreferences)
+      .where(eq(schema.dietPreferences.userId, userId));
+    return rows.map((row) => row.dietType);
+  }
+
+  // Only a favorite carries this claim. An allergy or exclusion is purely
+  // subtractive, so it always lands whether or not the item was reachable.
   private computeAffectsGeneration(
     type: FoodPreferenceType,
     targetId: string,
-    familyIdByFoodItemId: Map<string, string | null>,
+    factsByFoodItemId: Map<string, ReachabilityFacts>,
+    dietTypes: readonly DietType[],
   ): boolean {
-    return type !== 'favorite' || familyIdByFoodItemId.get(targetId) != null;
+    if (type !== 'favorite') return true;
+    const facts = factsByFoodItemId.get(targetId);
+    return facts !== undefined && isGenerationReachable(facts, dietTypes);
   }
 
   private async affectsGenerationOf(
+    userId: string,
     type: FoodPreferenceType,
     targetId: string,
   ): Promise<boolean> {
     if (type !== 'favorite') return true;
-    const familyIds = await this.familyIdsForFoodItems([targetId]);
-    return this.computeAffectsGeneration(type, targetId, familyIds);
+    const [facts, dietTypes] = await Promise.all([
+      this.reachabilityFactsForFoodItems([targetId]),
+      this.dietTypesFor(userId),
+    ]);
+    return this.computeAffectsGeneration(type, targetId, facts, dietTypes);
   }
 
   async list(userId: string): Promise<FoodPreferenceResponse[]> {
@@ -207,8 +248,12 @@ export class FoodPreferencesService {
     const favoriteFoodItemIds = rows
       .filter((row) => row.type === 'favorite')
       .map((row) => row.targetId);
-    const familyIdByFoodItemId =
-      await this.familyIdsForFoodItems(favoriteFoodItemIds);
+    const [factsByFoodItemId, dietTypes] = await Promise.all([
+      this.reachabilityFactsForFoodItems(favoriteFoodItemIds),
+      favoriteFoodItemIds.length > 0
+        ? this.dietTypesFor(userId)
+        : Promise.resolve([]),
+    ]);
 
     return rows.map((row) =>
       toFoodPreferenceResponse(
@@ -217,7 +262,8 @@ export class FoodPreferencesService {
         this.computeAffectsGeneration(
           row.type,
           row.targetId,
-          familyIdByFoodItemId,
+          factsByFoodItemId,
+          dietTypes,
         ),
       ),
     );
@@ -302,7 +348,7 @@ export class FoodPreferencesService {
     return toFoodPreferenceResponse(
       inserted,
       targetName,
-      await this.affectsGenerationOf(dto.type, dto.targetId),
+      await this.affectsGenerationOf(userId, dto.type, dto.targetId),
     );
   }
 
@@ -329,7 +375,7 @@ export class FoodPreferencesService {
     return toFoodPreferenceResponse(
       existing,
       targetName ?? null,
-      await this.affectsGenerationOf(existing.type, existing.targetId),
+      await this.affectsGenerationOf(userId, existing.type, existing.targetId),
     );
   }
 }
