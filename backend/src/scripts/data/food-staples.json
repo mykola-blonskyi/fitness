@@ -561,23 +561,6 @@
     }
   },
   {
-    "sourceId": "champignon-mushrooms-raw",
-    "family": "cooked_vegetable",
-    "category": "vegetables",
-    "subcategory": "other_vegetables",
-    "role": "vegetable",
-    "caloriesPer100g": 22,
-    "proteinPer100g": 3.1,
-    "carbsPer100g": 3.3,
-    "fatPer100g": 0.3,
-    "names": {
-      "en": "Champignon mushrooms, raw",
-      "uk": "Печериці, свіжі",
-      "ru": "Шампиньоны, свежие",
-      "es": "Champiñones, crudos"
-    }
-  },
-  {
     "sourceId": "eggplant-raw",
     "family": "cooked_vegetable",
     "category": "vegetables",
@@ -1255,6 +1238,57 @@
       "uk": "Біла квасоля, суха",
       "ru": "Белая фасоль, сухая",
       "es": "Alubias blancas, secas"
+    }
+  },
+  {
+    "sourceId": "champignon-mushrooms-raw",
+    "family": "mushroom",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 22,
+    "proteinPer100g": 3.1,
+    "carbsPer100g": 3.3,
+    "fatPer100g": 0.3,
+    "names": {
+      "en": "Champignon mushrooms, raw",
+      "uk": "Печериці, свіжі",
+      "ru": "Шампиньоны, свежие",
+      "es": "Champiñones, crudos"
+    }
+  },
+  {
+    "sourceId": "oyster-mushrooms-raw",
+    "family": "mushroom",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 34,
+    "proteinPer100g": 2.5,
+    "carbsPer100g": 6.2,
+    "fatPer100g": 0.5,
+    "names": {
+      "en": "Oyster mushrooms, raw",
+      "uk": "Гливи, свіжі",
+      "ru": "Вешенки, свежие",
+      "es": "Setas de cardo, crudas"
+    }
+  },
+  {
+    "sourceId": "porcini-mushrooms-raw",
+    "family": "mushroom",
+    "category": "vegetables",
+    "subcategory": "other_vegetables",
+    "role": "vegetable",
+    "caloriesPer100g": 32,
+    "proteinPer100g": 3.3,
+    "carbsPer100g": 2.4,
+    "fatPer100g": 1.5,
+    "names": {
+      "en": "Porcini mushrooms, raw",
+      "uk": "Білі гриби, свіжі",
+      "ru": "Белые грибы, свежие",
+      "es": "Boletus, crudos"
     }
   },
   {

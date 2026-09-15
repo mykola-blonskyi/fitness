@@ -91,7 +91,7 @@ function inferRuTableFamily(
     case 'porridge':
       return 'porridge';
     case 'mushrooms':
-      return has(name, 'сушен') ? null : 'cooked_vegetable';
+      return has(name, 'сушен') ? null : 'mushroom';
     case 'fats':
       return name.startsWith('масло') ? 'culinary_oil' : null;
     case 'eggs':
