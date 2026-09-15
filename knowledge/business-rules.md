@@ -118,6 +118,16 @@ Why: lets a user say "build my menu from these foods" and have it hold, instead 
 
 ---
 
+## A favorite says so when generation cannot reach its Food Item
+
+A favorite is marked as not affecting generated menus unless generation can actually produce that Food Item for this user. Reachable means all of: it has a Food Family, its calories per 100 g are above zero, its Food Role is one some meal slot draws, neither its Role nor its Category is excluded by the user's diet types, and — for a protein Role — its Category is one the protein pool currently includes.
+
+Allergies and exclusions are always marked as affecting generation. Removing an item works whether or not it was reachable in the first place.
+
+Why: this marker is the reason unusable Food Items are left in the catalog instead of being corrected one by one, so it has to be truthful or the decision resting on it is unsound. Testing only for a missing Food Family reported Role `fruit`, and Role `dairy` before ADR-023, as counting when no slot drew them. See ADR-023.
+
+---
+
 ## Diet Calculation Algorithm formula is documentation only
 
 `diet_calculation_algorithms.formula` is a human-readable description for display/audit purposes. The real calculation is versioned backend code (e.g. a `mifflinV1()` function) looked up by `code` — never parsed or evaluated at runtime.
