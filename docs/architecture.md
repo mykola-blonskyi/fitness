@@ -85,7 +85,7 @@ External systems:
 - Open Food Facts / USDA FoodData Central — one-time curated seed import for the food catalog
 - wger / ExerciseDB — one-time curated seed import for the exercise catalog
 - A machine-translation API (e.g. DeepL/Google Translate) — used only at import time to seed per-locale food/exercise names, marked unverified for later review
-- Plane (`plane.blonskyi.dev`, workspace FITNESS) — ticket tracking for implementation, outside the runtime system
+- GitHub issues — ticket tracking for implementation, outside the runtime system (replaced the self-hosted Plane instance on 2026-09-15; its export is in `docs/tickets/`)
 
 ---
 
