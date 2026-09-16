@@ -39,12 +39,17 @@ USER node
 
 EXPOSE 3001
 
-# Applies pending migrations, classifies the food catalog, then starts the
-# server - see docs/decisions.md ADR-005 for why migrations run here (at
-# boot) rather than as a separate CI step: this is the only place that ever
-# has real access to the production DATABASE_URL. A failure in either step
-# crashes the container before app.listen(), so it never passes its
-# healthcheck and Coolify leaves the previous version running.
+# Applies pending migrations, seeds the curated staples, classifies the food
+# catalog, then starts the server - see docs/decisions.md ADR-005 for why
+# migrations run here (at boot) rather than as a separate CI step: this is
+# the only place that ever has real access to the production DATABASE_URL. A
+# failure in any step crashes the container before app.listen(), so it never
+# passes its healthcheck and Coolify leaves the previous version running.
 # Classification is here because generation drops every Food Item with no
 # Family (ADR-020); it writes only changed rows, so a second boot is a no-op.
-CMD ["sh", "-c", "node_modules/.bin/drizzle-kit migrate && node dist/scripts/classify-food-families.js --allow-stale-overrides && node dist/main"]
+# The staples seed is here because nothing else ran it and both catalogs
+# silently fell behind data/food-staples.json; it upserts on
+# (source, sourceId), so a re-run writes nothing and costs about two
+# seconds. It runs before classification so a changed Family rule sweeps the
+# rows it has just inserted.
+CMD ["sh", "-c", "node_modules/.bin/drizzle-kit migrate && node dist/scripts/seed-food-staples.js && node dist/scripts/classify-food-families.js --allow-stale-overrides && node dist/main"]
