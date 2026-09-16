@@ -1,11 +1,10 @@
-// One-time import of the curated staples set (ADR-020 phase 1,
-// data/food-staples.json) into food_calories. Run manually:
+// Imports the curated staples set (ADR-020 phase 1, data/food-staples.json)
+// into food_calories. Runs on every boot from backend/Dockerfile's CMD, and
+// locally as:
 //   pnpm --filter backend db:seed:food-staples
 // Safe to re-run: rows upsert on (source, sourceId) via insertItem, and
 // translation rows are only added where missing. No DeepL, no network
-// calls - every name is hand-authored in the data file. The deployed
-// image has no ts-node, so on a server it is:
-//   node dist/scripts/seed-food-staples.js
+// calls - every name is hand-authored in the data file.
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
