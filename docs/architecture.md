@@ -103,7 +103,7 @@ External systems:
 8. The Python worker runs alignment analysis, writes `progress_photos.analysis_status`/`alignment_data` back.
 9. Frontend polls/reads `analysis_status`; when reading a photo back, NestJS generates a short-lived presigned GET URL after checking ownership.
 
-**Diet generation:** manual trigger only (see [[business-rules]]) → NestJS runs the greedy-heuristic generator against the user's profile, active Diet/Food Preferences, and the Food catalog → writes a new `diets` + `diet_items` row set scoped to the user, not to a day (see [ADR-022](docs/decisions.md)).
+**Diet generation:** manual trigger only (see [[business-rules]]) → NestJS runs the greedy-heuristic generator against the user's profile, active Diet/Food Preferences, and the user's favorited Food Items, which are the whole candidate pool (ADR-025) → writes a new `diets` + `diet_items` row set scoped to the user, not to a day (see [ADR-022](docs/decisions.md)).
 
 ---
 

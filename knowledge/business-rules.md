@@ -66,7 +66,7 @@ The day's calorie target is a hard ceiling: a menu may land under it, never over
 
 Why: this is a recommendation feature, not a medical prescription — but the macro grams are the point of a diet, so "close enough" applies to all four numbers, not to calories alone.
 
-A single-item swap or reroll holds that item's calorie contribution — the replacement's `weight_grams` is rescaled so the day total stays within tolerance. A full regenerate re-runs generation from scratch and does not preserve prior swaps.
+A single-item swap or reroll holds that item's calorie contribution — the replacement's `weight_grams` is rescaled so the day total stays within tolerance. Deleting an item drops it and re-derives the day's totals from what is left; the remaining meals keep their portions, since the menu is not rebuilt. A full regenerate re-runs generation from scratch and does not preserve prior swaps or deletions.
 
 ---
 
@@ -78,7 +78,7 @@ What the free items actually supply is subtracted from all four of the day's tar
 
 The counted totals therefore land under target by roughly what the free vegetables themselves supply: the plate hits its macros, the plan reports only the counted part of it.
 
-A Free Food cannot be swapped or rerolled. The endpoint rejects an uncounted item with 422 and the menu shows no swap control for it, since a swap never revisits `is_counted` and would leave the replacement uncounted.
+A Free Food cannot be swapped or rerolled. The endpoint rejects an uncounted item with 422 and the menu shows no swap control for it, since a swap never revisits `is_counted` and would leave the replacement uncounted. It can be deleted, which moves no total.
 
 ---
 
@@ -96,25 +96,21 @@ Why: covers both broad exclusions ("all dairy") and narrow ones ("just peanut bu
 
 ---
 
-## Favorited Food Items narrow the macro slot they belong to
+## Favorited Food Items are the generation pool, and a menu needs some
 
-A Food Preference of type `favorite` always targets a specific Food Item, never a Category, Subcategory, or Role. A favorite narrows the macro slot it belongs to (protein, carb, vegetable, or fat), not its Food Family.
+A Food Preference of type `favorite` always targets a specific Food Item, never a Category, Subcategory, or Role. Generation draws from the user's favorited Food Items and nothing else, Free Foods included — a user who favorites no vegetables gets no salad. A user with no favorites at all cannot generate a menu.
 
-The protein and carb slots narrow hard. If either holds an eligible favorite, only favorites fill it. Favorites are used round-robin, so every favorite appears before any favorite repeats, and no per-item cap applies. The two-meal cap on one protein Family does apply, and when every favorite Family is spent the slot draws its normal pool for that meal rather than repeating a favorite.
+Exclusions still apply on top of the favorites: a Food Item that is favorited but ruled out by an allergy, an exclusion or a diet type is not generated. Within that pool the protein slot is one pool across `lean_protein`, `fatty_protein`, `plant_protein` and `dairy`, filtered to animal plus fish by Category; `legumes` and `nuts` join it once a diet type excludes `meat` or `fish`. Role `fruit` is drawn by no slot, so its Food Items are browsable and loggable but never generated.
 
-The vegetable and fat slots take the soft rule. A favorite goes first and may repeat twice, then the normal pool opens.
-
-A slot with no favorite draws its normal pool. The protein pool is one pool across `lean_protein`, `fatty_protein`, `plant_protein` and `dairy`, filtered to animal plus fish by Category; `legumes` and `nuts` join it once a diet type excludes `meat` or `fish`. Role `fruit` is drawn by no slot, so its Food Items are browsable and loggable but never generated.
-
-A favorite raises the protein fat budget from 0.7 to 2.0 times the meal's fat target. The budget ranks the pool a slot has already narrowed to and never empties it, so a favorite too fatty for a late meal's tapered fat share still takes its turn. A favorite still has to pass the density and portion filters, so one too dilute to carry its slot at any portion is passed over.
+A day picks its least-used candidate first, so a day longer than the favorites list spreads the repeats evenly rather than serving one item in every leftover meal. The two-meal cap on one protein Family relaxes before a repeat does. The protein fat budget of 2.0 times the meal's fat target ranks the pool and never empties it, so a candidate too fatty for a late meal's tapered fat share still takes its turn; one too dilute to carry its slot at any portion is passed over.
 
 A Food Family can prefer a meal position. `casein_dairy` prefers the last meal and is deprioritized in every other meal. An affinity never blocks a pick. The generator resolves the position when it builds the plan, so reordering meals afterwards does not move food between them.
 
-Reroll restricts to favorites. Explicit swap does not.
+Swap offers favorited same-Role Food Items only. Reroll draws the whole eligible same-Role catalog, favorited or not.
 
 The same Food Item can never be both favorited and excluded/allergied at once — adding either is rejected while the other is active for that item.
 
-Why: lets a user say "build my menu from these foods" and have it hold, instead of seeing one favorite survive per day. Slot rather than Family because Family narrowing only took 56 candidates to 49 in production, and slot is the only level a user can name without knowing the taxonomy. The vegetable and fat slots stay soft because they take three items per meal, and a hard narrow there serves the same two vegetables all day. See ADR-023.
+Why: lets a user say "build my menu from these foods" and have it hold literally, with reroll as the one control that reaches past the list. See ADR-025.
 
 ---
 
@@ -124,7 +120,7 @@ A favorite is marked as not affecting generated menus unless generation can actu
 
 Allergies and exclusions are always marked as affecting generation. Removing an item works whether or not it was reachable in the first place.
 
-Why: this marker is the reason unusable Food Items are left in the catalog instead of being corrected one by one, so it has to be truthful or the decision resting on it is unsound. Testing only for a missing Food Family reported Role `fruit`, and Role `dairy` before ADR-023, as counting when no slot drew them. See ADR-023.
+Why: this marker is the reason unusable Food Items are left in the catalog instead of being corrected one by one, so it has to be truthful or the decision resting on it is unsound. It matters more under ADR-025, where an unreachable favorite is a hole in the pool rather than one lost preference. See ADR-023.
 
 ---
 

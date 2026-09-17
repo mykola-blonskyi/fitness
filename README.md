@@ -6,7 +6,7 @@ exclusively via the hub's SSO; this repo never implements its own login.
 
 **Status: in active development, live in production.** Scaffolding, Hub SSO auth, profile
 onboarding/settings, CI/CD, Daily Log + weight logging, training programs and workout logs, the
-diet engine (generation, swaps, favorites), progress photos (upload, pose analysis, gallery with
+diet engine (generation from your favorites, swap/reroll/delete), progress photos (upload, pose analysis, gallery with
 baseline comparison), i18n (en/uk/ru/es), and PWA offline support are all built, merged, and
 deployed at [fitness.blonskyi.dev](https://fitness.blonskyi.dev). See
 [plans/current.md](plans/current.md) for the phased plan and remaining work.

@@ -332,7 +332,7 @@ Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitnes
 
 Date: 2026-09-15
 
-Status: Accepted; two rules corrected by ADR-024 (2026-09-15) — the protein fat budget ranks a slot's pool instead of gating the catalog, and the protein Family cap binds under a hard narrow
+Status: Favorite rules superseded by ADR-025 (2026-09-17) — a favorite is no longer a narrowing applied to a wider pool, it is the pool. The `MEAL_AFFINITY` half stands.
 
 Supersedes ADR-014's and ADR-021's partition key and ADR-014's swap exemption. Implements the "slow protein at dinner" half of ADR-020's `dinner` Archetype before phase 2.
 
@@ -367,5 +367,29 @@ Corrects the mushroom divergence ADR-020 and ADR-021 parked for phase 2, and two
 **`MAX_MEALS_PER_PROTEIN_FAMILY` binds under a hard narrow.** ADR-023's "no per-item cap applies" stands; this is a Family cap, and it now filters the favorites before the round-robin picks among them. Once every favorite Family is spent the slot hands back to the wider pool rather than repeating a favorite, which is why a day with two favorited proteins serves each twice and draws the fifth meal from the pool.
 
 `food_calories.family_id` is only rewritten by the classification pass, and `backend/Dockerfile`'s `CMD` already runs it on every boot, so the deploy moved the rows itself. Production reported 10 changed. Diets already generated keep their items until regenerated.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-025: The favorites are the generation pool, and swap and reroll trade places
+
+Date: 2026-09-17
+
+Status: Accepted
+
+Supersedes ADR-023's and ADR-024's favorite rules. ADR-023's `MEAL_AFFINITY` and ADR-024's `mushroom` Family are untouched.
+
+**Generation draws from the user's favorited Food Items and nothing else.** Favorites stopped being a narrowing layered over a wider pool and became the pool itself, filtered at the SQL that loads candidates rather than inside the generator. A user with no favorites gets a 422 rather than a menu, so the list is required, not optional. Exclusions still apply on top: a food can be favorited and later ruled out by a diet type, and generation has to honour the later rule.
+
+This deletes the whole biasing apparatus ADR-023 and ADR-024 tuned — `narrowToFavorites`, the hard/soft `FAVORITE_NARROWING` table, `SOFT_FAVORITE_REPEATS`, and the per-day `favoriteUses` counter. `greedy-heuristic.ts` no longer takes a favorites set at all. The two protein fat budgets collapse to the one value ADR-023 gave a favorite, 2.0 of the meal's fat target, because every candidate is now a favorite.
+
+**The day rule became least-used-first.** It was "unused first, else anything". A pool that is the user's own list is small, so a day longer than the list has to repeat, and "else anything" let one item take every leftover meal. Least-used-first generalises ADR-023's favorite round-robin to every candidate and keeps the even spread that made the round-robin worth having. The protein Family cap still relaxes ahead of a repeat.
+
+**Swap and reroll trade places.** Swap now offers favorited same-Role items only — the picker and `swapItem()`'s own check both, so the picker cannot offer an item that then 422s. Reroll draws the whole eligible catalog. ADR-023 had it the other way round and reasoned from "reroll must honour the rule that produced the menu". Once the menu comes from the favorites alone, the user needs one control that reaches past them and one that stays inside, and reroll is the cheaper of the two to undo.
+
+**A menu item can be deleted.** `DELETE /diets/:dietId/items/:itemId` drops one row and re-derives the day's totals from what is left, the same recompute a swap does. It does not rebuild the menu, so the remaining meals keep their portions. A Free Food can be deleted too — it is uncounted, so dropping one changes what the day asks the user to eat and not the totals.
+
+Free Foods are drawn from the favorites like everything else, so a user who favorites no vegetables gets no salad. That is the literal reading of "build my menu from these foods", and a user who wants salad back favorites a vegetable.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
