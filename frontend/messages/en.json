@@ -79,7 +79,9 @@
     "itemActions": {
       "rerolling": "Rerolling…",
       "reroll": "Reroll",
-      "swap": "Swap"
+      "swap": "Swap",
+      "delete": "Delete",
+      "deleting": "Deleting…"
     },
     "generateMenuCta": {
       "generating": "Generating…",
@@ -101,7 +103,7 @@
       "searchPlaceholder": "Search…",
       "loading": "Loading…",
       "loadError": "Couldn't load food items — try again.",
-      "empty": "No other food items in this role.",
+      "empty": "No favorite food items in this role — add some in your preferences.",
       "caloriesPer100g": "{calories} kcal / 100g"
     },
     "errors": {

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -60,6 +61,17 @@ export class DietsController {
       itemId,
       dto.foodItemId,
     );
+  }
+
+  // Drops one food from the menu and re-derives the day's totals; the menu
+  // itself is not rebuilt, so the remaining meals keep their portions.
+  @Delete(':dietId/items/:itemId')
+  async removeItem(
+    @CurrentUser() identity: Identity,
+    @Param('dietId', ParseUUIDPipe) dietId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+  ): Promise<DietResponse> {
+    return this.dietsService.removeItem(identity.userId, dietId, itemId);
   }
 
   @Put(':dietId/meals/reorder')

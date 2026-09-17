@@ -79,7 +79,9 @@
     "itemActions": {
       "rerolling": "Buscando otra opción…",
       "reroll": "Otra opción",
-      "swap": "Cambiar"
+      "swap": "Cambiar",
+      "delete": "Eliminar",
+      "deleting": "Eliminando…"
     },
     "generateMenuCta": {
       "generating": "Generando…",
@@ -101,7 +103,7 @@
       "searchPlaceholder": "Buscar…",
       "loading": "Cargando…",
       "loadError": "No se han podido cargar los alimentos. Inténtalo de nuevo.",
-      "empty": "No hay otros alimentos con esta función.",
+      "empty": "No hay alimentos favoritos en esta categoría: añade alguno en tus preferencias.",
       "caloriesPer100g": "{calories} kcal / 100 g"
     },
     "errors": {

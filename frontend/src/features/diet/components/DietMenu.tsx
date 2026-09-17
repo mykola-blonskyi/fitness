@@ -262,14 +262,13 @@ export function DietMenu({ diet }: { diet: DietResponse }) {
                         })}
                   </span>
                 </div>
-                {item.isCounted && (
-                  <DietItemActions
-                    dietId={diet.id}
-                    itemId={item.id}
-                    foodItemId={item.foodItem.id}
-                    role={item.foodItem.role}
-                  />
-                )}
+                <DietItemActions
+                  dietId={diet.id}
+                  itemId={item.id}
+                  foodItemId={item.foodItem.id}
+                  role={item.foodItem.role}
+                  isCounted={item.isCounted}
+                />
               </li>
             ))}
           </ul>

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { FieldError } from '@shared/ui/components/FieldError';
-import { swapDietItem } from '@features/diet/actions';
+import { deleteDietItem, swapDietItem } from '@features/diet/actions';
+import type { DietItemMutationResult } from '@features/diet/actions';
 import { SwapPicker } from '@features/diet/components/SwapPicker';
 
 export function DietItemActions({
@@ -12,23 +13,29 @@ export function DietItemActions({
   itemId,
   foodItemId,
   role,
+  isCounted,
 }: {
   dietId: string;
   itemId: string;
   foodItemId: string;
   role: string;
+  // A Free Food is served at a fixed portion, so it can only be dropped.
+  isCounted: boolean;
 }) {
   const t = useTranslations('Diet');
   const router = useRouter();
-  const [isRerolling, setIsRerolling] = useState(false);
+  const [pending, setPending] = useState<'reroll' | 'delete' | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
-  async function onReroll() {
+  async function run(
+    action: 'reroll' | 'delete',
+    call: () => Promise<DietItemMutationResult>,
+  ) {
     setError(undefined);
-    setIsRerolling(true);
+    setPending(action);
     try {
-      const result = await swapDietItem(dietId, itemId);
+      const result = await call();
       if (result.ok) {
         router.refresh();
         return;
@@ -37,27 +44,44 @@ export function DietItemActions({
     } catch {
       setError(t('errors.generic'));
     }
-    setIsRerolling(false);
+    setPending(null);
   }
 
   return (
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
       <div className="flex gap-2">
+        {isCounted && (
+          <>
+            <button
+              type="button"
+              onClick={() => run('reroll', () => swapDietItem(dietId, itemId))}
+              disabled={pending !== null}
+              className="btn-ghost btn-sm"
+            >
+              {pending === 'reroll'
+                ? t('itemActions.rerolling')
+                : t('itemActions.reroll')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPickerOpen((open) => !open)}
+              aria-expanded={pickerOpen}
+              disabled={pending !== null}
+              className="btn-ghost btn-sm"
+            >
+              {t('itemActions.swap')}
+            </button>
+          </>
+        )}
         <button
           type="button"
-          onClick={onReroll}
-          disabled={isRerolling}
-          className="btn-ghost btn-sm"
+          onClick={() => run('delete', () => deleteDietItem(dietId, itemId))}
+          disabled={pending !== null}
+          className="btn-ghost btn-sm text-danger"
         >
-          {isRerolling ? t('itemActions.rerolling') : t('itemActions.reroll')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setPickerOpen((open) => !open)}
-          aria-expanded={pickerOpen}
-          className="btn-ghost btn-sm"
-        >
-          {t('itemActions.swap')}
+          {pending === 'delete'
+            ? t('itemActions.deleting')
+            : t('itemActions.delete')}
         </button>
       </div>
 
