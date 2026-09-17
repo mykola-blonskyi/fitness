@@ -414,6 +414,28 @@ describe('DietMenu', () => {
     expect(swapDietItem).toHaveBeenCalledWith('diet-1', 'd1', 'f9');
   });
 
+  it('blames the search, not the favorites, when a search matched nothing', async () => {
+    const user = userEvent.setup();
+    listSwapCandidates.mockResolvedValue([]);
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    const dinnerRow = screen.getByText('Salmon').closest('li') as HTMLElement;
+    await user.click(
+      within(dinnerRow).getByRole('button', { name: /^swap$/i }),
+    );
+
+    expect(
+      await screen.findByText(/add some in your preferences/i),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByRole('searchbox'), 'chicken');
+
+    expect(await screen.findByText(/matches your search/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/add some in your preferences/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('regenerate confirms before calling generateDiet', async () => {
     const user = userEvent.setup();
     generateDiet.mockResolvedValue({ ok: true, diet });

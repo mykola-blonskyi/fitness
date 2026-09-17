@@ -20,7 +20,6 @@ export function SwapPicker({
   onDone: () => void;
 }) {
   const t = useTranslations('Diet');
-  const tRoles = useTranslations('FoodRoles');
   const [search, setSearch] = useState('');
   const [candidates, setCandidates] = useState<FoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +66,7 @@ export function SwapPicker({
   return (
     <div className="flex w-full flex-col gap-2 rounded border border-line p-3 sm:w-72">
       <label className="sr-only" htmlFor={`swap-search-${itemId}`}>
-        {t('swapPicker.searchLabel', { role: tRoles(role) })}
+        {t('swapPicker.searchLabel')}
       </label>
       <input
         id={`swap-search-${itemId}`}
@@ -83,7 +82,11 @@ export function SwapPicker({
       )}
 
       {!isLoading && candidates.length === 0 && (
-        <p className="text-xs text-muted">{t('swapPicker.empty')}</p>
+        <p className="text-xs text-muted">
+          {search
+            ? t('swapPicker.emptySearch')
+            : t('swapPicker.emptyNoFavorites')}
+        </p>
       )}
 
       <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">

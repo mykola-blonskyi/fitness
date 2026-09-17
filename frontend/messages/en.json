@@ -99,11 +99,12 @@
       "reviewPreferences": "Review your preferences"
     },
     "swapPicker": {
-      "searchLabel": "Search {role} food items",
+      "searchLabel": "Search replacement food items",
       "searchPlaceholder": "Search…",
       "loading": "Loading…",
       "loadError": "Couldn't load food items — try again.",
-      "empty": "No favorite food items in this role — add some in your preferences.",
+      "emptyNoFavorites": "No other favorite food item fits here — add some in your preferences.",
+      "emptySearch": "No favorite food item matches your search.",
       "caloriesPer100g": "{calories} kcal / 100g"
     },
     "errors": {
