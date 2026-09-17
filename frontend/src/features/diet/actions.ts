@@ -70,7 +70,7 @@ export type GenerateDietResult =
   // the user's food/diet preferences (HTTP 422).
   | { ok: false; error: string; preferencesBlocked: boolean };
 
-export type SwapDietItemResult =
+export type DietItemMutationResult =
   { ok: true; diet: DietResponse } | { ok: false; error: string };
 
 // Used both for the first generate and for a full regenerate - a regenerate
@@ -104,11 +104,11 @@ export async function swapDietItem(
   dietId: string,
   itemId: string,
   foodItemId?: string,
-): Promise<SwapDietItemResult> {
+): Promise<DietItemMutationResult> {
   return Sentry.withServerActionInstrumentation(
     'swapDietItem',
     {},
-    async (): Promise<SwapDietItemResult> => {
+    async (): Promise<DietItemMutationResult> => {
       try {
         const diet = await apiFetch<DietResponse>(
           `/diets/${dietId}/items/${itemId}/swap`,
@@ -116,6 +116,31 @@ export async function swapDietItem(
             method: 'POST',
             body: JSON.stringify(foodItemId ? { foodItemId } : {}),
           },
+        );
+        revalidatePath(DIET_PAGE, 'page');
+        return { ok: true, diet };
+      } catch (err) {
+        if (err instanceof ApiError) {
+          return { ok: false, error: err.message };
+        }
+        throw err;
+      }
+    },
+  );
+}
+
+export async function deleteDietItem(
+  dietId: string,
+  itemId: string,
+): Promise<DietItemMutationResult> {
+  return Sentry.withServerActionInstrumentation(
+    'deleteDietItem',
+    {},
+    async (): Promise<DietItemMutationResult> => {
+      try {
+        const diet = await apiFetch<DietResponse>(
+          `/diets/${dietId}/items/${itemId}`,
+          { method: 'DELETE' },
         );
         revalidatePath(DIET_PAGE, 'page');
         return { ok: true, diet };

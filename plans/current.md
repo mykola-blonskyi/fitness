@@ -35,6 +35,7 @@ Meal shape stays as it is today. The foods stop being absurd.
 - [x] No Food Item twice in a day (fall back to a repeat only when the Family has nothing else eligible)
 - [x] At most 2 meals per day drawing from the same protein Family
 - [x] Favorites narrow per Family instead of per Role (ADR-014 as narrowed by ADR-020, implemented by ADR-021) — pulled forward from Phase 2, because a Role-keyed filter and a three-item salad together left a user who favourited one vegetable with the same single item in every meal
+- [x] Favorites stop narrowing anything and become the generation pool itself (ADR-025) — the fourth consecutive attempt at tuning a narrowing strength was the signal that the narrowing was the wrong shape. A user with no favorites now gets a 422 rather than a menu, swap offers favorites only and reroll draws the whole catalog, and a menu item can be deleted. Deleted the hard/soft slot table, the soft-repeat cap, the per-day favorite-use counter and the second protein fat budget.
 - [x] Salads are two bulk items at 80 g plus one accent at 15 g, the accent Family `accent_vegetable` with ten curated members (FITNESS-75)
   - Measured over five seeds: no salad in 108,000 held fewer than two bulk items, the calorie ceiling and the no-repeat and protein-Family rules are unchanged, and the moderate profile pays at most 0.76 g across the three mean absolute macro deltas. ADR-019's unreachable 310P profile pays 0.78-4.16 g, which fails the thresholds the change was measured against and was accepted anyway, since a plan with no headroom cannot absorb the vegetable the accent slot removes. See `reports/audits/2026-09-13-salad-composition.md`.
 - [x] Free Foods: the `salad_vegetable` and `cooked_vegetable` Families get fixed nominal portions, leave the macro fit and the displayed totals, and what they actually supply is subtracted from all four targets before fitting (FITNESS-74)
@@ -49,6 +50,7 @@ Meal shape stays as it is today. The foods stop being absurd.
 - [ ] `diet_items.slot_key` + multi-item slots (3-item salad, 1-2 item dinner protein), rendered as one labelled group
 - [ ] Servings (`serving_unit`/`serving_grams` on ~50-80 foods) + whole-unit snapping in the fit
 - [ ] Swap/reroll retargeted from Role to Family; slot-level reroll ("give me another salad")
+  - Inherits ADR-025's split: whatever the key becomes, swap stays inside the favorites and reroll reaches past them.
   - A Family is not a calorie band: `white_fish` spans 0.4-30.7 g fat and 67-331 kcal/100 g, because `red_fish` keys off five salmonid names and every other finfish falls through to it. Offering cod -> sea eel as a swap is a four-fold calorie substitution, so the swap has to filter on Role as well as Family, or `white_fish` has to be split first. Measured in `reports/audits/2026-09-12-food-family-classification.md`.
 
 ## Phase 3 — Variants and settings

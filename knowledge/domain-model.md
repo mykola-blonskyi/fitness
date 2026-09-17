@@ -194,7 +194,7 @@ Relationships:
 
 Responsibilities:
 
-A user's current generated meal plan, valid until they regenerate it (ADR-022). Regenerating inserts a new Diet; swapping an item edits the existing one in place and re-derives its totals.
+A user's current generated meal plan, valid until they regenerate it (ADR-022). Regenerating inserts a new Diet; swapping or deleting an item edits the existing one in place and re-derives its totals.
 
 Fields:
 
@@ -217,7 +217,7 @@ One food entry within a generated Diet.
 
 Fields:
 
-- weight_grams (can change after generation via swap/reroll, which rescale it to hold the item's calorie contribution), meal_position (1-based position within the day, "Meal 1".."Meal N" — see ADR-016), order_index (scoped within its meal_position)
+- weight_grams (can change after generation via swap/reroll, which rescale it to hold the item's calorie contribution; a Diet Item can also be deleted outright, which leaves every other item's weight alone), meal_position (1-based position within the day, "Meal 1".."Meal N" — see ADR-016), order_index (scoped within its meal_position)
 - slot_key (nullable — which Meal Slot of the meal's Archetype this item fills, e.g. `main.salad`; several items sharing one slot_key render as one labelled group. ADR-020)
 - is_counted (Free Foods are listed but excluded from the Diet's totals and from the macro fit — ADR-020)
 
@@ -297,7 +297,7 @@ Relationships:
 
 Responsibilities:
 
-Fixed taxonomies. Category/Subcategory drive browsing; Role is what Food Preferences target and what the macro fit sizes against; **Food Family** (ADR-020) is what a Meal Slot draws from, what a swap offers, and what a favorite narrows. Category and Role are independent classifications on the same Food Item, not hierarchical with each other — a `legumes`-category item's Role is `plant_protein`, not derived from its category name. The same independence holds for potato: Category stays `vegetables` (so browsing and "exclude vegetables" keep working) while its Role is `complex_carb` and its Family `starchy_vegetable`.
+Fixed taxonomies. Category/Subcategory drive browsing; Role is what Food Preferences target and what the macro fit sizes against; **Food Family** (ADR-020) is what a Meal Slot draws from and what a swap offers. A favorite narrows nothing; the favorites are the pool (ADR-025). Category and Role are independent classifications on the same Food Item, not hierarchical with each other — a `legumes`-category item's Role is `plant_protein`, not derived from its category name. The same independence holds for potato: Category stays `vegetables` (so browsing and "exclude vegetables" keep working) while its Role is `complex_carb` and its Family `starchy_vegetable`.
 
 Fixed values:
 

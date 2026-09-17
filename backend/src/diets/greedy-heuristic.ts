@@ -1,6 +1,8 @@
-// Diet generator - see docs/decisions.md ADR-011, ADR-016 and ADR-019. For
-// each meal (protein split equally, carbs tapered across the carb-eligible
-// meals, fat tapered across all of them - see mealTargetsForCount) it picks
+// Diet generator - see docs/decisions.md ADR-011, ADR-016, ADR-019 and
+// ADR-025. Every candidate handed in is already one of the user's
+// favorites, so nothing here re-checks that. For each meal
+// (protein split equally, carbs tapered across the carb-eligible meals,
+// fat tapered across all of them - see mealTargetsForCount) it picks
 // one Food Item per macro role, preferring candidates dense enough to carry
 // that role's share in a sensible portion, fits the portions to the meal's
 // whole protein/carb/fat target at once, then shrinks the day
@@ -50,23 +52,9 @@ const MAX_PORTION_GRAMS: Record<number, number> = {
 // A protein source brings its own fat; one that would spend more than this
 // much of the meal's fat budget by itself leaves nothing for the fat role
 // and pushes the day past its fat target, so a leaner sibling wins when
-// there is one.
-const PROTEIN_FAT_BUDGET_SHARE = 0.7;
-
-// Looser, not waived: at a high protein target the 0.7 share left cottage
-// cheese the only qualifying favorite (ADR-023).
-const FAVORITE_PROTEIN_FAT_BUDGET_SHARE = 2.0;
-
-// Protein and carb take one item a meal, so a hard narrow still varies the
-// day. Vegetable and fat take three, where it would not (ADR-021).
-const FAVORITE_NARROWING: Record<number, 'hard' | 'soft'> = {
-  [PROTEIN_CHAIN_INDEX]: 'hard',
-  [CARB_CHAIN_INDEX]: 'hard',
-  [VEGETABLE_CHAIN_INDEX]: 'soft',
-  [FAT_CHAIN_INDEX]: 'soft',
-};
-
-const SOFT_FAVORITE_REPEATS = 2;
+// there is one. Loose rather than 0.7, because the pool is now the user's
+// own favorites and a tight share leaves it nothing to rotate (ADR-025).
+const PROTEIN_FAT_BUDGET_SHARE = 2.0;
 
 const MAX_MEALS_PER_PROTEIN_FAMILY = 2;
 
@@ -95,10 +83,8 @@ export interface GreedyHeuristicInput {
   targetFatG: number;
   // 1-6, validated at the point mealCount is set; not re-validated here.
   mealCount: number;
+  // Already narrowed to the user's favorites (ADR-025).
   candidatesByRole: Map<string, FoodCandidate[]>;
-  // Optional so the existing specs need not thread it; generate() always
-  // supplies it.
-  favoriteFoodItemIds?: ReadonlySet<string>;
   proteinCategories?: ReadonlySet<string>;
   // Injectable so tests can pick deterministically; defaults to random.
   pickRandom?: <T extends { id: string }>(items: T[]) => T;
@@ -216,37 +202,38 @@ function eligibleCandidates(
 }
 
 interface DayPicks {
-  foodItemIds: Set<string>;
+  usesByFoodItemId: Map<string, number>;
   mealsPerProteinFamily: Map<string, number>;
-  favoriteUses: Map<string, number>;
 }
 
 interface Selection {
   rawPick: <T extends { id: string }>(items: T[]) => T;
-  favoriteFoodItemIds: ReadonlySet<string>;
   picked: DayPicks;
 }
 
-// A repeated item is worse than a third meal from one protein family, so
-// the family cap relaxes before the no-repeat rule does: try unused-and-
-// under-cap first, then just unused, then give up and allow a repeat.
+// Least-used-first, not unused-only: the pool is the user's own favorites
+// (ADR-025), so a day longer than the list has to repeat, and this spreads
+// the repeats evenly instead of letting one item take every leftover meal.
+// A repeat is still worse than a third meal from one protein family, so the
+// family cap relaxes first.
 function dayFilteredCandidates(
   eligible: FoodCandidate[],
   chainIndex: number,
   picked: DayPicks,
 ): FoodCandidate[] {
-  const unused = eligible.filter(
-    (candidate) => !picked.foodItemIds.has(candidate.id),
-  );
+  const uses = (candidate: FoodCandidate) =>
+    picked.usesByFoodItemId.get(candidate.id) ?? 0;
+  const fewest = Math.min(...eligible.map(uses));
+  const leastUsed = eligible.filter((candidate) => uses(candidate) === fewest);
 
   if (chainIndex === PROTEIN_CHAIN_INDEX) {
-    const underCap = unused.filter((candidate) =>
+    const underCap = leastUsed.filter((candidate) =>
       underProteinFamilyCap(candidate, picked),
     );
     if (underCap.length > 0) return underCap;
   }
 
-  return unused.length > 0 ? unused : eligible;
+  return leastUsed;
 }
 
 function recordPick(
@@ -255,17 +242,14 @@ function recordPick(
   chainIndex: number,
 ): void {
   const { picked } = selection;
-  picked.foodItemIds.add(candidate.id);
+  picked.usesByFoodItemId.set(
+    candidate.id,
+    (picked.usesByFoodItemId.get(candidate.id) ?? 0) + 1,
+  );
   if (chainIndex === PROTEIN_CHAIN_INDEX && candidate.familyName !== null) {
     picked.mealsPerProteinFamily.set(
       candidate.familyName,
       (picked.mealsPerProteinFamily.get(candidate.familyName) ?? 0) + 1,
-    );
-  }
-  if (selection.favoriteFoodItemIds.has(candidate.id)) {
-    picked.favoriteUses.set(
-      candidate.id,
-      (picked.favoriteUses.get(candidate.id) ?? 0) + 1,
     );
   }
 }
@@ -279,39 +263,6 @@ function underProteinFamilyCap(
     (picked.mealsPerProteinFamily.get(candidate.familyName) ?? 0) <
       MAX_MEALS_PER_PROTEIN_FAMILY
   );
-}
-
-// A hard slot overrides the no-repeat rule on purpose: round-robin over the
-// favorites is the rule. The protein family cap still binds, so two
-// favorited proteins of one family cannot take the whole day; once every
-// favorite family is spent the slot goes back to the wider pool.
-function narrowToFavorites(
-  eligible: FoodCandidate[],
-  chainIndex: number,
-  selection: Selection,
-): FoodCandidate[] | null {
-  const uses = (candidate: FoodCandidate) =>
-    selection.picked.favoriteUses.get(candidate.id) ?? 0;
-  const eligibleFavorites = eligible.filter((candidate) =>
-    selection.favoriteFoodItemIds.has(candidate.id),
-  );
-  const favorites =
-    chainIndex === PROTEIN_CHAIN_INDEX
-      ? eligibleFavorites.filter((candidate) =>
-          underProteinFamilyCap(candidate, selection.picked),
-        )
-      : eligibleFavorites;
-  if (favorites.length === 0) return null;
-
-  if (FAVORITE_NARROWING[chainIndex] === 'hard') {
-    const fewest = Math.min(...favorites.map(uses));
-    return favorites.filter((candidate) => uses(candidate) === fewest);
-  }
-
-  const unspent = favorites.filter(
-    (candidate) => uses(candidate) < SOFT_FAVORITE_REPEATS,
-  );
-  return unspent.length > 0 ? unspent : null;
 }
 
 function preferByMealAffinity(
@@ -331,15 +282,11 @@ function preferByMealAffinity(
 function preferLeanProtein(
   pool: FoodCandidate[],
   target: MealTarget,
-  favoriteFoodItemIds: ReadonlySet<string>,
 ): FoodCandidate[] {
   const lean = pool.filter(
     (candidate) =>
       (target.proteinG / candidate.proteinPer100g) * candidate.fatPer100g <=
-      target.fatG *
-        (favoriteFoodItemIds.has(candidate.id)
-          ? FAVORITE_PROTEIN_FAT_BUDGET_SHARE
-          : PROTEIN_FAT_BUDGET_SHARE),
+      target.fatG * PROTEIN_FAT_BUDGET_SHARE,
   );
   return lean.length > 0 ? lean : pool;
 }
@@ -353,12 +300,14 @@ function chooseCandidate(
   isLastMeal: boolean,
   target?: MealTarget,
 ): FoodCandidate {
-  const narrowed =
-    narrowToFavorites(available, chainIndex, selection) ??
-    dayFilteredCandidates(available, chainIndex, selection.picked);
+  const narrowed = dayFilteredCandidates(
+    available,
+    chainIndex,
+    selection.picked,
+  );
   const pool =
     chainIndex === PROTEIN_CHAIN_INDEX && target !== undefined
-      ? preferLeanProtein(narrowed, target, selection.favoriteFoodItemIds)
+      ? preferLeanProtein(narrowed, target)
       : narrowed;
   const candidate = selection.rawPick(preferByMealAffinity(pool, isLastMeal));
   recordPick(selection, candidate, chainIndex);
@@ -562,12 +511,7 @@ function buildMeal(
 export function generateDietItems(input: GreedyHeuristicInput): GeneratedDiet {
   const selection: Selection = {
     rawPick: input.pickRandom ?? defaultPick,
-    favoriteFoodItemIds: input.favoriteFoodItemIds ?? new Set<string>(),
-    picked: {
-      foodItemIds: new Set(),
-      mealsPerProteinFamily: new Map(),
-      favoriteUses: new Map(),
-    },
+    picked: { usesByFoodItemId: new Map(), mealsPerProteinFamily: new Map() },
   };
   const isLastMeal = (position: number) => position === input.mealCount;
 

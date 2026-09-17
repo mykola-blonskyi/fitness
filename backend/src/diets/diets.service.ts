@@ -50,6 +50,10 @@ function defaultPick<T>(items: T[]): T {
 
 type FoodItemRow = typeof schema.foodCalories.$inferSelect;
 
+type Tx = Parameters<
+  Parameters<NodePgDatabase<typeof schema>['transaction']>[0]
+>[0];
+
 @Injectable()
 export class DietsService {
   constructor(
@@ -114,10 +118,13 @@ export class DietsService {
   // without that role taking part in the query. One query covers every
   // non-excluded role rather than one query per role - roleIdByName is a
   // bijection (food_roles.name is unique), so each role id maps back to
-  // exactly one role name.
+  // exactly one role name. The pool is the user's favorites and nothing
+  // else (ADR-025); exclusions still apply on top, since a food can be
+  // favorited and later excluded by a diet type.
   private async findCandidatesByRole(
     exclusions: ExclusionTargets,
     roleIdByName: Map<string, string>,
+    favoriteFoodItemIds: ReadonlySet<string>,
   ): Promise<Map<string, FoodCandidate[]>> {
     const roleNames = [...new Set(MEAL_ROLE_CHAINS.flat())];
 
@@ -134,7 +141,7 @@ export class DietsService {
     }
 
     const queryableRoleIds = [...roleNameById.keys()];
-    if (queryableRoleIds.length === 0) {
+    if (queryableRoleIds.length === 0 || favoriteFoodItemIds.size === 0) {
       return candidatesByRole;
     }
 
@@ -161,6 +168,7 @@ export class DietsService {
       .where(
         and(
           inArray(schema.foodCalories.roleId, queryableRoleIds),
+          inArray(schema.foodCalories.id, [...favoriteFoodItemIds]),
           generationEligibleWhere(exclusions),
         ),
       );
@@ -206,21 +214,6 @@ export class DietsService {
     return { exclusions, roleIdByName: taxonomyIds.roleIdByName, dietTypes };
   }
 
-  private async findGenerationCandidatesByRole(
-    userId: string,
-    exclusions: ExclusionTargets,
-    roleIdByName: Map<string, string>,
-  ): Promise<{
-    candidatesByRole: Map<string, FoodCandidate[]>;
-    favoriteFoodItemIds: ReadonlySet<string>;
-  }> {
-    const [candidatesByRole, favoriteFoodItemIds] = await Promise.all([
-      this.findCandidatesByRole(exclusions, roleIdByName),
-      this.foodPreferencesService.getFavoriteFoodItemIds(userId),
-    ]);
-    return { candidatesByRole, favoriteFoodItemIds };
-  }
-
   // Shared by findCurrent()'s and swapItem()'s lookup of the algorithm a
   // stored Diet row was generated with - which may be an older algorithm
   // than the one CalorieTargetsService currently looks up by code, since
@@ -246,14 +239,22 @@ export class DietsService {
     const target = await this.calorieTargetsService.computeForUser(userId);
     const algorithm = target.algorithm;
 
-    const { exclusions, roleIdByName, dietTypes } =
-      await this.resolveExclusions(userId);
-    const { candidatesByRole, favoriteFoodItemIds } =
-      await this.findGenerationCandidatesByRole(
-        userId,
-        exclusions,
-        roleIdByName,
+    const [{ exclusions, roleIdByName, dietTypes }, favoriteFoodItemIds] =
+      await Promise.all([
+        this.resolveExclusions(userId),
+        this.foodPreferencesService.getFavoriteFoodItemIds(userId),
+      ]);
+    if (favoriteFoodItemIds.size === 0) {
+      throw new UnprocessableEntityException(
+        'Add favorite food items before generating a menu',
       );
+    }
+
+    const candidatesByRole = await this.findCandidatesByRole(
+      exclusions,
+      roleIdByName,
+      favoriteFoodItemIds,
+    );
     const hasAnyCandidate = [...candidatesByRole.values()].some(
       (candidates) => candidates.length > 0,
     );
@@ -270,7 +271,6 @@ export class DietsService {
       targetFatG: target.fatG,
       mealCount: user.mealCount,
       candidatesByRole,
-      favoriteFoodItemIds,
       proteinCategories: proteinCategoriesFor(dietTypes),
     });
 
@@ -351,6 +351,7 @@ export class DietsService {
     foodItemId: string,
     currentFoodItem: FoodItemRow,
     exclusions: ExclusionTargets,
+    favoriteFoodItemIds: ReadonlySet<string>,
   ): Promise<FoodItemRow> {
     const replacement = await this.db.query.foodCalories.findFirst({
       where: eq(schema.foodCalories.id, foodItemId),
@@ -361,6 +362,11 @@ export class DietsService {
     if (replacement.roleId !== currentFoodItem.roleId) {
       throw new BadRequestException(
         'Replacement must share the same Food Role as the item being swapped',
+      );
+    }
+    if (!favoriteFoodItemIds.has(replacement.id)) {
+      throw new UnprocessableEntityException(
+        'A swap offers your favorite food items only - favorite this one first',
       );
     }
     // gramsForCalories divides by this - a 0-calorie item can't be portioned.
@@ -383,8 +389,9 @@ export class DietsService {
     return replacement;
   }
 
+  // Deliberately unrestricted by the favorites: reroll is the way out of
+  // them, and swap is the way inside them (ADR-025).
   private async pickRerollReplacement(
-    userId: string,
     currentFoodItem: FoodItemRow,
     exclusions: ExclusionTargets,
     pickRandom: <T>(items: T[]) => T,
@@ -412,14 +419,7 @@ export class DietsService {
       );
     }
 
-    // Reroll honours favorites; an explicit swap deliberately does not,
-    // since narrowing a list the user opened on purpose is hostile (ADR-023).
-    const favoriteFoodItemIds =
-      await this.foodPreferencesService.getFavoriteFoodItemIds(userId);
-    const favorites = candidates.filter((row) =>
-      favoriteFoodItemIds.has(row.id),
-    );
-    return pickRandom(favorites.length > 0 ? favorites : candidates);
+    return pickRandom(candidates);
   }
 
   // Narrowed to what swapItem() will actually accept, so the picker cannot
@@ -428,8 +428,14 @@ export class DietsService {
     userId: string,
     params: ListFoodItemsDto,
   ): Promise<FoodItemPage> {
-    const { exclusions } = await this.resolveExclusions(userId);
-    return this.foodItemsService.list(userId, params, exclusions);
+    const [{ exclusions }, favoriteFoodItemIds] = await Promise.all([
+      this.resolveExclusions(userId),
+      this.foodPreferencesService.getFavoriteFoodItemIds(userId),
+    ]);
+    return this.foodItemsService.list(userId, params, {
+      exclusions,
+      favoriteFoodItemIds,
+    });
   }
 
   // Omitted foodItemId = reroll (random same-Role candidate); either way
@@ -441,17 +447,11 @@ export class DietsService {
     foodItemId?: string,
     pickRandom: <T>(items: T[]) => T = defaultPick,
   ): Promise<DietResponse> {
-    const diet = await this.findOwnedDiet(userId, dietId);
-
-    const dietItem = await this.db.query.dietItems.findFirst({
-      where: and(
-        eq(schema.dietItems.id, itemId),
-        eq(schema.dietItems.dietId, diet.id),
-      ),
-    });
-    if (!dietItem) {
-      throw new NotFoundException('Diet item not found');
-    }
+    const { diet, dietItem } = await this.findOwnedDietItem(
+      userId,
+      dietId,
+      itemId,
+    );
 
     // A swap never revisits is_counted, so the new food would go uncounted.
     if (!dietItem.isCounted) {
@@ -475,9 +475,9 @@ export class DietsService {
           foodItemId,
           currentFoodItem,
           exclusions,
+          await this.foodPreferencesService.getFavoriteFoodItemIds(userId),
         )
       : await this.pickRerollReplacement(
-          userId,
           currentFoodItem,
           exclusions,
           pickRandom,
@@ -497,38 +497,90 @@ export class DietsService {
         .set({ foodItemId: replacement.id, weightGrams: newGrams.toString() })
         .where(eq(schema.dietItems.id, dietItem.id));
 
-      // Re-derives totals from every item rather than adjusting by the
-      // swapped item's delta, so they can never drift from what the items sum to.
-      const itemRows = await tx
-        .select({
-          weightGrams: schema.dietItems.weightGrams,
-          isCounted: schema.dietItems.isCounted,
-          caloriesPer100g: schema.foodCalories.caloriesPer100g,
-          proteinPer100g: schema.foodCalories.proteinPer100g,
-          carbsPer100g: schema.foodCalories.carbsPer100g,
-          fatPer100g: schema.foodCalories.fatPer100g,
-        })
-        .from(schema.dietItems)
-        .innerJoin(
-          schema.foodCalories,
-          eq(schema.foodCalories.id, schema.dietItems.foodItemId),
-        )
-        .where(eq(schema.dietItems.dietId, diet.id));
+      return this.recalculateTotals(tx, diet.id);
+    });
 
-      const totals = sumCountedTotals(itemRows);
+    const algorithm = await this.getAlgorithmById(updatedDiet.algorithmId);
+    return this.buildResponse(updatedDiet, algorithm);
+  }
 
-      const [updated] = await tx
-        .update(schema.diets)
-        .set({
-          totalCalories: Math.round(totals.calories).toString(),
-          totalProtein: Math.round(totals.proteinG).toString(),
-          totalCarbs: Math.round(totals.carbsG).toString(),
-          totalFat: Math.round(totals.fatG).toString(),
-        })
-        .where(eq(schema.diets.id, diet.id))
-        .returning();
+  private async findOwnedDietItem(
+    userId: string,
+    dietId: string,
+    itemId: string,
+  ): Promise<{
+    diet: typeof schema.diets.$inferSelect;
+    dietItem: typeof schema.dietItems.$inferSelect;
+  }> {
+    const diet = await this.findOwnedDiet(userId, dietId);
+    const dietItem = await this.db.query.dietItems.findFirst({
+      where: and(
+        eq(schema.dietItems.id, itemId),
+        eq(schema.dietItems.dietId, diet.id),
+      ),
+    });
+    if (!dietItem) {
+      throw new NotFoundException('Diet item not found');
+    }
+    return { diet, dietItem };
+  }
 
-      return updated;
+  // Re-derives totals from every remaining item rather than adjusting by the
+  // edited item's delta, so they can never drift from what the items sum to.
+  private async recalculateTotals(
+    tx: Tx,
+    dietId: string,
+  ): Promise<typeof schema.diets.$inferSelect> {
+    const itemRows = await tx
+      .select({
+        weightGrams: schema.dietItems.weightGrams,
+        isCounted: schema.dietItems.isCounted,
+        caloriesPer100g: schema.foodCalories.caloriesPer100g,
+        proteinPer100g: schema.foodCalories.proteinPer100g,
+        carbsPer100g: schema.foodCalories.carbsPer100g,
+        fatPer100g: schema.foodCalories.fatPer100g,
+      })
+      .from(schema.dietItems)
+      .innerJoin(
+        schema.foodCalories,
+        eq(schema.foodCalories.id, schema.dietItems.foodItemId),
+      )
+      .where(eq(schema.dietItems.dietId, dietId));
+
+    const totals = sumCountedTotals(itemRows);
+
+    const [updated] = await tx
+      .update(schema.diets)
+      .set({
+        totalCalories: Math.round(totals.calories).toString(),
+        totalProtein: Math.round(totals.proteinG).toString(),
+        totalCarbs: Math.round(totals.carbsG).toString(),
+        totalFat: Math.round(totals.fatG).toString(),
+      })
+      .where(eq(schema.diets.id, dietId))
+      .returning();
+
+    return updated;
+  }
+
+  // Free Foods included: they are uncounted, so dropping one only changes
+  // what the day asks the user to eat, not the totals.
+  async removeItem(
+    userId: string,
+    dietId: string,
+    itemId: string,
+  ): Promise<DietResponse> {
+    const { diet, dietItem } = await this.findOwnedDietItem(
+      userId,
+      dietId,
+      itemId,
+    );
+
+    const updatedDiet = await this.db.transaction(async (tx) => {
+      await tx
+        .delete(schema.dietItems)
+        .where(eq(schema.dietItems.id, dietItem.id));
+      return this.recalculateTotals(tx, diet.id);
     });
 
     const algorithm = await this.getAlgorithmById(updatedDiet.algorithmId);

@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, ilike, lt, or } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, lt, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -20,6 +20,15 @@ const DEFAULT_LIMIT = 20;
 export interface FoodItemPage {
   items: FoodItemResponse[];
   nextCursor: string | null;
+}
+
+// What generation would accept for this user: the swap picker passes it so
+// it cannot offer an item swapItem() then rejects (ADR-025). The two travel
+// together - offering the favorites unfiltered by exclusions would surface
+// a food a diet type has since ruled out.
+export interface GenerationScope {
+  exclusions: ExclusionTargets;
+  favoriteFoodItemIds: ReadonlySet<string>;
 }
 
 // Shared column projection for both list() and create()'s post-insert
@@ -55,13 +64,19 @@ export class FoodItemsService {
   // item created via the form below then lands on page 1 right away,
   // instead of at the tail of the full scroll.
   //
-  // Exclusions narrow the page to what generation would accept, for the
-  // swap picker; browsing and logging a food stay unrestricted (ADR-020).
+  // generationScope narrows the page to what generation would accept, for
+  // the swap picker; browsing and logging a food stay unrestricted (ADR-020).
   async list(
     userId: string,
     params: ListFoodItemsDto,
-    exclusions?: ExclusionTargets,
+    generationScope?: GenerationScope,
   ): Promise<FoodItemPage> {
+    // inArray would reject the empty list below, and an empty favorites set
+    // has nothing to offer anyway.
+    if (generationScope?.favoriteFoodItemIds.size === 0) {
+      return { items: [], nextCursor: null };
+    }
+
     const locale = await resolveUserLocale(this.db, userId);
     const limit = params.limit ?? DEFAULT_LIMIT;
     const cursor = params.cursor ? decodeCursor(params.cursor) : null;
@@ -100,7 +115,14 @@ export class FoodItemsService {
       .where(
         and(
           eq(schema.foodCalories.isVerified, true),
-          exclusions ? generationEligibleWhere(exclusions) : undefined,
+          generationScope
+            ? and(
+                generationEligibleWhere(generationScope.exclusions),
+                inArray(schema.foodCalories.id, [
+                  ...generationScope.favoriteFoodItemIds,
+                ]),
+              )
+            : undefined,
           params.category
             ? eq(schema.foodCategories.name, params.category)
             : undefined,
