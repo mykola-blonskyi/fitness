@@ -5,7 +5,11 @@ import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { decodeCursor, encodeCursor } from '../admin/cursor-pagination';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
-import { generationEligibleWhere } from './food-eligibility';
+import {
+  generationEligibleWhere,
+  slotEligibleWhere,
+  type SlotConstraint,
+} from './food-eligibility';
 import type { CreateFoodItemDto } from './dto/create-food-item.dto';
 import type { ListFoodItemsDto } from './dto/list-food-items.dto';
 import { resolveUserLocale } from '../shared/locale';
@@ -29,6 +33,7 @@ export interface FoodItemPage {
 export interface GenerationScope {
   exclusions: ExclusionTargets;
   favoriteFoodItemIds: ReadonlySet<string>;
+  slot: SlotConstraint;
 }
 
 // Shared column projection for both list() and create()'s post-insert
@@ -118,6 +123,7 @@ export class FoodItemsService {
           generationScope
             ? and(
                 generationEligibleWhere(generationScope.exclusions),
+                slotEligibleWhere(generationScope.slot),
                 inArray(schema.foodCalories.id, [
                   ...generationScope.favoriteFoodItemIds,
                 ]),

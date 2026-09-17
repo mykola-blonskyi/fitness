@@ -16,6 +16,11 @@ import type { ListFoodItemsDto } from '../food-items/dto/list-food-items.dto';
 import {
   generationEligibleWhere,
   generationIneligibility,
+  resolveSlotConstraint,
+  satisfiesSlot,
+  slotEligibleWhere,
+  type SlotConstraint,
+  type TaxonomyIds,
 } from '../food-items/food-eligibility';
 import {
   FoodItemsService,
@@ -123,7 +128,7 @@ export class DietsService {
   // favorited and later excluded by a diet type.
   private async findCandidatesByRole(
     exclusions: ExclusionTargets,
-    roleIdByName: Map<string, string>,
+    roleIdByName: ReadonlyMap<string, string>,
     favoriteFoodItemIds: ReadonlySet<string>,
   ): Promise<Map<string, FoodCandidate[]>> {
     const roleNames = [...new Set(MEAL_ROLE_CHAINS.flat())];
@@ -197,7 +202,7 @@ export class DietsService {
   // "excluded during generation" and "rejected on swap" cannot drift apart.
   private async resolveExclusions(userId: string): Promise<{
     exclusions: ExclusionTargets;
-    roleIdByName: Map<string, string>;
+    taxonomy: TaxonomyIds;
     dietTypes: DietType[];
   }> {
     const [foodPreferenceExclusions, taxonomyIds] = await Promise.all([
@@ -211,7 +216,7 @@ export class DietsService {
         taxonomyIds.categoryIdByName,
         taxonomyIds.roleIdByName,
       );
-    return { exclusions, roleIdByName: taxonomyIds.roleIdByName, dietTypes };
+    return { exclusions, taxonomy: taxonomyIds, dietTypes };
   }
 
   // Shared by findCurrent()'s and swapItem()'s lookup of the algorithm a
@@ -239,7 +244,7 @@ export class DietsService {
     const target = await this.calorieTargetsService.computeForUser(userId);
     const algorithm = target.algorithm;
 
-    const [{ exclusions, roleIdByName, dietTypes }, favoriteFoodItemIds] =
+    const [{ exclusions, taxonomy, dietTypes }, favoriteFoodItemIds] =
       await Promise.all([
         this.resolveExclusions(userId),
         this.foodPreferencesService.getFavoriteFoodItemIds(userId),
@@ -252,7 +257,7 @@ export class DietsService {
 
     const candidatesByRole = await this.findCandidatesByRole(
       exclusions,
-      roleIdByName,
+      taxonomy.roleIdByName,
       favoriteFoodItemIds,
     );
     const hasAnyCandidate = [...candidatesByRole.values()].some(
@@ -349,7 +354,7 @@ export class DietsService {
 
   private async resolveExplicitReplacement(
     foodItemId: string,
-    currentFoodItem: FoodItemRow,
+    slot: SlotConstraint,
     exclusions: ExclusionTargets,
     favoriteFoodItemIds: ReadonlySet<string>,
   ): Promise<FoodItemRow> {
@@ -359,9 +364,9 @@ export class DietsService {
     if (!replacement) {
       throw new NotFoundException('Food item not found');
     }
-    if (replacement.roleId !== currentFoodItem.roleId) {
+    if (!satisfiesSlot(replacement, slot)) {
       throw new BadRequestException(
-        'Replacement must share the same Food Role as the item being swapped',
+        'Replacement must fill the same macro slot as the item being swapped',
       );
     }
     if (!favoriteFoodItemIds.has(replacement.id)) {
@@ -393,29 +398,24 @@ export class DietsService {
   // them, and swap is the way inside them (ADR-025).
   private async pickRerollReplacement(
     currentFoodItem: FoodItemRow,
+    slot: SlotConstraint,
     exclusions: ExclusionTargets,
     pickRandom: <T>(items: T[]) => T,
   ): Promise<FoodItemRow> {
-    if (exclusions.role.has(currentFoodItem.roleId)) {
-      throw new UnprocessableEntityException(
-        'No other food item in this role matches your preferences',
-      );
-    }
-
-    const sameRoleRows = await this.db.query.foodCalories.findMany({
+    const sameSlotRows = await this.db.query.foodCalories.findMany({
       where: and(
-        eq(schema.foodCalories.roleId, currentFoodItem.roleId),
+        slotEligibleWhere(slot),
         ne(schema.foodCalories.id, currentFoodItem.id),
         generationEligibleWhere(exclusions),
       ),
     });
     // 0-calorie items can't be portion-scaled - same exclusion generate makes.
-    const candidates = sameRoleRows.filter(
+    const candidates = sameSlotRows.filter(
       (row) => Number(row.caloriesPer100g) > 0,
     );
     if (candidates.length === 0) {
       throw new UnprocessableEntityException(
-        'No other food item in this role matches your preferences',
+        'No other food item fits this slot and your preferences',
       );
     }
 
@@ -423,18 +423,30 @@ export class DietsService {
   }
 
   // Narrowed to what swapItem() will actually accept, so the picker cannot
-  // offer an item that then 422s.
+  // offer an item that then 422s - both resolve the same SlotConstraint.
   async listSwapCandidates(
     userId: string,
     params: ListFoodItemsDto,
   ): Promise<FoodItemPage> {
-    const [{ exclusions }, favoriteFoodItemIds] = await Promise.all([
-      this.resolveExclusions(userId),
-      this.foodPreferencesService.getFavoriteFoodItemIds(userId),
-    ]);
-    return this.foodItemsService.list(userId, params, {
+    // The slot subsumes the role, so forwarding both would narrow straight
+    // back to the single Role this replaces.
+    const { role, ...rest } = params;
+    if (!role) {
+      throw new BadRequestException('role is required');
+    }
+    const [{ exclusions, taxonomy, dietTypes }, favoriteFoodItemIds] =
+      await Promise.all([
+        this.resolveExclusions(userId),
+        this.foodPreferencesService.getFavoriteFoodItemIds(userId),
+      ]);
+    const roleId = taxonomy.roleIdByName.get(role);
+    if (!roleId) {
+      throw new BadRequestException('Unknown Food Role');
+    }
+    return this.foodItemsService.list(userId, rest, {
       exclusions,
       favoriteFoodItemIds,
+      slot: resolveSlotConstraint(roleId, taxonomy, dietTypes),
     });
   }
 
@@ -468,17 +480,24 @@ export class DietsService {
       throw new NotFoundException('Original food item not found');
     }
 
-    const { exclusions } = await this.resolveExclusions(userId);
+    const { exclusions, taxonomy, dietTypes } =
+      await this.resolveExclusions(userId);
+    const slot = resolveSlotConstraint(
+      currentFoodItem.roleId,
+      taxonomy,
+      dietTypes,
+    );
 
     const replacement = foodItemId
       ? await this.resolveExplicitReplacement(
           foodItemId,
-          currentFoodItem,
+          slot,
           exclusions,
           await this.foodPreferencesService.getFavoriteFoodItemIds(userId),
         )
       : await this.pickRerollReplacement(
           currentFoodItem,
+          slot,
           exclusions,
           pickRandom,
         );

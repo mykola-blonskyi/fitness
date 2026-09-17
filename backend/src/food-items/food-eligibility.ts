@@ -1,4 +1,4 @@
-import { and, isNotNull, notInArray, type SQL } from 'drizzle-orm';
+import { and, inArray, isNotNull, notInArray, type SQL } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
 import type { DietType } from '../diet-preferences/diet-preference.types';
@@ -15,6 +15,18 @@ export interface EligibilityRow {
   subcategoryId: string;
   roleId: string;
   familyId: string | null;
+}
+
+export interface TaxonomyIds {
+  roleIdByName: ReadonlyMap<string, string>;
+  categoryIdByName: ReadonlyMap<string, string>;
+}
+
+export interface SlotConstraint {
+  roleIds: readonly string[];
+  // The protein slot draws a Category-filtered pool (proteinCategoriesFor)
+  // that no exclusion set reproduces; null for the other three slots.
+  categoryIds: readonly string[] | null;
 }
 
 export type Ineligibility = 'no_family' | 'preference_excluded';
@@ -106,4 +118,64 @@ export function isGenerationReachable(
     );
   }
   return true;
+}
+
+// What may replace a menu item: the macro slot generation drew it from, not
+// its single Food Role - a protein slot pools dairy with lean_protein.
+export function resolveSlotConstraint(
+  currentRoleId: string,
+  taxonomy: TaxonomyIds,
+  dietTypes: readonly DietType[],
+): SlotConstraint {
+  const roleNameById = new Map(
+    [...taxonomy.roleIdByName].map(([name, id]) => [id, name]),
+  );
+  const currentRoleName = roleNameById.get(currentRoleId);
+  const chainIndex = MEAL_ROLE_CHAINS.findIndex(
+    (chain) => currentRoleName !== undefined && chain.includes(currentRoleName),
+  );
+  if (chainIndex === -1) {
+    return { roleIds: [currentRoleId], categoryIds: null };
+  }
+
+  const roleIds = idsFor(MEAL_ROLE_CHAINS[chainIndex], taxonomy.roleIdByName);
+  if (chainIndex !== PROTEIN_CHAIN_INDEX) {
+    return { roleIds, categoryIds: null };
+  }
+  return {
+    roleIds,
+    categoryIds: idsFor(
+      proteinCategoriesFor(dietTypes),
+      taxonomy.categoryIdByName,
+    ),
+  };
+}
+
+function idsFor(
+  names: Iterable<string>,
+  idByName: ReadonlyMap<string, string>,
+): string[] {
+  return [...names]
+    .map((name) => idByName.get(name))
+    .filter((id): id is string => id !== undefined);
+}
+
+export function slotEligibleWhere(constraint: SlotConstraint): SQL | undefined {
+  return and(
+    inArray(schema.foodCalories.roleId, [...constraint.roleIds]),
+    constraint.categoryIds
+      ? inArray(schema.foodCalories.categoryId, [...constraint.categoryIds])
+      : undefined,
+  );
+}
+
+export function satisfiesSlot(
+  row: Pick<EligibilityRow, 'roleId' | 'categoryId'>,
+  constraint: SlotConstraint,
+): boolean {
+  return (
+    constraint.roleIds.includes(row.roleId) &&
+    (constraint.categoryIds === null ||
+      constraint.categoryIds.includes(row.categoryId))
+  );
 }

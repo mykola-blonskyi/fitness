@@ -40,6 +40,11 @@ async function listWhere(generationScope?: GenerationScope): Promise<string> {
   return new PgDialect().sqlToQuery(where()).sql;
 }
 
+const proteinSlot = {
+  roleIds: ['role-lean-protein', 'role-dairy'],
+  categoryIds: null,
+};
+
 describe('FoodItemsService.list', () => {
   it('shows the whole verified catalog when no generation scope is passed', async () => {
     const sql = await listWhere();
@@ -53,6 +58,7 @@ describe('FoodItemsService.list', () => {
     const sql = await listWhere({
       exclusions: { ...noExclusions(), category: new Set(['cat-meat']) },
       favoriteFoodItemIds: new Set(['chicken']),
+      slot: proteinSlot,
     });
 
     expect(sql).toContain('"food_calories"."family_id" is not null');
@@ -63,9 +69,30 @@ describe('FoodItemsService.list', () => {
     const sql = await listWhere({
       exclusions: noExclusions(),
       favoriteFoodItemIds: new Set(['chicken', 'rice']),
+      slot: proteinSlot,
     });
 
-    expect(sql).toContain('"food_calories"."id" in ($2, $3)');
+    expect(sql).toContain('"food_calories"."id" in');
+  });
+
+  it('narrows to every Role in the slot, not the item own one', async () => {
+    const sql = await listWhere({
+      exclusions: noExclusions(),
+      favoriteFoodItemIds: new Set(['chicken']),
+      slot: proteinSlot,
+    });
+
+    expect(sql).toContain('"food_calories"."role_id" in ($2, $3)');
+  });
+
+  it('also narrows the protein slot by Category, as generation does', async () => {
+    const sql = await listWhere({
+      exclusions: noExclusions(),
+      favoriteFoodItemIds: new Set(['chicken']),
+      slot: { roleIds: ['role-lean-protein'], categoryIds: ['cat-meat'] },
+    });
+
+    expect(sql).toContain('"food_calories"."category_id" in');
   });
 
   it('returns nothing rather than querying when the favorites set is empty', async () => {
@@ -77,6 +104,7 @@ describe('FoodItemsService.list', () => {
       {
         exclusions: noExclusions(),
         favoriteFoodItemIds: new Set(),
+        slot: proteinSlot,
       },
     );
 

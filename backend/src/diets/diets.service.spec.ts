@@ -224,7 +224,11 @@ describe('DietsService.resolveExplicitReplacement', () => {
 
   it('accepts a favorited, Family-classified replacement in the same slot', async () => {
     const db = buildDb(
-      foodItem({ id: 'cod', roleId: 'role-lean-protein', categoryId: 'cat-fish' }),
+      foodItem({
+        id: 'cod',
+        roleId: 'role-lean-protein',
+        categoryId: 'cat-fish',
+      }),
     );
 
     const replacement = await buildService(db)['resolveExplicitReplacement'](
@@ -239,7 +243,11 @@ describe('DietsService.resolveExplicitReplacement', () => {
 
   it('rejects a replacement from another slot', async () => {
     const db = buildDb(
-      foodItem({ id: 'olive-oil', roleId: 'role-healthy-fat', categoryId: 'cat-oils' }),
+      foodItem({
+        id: 'olive-oil',
+        roleId: 'role-healthy-fat',
+        categoryId: 'cat-oils',
+      }),
     );
 
     await expect(
