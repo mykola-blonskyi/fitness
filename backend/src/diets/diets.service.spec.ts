@@ -1,7 +1,11 @@
-import { UnprocessableEntityException } from '@nestjs/common';
+import {
+  BadRequestException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import type { SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { DietsService } from './diets.service';
+import { resolveSlotConstraint } from '../food-items/food-eligibility';
 import * as schema from '../db/schema';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
 
@@ -38,6 +42,28 @@ const foodItem = (overrides: Partial<FoodItemRow> = {}): FoodItemRow => ({
   createdAt: new Date('2026-01-01'),
   ...overrides,
 });
+
+const taxonomy = {
+  roleIdByName: new Map([
+    ['lean_protein', 'role-lean-protein'],
+    ['fatty_protein', 'role-fatty-protein'],
+    ['plant_protein', 'role-plant-protein'],
+    ['dairy', 'role-dairy'],
+    ['vegetable', 'role-vegetable'],
+    ['healthy_fat', 'role-healthy-fat'],
+    ['saturated_fat', 'role-saturated-fat'],
+  ]),
+  categoryIdByName: new Map([
+    ['meat', 'cat-meat'],
+    ['fish', 'cat-fish'],
+    ['dairy', 'cat-dairy'],
+    ['eggs', 'cat-eggs'],
+    ['legumes', 'cat-legumes'],
+    ['nuts', 'cat-nuts'],
+  ]),
+};
+
+const proteinSlot = resolveSlotConstraint('role-dairy', taxonomy, []);
 
 function buildService(db: unknown): DietsService {
   const foodPreferencesService = {
@@ -118,7 +144,8 @@ describe('DietsService.pickRerollReplacement', () => {
     };
 
     await buildService(db)['pickRerollReplacement'](
-      foodItem(),
+      foodItem({ roleId: 'role-dairy' }),
+      proteinSlot,
       noExclusions(),
       (items) => items[0],
     );
@@ -143,12 +170,20 @@ describe('DietsService.pickRerollReplacement', () => {
     };
 
     const replacement = await buildService(db)['pickRerollReplacement'](
-      foodItem(),
+      foodItem({ roleId: 'role-dairy' }),
+      proteinSlot,
       noExclusions(),
       (items) => items[0],
     );
 
     expect(replacement.id).toBe('cod');
+  });
+
+  it('reaches every role in the slot, not just the current one', async () => {
+    const sql = await rerollWhere();
+
+    expect(sql).toContain('"food_calories"."role_id" in');
+    expect(sql).not.toContain('"food_calories"."role_id" = ');
   });
 });
 
@@ -167,7 +202,7 @@ describe('DietsService.resolveExplicitReplacement', () => {
     await expect(
       buildService(db)['resolveExplicitReplacement'](
         'wheat-flour',
-        foodItem(),
+        proteinSlot,
         noExclusions(),
         new Set(['wheat-flour']),
       ),
@@ -180,23 +215,40 @@ describe('DietsService.resolveExplicitReplacement', () => {
     await expect(
       buildService(db)['resolveExplicitReplacement'](
         'cod',
-        foodItem(),
+        proteinSlot,
         noExclusions(),
         new Set(['turkey']),
       ),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
-  it('accepts a favorited, Family-classified replacement in the same role', async () => {
-    const db = buildDb(foodItem({ id: 'cod' }));
+  it('accepts a favorited, Family-classified replacement in the same slot', async () => {
+    const db = buildDb(
+      foodItem({ id: 'cod', roleId: 'role-lean-protein', categoryId: 'cat-fish' }),
+    );
 
     const replacement = await buildService(db)['resolveExplicitReplacement'](
       'cod',
-      foodItem(),
+      proteinSlot,
       noExclusions(),
       new Set(['cod']),
     );
 
     expect(replacement.id).toBe('cod');
+  });
+
+  it('rejects a replacement from another slot', async () => {
+    const db = buildDb(
+      foodItem({ id: 'olive-oil', roleId: 'role-healthy-fat', categoryId: 'cat-oils' }),
+    );
+
+    await expect(
+      buildService(db)['resolveExplicitReplacement'](
+        'olive-oil',
+        proteinSlot,
+        noExclusions(),
+        new Set(['olive-oil']),
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

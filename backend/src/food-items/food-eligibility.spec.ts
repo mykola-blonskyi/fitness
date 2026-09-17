@@ -2,6 +2,9 @@ import { PgDialect } from 'drizzle-orm/pg-core';
 import {
   generationEligibleWhere,
   generationIneligibility,
+  resolveSlotConstraint,
+  satisfiesSlot,
+  slotEligibleWhere,
   type EligibilityRow,
 } from './food-eligibility';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
@@ -94,5 +97,103 @@ describe('generationIneligibility', () => {
     expect(generationIneligibility(potato, exclusions)).toBe(
       'preference_excluded',
     );
+  });
+});
+
+describe('resolveSlotConstraint', () => {
+  const taxonomy = {
+    roleIdByName: new Map([
+      ['lean_protein', 'role-lean-protein'],
+      ['fatty_protein', 'role-fatty-protein'],
+      ['plant_protein', 'role-plant-protein'],
+      ['dairy', 'role-dairy'],
+      ['complex_carb', 'role-complex-carb'],
+      ['simple_carb', 'role-simple-carb'],
+      ['vegetable', 'role-vegetable'],
+      ['healthy_fat', 'role-healthy-fat'],
+      ['saturated_fat', 'role-saturated-fat'],
+      ['treat', 'role-treat'],
+    ]),
+    categoryIdByName: new Map([
+      ['meat', 'cat-meat'],
+      ['fish', 'cat-fish'],
+      ['dairy', 'cat-dairy'],
+      ['eggs', 'cat-eggs'],
+      ['legumes', 'cat-legumes'],
+      ['nuts', 'cat-nuts'],
+    ]),
+  };
+
+  it('pools the whole protein chain, whichever of its roles the item holds', () => {
+    const fromDairy = resolveSlotConstraint('role-dairy', taxonomy, []);
+
+    expect([...fromDairy.roleIds].sort()).toEqual([
+      'role-dairy',
+      'role-fatty-protein',
+      'role-lean-protein',
+      'role-plant-protein',
+    ]);
+  });
+
+  it('keeps an omnivore out of the legumes generation never serves her', () => {
+    const constraint = resolveSlotConstraint('role-lean-protein', taxonomy, []);
+
+    expect(constraint.categoryIds).not.toContain('cat-legumes');
+    expect(
+      satisfiesSlot(
+        row({ roleId: 'role-plant-protein', categoryId: 'cat-legumes' }),
+        constraint,
+      ),
+    ).toBe(false);
+  });
+
+  it('opens legumes to a vegetarian, matching proteinCategoriesFor', () => {
+    const constraint = resolveSlotConstraint('role-lean-protein', taxonomy, [
+      'vegetarian',
+    ]);
+
+    expect(
+      satisfiesSlot(
+        row({ roleId: 'role-plant-protein', categoryId: 'cat-legumes' }),
+        constraint,
+      ),
+    ).toBe(true);
+  });
+
+  it('leaves the non-protein slots unfiltered by Category', () => {
+    const carb = resolveSlotConstraint('role-simple-carb', taxonomy, []);
+
+    expect(carb.categoryIds).toBeNull();
+    expect([...carb.roleIds].sort()).toEqual([
+      'role-complex-carb',
+      'role-simple-carb',
+    ]);
+  });
+
+  it('degrades to the item own role when no slot draws it', () => {
+    const treat = resolveSlotConstraint('role-treat', taxonomy, []);
+
+    expect(treat.roleIds).toEqual(['role-treat']);
+    expect(treat.categoryIds).toBeNull();
+  });
+
+  it('agrees between its SQL form and its row form', () => {
+    const constraint = resolveSlotConstraint('role-dairy', taxonomy, []);
+
+    expect(render(slotEligibleWhere(constraint))).toContain(
+      '"food_calories"."role_id" in',
+    );
+    expect(
+      satisfiesSlot(
+        row({ roleId: 'role-lean-protein', categoryId: 'cat-meat' }),
+        constraint,
+      ),
+    ).toBe(true);
+    expect(
+      satisfiesSlot(
+        row({ roleId: 'role-vegetable', categoryId: 'cat-vegetables' }),
+        constraint,
+      ),
+    ).toBe(false);
   });
 });
