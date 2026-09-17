@@ -380,6 +380,24 @@ describe('DietMenu', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it('a finished reroll re-enables the row instead of staying on Rerolling…', async () => {
+    const user = userEvent.setup();
+    swapDietItem.mockResolvedValue({ ok: true, diet });
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    const breakfastRow = screen.getByText('Oats').closest('li') as HTMLElement;
+    await user.click(
+      within(breakfastRow).getByRole('button', { name: /reroll/i }),
+    );
+
+    expect(
+      within(breakfastRow).getByRole('button', { name: /^reroll$/i }),
+    ).toBeEnabled();
+    expect(
+      within(breakfastRow).getByRole('button', { name: /^delete$/i }),
+    ).toBeEnabled();
+  });
+
   it('picking a candidate in the swap picker calls swapDietItem with the food id', async () => {
     const user = userEvent.setup();
     swapDietItem.mockResolvedValue({ ok: true, diet });
