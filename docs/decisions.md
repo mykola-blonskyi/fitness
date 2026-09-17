@@ -393,3 +393,23 @@ This deletes the whole biasing apparatus ADR-023 and ADR-024 tuned — `narrowTo
 Free Foods are drawn from the favorites like everything else, so a user who favorites no vegetables gets no salad. That is the literal reading of "build my menu from these foods", and a user who wants salad back favorites a vegetable.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-026: A replacement is drawn from the macro slot, not the Food Role
+
+Date: 2026-09-17
+
+Status: Accepted
+
+Corrects an unstated assumption in ADR-025. Its swap/reroll split (swap stays inside the favorites, reroll reaches the whole eligible catalog) stands unchanged.
+
+**Swap and reroll draw from the macro slot generation filled, not from the replaced item's single Food Role.** A slot pools a whole `MEAL_ROLE_CHAINS` entry, so the protein slot holds `lean_protein`, `fatty_protein`, `plant_protein` and `dairy` alike. Keying replacement on Role left a protein slot holding cottage cheese (`dairy`) unable to reach chicken (`lean_protein`) by either control, while reroll offered salted butter for the same slot. The user sees a meal row carrying a macro, not a taxonomy entry, and the replacement rule now matches.
+
+The carb and fat chains are ordered fallbacks rather than pooled draws, so "generation could have placed it here" is not uniformly true across the four slots. The rule is the same for all four anyway: a chain's order is a generation-time preference for which Role fills a slot, never a claim that the later Roles are outside it. The cost is that rerolling a `complex_carb` sometimes returns a `simple_carb`; reroll is the cheap-to-undo control, and a bias inside the pick is the fix if that ever matters.
+
+**The protein slot carries its Category filter into the replacement rule.** `proteinCategoriesFor` keeps legumes and nuts out of an omnivore's protein slot, and no exclusion set reproduces it — `categoryNamesExcludedBy` is empty for a user with no diet type. Widening the Role set without it would have let reroll serve beans as a main to a user generation never serves them to.
+
+`resolveSlotConstraint` in `food-items/food-eligibility.ts` is the single source of truth. The picker query, the explicit-swap check and the reroll draw all read it, so the picker cannot offer an item the swap then rejects. A Role in no chain (`beverage`, `fruit`, `treat`) degrades to itself, which is the pre-ADR-026 behavior; generation never places one.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

@@ -380,6 +380,24 @@ describe('DietMenu', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it('a finished reroll re-enables the row instead of staying on Rerolling…', async () => {
+    const user = userEvent.setup();
+    swapDietItem.mockResolvedValue({ ok: true, diet });
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    const breakfastRow = screen.getByText('Oats').closest('li') as HTMLElement;
+    await user.click(
+      within(breakfastRow).getByRole('button', { name: /reroll/i }),
+    );
+
+    expect(
+      within(breakfastRow).getByRole('button', { name: /^reroll$/i }),
+    ).toBeEnabled();
+    expect(
+      within(breakfastRow).getByRole('button', { name: /^delete$/i }),
+    ).toBeEnabled();
+  });
+
   it('picking a candidate in the swap picker calls swapDietItem with the food id', async () => {
     const user = userEvent.setup();
     swapDietItem.mockResolvedValue({ ok: true, diet });
@@ -394,6 +412,28 @@ describe('DietMenu', () => {
     await user.click(candidate);
 
     expect(swapDietItem).toHaveBeenCalledWith('diet-1', 'd1', 'f9');
+  });
+
+  it('blames the search, not the favorites, when a search matched nothing', async () => {
+    const user = userEvent.setup();
+    listSwapCandidates.mockResolvedValue([]);
+    renderWithIntl(<DietMenu diet={diet} />);
+
+    const dinnerRow = screen.getByText('Salmon').closest('li') as HTMLElement;
+    await user.click(
+      within(dinnerRow).getByRole('button', { name: /^swap$/i }),
+    );
+
+    expect(
+      await screen.findByText(/add some in your preferences/i),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByRole('searchbox'), 'chicken');
+
+    expect(await screen.findByText(/matches your search/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/add some in your preferences/i),
+    ).not.toBeInTheDocument();
   });
 
   it('regenerate confirms before calling generateDiet', async () => {

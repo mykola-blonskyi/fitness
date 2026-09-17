@@ -99,11 +99,12 @@
       "reviewPreferences": "Revisa tus preferencias"
     },
     "swapPicker": {
-      "searchLabel": "Buscar alimentos: {role}",
+      "searchLabel": "Buscar alimentos de sustitución",
       "searchPlaceholder": "Buscar…",
       "loading": "Cargando…",
       "loadError": "No se han podido cargar los alimentos. Inténtalo de nuevo.",
-      "empty": "No hay alimentos favoritos en esta categoría: añade alguno en tus preferencias.",
+      "emptyNoFavorites": "Ningún otro alimento favorito encaja aquí: añade alguno en tus preferencias.",
+      "emptySearch": "Ningún alimento favorito coincide con tu búsqueda.",
       "caloriesPer100g": "{calories} kcal / 100 g"
     },
     "errors": {

@@ -38,12 +38,14 @@ export function DietItemActions({
       const result = await call();
       if (result.ok) {
         router.refresh();
-        return;
+      } else {
+        setError(result.error);
       }
-      setError(result.error);
     } catch {
       setError(t('errors.generic'));
     }
+    // router.refresh() re-renders the server tree without remounting this
+    // component, so a successful call has to clear its pending state too.
     setPending(null);
   }
 
