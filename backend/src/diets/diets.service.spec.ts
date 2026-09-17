@@ -53,8 +53,8 @@ function buildService(db: unknown): DietsService {
   );
 }
 
-describe('DietsService.findGenerationCandidatesByRole', () => {
-  it('asks the database only for Family-classified rows', async () => {
+describe('DietsService.findCandidatesByRole', () => {
+  it('asks the database only for Family-classified, favorited rows', async () => {
     let captured: SQL | undefined;
     const db = {
       select: () => ({
@@ -71,16 +71,35 @@ describe('DietsService.findGenerationCandidatesByRole', () => {
       }),
     };
 
-    const result = await buildService(db)['findGenerationCandidatesByRole'](
-      'user-1',
+    await buildService(db)['findCandidatesByRole'](
       noExclusions(),
       new Map([['complex_carb', 'role-complex-carb']]),
+      new Set(['rice']),
     );
 
     expect(render(captured)).toContain(
       '"food_calories"."family_id" is not null',
     );
-    expect(result.favoriteFoodItemIds).toEqual(new Set());
+    expect(render(captured)).toContain('"food_calories"."id" in');
+  });
+
+  it('skips the query entirely when the favorites set is empty', async () => {
+    let queried = false;
+    const db = {
+      select: () => {
+        queried = true;
+        throw new Error('should not query');
+      },
+    };
+
+    const result = await buildService(db)['findCandidatesByRole'](
+      noExclusions(),
+      new Map([['complex_carb', 'role-complex-carb']]),
+      new Set<string>(),
+    );
+
+    expect(queried).toBe(false);
+    expect(result.get('complex_carb')).toEqual([]);
   });
 });
 
@@ -99,30 +118,12 @@ describe('DietsService.pickRerollReplacement', () => {
     };
 
     await buildService(db)['pickRerollReplacement'](
-      'user-1',
       foodItem(),
       noExclusions(),
       (items) => items[0],
     );
 
     return render(captured);
-  }
-
-  function rerollService(rows: FoodItemRow[], favorites: Set<string>) {
-    const db = {
-      query: {
-        foodCalories: { findMany: () => Promise.resolve(rows) },
-      },
-    };
-    const service = buildService(db);
-    (
-      service as unknown as {
-        foodPreferencesService: { getFavoriteFoodItemIds: jest.Mock };
-      }
-    ).foodPreferencesService.getFavoriteFoodItemIds.mockResolvedValue(
-      favorites,
-    );
-    return service;
   }
 
   it('asks the database only for Family-classified rows', async () => {
@@ -135,26 +136,13 @@ describe('DietsService.pickRerollReplacement', () => {
     expect(await rerollWhere()).not.toContain('is_verified');
   });
 
-  it('rerolls into a favorite when the role holds one', async () => {
+  it('draws from the whole role, favorited or not (ADR-025)', async () => {
     const rows = [foodItem({ id: 'cod' }), foodItem({ id: 'turkey' })];
-    const service = rerollService(rows, new Set(['turkey']));
+    const db = {
+      query: { foodCalories: { findMany: () => Promise.resolve(rows) } },
+    };
 
-    const replacement = await service['pickRerollReplacement'](
-      'user-1',
-      foodItem(),
-      noExclusions(),
-      (items) => items[0],
-    );
-
-    expect(replacement.id).toBe('turkey');
-  });
-
-  it('rerolls into the whole role when it holds no favorite', async () => {
-    const rows = [foodItem({ id: 'cod' }), foodItem({ id: 'turkey' })];
-    const service = rerollService(rows, new Set(['salmon']));
-
-    const replacement = await service['pickRerollReplacement'](
-      'user-1',
+    const replacement = await buildService(db)['pickRerollReplacement'](
       foodItem(),
       noExclusions(),
       (items) => items[0],
@@ -181,17 +169,32 @@ describe('DietsService.resolveExplicitReplacement', () => {
         'wheat-flour',
         foodItem(),
         noExclusions(),
+        new Set(['wheat-flour']),
       ),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
-  it('accepts a Family-classified replacement in the same role', async () => {
+  it('rejects a replacement outside the favorites (ADR-025)', async () => {
+    const db = buildDb(foodItem({ id: 'cod' }));
+
+    await expect(
+      buildService(db)['resolveExplicitReplacement'](
+        'cod',
+        foodItem(),
+        noExclusions(),
+        new Set(['turkey']),
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('accepts a favorited, Family-classified replacement in the same role', async () => {
     const db = buildDb(foodItem({ id: 'cod' }));
 
     const replacement = await buildService(db)['resolveExplicitReplacement'](
       'cod',
       foodItem(),
       noExclusions(),
+      new Set(['cod']),
     );
 
     expect(replacement.id).toBe('cod');

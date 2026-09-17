@@ -644,6 +644,30 @@ describe('generateDietItems', () => {
     expect(new Set(foodItemIds).size).toBe(foodItemIds.length);
   });
 
+  it('spreads the repeats evenly when the day is longer than the candidate list', () => {
+    const proteins = [0, 1].map((i) => ({
+      ...leanProtein,
+      id: `rotation-protein-${i}`,
+    }));
+
+    const result = generateDietItems({
+      targetCalories: 1500,
+      targetProteinG: 120,
+      targetCarbsG: 0,
+      targetFatG: 40,
+      mealCount: 4,
+      candidatesByRole: new Map([['lean_protein', proteins]]),
+      pickRandom: (items) => items[0],
+    });
+
+    expect(result.items.map((item) => item.foodItemId)).toEqual([
+      'rotation-protein-0',
+      'rotation-protein-1',
+      'rotation-protein-0',
+      'rotation-protein-1',
+    ]);
+  });
+
   it('caps a protein family at two meals even when a naive picker would take a third from it', () => {
     const familyA1: FoodCandidate = {
       ...leanProtein,
