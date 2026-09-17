@@ -297,7 +297,7 @@ Relationships:
 
 Responsibilities:
 
-Fixed taxonomies. Category/Subcategory drive browsing; Role is what Food Preferences target and what the macro fit sizes against; **Food Family** (ADR-020) is what a Meal Slot draws from and what a swap offers. A favorite narrows nothing; the favorites are the pool (ADR-025). Category and Role are independent classifications on the same Food Item, not hierarchical with each other — a `legumes`-category item's Role is `plant_protein`, not derived from its category name. The same independence holds for potato: Category stays `vegetables` (so browsing and "exclude vegetables" keep working) while its Role is `complex_carb` and its Family `starchy_vegetable`.
+Fixed taxonomies. Category/Subcategory drive browsing; Role is what Food Preferences target and what the macro fit sizes against; **Food Family** (ADR-020) is what governs repetition and affinity within a generated day. A meal's macro slot draws from a chain of Roles (`MEAL_ROLE_CHAINS`), and that slot — not the single Role — is also what a swap or reroll offers (ADR-026). A favorite narrows nothing; the favorites are the pool (ADR-025). Category and Role are independent classifications on the same Food Item, not hierarchical with each other — a `legumes`-category item's Role is `plant_protein`, not derived from its category name. The same independence holds for potato: Category stays `vegetables` (so browsing and "exclude vegetables" keep working) while its Role is `complex_carb` and its Family `starchy_vegetable`.
 
 Fixed values:
 
