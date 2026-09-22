@@ -82,8 +82,8 @@ export class FoodItemsService {
     params: ListFoodItemsDto,
     generationScope?: GenerationScope,
   ): Promise<FoodItemPage> {
-    // inArray would reject the empty list below, and an empty favorites set
-    // has nothing to offer anyway.
+    // inArray rejects an empty list, and an empty favorites set has
+    // nothing to offer anyway.
     if (generationScope?.favoriteFoodItemIds.size === 0) {
       return { items: [], nextCursor: null };
     }
@@ -239,6 +239,7 @@ export class FoodItemsService {
     favoriteFoodItemIds: ReadonlySet<string>,
     exclusions: ExclusionTargets,
   ): Promise<GenerationCandidate[]> {
+    // inArray rejects an empty list.
     if (roleIds.length === 0 || favoriteFoodItemIds.size === 0) return [];
 
     const rows = await this.db
@@ -310,6 +311,7 @@ export class FoodItemsService {
     targetType: FoodPreferenceTargetType,
     ids: string[],
   ): Promise<Map<string, string>> {
+    // inArray rejects an empty list.
     if (ids.length === 0) return new Map();
 
     switch (targetType) {
@@ -372,6 +374,7 @@ export class FoodItemsService {
   async getReachabilityFacts(
     ids: string[],
   ): Promise<Map<string, ReachabilityFacts>> {
+    // inArray rejects an empty list.
     if (ids.length === 0) return new Map();
 
     const rows = await this.db
