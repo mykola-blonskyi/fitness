@@ -211,9 +211,8 @@ export class FoodItemsService {
     };
   }
 
-  // Name-keyed, unlike getTaxonomy()'s nested response: generation and
-  // Food Replacement both start from a Role or Category name in code and
-  // need its id to query or to resolve a slot.
+  // Name-keyed, unlike getTaxonomy()'s nested response: generation starts
+  // from a Role or Category name in code and needs its id.
   async getTaxonomyIds(): Promise<TaxonomyIds> {
     const [roleRows, categoryRows] = await Promise.all([
       this.db
@@ -370,8 +369,6 @@ export class FoodItemsService {
     }
   }
 
-  // What isGenerationReachable() needs to decide whether a favorite can
-  // ever show up in a generated menu.
   async getReachabilityFacts(
     ids: string[],
   ): Promise<Map<string, ReachabilityFacts>> {

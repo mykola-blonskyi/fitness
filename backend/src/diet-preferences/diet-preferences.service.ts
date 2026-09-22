@@ -26,8 +26,6 @@ export class DietPreferencesService {
     return rows.map(toDietPreferenceResponse);
   }
 
-  // What the generator and the favorites' reachability check both ask
-  // for: the types alone, without the rows they came from.
   async listTypes(userId: string): Promise<DietType[]> {
     const rows = await this.db
       .select({ dietType: schema.dietPreferences.dietType })

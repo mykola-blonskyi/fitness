@@ -1,15 +1,13 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DB } from '../db/db.module';
-import * as schema from '../db/schema';
-import { CalorieTargetsService } from '../calorie-targets/calorie-targets.service';
+import {
+  CalorieTargetsService,
+  type CalorieAlgorithmRow,
+} from '../calorie-targets/calorie-targets.service';
 import { DietPreferencesService } from '../diet-preferences/diet-preferences.service';
 import type { DietType } from '../diet-preferences/diet-preference.types';
 import type { ListFoodItemsDto } from '../food-items/dto/list-food-items.dto';
@@ -27,19 +25,18 @@ import {
 import type { FoodItemRow } from '../food-items/food-item.types';
 import { FoodPreferencesService } from '../food-preferences/food-preferences.service';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
-import { resolveUserLocale } from '../shared/locale';
 import { UsersService } from '../users/users.service';
 import {
   categoryNamesExcludedBy,
   proteinCategoriesFor,
   roleNamesExcludedBy,
 } from './diet-preference-exclusions';
-import { sumCountedTotals } from './diet-totals';
+import { toDietResponse, type DietResponse } from './diet.mapper';
 import {
-  toDietResponse,
-  type DietItemWithFoodRow,
-  type DietResponse,
-} from './diet.mapper';
+  DietsRepository,
+  type DietItemRow,
+  type DietRow,
+} from './diets.repository';
 import {
   MEAL_ROLE_CHAINS,
   resolveMealOrder,
@@ -52,14 +49,10 @@ function defaultPick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-type Tx = Parameters<
-  Parameters<NodePgDatabase<typeof schema>['transaction']>[0]
->[0];
-
 @Injectable()
 export class DietsService {
   constructor(
-    @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
+    private readonly dietsRepository: DietsRepository,
     private readonly usersService: UsersService,
     private readonly calorieTargetsService: CalorieTargetsService,
     private readonly foodPreferencesService: FoodPreferencesService,
@@ -196,58 +189,34 @@ export class DietsService {
       proteinCategories: proteinCategoriesFor(dietTypes),
     });
 
-    const dietRow = await this.db.transaction(async (tx) => {
-      const [inserted] = await tx
-        .insert(schema.diets)
-        .values({
-          userId,
-          algorithmId: algorithm.id,
-          totalCalories: generated.totalCalories.toString(),
-          totalProtein: generated.totalProtein.toString(),
-          totalCarbs: generated.totalCarbs.toString(),
-          totalFat: generated.totalFat.toString(),
-          calculationMetadata: {
-            algorithmCode: algorithm.code,
-            targetCalories: target.calories,
-            targetProteinG: target.proteinG,
-            targetCarbsG: target.carbsG,
-            targetFatG: target.fatG,
-            freeFoodCalories: generated.freeFoodCalories,
-            fittedCalorieTarget: generated.fittedCalorieTarget,
-            fittedProteinTarget: generated.fittedProteinTarget,
-            fittedCarbsTarget: generated.fittedCarbsTarget,
-            fittedFatTarget: generated.fittedFatTarget,
-            mealCount: user.mealCount,
-          },
-        })
-        .returning();
-
-      if (generated.items.length > 0) {
-        await tx.insert(schema.dietItems).values(
-          generated.items.map((item) => ({
-            dietId: inserted.id,
-            foodItemId: item.foodItemId,
-            mealPosition: item.mealPosition,
-            weightGrams: item.weightGrams.toString(),
-            orderIndex: item.orderIndex,
-            isCounted: item.isCounted,
-          })),
-        );
-      }
-
-      return inserted;
+    const dietRow = await this.dietsRepository.insertGenerated({
+      userId,
+      algorithmId: algorithm.id,
+      totalCalories: generated.totalCalories,
+      totalProtein: generated.totalProtein,
+      totalCarbs: generated.totalCarbs,
+      totalFat: generated.totalFat,
+      calculationMetadata: {
+        algorithmCode: algorithm.code,
+        targetCalories: target.calories,
+        targetProteinG: target.proteinG,
+        targetCarbsG: target.carbsG,
+        targetFatG: target.fatG,
+        freeFoodCalories: generated.freeFoodCalories,
+        fittedCalorieTarget: generated.fittedCalorieTarget,
+        fittedProteinTarget: generated.fittedProteinTarget,
+        fittedCarbsTarget: generated.fittedCarbsTarget,
+        fittedFatTarget: generated.fittedFatTarget,
+        mealCount: user.mealCount,
+      },
+      items: generated.items,
     });
 
     return this.buildResponse(dietRow, algorithm);
   }
 
-  // Most recently created Diet row for the user, not a stored is_current
-  // flag; older Diets are kept as history.
   async findCurrent(userId: string): Promise<DietResponse> {
-    const dietRow = await this.db.query.diets.findFirst({
-      where: eq(schema.diets.userId, userId),
-      orderBy: desc(schema.diets.createdAt),
-    });
+    const dietRow = await this.dietsRepository.findLatestForUser(userId);
     if (!dietRow) {
       throw new NotFoundException('No Diet generated yet');
     }
@@ -261,10 +230,8 @@ export class DietsService {
   private async findOwnedDiet(
     userId: string,
     dietId: string,
-  ): Promise<typeof schema.diets.$inferSelect> {
-    const diet = await this.db.query.diets.findFirst({
-      where: and(eq(schema.diets.id, dietId), eq(schema.diets.userId, userId)),
-    });
+  ): Promise<DietRow> {
+    const diet = await this.dietsRepository.findOwned(userId, dietId);
     if (!diet) {
       throw new NotFoundException('Diet not found');
     }
@@ -425,14 +392,12 @@ export class DietsService {
       swappedKcal,
     );
 
-    const updatedDiet = await this.db.transaction(async (tx) => {
-      await tx
-        .update(schema.dietItems)
-        .set({ foodItemId: replacement.id, weightGrams: newGrams.toString() })
-        .where(eq(schema.dietItems.id, dietItem.id));
-
-      return this.recalculateTotals(tx, diet.id);
-    });
+    const updatedDiet = await this.dietsRepository.swapItemFood(
+      diet.id,
+      dietItem.id,
+      replacement.id,
+      newGrams,
+    );
 
     const algorithm = await this.calorieTargetsService.getAlgorithmById(
       updatedDiet.algorithmId,
@@ -445,58 +410,15 @@ export class DietsService {
     dietId: string,
     itemId: string,
   ): Promise<{
-    diet: typeof schema.diets.$inferSelect;
-    dietItem: typeof schema.dietItems.$inferSelect;
+    diet: DietRow;
+    dietItem: DietItemRow;
   }> {
     const diet = await this.findOwnedDiet(userId, dietId);
-    const dietItem = await this.db.query.dietItems.findFirst({
-      where: and(
-        eq(schema.dietItems.id, itemId),
-        eq(schema.dietItems.dietId, diet.id),
-      ),
-    });
+    const dietItem = await this.dietsRepository.findItem(diet.id, itemId);
     if (!dietItem) {
       throw new NotFoundException('Diet item not found');
     }
     return { diet, dietItem };
-  }
-
-  // Re-derives totals from every remaining item rather than adjusting by the
-  // edited item's delta, so they can never drift from what the items sum to.
-  private async recalculateTotals(
-    tx: Tx,
-    dietId: string,
-  ): Promise<typeof schema.diets.$inferSelect> {
-    const itemRows = await tx
-      .select({
-        weightGrams: schema.dietItems.weightGrams,
-        isCounted: schema.dietItems.isCounted,
-        caloriesPer100g: schema.foodCalories.caloriesPer100g,
-        proteinPer100g: schema.foodCalories.proteinPer100g,
-        carbsPer100g: schema.foodCalories.carbsPer100g,
-        fatPer100g: schema.foodCalories.fatPer100g,
-      })
-      .from(schema.dietItems)
-      .innerJoin(
-        schema.foodCalories,
-        eq(schema.foodCalories.id, schema.dietItems.foodItemId),
-      )
-      .where(eq(schema.dietItems.dietId, dietId));
-
-    const totals = sumCountedTotals(itemRows);
-
-    const [updated] = await tx
-      .update(schema.diets)
-      .set({
-        totalCalories: Math.round(totals.calories).toString(),
-        totalProtein: Math.round(totals.proteinG).toString(),
-        totalCarbs: Math.round(totals.carbsG).toString(),
-        totalFat: Math.round(totals.fatG).toString(),
-      })
-      .where(eq(schema.diets.id, dietId))
-      .returning();
-
-    return updated;
   }
 
   // Free Foods included: they are uncounted, so dropping one only changes
@@ -512,12 +434,10 @@ export class DietsService {
       itemId,
     );
 
-    const updatedDiet = await this.db.transaction(async (tx) => {
-      await tx
-        .delete(schema.dietItems)
-        .where(eq(schema.dietItems.id, dietItem.id));
-      return this.recalculateTotals(tx, diet.id);
-    });
+    const updatedDiet = await this.dietsRepository.deleteItem(
+      diet.id,
+      dietItem.id,
+    );
 
     const algorithm = await this.calorieTargetsService.getAlgorithmById(
       updatedDiet.algorithmId,
@@ -537,11 +457,9 @@ export class DietsService {
   ): Promise<DietResponse> {
     const diet = await this.findOwnedDiet(userId, dietId);
 
-    const existing = await this.db
-      .selectDistinct({ mealPosition: schema.dietItems.mealPosition })
-      .from(schema.dietItems)
-      .where(eq(schema.dietItems.dietId, diet.id));
-    const existingPositions = new Set(existing.map((row) => row.mealPosition));
+    const existingPositions = new Set(
+      await this.dietsRepository.listMealPositions(diet.id),
+    );
 
     const providedPositions = new Set(dto.orderedMealPositions);
     const isExactMatch =
@@ -556,18 +474,10 @@ export class DietsService {
       );
     }
 
-    await this.db.transaction(async (tx) => {
-      await tx
-        .delete(schema.dietMealOrder)
-        .where(eq(schema.dietMealOrder.dietId, diet.id));
-      await tx.insert(schema.dietMealOrder).values(
-        dto.orderedMealPositions.map((mealPosition, index) => ({
-          dietId: diet.id,
-          mealPosition,
-          displayOrder: index,
-        })),
-      );
-    });
+    await this.dietsRepository.replaceMealOrder(
+      diet.id,
+      dto.orderedMealPositions,
+    );
 
     const algorithm = await this.calorieTargetsService.getAlgorithmById(
       diet.algorithmId,
@@ -576,70 +486,18 @@ export class DietsService {
   }
 
   private async buildResponse(
-    dietRow: typeof schema.diets.$inferSelect,
+    dietRow: DietRow,
     // Pick, not the full row type - generate() passes the algorithm
     // subset CalorieTargetResponse carries (see computeForUser), which
     // has no createdAt.
-    algorithm: Pick<
-      typeof schema.dietCalculationAlgorithms.$inferSelect,
-      'code' | 'name'
-    >,
+    algorithm: Pick<CalorieAlgorithmRow, 'code' | 'name'>,
   ): Promise<DietResponse> {
-    const locale = await resolveUserLocale(this.db, dietRow.userId);
-
-    const rows = await this.db
-      .select({
-        id: schema.dietItems.id,
-        mealPosition: schema.dietItems.mealPosition,
-        orderIndex: schema.dietItems.orderIndex,
-        weightGrams: schema.dietItems.weightGrams,
-        isCounted: schema.dietItems.isCounted,
-        foodItemId: schema.foodCalories.id,
-        foodItemName: schema.foodCalories.name,
-        translatedName: schema.foodCalorieTranslations.name,
-        foodItemImageUrl: schema.foodCalories.imageUrl,
-        foodItemRole: schema.foodRoles.name,
-        caloriesPer100g: schema.foodCalories.caloriesPer100g,
-        proteinPer100g: schema.foodCalories.proteinPer100g,
-        carbsPer100g: schema.foodCalories.carbsPer100g,
-        fatPer100g: schema.foodCalories.fatPer100g,
-      })
-      .from(schema.dietItems)
-      .innerJoin(
-        schema.foodCalories,
-        eq(schema.foodCalories.id, schema.dietItems.foodItemId),
-      )
-      .innerJoin(
-        schema.foodRoles,
-        eq(schema.foodRoles.id, schema.foodCalories.roleId),
-      )
-      .leftJoin(
-        schema.foodCalorieTranslations,
-        and(
-          eq(
-            schema.foodCalorieTranslations.foodCalorieId,
-            schema.foodCalories.id,
-          ),
-          eq(schema.foodCalorieTranslations.locale, locale),
-        ),
-      )
-      .where(eq(schema.dietItems.dietId, dietRow.id))
-      .orderBy(schema.dietItems.mealPosition, schema.dietItems.orderIndex);
-
-    const itemRows: DietItemWithFoodRow[] = rows.map(
-      ({ translatedName, ...row }) => ({
-        ...row,
-        foodItemName: translatedName ?? row.foodItemName,
-      }),
+    const locale = await this.dietsRepository.resolveLocale(dietRow.userId);
+    const itemRows = await this.dietsRepository.listItemsWithFood(
+      dietRow.id,
+      locale,
     );
-
-    const orderRows = await this.db
-      .select({
-        mealPosition: schema.dietMealOrder.mealPosition,
-        displayOrder: schema.dietMealOrder.displayOrder,
-      })
-      .from(schema.dietMealOrder)
-      .where(eq(schema.dietMealOrder.dietId, dietRow.id));
+    const orderRows = await this.dietsRepository.listMealOrder(dietRow.id);
 
     const mealPositions = [...new Set(itemRows.map((row) => row.mealPosition))];
     const mealOrder = resolveMealOrder(mealPositions, orderRows);

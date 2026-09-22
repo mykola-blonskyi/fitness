@@ -14,9 +14,8 @@ export const EXERCISE_CATEGORIES = [
 
 export type ExerciseCategory = (typeof EXERCISE_CATEGORIES)[number];
 
-// What a caller outside this module gets for a single Exercise: the
-// display facts the program- and workout-set joins already project, and
-// the category that decides whether a set carries reps or duration.
+// category is here because it decides whether a set carries reps or a
+// duration, which every caller outside this module resolves before writing.
 export interface ExerciseRef {
   id: string;
   name: string;

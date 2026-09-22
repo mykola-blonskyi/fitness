@@ -47,13 +47,12 @@ export function isFoodFamily(value: string): value is FoodFamily {
   return FAMILY_SET.has(value);
 }
 
-// The full catalog row, as the generation and replacement rules in
-// food-eligibility.ts judge it. Distinct from FoodItemResponse, which is
-// the browse surface's locale-resolved, taxonomy-named view.
+// The raw catalog row food-eligibility.ts judges, as opposed to
+// FoodItemResponse, which is the browse surface's locale-resolved view.
 export type FoodItemRow = typeof foodCalories.$inferSelect;
 
-// One row the generator may draw for a macro slot, with the decimals
-// already numbers so no consumer has to know they arrive as strings.
+// The decimals are numbers here so no consumer has to know food_calories
+// hands them back as strings.
 export interface GenerationCandidate {
   id: string;
   roleId: string;
