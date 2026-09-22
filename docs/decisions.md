@@ -413,3 +413,27 @@ The carb and fat chains are ordered fallbacks rather than pooled draws, so "gene
 `resolveSlotConstraint` in `food-items/food-eligibility.ts` is the single source of truth. The picker query, the explicit-swap check and the reroll draw all read it, so the picker cannot offer an item the swap then rejects. A Role in no chain (`beverage`, `fruit`, `treat`) degrades to itself, which is the pre-ADR-026 behavior; generation never places one.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-027: One module owns each table, and a query rooted elsewhere fails a test
+
+Date: 2026-09-22
+
+Status: Accepted
+
+**Each table has exactly one owning module.** A module may name a foreign table in a join, because a join reads that table to shape rows the module already owns. A query rooted at a foreign table belongs to the service that owns it. A query is rooted at whatever table it names in `.from()`, `.insert()`, `.update()`, `.delete()`, or `db.query.<table>`.
+
+`backend/src/db/table-ownership.spec.ts` holds the table-to-module map and enforces the rule. A failure names the file, the table, and the table's owner. A second test asserts that the map covers every `PgTable` in the schema, so you cannot add a table without giving it an owner.
+
+Three directories are exempt. `admin` reads and writes every table, and `scripts` holds one-off jobs, so routing either through eleven services buys nothing. `db` defines the schema. One file is exempt too: `shared/locale.ts` reads `users.locale` through a helper that takes the db handle as a parameter. That helper is already the only place this app reads a user's locale.
+
+**Within a module, a service keeps its own queries.** `diets` is the exception. Its queries spanned three tables and four transactions, interleaved with the rules that decide what to write, so they moved to `DietsRepository`. `DietsService` now imports neither `drizzle-orm` nor the schema. Size drove that split, so treat it as a threshold and not as a pattern to copy. Twelve of the sixteen services still hold Drizzle inline:
+
+```bash
+grep -rl "drizzle-orm" backend/src --include='*.service.ts' | grep -v spec | wc -l
+```
+
+A repository for each of those twelve would add a layer over an already thin ORM and hide no decision.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.

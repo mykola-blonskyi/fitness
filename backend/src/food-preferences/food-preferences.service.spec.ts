@@ -1,11 +1,8 @@
 import { ConflictException } from '@nestjs/common';
 import { DatabaseError } from 'pg';
 import { FoodPreferencesService } from './food-preferences.service';
+import type { ReachabilityFacts } from '../food-items/food-eligibility';
 import type { CreateFoodPreferenceDto } from './dto/create-food-preference.dto';
-
-jest.mock('../shared/locale', () => ({
-  resolveUserLocale: jest.fn().mockResolvedValue('en'),
-}));
 
 function uniqueViolation(): DatabaseError {
   const err = new DatabaseError('duplicate key', 0, 'error');
@@ -14,22 +11,12 @@ function uniqueViolation(): DatabaseError {
 }
 
 describe('FoodPreferencesService.list', () => {
-  const foodItemNameRows = [
-    { id: 'food-1', name: 'Chicken Breast', translatedName: null },
-  ];
-
-  function chain(rows: unknown[]) {
-    const node = {
-      leftJoin: () => node,
-      where: () => Promise.resolve(rows),
+  function buildDb(prefRows: unknown[]) {
+    return {
+      select: () => ({
+        from: () => ({ where: () => Promise.resolve(prefRows) }),
+      }),
     };
-    return { from: () => node };
-  }
-
-  function buildDb(...results: unknown[][]) {
-    const select = jest.fn();
-    for (const rows of results) select.mockReturnValueOnce(chain(rows));
-    return { select };
   }
 
   const favorite = [
@@ -41,24 +28,35 @@ describe('FoodPreferencesService.list', () => {
     },
   ];
 
-  const facts = (overrides: Record<string, unknown> = {}) => [
-    {
-      id: 'food-1',
-      familyId: 'family-1',
-      caloriesPer100g: '165',
-      roleName: 'lean_protein',
-      categoryName: 'meat',
-      ...overrides,
-    },
-  ];
+  const facts = (
+    overrides: Partial<ReachabilityFacts> = {},
+  ): ReachabilityFacts => ({
+    familyId: 'family-1',
+    caloriesPer100g: 165,
+    roleName: 'lean_protein',
+    categoryName: 'meat',
+    ...overrides,
+  });
 
   async function affectsGeneration(
-    factRows: unknown[],
-    dietRows: unknown[] = [],
+    itemFacts: ReachabilityFacts | null,
+    dietTypes: string[] = [],
     prefRows: unknown[] = favorite,
   ): Promise<boolean> {
-    const db = buildDb(prefRows, foodItemNameRows, factRows, dietRows);
-    const service = new FoodPreferencesService(db as never);
+    const service = new FoodPreferencesService(
+      buildDb(prefRows) as never,
+      { listTypes: jest.fn().mockResolvedValue(dietTypes) } as never,
+      {
+        getTargetNames: jest
+          .fn()
+          .mockResolvedValue(new Map([['food-1', 'Chicken Breast']])),
+        getReachabilityFacts: jest
+          .fn()
+          .mockResolvedValue(
+            itemFacts ? new Map([['food-1', itemFacts]]) : new Map(),
+          ),
+      } as never,
+    );
     const [result] = await service.list('user-1');
     return result.affectsGeneration;
   }
@@ -86,15 +84,11 @@ describe('FoodPreferencesService.list', () => {
   });
 
   it('marks a zero-calorie favorite as not affecting generation', async () => {
-    expect(await affectsGeneration(facts({ caloriesPer100g: '0' }))).toBe(
-      false,
-    );
+    expect(await affectsGeneration(facts({ caloriesPer100g: 0 }))).toBe(false);
   });
 
   it('marks a favorite its own diet type excludes as not affecting generation', async () => {
-    expect(await affectsGeneration(facts(), [{ dietType: 'vegetarian' }])).toBe(
-      false,
-    );
+    expect(await affectsGeneration(facts(), ['vegetarian'])).toBe(false);
   });
 
   // The protein pool is animal plus fish until a diet type removes one,
@@ -105,9 +99,7 @@ describe('FoodPreferencesService.list', () => {
       categoryName: 'legumes',
     });
     expect(await affectsGeneration(lentils)).toBe(false);
-    expect(await affectsGeneration(lentils, [{ dietType: 'vegetarian' }])).toBe(
-      true,
-    );
+    expect(await affectsGeneration(lentils, ['vegetarian'])).toBe(true);
   });
 
   it('marks an exclude row as affecting generation regardless of reachability', async () => {
@@ -119,7 +111,7 @@ describe('FoodPreferencesService.list', () => {
         targetId: 'food-1',
       },
     ];
-    expect(await affectsGeneration([], [], excludeRow)).toBe(true);
+    expect(await affectsGeneration(null, [], excludeRow)).toBe(true);
   });
 });
 
@@ -131,38 +123,36 @@ describe('FoodPreferencesService.create', () => {
   };
 
   function buildDb(overrides: { existing: unknown; returning: jest.Mock }) {
-    const select = jest.fn().mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest
-          .fn()
-          .mockResolvedValue([{ id: 'cat-1', name: 'Vegetables' }]),
-      }),
-    });
     const values = jest
       .fn()
       .mockReturnValue({ returning: overrides.returning });
     const insert = jest.fn().mockReturnValue({ values });
     return {
-      db: {
-        select,
-        query: {
-          foodPreferences: {
-            findFirst: jest.fn().mockResolvedValue(overrides.existing),
-          },
+      query: {
+        foodPreferences: {
+          findFirst: jest.fn().mockResolvedValue(overrides.existing),
         },
-        insert,
       },
+      insert,
     };
   }
 
-  it('rejects a duplicate preference found by the pre-check', async () => {
-    const { db } = buildDb({
-      existing: { id: 'pref-1' },
-      returning: jest.fn(),
-    });
-    const service = new FoodPreferencesService(db as never);
+  function buildService(db: unknown): FoodPreferencesService {
+    return new FoodPreferencesService(
+      db as never,
+      {} as never,
+      {
+        getTargetNames: jest
+          .fn()
+          .mockResolvedValue(new Map([['cat-1', 'Vegetables']])),
+      } as never,
+    );
+  }
 
-    await expect(service.create('user-1', dto)).rejects.toThrow(
+  it('rejects a duplicate preference found by the pre-check', async () => {
+    const db = buildDb({ existing: { id: 'pref-1' }, returning: jest.fn() });
+
+    await expect(buildService(db).create('user-1', dto)).rejects.toThrow(
       ConflictException,
     );
     expect(db.insert).not.toHaveBeenCalled();
@@ -170,10 +160,9 @@ describe('FoodPreferencesService.create', () => {
 
   it('turns a concurrent insert racing past the pre-check into a 409', async () => {
     const returning = jest.fn().mockRejectedValue(uniqueViolation());
-    const { db } = buildDb({ existing: undefined, returning });
-    const service = new FoodPreferencesService(db as never);
+    const db = buildDb({ existing: undefined, returning });
 
-    await expect(service.create('user-1', dto)).rejects.toThrow(
+    await expect(buildService(db).create('user-1', dto)).rejects.toThrow(
       ConflictException,
     );
   });

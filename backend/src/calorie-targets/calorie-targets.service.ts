@@ -15,6 +15,14 @@ import {
 
 const ALGORITHM_CODE = 'mifflin_v1';
 
+// Seeded by a migration (drizzle/0006_seed_mifflin_v1_algorithm.sql), so
+// a miss here means migrations have not fully run - which the boot-time
+// migrate step (ADR-005) is meant to prevent.
+const NOT_CONFIGURED = 'Calorie algorithm not configured';
+
+export type CalorieAlgorithmRow =
+  typeof schema.dietCalculationAlgorithms.$inferSelect;
+
 @Injectable()
 export class CalorieTargetsService {
   constructor(
@@ -45,10 +53,7 @@ export class CalorieTargetsService {
       where: eq(schema.dietCalculationAlgorithms.code, ALGORITHM_CODE),
     });
     if (!algorithm) {
-      // Seeded by a migration (drizzle/0006_seed_mifflin_v1_algorithm.sql)
-      // - only reachable if migrations haven't fully run, which the
-      // boot-time migrate step (ADR-005) is meant to prevent.
-      throw new NotFoundException('Calorie algorithm not configured');
+      throw new NotFoundException(NOT_CONFIGURED);
     }
 
     const input: MifflinV1Input = {
@@ -66,5 +71,18 @@ export class CalorieTargetsService {
       { weight: weighIn.weight, unit: weighIn.weightUnit, date: weighIn.date },
       result,
     );
+  }
+
+  // A stored Diet names the algorithm it was generated with, which may be
+  // an older row than the one computeForUser() looks up by code - Diet
+  // rows are never migrated when the registered algorithm changes.
+  async getAlgorithmById(id: string): Promise<CalorieAlgorithmRow> {
+    const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
+      where: eq(schema.dietCalculationAlgorithms.id, id),
+    });
+    if (!algorithm) {
+      throw new NotFoundException(NOT_CONFIGURED);
+    }
+    return algorithm;
   }
 }

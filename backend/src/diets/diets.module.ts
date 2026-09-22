@@ -5,6 +5,7 @@ import { FoodItemsModule } from '../food-items/food-items.module';
 import { FoodPreferencesModule } from '../food-preferences/food-preferences.module';
 import { UsersModule } from '../users/users.module';
 import { DietsController } from './diets.controller';
+import { DietsRepository } from './diets.repository';
 import { DietsService } from './diets.service';
 
 @Module({
@@ -16,6 +17,6 @@ import { DietsService } from './diets.service';
     DietPreferencesModule,
   ],
   controllers: [DietsController],
-  providers: [DietsService],
+  providers: [DietsRepository, DietsService],
 })
 export class DietsModule {}

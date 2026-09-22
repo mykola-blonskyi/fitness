@@ -13,3 +13,12 @@ export const EXERCISE_CATEGORIES = [
 ] as const;
 
 export type ExerciseCategory = (typeof EXERCISE_CATEGORIES)[number];
+
+// category is here because it decides whether a set carries reps or a
+// duration, which every caller outside this module resolves before writing.
+export interface ExerciseRef {
+  id: string;
+  name: string;
+  category: ExerciseCategory;
+  imageUrl: string | null;
+}

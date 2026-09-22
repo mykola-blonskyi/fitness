@@ -10,12 +10,13 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { isUniqueViolation } from '../shared/db-errors';
+import { DietPreferencesService } from '../diet-preferences/diet-preferences.service';
 import type { DietType } from '../diet-preferences/diet-preference.types';
 import {
   isGenerationReachable,
   type ReachabilityFacts,
 } from '../food-items/food-eligibility';
-import { resolveUserLocale } from '../shared/locale';
+import { FoodItemsService } from '../food-items/food-items.service';
 import type { CreateFoodPreferenceDto } from './dto/create-food-preference.dto';
 import {
   toFoodPreferenceResponse,
@@ -30,76 +31,11 @@ import {
 
 @Injectable()
 export class FoodPreferencesService {
-  constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
-
-  // The four tables target_id polymorphically points at - see schema.ts's
-  // comment on food_preferences.target_id for why this can't be a real
-  // FK. Each table has its own distinct Drizzle type (they're not a
-  // common supertype), so this is a switch rather than a lookup object -
-  // that would need an unsound cast to type-check.
-  private async fetchTargetNames(
-    userId: string,
-    targetType: FoodPreferenceTargetType,
-    ids: string[],
-  ): Promise<Map<string, string>> {
-    if (ids.length === 0) return new Map();
-
-    switch (targetType) {
-      case 'category': {
-        const rows = await this.db
-          .select({
-            id: schema.foodCategories.id,
-            name: schema.foodCategories.name,
-          })
-          .from(schema.foodCategories)
-          .where(inArray(schema.foodCategories.id, ids));
-        return new Map(rows.map((row) => [row.id, row.name]));
-      }
-      case 'subcategory': {
-        const rows = await this.db
-          .select({
-            id: schema.foodSubcategories.id,
-            name: schema.foodSubcategories.name,
-          })
-          .from(schema.foodSubcategories)
-          .where(inArray(schema.foodSubcategories.id, ids));
-        return new Map(rows.map((row) => [row.id, row.name]));
-      }
-      case 'role': {
-        const rows = await this.db
-          .select({ id: schema.foodRoles.id, name: schema.foodRoles.name })
-          .from(schema.foodRoles)
-          .where(inArray(schema.foodRoles.id, ids));
-        return new Map(rows.map((row) => [row.id, row.name]));
-      }
-      case 'food_item': {
-        // The only target type with per-locale names - the three taxonomy
-        // tables above have no translation table at all.
-        const locale = await resolveUserLocale(this.db, userId);
-        const rows = await this.db
-          .select({
-            id: schema.foodCalories.id,
-            name: schema.foodCalories.name,
-            translatedName: schema.foodCalorieTranslations.name,
-          })
-          .from(schema.foodCalories)
-          .leftJoin(
-            schema.foodCalorieTranslations,
-            and(
-              eq(
-                schema.foodCalorieTranslations.foodCalorieId,
-                schema.foodCalories.id,
-              ),
-              eq(schema.foodCalorieTranslations.locale, locale),
-            ),
-          )
-          .where(inArray(schema.foodCalories.id, ids));
-        return new Map(
-          rows.map((row) => [row.id, row.translatedName ?? row.name]),
-        );
-      }
-    }
-  }
+  constructor(
+    @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
+    private readonly dietPreferencesService: DietPreferencesService,
+    private readonly foodItemsService: FoodItemsService,
+  ) {}
 
   // Used by diets.service.ts (FITNESS-30) to filter candidate Food Items
   // during generation - see knowledge/business-rules.md "Food Preferences
@@ -153,49 +89,6 @@ export class FoodPreferencesService {
     return new Set(rows.map((row) => row.targetId));
   }
 
-  private async reachabilityFactsForFoodItems(
-    ids: string[],
-  ): Promise<Map<string, ReachabilityFacts>> {
-    if (ids.length === 0) return new Map();
-    const rows = await this.db
-      .select({
-        id: schema.foodCalories.id,
-        familyId: schema.foodCalories.familyId,
-        caloriesPer100g: schema.foodCalories.caloriesPer100g,
-        roleName: schema.foodRoles.name,
-        categoryName: schema.foodCategories.name,
-      })
-      .from(schema.foodCalories)
-      .leftJoin(
-        schema.foodRoles,
-        eq(schema.foodRoles.id, schema.foodCalories.roleId),
-      )
-      .leftJoin(
-        schema.foodCategories,
-        eq(schema.foodCategories.id, schema.foodCalories.categoryId),
-      )
-      .where(inArray(schema.foodCalories.id, ids));
-    return new Map(
-      rows.map((row) => [
-        row.id,
-        {
-          familyId: row.familyId,
-          caloriesPer100g: Number(row.caloriesPer100g),
-          roleName: row.roleName,
-          categoryName: row.categoryName,
-        },
-      ]),
-    );
-  }
-
-  private async dietTypesFor(userId: string): Promise<DietType[]> {
-    const rows = await this.db
-      .select({ dietType: schema.dietPreferences.dietType })
-      .from(schema.dietPreferences)
-      .where(eq(schema.dietPreferences.userId, userId));
-    return rows.map((row) => row.dietType);
-  }
-
   // Only a favorite carries this claim. An allergy or exclusion is purely
   // subtractive, so it always lands whether or not the item was reachable.
   private computeAffectsGeneration(
@@ -216,8 +109,8 @@ export class FoodPreferencesService {
   ): Promise<boolean> {
     if (type !== 'favorite') return true;
     const [facts, dietTypes] = await Promise.all([
-      this.reachabilityFactsForFoodItems([targetId]),
-      this.dietTypesFor(userId),
+      this.foodItemsService.getReachabilityFacts([targetId]),
+      this.dietPreferencesService.listTypes(userId),
     ]);
     return this.computeAffectsGeneration(type, targetId, facts, dietTypes);
   }
@@ -241,7 +134,7 @@ export class FoodPreferencesService {
         .map((row) => row.targetId);
       namesByTargetType.set(
         targetType,
-        await this.fetchTargetNames(userId, targetType, ids),
+        await this.foodItemsService.getTargetNames(userId, targetType, ids),
       );
     }
 
@@ -249,9 +142,9 @@ export class FoodPreferencesService {
       .filter((row) => row.type === 'favorite')
       .map((row) => row.targetId);
     const [factsByFoodItemId, dietTypes] = await Promise.all([
-      this.reachabilityFactsForFoodItems(favoriteFoodItemIds),
+      this.foodItemsService.getReachabilityFacts(favoriteFoodItemIds),
       favoriteFoodItemIds.length > 0
-        ? this.dietTypesFor(userId)
+        ? this.dietPreferencesService.listTypes(userId)
         : Promise.resolve([]),
     ]);
 
@@ -273,9 +166,11 @@ export class FoodPreferencesService {
     userId: string,
     dto: CreateFoodPreferenceDto,
   ): Promise<FoodPreferenceResponse> {
-    const targetNames = await this.fetchTargetNames(userId, dto.targetType, [
-      dto.targetId,
-    ]);
+    const targetNames = await this.foodItemsService.getTargetNames(
+      userId,
+      dto.targetType,
+      [dto.targetId],
+    );
     const targetName = targetNames.get(dto.targetId);
     // A truthy check here would wrongly reject a real target whose name
     // happens to be an empty string - Map.get()'s undefined is the only
@@ -368,7 +263,7 @@ export class FoodPreferencesService {
       .where(eq(schema.foodPreferences.id, id));
 
     const targetName = (
-      await this.fetchTargetNames(userId, existing.targetType, [
+      await this.foodItemsService.getTargetNames(userId, existing.targetType, [
         existing.targetId,
       ])
     ).get(existing.targetId);

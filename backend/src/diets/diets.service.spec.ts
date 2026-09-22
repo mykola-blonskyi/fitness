@@ -2,14 +2,10 @@ import {
   BadRequestException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { SQL } from 'drizzle-orm';
-import { PgDialect } from 'drizzle-orm/pg-core';
 import { DietsService } from './diets.service';
 import { resolveSlotConstraint } from '../food-items/food-eligibility';
-import * as schema from '../db/schema';
+import type { FoodItemRow } from '../food-items/food-item.types';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
-
-type FoodItemRow = typeof schema.foodCalories.$inferSelect;
 
 function noExclusions(): ExclusionTargets {
   return {
@@ -18,10 +14,6 @@ function noExclusions(): ExclusionTargets {
     role: new Set(),
     food_item: new Set(),
   };
-}
-
-function render(where: SQL | undefined): string {
-  return new PgDialect().sqlToQuery(where!).sql;
 }
 
 const foodItem = (overrides: Partial<FoodItemRow> = {}): FoodItemRow => ({
@@ -65,155 +57,153 @@ const taxonomy = {
 
 const proteinSlot = resolveSlotConstraint('role-dairy', taxonomy, []);
 
-function buildService(db: unknown): DietsService {
-  const foodPreferencesService = {
-    getFavoriteFoodItemIds: jest.fn().mockResolvedValue(new Set<string>()),
-  };
+function buildService(foodItems: unknown): DietsService {
   return new DietsService(
-    db as never,
     {} as never,
     {} as never,
-    foodPreferencesService as never,
     {} as never,
     {} as never,
+    {} as never,
+    foodItems as never,
   );
 }
 
 describe('DietsService.findCandidatesByRole', () => {
-  it('asks the database only for Family-classified, favorited rows', async () => {
-    let captured: SQL | undefined;
-    const db = {
-      select: () => ({
-        from: () => {
-          const joined = {
-            leftJoin: () => joined,
-            where: (clause: SQL | undefined) => {
-              captured = clause;
-              return Promise.resolve([]);
-            },
-          };
-          return joined;
+  it('groups the returned rows under the role name each one was drawn for', async () => {
+    const service = buildService({
+      findGenerationCandidates: jest.fn().mockResolvedValue([
+        {
+          id: 'rice',
+          roleId: 'role-complex-carb',
+          caloriesPer100g: 130,
+          proteinPer100g: 2.7,
+          carbsPer100g: 28,
+          fatPer100g: 0.3,
+          familyName: 'grain_garnish',
+          categoryName: 'grains',
         },
-      }),
-    };
+      ]),
+    });
 
-    await buildService(db)['findCandidatesByRole'](
+    const result = await service['findCandidatesByRole'](
       noExclusions(),
       new Map([['complex_carb', 'role-complex-carb']]),
       new Set(['rice']),
     );
 
-    expect(render(captured)).toContain(
-      '"food_calories"."family_id" is not null',
-    );
-    expect(render(captured)).toContain('"food_calories"."id" in');
+    expect(result.get('complex_carb')).toEqual([
+      {
+        id: 'rice',
+        caloriesPer100g: 130,
+        proteinPer100g: 2.7,
+        carbsPer100g: 28,
+        fatPer100g: 0.3,
+        familyName: 'grain_garnish',
+        categoryName: 'grains',
+      },
+    ]);
   });
 
-  it('skips the query entirely when the favorites set is empty', async () => {
-    let queried = false;
-    const db = {
-      select: () => {
-        queried = true;
-        throw new Error('should not query');
-      },
-    };
+  // greedy-heuristic.ts divides by this value when portion-scaling.
+  it('drops a 0-calorie row the catalog is willing to return', async () => {
+    const service = buildService({
+      findGenerationCandidates: jest.fn().mockResolvedValue([
+        {
+          id: 'water',
+          roleId: 'role-complex-carb',
+          caloriesPer100g: 0,
+          proteinPer100g: 0,
+          carbsPer100g: 0,
+          fatPer100g: 0,
+          familyName: 'grain_garnish',
+          categoryName: 'grains',
+        },
+      ]),
+    });
 
-    const result = await buildService(db)['findCandidatesByRole'](
+    const result = await service['findCandidatesByRole'](
       noExclusions(),
       new Map([['complex_carb', 'role-complex-carb']]),
-      new Set<string>(),
+      new Set(['water']),
     );
 
-    expect(queried).toBe(false);
     expect(result.get('complex_carb')).toEqual([]);
+  });
+
+  it('keeps an excluded role out of the ids it asks the catalog for', async () => {
+    const findGenerationCandidates = jest.fn().mockResolvedValue([]);
+    const exclusions = { ...noExclusions(), role: new Set(['role-dairy']) };
+
+    await buildService({ findGenerationCandidates })['findCandidatesByRole'](
+      exclusions,
+      new Map([
+        ['dairy', 'role-dairy'],
+        ['vegetable', 'role-vegetable'],
+      ]),
+      new Set(['milk']),
+    );
+
+    expect(findGenerationCandidates).toHaveBeenCalledWith(
+      ['role-vegetable'],
+      new Set(['milk']),
+      exclusions,
+    );
   });
 });
 
 describe('DietsService.pickRerollReplacement', () => {
-  async function rerollWhere(): Promise<string> {
-    let captured: SQL | undefined;
-    const db = {
-      query: {
-        foodCalories: {
-          findMany: (config: { where?: SQL }) => {
-            captured = config.where;
-            return Promise.resolve([foodItem({ id: 'cod' })]);
-          },
-        },
-      },
-    };
-
-    await buildService(db)['pickRerollReplacement'](
-      foodItem({ roleId: 'role-dairy' }),
-      proteinSlot,
-      noExclusions(),
-      (items) => items[0],
-    );
-
-    return render(captured);
-  }
-
-  it('asks the database only for Family-classified rows', async () => {
-    expect(await rerollWhere()).toContain(
-      '"food_calories"."family_id" is not null',
-    );
-  });
-
-  it('does not require is_verified, which generation ignores', async () => {
-    expect(await rerollWhere()).not.toContain('is_verified');
-  });
-
-  it('draws from the whole role, favorited or not (ADR-025)', async () => {
+  it('draws from the whole slot, favorited or not (ADR-025)', async () => {
     const rows = [foodItem({ id: 'cod' }), foodItem({ id: 'turkey' })];
-    const db = {
-      query: { foodCalories: { findMany: () => Promise.resolve(rows) } },
-    };
+    const service = buildService({
+      findSlotCandidates: jest.fn().mockResolvedValue(rows),
+    });
 
-    const replacement = await buildService(db)['pickRerollReplacement'](
+    const replacement = await service['pickRerollReplacement'](
       foodItem({ roleId: 'role-dairy' }),
       proteinSlot,
       noExclusions(),
-      (items) => items[0],
+      <T>(items: T[]) => items[0],
     );
 
     expect(replacement.id).toBe('cod');
   });
 
-  it('reaches every role in the slot, not just the current one', async () => {
-    const sql = await rerollWhere();
+  it('rejects a slot whose only other rows have no calories', async () => {
+    const service = buildService({
+      findSlotCandidates: jest
+        .fn()
+        .mockResolvedValue([foodItem({ id: 'water', caloriesPer100g: '0' })]),
+    });
 
-    expect(sql).toContain('"food_calories"."role_id" in');
-    expect(sql).not.toContain('"food_calories"."role_id" = ');
+    await expect(
+      service['pickRerollReplacement'](
+        foodItem({ roleId: 'role-dairy' }),
+        proteinSlot,
+        noExclusions(),
+        <T>(items: T[]) => items[0],
+      ),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 });
 
 describe('DietsService.resolveExplicitReplacement', () => {
-  function buildDb(replacement: FoodItemRow) {
-    return {
-      query: {
-        foodCalories: { findFirst: () => Promise.resolve(replacement) },
-      },
-    };
+  function buildWith(replacement: FoodItemRow): DietsService {
+    return buildService({
+      findRow: jest.fn().mockResolvedValue(replacement),
+    });
   }
 
   it('rejects a replacement with no Family', async () => {
-    const db = buildDb(foodItem({ id: 'wheat-flour', familyId: null }));
-
     await expect(
-      buildService(db)['resolveExplicitReplacement'](
-        'wheat-flour',
-        proteinSlot,
-        noExclusions(),
-        new Set(['wheat-flour']),
-      ),
+      buildWith(foodItem({ id: 'wheat-flour', familyId: null }))[
+        'resolveExplicitReplacement'
+      ]('wheat-flour', proteinSlot, noExclusions(), new Set(['wheat-flour'])),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
   it('rejects a replacement outside the favorites (ADR-025)', async () => {
-    const db = buildDb(foodItem({ id: 'cod' }));
-
     await expect(
-      buildService(db)['resolveExplicitReplacement'](
+      buildWith(foodItem({ id: 'cod' }))['resolveExplicitReplacement'](
         'cod',
         proteinSlot,
         noExclusions(),
@@ -223,15 +213,13 @@ describe('DietsService.resolveExplicitReplacement', () => {
   });
 
   it('accepts a favorited, Family-classified replacement in the same slot', async () => {
-    const db = buildDb(
+    const replacement = await buildWith(
       foodItem({
         id: 'cod',
         roleId: 'role-lean-protein',
         categoryId: 'cat-fish',
       }),
-    );
-
-    const replacement = await buildService(db)['resolveExplicitReplacement'](
+    )['resolveExplicitReplacement'](
       'cod',
       proteinSlot,
       noExclusions(),
@@ -242,16 +230,14 @@ describe('DietsService.resolveExplicitReplacement', () => {
   });
 
   it('rejects a replacement from another slot', async () => {
-    const db = buildDb(
-      foodItem({
-        id: 'olive-oil',
-        roleId: 'role-healthy-fat',
-        categoryId: 'cat-oils',
-      }),
-    );
-
     await expect(
-      buildService(db)['resolveExplicitReplacement'](
+      buildWith(
+        foodItem({
+          id: 'olive-oil',
+          roleId: 'role-healthy-fat',
+          categoryId: 'cat-oils',
+        }),
+      )['resolveExplicitReplacement'](
         'olive-oil',
         proteinSlot,
         noExclusions(),
