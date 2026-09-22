@@ -8,48 +8,6 @@ See [[domain-model]] and [[business-rules]] for the domain layer this architectu
 
 Full history and rationale behind these choices: `~/Documents/obsidian-notes/projects_history/fitness/docs/architecture.md`.
 
-## System Diagram
-
-The browser never reaches Postgres, Redis or the NestJS API. It talks to Next.js, and to MinIO only through a presigned URL Next.js asked the API to mint.
-
-```mermaid
-flowchart LR
-  subgraph browser["Browser (PWA)"]
-    ui["React UI + service worker"]
-    idb[("IndexedDB<br/>queued writes")]
-  end
-
-  subgraph edge["Public ingress: fitness.blonskyi.dev"]
-    next["Next.js server<br/>Auth.js OIDC client<br/>proxy.ts, Server Actions"]
-  end
-
-  subgraph core["Private Docker network: no public route"]
-    api["NestJS API<br/>all business logic"]
-    worker["Python worker<br/>pose detection + alignment"]
-    redis[("Redis<br/>detect / analyze-alignment lists")]
-  end
-
-  idp["login.blonskyi.dev<br/>OpenID Provider"]
-  pg[("Postgres<br/>shared instance, own tables")]
-  minio[("MinIO<br/>private photo bucket")]
-  sentry["Sentry"]
-
-  ui -->|"host-only session cookie"| next
-  ui -->|"append while offline"| idb
-  idb -.->|"replay in order once online"| ui
-  ui -->|"presigned PUT / GET only"| minio
-  next -->|"authorization code + PKCE"| idp
-  next -->|"x-user-id, x-user-email"| api
-  api --> pg
-  api -->|"push job"| redis
-  api -->|"mint presigned URL"| minio
-  worker -->|"pop job"| redis
-  worker -->|"own service credentials"| minio
-  worker -->|"write results"| pg
-  next -.-> sentry
-  api -.-> sentry
-```
-
 ---
 
 ## Goals
@@ -78,31 +36,6 @@ Dependencies:
 - NestJS API (all reads/writes go through it)
 - login (`login.blonskyi.dev`) as the OpenID Provider
 
-Queued writes replay from the React tree, in order:
-
-```mermaid
-sequenceDiagram
-  actor U as User
-  participant R as React tree
-  participant Q as IndexedDB queue
-  participant S as Server Action
-
-  U->>R: log a set or a weigh-in
-  alt online
-    R->>S: write through
-  else offline
-    R->>Q: append
-    R-->>U: shown as pending
-  end
-  Note over R,Q: back online: the drain runs here, not in the service worker
-  R->>Q: read head
-  R->>S: replay it
-  S-->>R: accepted
-  R->>Q: drop head, take the next
-  Note over R,Q: a transient failure stops the drain and keeps the tail
-  Note over R,Q: only a permanent error drops that one write
-```
-
 ---
 
 ### Backend
@@ -121,53 +54,6 @@ Dependencies:
 - Postgres (shared instance, this project's own tables)
 - Redis (job queue)
 - MinIO (photo storage)
-
-Module map. Every module sits behind `IdentityGuard` and reads the schema through `db`, so those edges are left out. `admin` is a back office over every table and is exempt from the ownership rule; the authoritative owner-per-table map is `backend/src/db/table-ownership.spec.ts`, which fails the build when a query is rooted outside its owner.
-
-```mermaid
-flowchart TD
-  subgraph dietArea["Diet"]
-    di["diets"]
-    ct["calorie-targets"]
-    fi["food-items"]
-    fp["food-preferences"]
-    dp["diet-preferences"]
-  end
-
-  subgraph trainingArea["Training"]
-    tp["training-programs"]
-    wl["workout-logs"]
-    ex["exercises"]
-  end
-
-  subgraph bodyArea["Body"]
-    dl["daily-logs"]
-    ps["photo-sessions"]
-    paq["photo-analysis-queue"]
-    st["storage"]
-  end
-
-  us["users"]
-
-  di --> ct
-  di --> fi
-  di --> fp
-  di --> dp
-  fi -.->|"slot and exclusion rules"| di
-  fi --> dp
-  fp --> fi
-  fp --> dp
-  ct --> dl
-  ct --> us
-  dl --> us
-  wl --> dl
-  wl --> ex
-  wl --> tp
-  tp --> ex
-  ps --> dl
-  ps --> paq
-  ps --> st
-```
 
 ---
 
@@ -217,72 +103,13 @@ External systems:
 8. The Python worker runs alignment analysis, writes `progress_photos.analysis_status`/`alignment_data` back.
 9. Frontend polls/reads `analysis_status`; when reading a photo back, NestJS generates a short-lived presigned GET URL after checking ownership.
 
-The two status columns that drive it, and who moves each one:
-
-```mermaid
-stateDiagram-v2
-  state "photo_sessions.status" as Session {
-    [*] --> uploading: client asks for an upload URL
-    uploading --> detecting: upload confirmed, detect job pushed
-    detecting --> needs_review: worker assigns pose + landmarks
-    needs_review --> confirmed: user confirms or corrects the pose
-  }
-
-  state "progress_photos.analysis_status" as Photo {
-    [*] --> pending: analyze-alignment job pushed
-    pending --> processing: worker picks it up
-    processing --> completed: alignment_data written
-    processing --> failed: auto-retries exhausted
-    failed --> pending: user asks for a retry
-  }
-
-  Session --> Photo: on confirmed, one job per photo
-```
-
-An ambiguous detection lands in `needs_review` with no pose assigned rather than failing, because only a human can settle it.
-
 **Diet generation:** manual trigger only (see [[business-rules]]) → NestJS runs the greedy-heuristic generator against the user's profile, active Diet/Food Preferences, and the user's favorited Food Items, which are the whole candidate pool (ADR-025) → writes a new `diets` + `diet_items` row set scoped to the user, not to a day (see [ADR-022](docs/decisions.md)).
-
-```mermaid
-flowchart TD
-  trigger["POST /diets/generate"] --> pool
-  profile["User profile<br/>age, height, weight, goal, activity, meal_count"] --> targets["Day targets: calories + macros<br/>mifflin_v1, recorded on the Diet"]
-  targets --> arch
-  fav["Favorited Food Items"] --> pool["Candidate pool"]
-  dp["Diet Preferences<br/>diet-type exclusions"] --> pool
-  fp["Food Preferences<br/>excluded items, categories, roles"] --> pool
-  pool -->|"empty"| err["422: favorite something first"]
-  pool --> arch["Archetype per meal position<br/>breakfast, mains, dinner"]
-  arch --> slots["Each Slot draws a Food Family<br/>carrying one macro, least-used first"]
-  slots --> free["Free Foods priced out of the targets before fitting"]
-  free --> fit["Portions fitted to protein, carb and fat at once"]
-  fit --> persist[("diets + diet_items + diet_meal_order")]
-
-  persist --> swap["Swap: favorited items in the same macro slot"]
-  persist --> reroll["Reroll: the whole eligible catalog"]
-  persist --> del["Delete: drop one row"]
-  swap --> recompute["Totals re-derived in place, no regeneration"]
-  reroll --> recompute
-  del --> recompute
-  recompute --> persist
-```
 
 ---
 
 ## Deployment
 
 Docker Compose, deployed via Coolify (self-hosted) using a GitHub App for the private repo. On push to `main`: lint + tests (ESLint, Prettier, frontend/backend test suites) → the `deploy` job POSTs the Coolify webhook → Coolify builds and starts the containers, and the backend container runs `drizzle-kit migrate` as its own entrypoint before serving (see [ADR-005](docs/decisions.md)). A green CI run does not prove the release landed: a failed migration crashloops the new container, Coolify keeps the previous one serving, and `main` still shows a green tick. Shares its Postgres instance and Coolify host with the user's other `*.blonskyi.dev` pet projects.
-
-```mermaid
-flowchart LR
-  push["push to main"] --> ci["GitHub Actions<br/>lint, format, typecheck, tests, PWA audit"]
-  ci -->|"deploy job POSTs the Coolify webhook"| coolify["Coolify"]
-  coolify --> build["build images"]
-  build --> start["start containers"]
-  start --> migrate["backend entrypoint: drizzle-kit migrate"]
-  migrate -->|"succeeds"| serve["new container serves"]
-  migrate -->|"fails"| crash["crashloop: the previous container keeps serving,<br/>and main still shows a green tick"]
-```
 
 ---
 
@@ -291,28 +118,6 @@ flowchart LR
 Authentication:
 
 The Next.js frontend is an OIDC client of `login.blonskyi.dev` (authorization code + PKCE, `client_id` `fitness`, redirect URI `/api/auth/callback/login`) — see [ADR-018](docs/decisions.md). It runs its own Auth.js instance with its own `AUTH_SECRET` and issues its own **host-only** session cookie (`fitness.session-token`, no `Domain`, httpOnly, `sameSite: lax`); nothing is shared with any other subdomain. The name is deliberately not Auth.js's default `authjs.session-token`: the Hub sets that name for `.blonskyi.dev`, and a same-named cookie sent alongside this app's would shadow it. `proxy.ts` reads that cookie and forwards trusted `x-user-id` (login's `sub`) / `x-user-email` headers to NestJS. NestJS is internal-only (private Docker network) and never validates the cookie itself.
-
-```mermaid
-sequenceDiagram
-  actor U as User
-  participant B as Browser
-  participant N as Next.js proxy
-  participant L as login.blonskyi.dev
-  participant G as NestJS IdentityGuard
-  participant P as Postgres
-
-  U->>B: open a protected page
-  B->>N: request without a session cookie
-  N->>L: authorization code + PKCE
-  L-->>N: id_token carrying sub and email
-  N-->>B: set fitness.session-token, host-only
-  B->>N: request with the cookie
-  N->>N: drop any client-sent x-user-* header
-  N->>G: forward x-user-id = login's sub
-  G->>P: look up users.identity_sub
-  P-->>G: users.id
-  G-->>N: identity.userId, and every query is scoped to it
-```
 
 Authorization:
 

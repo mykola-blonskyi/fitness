@@ -4,43 +4,6 @@ See [[glossary]] for term definitions and [[business-rules]] for the rules refer
 
 Full history and rationale for this model's shape: `~/Documents/obsidian-notes/projects_history/fitness/knowledge/domain-model.md`.
 
-```mermaid
-erDiagram
-  users ||--o{ daily_logs : owns
-  users ||--o{ training_programs : owns
-  users ||--o{ user_active_programs : activates
-  users ||--o{ diets : owns
-  users ||--o{ food_preferences : sets
-  users ||--o{ diet_preferences : sets
-  users ||--o{ photo_sessions : owns
-
-  daily_logs ||--o{ workout_logs : anchors
-  daily_logs ||--o{ progress_photos : anchors
-
-  training_programs ||--o{ program_exercises : lists
-  training_programs ||--o{ user_active_programs : referenced_by
-  program_exercises }o--|| exercises : names
-  workout_logs ||--o{ workout_sets : records
-  workout_logs }o--o| training_programs : copied_from
-  workout_sets }o--|| exercises : names
-  exercises ||--o{ exercise_translations : localized_by
-
-  diets }o--|| diet_calculation_algorithms : generated_by
-  diets ||--o{ diet_items : contains
-  diets ||--o{ diet_meal_order : orders
-  diet_items }o--|| food_calories : names
-  food_calories }o--|| food_categories : in
-  food_calories }o--o| food_subcategories : in
-  food_calories }o--|| food_roles : plays
-  food_calories }o--o| food_families : belongs_to
-  food_calories ||--o{ food_calorie_translations : localized_by
-  food_subcategories }o--|| food_categories : under
-
-  photo_sessions ||--o{ progress_photos : groups
-```
-
-A Food Item with no Family is browsable and loggable but never generated (ADR-020), which is why that edge is optional.
-
 ## Entities
 
 ### User
