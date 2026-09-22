@@ -8,6 +8,7 @@ import { and, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import type { DietType } from './diet-preference.types';
 import type { CreateDietPreferenceDto } from './dto/create-diet-preference.dto';
 import {
   toDietPreferenceResponse,
@@ -23,6 +24,16 @@ export class DietPreferencesService {
       where: eq(schema.dietPreferences.userId, userId),
     });
     return rows.map(toDietPreferenceResponse);
+  }
+
+  // What the generator and the favorites' reachability check both ask
+  // for: the types alone, without the rows they came from.
+  async listTypes(userId: string): Promise<DietType[]> {
+    const rows = await this.db
+      .select({ dietType: schema.dietPreferences.dietType })
+      .from(schema.dietPreferences)
+      .where(eq(schema.dietPreferences.userId, userId));
+    return rows.map((row) => row.dietType);
   }
 
   async create(

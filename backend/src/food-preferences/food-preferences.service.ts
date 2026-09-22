@@ -10,6 +10,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { isUniqueViolation } from '../shared/db-errors';
+import { DietPreferencesService } from '../diet-preferences/diet-preferences.service';
 import type { DietType } from '../diet-preferences/diet-preference.types';
 import {
   isGenerationReachable,
@@ -30,7 +31,10 @@ import {
 
 @Injectable()
 export class FoodPreferencesService {
-  constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
+  constructor(
+    @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
+    private readonly dietPreferencesService: DietPreferencesService,
+  ) {}
 
   // The four tables target_id polymorphically points at - see schema.ts's
   // comment on food_preferences.target_id for why this can't be a real
@@ -188,14 +192,6 @@ export class FoodPreferencesService {
     );
   }
 
-  private async dietTypesFor(userId: string): Promise<DietType[]> {
-    const rows = await this.db
-      .select({ dietType: schema.dietPreferences.dietType })
-      .from(schema.dietPreferences)
-      .where(eq(schema.dietPreferences.userId, userId));
-    return rows.map((row) => row.dietType);
-  }
-
   // Only a favorite carries this claim. An allergy or exclusion is purely
   // subtractive, so it always lands whether or not the item was reachable.
   private computeAffectsGeneration(
@@ -217,7 +213,7 @@ export class FoodPreferencesService {
     if (type !== 'favorite') return true;
     const [facts, dietTypes] = await Promise.all([
       this.reachabilityFactsForFoodItems([targetId]),
-      this.dietTypesFor(userId),
+      this.dietPreferencesService.listTypes(userId),
     ]);
     return this.computeAffectsGeneration(type, targetId, facts, dietTypes);
   }
@@ -251,7 +247,7 @@ export class FoodPreferencesService {
     const [factsByFoodItemId, dietTypes] = await Promise.all([
       this.reachabilityFactsForFoodItems(favoriteFoodItemIds),
       favoriteFoodItemIds.length > 0
-        ? this.dietTypesFor(userId)
+        ? this.dietPreferencesService.listTypes(userId)
         : Promise.resolve([]),
     ]);
 

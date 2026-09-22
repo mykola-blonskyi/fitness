@@ -54,11 +54,18 @@ describe('FoodPreferencesService.list', () => {
 
   async function affectsGeneration(
     factRows: unknown[],
-    dietRows: unknown[] = [],
+    dietRows: { dietType: string }[] = [],
     prefRows: unknown[] = favorite,
   ): Promise<boolean> {
-    const db = buildDb(prefRows, foodItemNameRows, factRows, dietRows);
-    const service = new FoodPreferencesService(db as never);
+    const db = buildDb(prefRows, foodItemNameRows, factRows);
+    const service = new FoodPreferencesService(
+      db as never,
+      {
+        listTypes: jest
+          .fn()
+          .mockResolvedValue(dietRows.map((row) => row.dietType)),
+      } as never,
+    );
     const [result] = await service.list('user-1');
     return result.affectsGeneration;
   }
@@ -160,7 +167,7 @@ describe('FoodPreferencesService.create', () => {
       existing: { id: 'pref-1' },
       returning: jest.fn(),
     });
-    const service = new FoodPreferencesService(db as never);
+    const service = new FoodPreferencesService(db as never, {} as never);
 
     await expect(service.create('user-1', dto)).rejects.toThrow(
       ConflictException,
@@ -171,7 +178,7 @@ describe('FoodPreferencesService.create', () => {
   it('turns a concurrent insert racing past the pre-check into a 409', async () => {
     const returning = jest.fn().mockRejectedValue(uniqueViolation());
     const { db } = buildDb({ existing: undefined, returning });
-    const service = new FoodPreferencesService(db as never);
+    const service = new FoodPreferencesService(db as never, {} as never);
 
     await expect(service.create('user-1', dto)).rejects.toThrow(
       ConflictException,
