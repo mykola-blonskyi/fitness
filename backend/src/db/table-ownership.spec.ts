@@ -35,8 +35,8 @@ const OWNER_BY_TABLE: Record<string, string> = {
   progressPhotos: 'photo-sessions',
 };
 
-// admin is a back office over every table and scripts are one-off jobs;
-// routing either through eleven services would buy nothing.
+// admin reads and writes every table and scripts holds one-off jobs, so
+// routing either through eleven services buys nothing.
 const UNSCOPED_MODULES = new Set(['admin', 'scripts', 'db']);
 
 const EXCEPTIONS: { file: string; table: string; why: string }[] = [

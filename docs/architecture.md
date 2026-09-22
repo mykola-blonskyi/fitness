@@ -99,7 +99,8 @@ sequenceDiagram
   R->>S: replay it
   S-->>R: accepted
   R->>Q: drop head, take the next
-  Note over R,Q: a transient failure stops the drain and keeps the tail;<br/>only a permanent error drops that one write
+  Note over R,Q: a transient failure stops the drain and keeps the tail
+  Note over R,Q: only a permanent error drops that one write
 ```
 
 ---
@@ -310,7 +311,7 @@ sequenceDiagram
   N->>G: forward x-user-id = login's sub
   G->>P: look up users.identity_sub
   P-->>G: users.id
-  G-->>N: identity.userId; every query is scoped to it
+  G-->>N: identity.userId, and every query is scoped to it
 ```
 
 Authorization:
