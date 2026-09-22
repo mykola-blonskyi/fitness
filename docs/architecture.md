@@ -44,7 +44,7 @@ NestJS, Drizzle ORM. **Sole owner of the database and business logic** — diet 
 
 Responsibilities:
 
-- All Drizzle/Postgres access
+- All Drizzle/Postgres access, with one module owning each table (see [ADR-027](docs/decisions.md))
 - Generates presigned MinIO URLs for photo upload (client leg) and photo read (owner-only, short-lived — see Security)
 - Enqueues photo-analysis jobs onto Redis; exposes an internal endpoint (or reads back) for worker results
 - Trusts `x-user-id`/`x-user-email` headers forwarded by the frontend; never touches the session cookie or token itself. `x-user-id` carries login's `sub`, which `IdentityGuard` resolves to this app's own `users.id` via `users.identity_sub` (see [ADR-018](docs/decisions.md))

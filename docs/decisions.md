@@ -413,3 +413,21 @@ The carb and fat chains are ordered fallbacks rather than pooled draws, so "gene
 `resolveSlotConstraint` in `food-items/food-eligibility.ts` is the single source of truth. The picker query, the explicit-swap check and the reroll draw all read it, so the picker cannot offer an item the swap then rejects. A Role in no chain (`beverage`, `fruit`, `treat`) degrades to itself, which is the pre-ADR-026 behavior; generation never places one.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-027: One module owns each table, and a query rooted elsewhere is a test failure
+
+Date: 2026-09-22
+
+Status: Accepted
+
+**Each table has exactly one owning module.** A module may reference a foreign table in a join, reading it to shape its own rows. A query rooted at one — `.from()`, `.insert()`, `.update()`, `.delete()`, or `db.query.<table>` — belongs to the owning module's service.
+
+`backend/src/db/table-ownership.spec.ts` enforces this and holds the table-to-module map. It fails naming the file, the table and its owner. A second test asserts the map covers every `PgTable` in the schema, so a new table cannot be added without deciding who owns it.
+
+`admin`, `scripts` and `db` are exempt: admin is a back office over every table and the scripts are one-off jobs. The one file-level exception is `shared/locale.ts`, which reads `users.locale` through a helper taking the db handle as a parameter, and is already the single source of that lookup.
+
+**Within a module, a service keeps its own queries.** `diets` is the exception: ten queries and four transactions across three tables, so they live in `DietsRepository` and the service imports neither `drizzle-orm` nor the schema. That is a size threshold, not a pattern to copy. The other fifteen services keep Drizzle inline — a repository per entity would add a layer over an already-thin ORM without hiding a decision.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
