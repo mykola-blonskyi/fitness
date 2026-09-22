@@ -53,10 +53,6 @@ const PENDING_MIGRATIONS = [
   'diets/diets.service.ts queries foodCalories (food-items)',
   'diets/diets.service.ts queries foodCategories (food-items)',
   'diets/diets.service.ts queries foodRoles (food-items)',
-  'food-preferences/food-preferences.service.ts queries foodCalories (food-items)',
-  'food-preferences/food-preferences.service.ts queries foodCategories (food-items)',
-  'food-preferences/food-preferences.service.ts queries foodRoles (food-items)',
-  'food-preferences/food-preferences.service.ts queries foodSubcategories (food-items)',
 ];
 
 const ROOTING_CALL = /\.(?:from|insert|update|delete)\(\s*schema\.(\w+)/g;

@@ -4,10 +4,14 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { decodeCursor, encodeCursor } from '../admin/cursor-pagination';
-import type { ExclusionTargets } from '../food-preferences/food-preference.types';
+import type {
+  ExclusionTargets,
+  FoodPreferenceTargetType,
+} from '../food-preferences/food-preference.types';
 import {
   generationEligibleWhere,
   slotEligibleWhere,
+  type ReachabilityFacts,
   type SlotConstraint,
 } from './food-eligibility';
 import type { CreateFoodItemDto } from './dto/create-food-item.dto';
@@ -203,6 +207,114 @@ export class FoodItemsService {
       })),
       roles: roles.map((role) => ({ id: role.id, name: role.name })),
     };
+  }
+
+  // The four catalog tables a Food Preference's target_id can point at -
+  // see schema.ts's comment on food_preferences.target_id for why that
+  // can't be a real FK. Each table has its own distinct Drizzle type
+  // (they're not a common supertype), so this is a switch rather than a
+  // lookup object - that would need an unsound cast to type-check.
+  async getTargetNames(
+    userId: string,
+    targetType: FoodPreferenceTargetType,
+    ids: string[],
+  ): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+
+    switch (targetType) {
+      case 'category': {
+        const rows = await this.db
+          .select({
+            id: schema.foodCategories.id,
+            name: schema.foodCategories.name,
+          })
+          .from(schema.foodCategories)
+          .where(inArray(schema.foodCategories.id, ids));
+        return new Map(rows.map((row) => [row.id, row.name]));
+      }
+      case 'subcategory': {
+        const rows = await this.db
+          .select({
+            id: schema.foodSubcategories.id,
+            name: schema.foodSubcategories.name,
+          })
+          .from(schema.foodSubcategories)
+          .where(inArray(schema.foodSubcategories.id, ids));
+        return new Map(rows.map((row) => [row.id, row.name]));
+      }
+      case 'role': {
+        const rows = await this.db
+          .select({ id: schema.foodRoles.id, name: schema.foodRoles.name })
+          .from(schema.foodRoles)
+          .where(inArray(schema.foodRoles.id, ids));
+        return new Map(rows.map((row) => [row.id, row.name]));
+      }
+      case 'food_item': {
+        // The only target type with per-locale names - the three taxonomy
+        // tables above have no translation table at all.
+        const locale = await resolveUserLocale(this.db, userId);
+        const rows = await this.db
+          .select({
+            id: schema.foodCalories.id,
+            name: schema.foodCalories.name,
+            translatedName: schema.foodCalorieTranslations.name,
+          })
+          .from(schema.foodCalories)
+          .leftJoin(
+            schema.foodCalorieTranslations,
+            and(
+              eq(
+                schema.foodCalorieTranslations.foodCalorieId,
+                schema.foodCalories.id,
+              ),
+              eq(schema.foodCalorieTranslations.locale, locale),
+            ),
+          )
+          .where(inArray(schema.foodCalories.id, ids));
+        return new Map(
+          rows.map((row) => [row.id, row.translatedName ?? row.name]),
+        );
+      }
+    }
+  }
+
+  // What isGenerationReachable() needs to decide whether a favorite can
+  // ever show up in a generated menu.
+  async getReachabilityFacts(
+    ids: string[],
+  ): Promise<Map<string, ReachabilityFacts>> {
+    if (ids.length === 0) return new Map();
+
+    const rows = await this.db
+      .select({
+        id: schema.foodCalories.id,
+        familyId: schema.foodCalories.familyId,
+        caloriesPer100g: schema.foodCalories.caloriesPer100g,
+        roleName: schema.foodRoles.name,
+        categoryName: schema.foodCategories.name,
+      })
+      .from(schema.foodCalories)
+      .leftJoin(
+        schema.foodRoles,
+        eq(schema.foodRoles.id, schema.foodCalories.roleId),
+      )
+      .leftJoin(
+        schema.foodCategories,
+        eq(schema.foodCategories.id, schema.foodCalories.categoryId),
+      )
+      .where(inArray(schema.foodCalories.id, ids));
+
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          familyId: row.familyId,
+          caloriesPer100g: Number(row.caloriesPer100g),
+          roleName: row.roleName,
+          categoryName: row.categoryName,
+        },
+      ]),
+    );
   }
 
   // source/sourceId stay null (unlike seeded rows). isVerified is set
