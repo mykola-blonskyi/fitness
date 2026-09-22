@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gte, isNotNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import { UsersService } from '../users/users.service';
 import {
   assertRealisticBodyWeight,
   convertWeight,
@@ -21,7 +22,10 @@ const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 @Injectable()
 export class DailyLogsService {
-  constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
+  constructor(
+    @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
+    private readonly usersService: UsersService,
+  ) {}
 
   async findByDate(
     userId: string,
@@ -139,10 +143,7 @@ export class DailyLogsService {
     const sinceDate = since.toISOString().slice(0, 10);
 
     const [user, rows] = await Promise.all([
-      this.db.query.users.findFirst({
-        where: eq(schema.users.id, userId),
-        columns: { defaultWeightUnit: true },
-      }),
+      this.usersService.findById(userId),
       this.db.query.dailyLogs.findMany({
         where: and(
           eq(schema.dailyLogs.userId, userId),
