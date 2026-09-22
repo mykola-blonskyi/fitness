@@ -9,6 +9,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
 import { DailyLogsService } from '../daily-logs/daily-logs.service';
+import { ExercisesService } from '../exercises/exercises.service';
 import { TrainingProgramsService } from '../training-programs/training-programs.service';
 import type { LogWorkoutSetDto } from './dto/log-workout-set.dto';
 import type { StartWorkoutLogDto } from './dto/start-workout-log.dto';
@@ -29,6 +30,7 @@ export class WorkoutLogsService {
     @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
     private readonly dailyLogsService: DailyLogsService,
     private readonly trainingProgramsService: TrainingProgramsService,
+    private readonly exercisesService: ExercisesService,
   ) {}
 
   // Reuses TrainingProgramsService rather than re-querying
@@ -174,13 +176,7 @@ export class WorkoutLogsService {
   ): Promise<WorkoutSetResponse> {
     await this.findOwnedWorkoutLog(userId, workoutLogId);
 
-    const exercise = await this.db.query.exercises.findFirst({
-      where: eq(schema.exercises.id, dto.exerciseId),
-    });
-    if (!exercise) {
-      throw new NotFoundException('Exercise not found');
-    }
-
+    const exercise = await this.exercisesService.getById(dto.exerciseId);
     const values = resolveWorkoutSetValues(exercise.category, dto);
 
     const [inserted] = await this.db

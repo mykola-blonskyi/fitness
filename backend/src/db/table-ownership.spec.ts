@@ -59,8 +59,6 @@ const PENDING_MIGRATIONS = [
   'food-preferences/food-preferences.service.ts queries foodCategories (food-items)',
   'food-preferences/food-preferences.service.ts queries foodRoles (food-items)',
   'food-preferences/food-preferences.service.ts queries foodSubcategories (food-items)',
-  'training-programs/training-programs.service.ts queries exercises (exercises)',
-  'workout-logs/workout-logs.service.ts queries exercises (exercises)',
 ];
 
 const ROOTING_CALL = /\.(?:from|insert|update|delete)\(\s*schema\.(\w+)/g;

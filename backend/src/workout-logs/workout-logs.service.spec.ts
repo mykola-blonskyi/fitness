@@ -1,11 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { WorkoutLogsService } from './workout-logs.service';
 
-function buildDb(overrides: {
-  workoutLogRow: unknown;
-  exercise: unknown;
-  inserted: unknown;
-}) {
+function buildDb(overrides: { workoutLogRow: unknown; inserted: unknown }) {
   const select = jest.fn().mockReturnValue({
     from: jest.fn().mockReturnValue({
       innerJoin: jest.fn().mockReturnValue({
@@ -23,12 +19,17 @@ function buildDb(overrides: {
   const insert = jest.fn().mockReturnValue({ values });
 
   return {
-    query: {
-      exercises: { findFirst: jest.fn().mockResolvedValue(overrides.exercise) },
-    },
     select,
     insert,
     values,
+  };
+}
+
+function buildExercises(exercise: unknown) {
+  return {
+    getById: exercise
+      ? jest.fn().mockResolvedValue(exercise)
+      : jest.fn().mockRejectedValue(new NotFoundException()),
   };
 }
 
@@ -67,11 +68,12 @@ describe('WorkoutLogsService.logSet', () => {
       reps: 5,
       durationSeconds: null,
     };
-    const db = buildDb({ workoutLogRow, exercise, inserted });
+    const db = buildDb({ workoutLogRow, inserted });
     const service = new WorkoutLogsService(
       db as never,
       {} as never,
       {} as never,
+      buildExercises(exercise) as never,
     );
 
     const result = await service.logSet('user-1', 'log-1', dto);
@@ -92,15 +94,12 @@ describe('WorkoutLogsService.logSet', () => {
   });
 
   it('throws NotFoundException when the exercise does not exist', async () => {
-    const db = buildDb({
-      workoutLogRow,
-      exercise: undefined,
-      inserted: undefined,
-    });
+    const db = buildDb({ workoutLogRow, inserted: undefined });
     const service = new WorkoutLogsService(
       db as never,
       {} as never,
       {} as never,
+      buildExercises(undefined) as never,
     );
 
     await expect(service.logSet('user-1', 'log-1', dto)).rejects.toThrow(

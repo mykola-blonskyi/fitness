@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { and, desc, eq, ilike, lt, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
@@ -8,6 +13,7 @@ import type { CreateExerciseDto } from './dto/create-exercise.dto';
 import type { ListExercisesDto } from './dto/list-exercises.dto';
 import { resolveUserLocale } from '../shared/locale';
 import { toExerciseResponse, type ExerciseResponse } from './exercise.mapper';
+import type { ExerciseRef } from './exercise.types';
 
 const DEFAULT_LIMIT = 20;
 
@@ -98,6 +104,17 @@ export class ExercisesService {
             })
           : null,
     };
+  }
+
+  async getById(exerciseId: string): Promise<ExerciseRef> {
+    const exercise = await this.db.query.exercises.findFirst({
+      where: eq(schema.exercises.id, exerciseId),
+      columns: { id: true, name: true, category: true, imageUrl: true },
+    });
+    if (!exercise) {
+      throw new NotFoundException('Exercise not found');
+    }
+    return exercise;
   }
 
   // isVerified: true - a manually-created Exercise is implicitly

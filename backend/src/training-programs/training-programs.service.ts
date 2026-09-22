@@ -8,6 +8,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
+import { ExercisesService } from '../exercises/exercises.service';
 import type { AddProgramExerciseDto } from './dto/add-program-exercise.dto';
 import type { CreateTrainingProgramDto } from './dto/create-training-program.dto';
 import type { ReorderProgramExercisesDto } from './dto/reorder-program-exercises.dto';
@@ -22,7 +23,10 @@ import {
 
 @Injectable()
 export class TrainingProgramsService {
-  constructor(@Inject(DB) private readonly db: NodePgDatabase<typeof schema>) {}
+  constructor(
+    @Inject(DB) private readonly db: NodePgDatabase<typeof schema>,
+    private readonly exercisesService: ExercisesService,
+  ) {}
 
   // Reused by every route on an existing program - same ownership-check
   // convention as diet-preferences.service.ts/food-preferences.service.ts.
@@ -174,13 +178,7 @@ export class TrainingProgramsService {
   ): Promise<ProgramExerciseResponse> {
     await this.getOwnedUnarchivedProgram(userId, programId);
 
-    const exercise = await this.db.query.exercises.findFirst({
-      where: eq(schema.exercises.id, dto.exerciseId),
-    });
-    if (!exercise) {
-      throw new NotFoundException('Exercise not found');
-    }
-
+    const exercise = await this.exercisesService.getById(dto.exerciseId);
     const targets = resolveProgramExerciseTargets(exercise.category, dto);
 
     const [inserted] = await this.db
