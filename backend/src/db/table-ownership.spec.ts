@@ -50,9 +50,6 @@ const EXCEPTIONS: { file: string; table: string; why: string }[] = [
 // Emptied over the rest of this branch, one migration per commit.
 const PENDING_MIGRATIONS = [
   'diets/diets.service.ts queries dietCalculationAlgorithms (calorie-targets)',
-  'diets/diets.service.ts queries foodCalories (food-items)',
-  'diets/diets.service.ts queries foodCategories (food-items)',
-  'diets/diets.service.ts queries foodRoles (food-items)',
 ];
 
 const ROOTING_CALL = /\.(?:from|insert|update|delete)\(\s*schema\.(\w+)/g;

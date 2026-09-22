@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, ilike, inArray, lt, or } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, lt, ne, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -13,6 +13,7 @@ import {
   slotEligibleWhere,
   type ReachabilityFacts,
   type SlotConstraint,
+  type TaxonomyIds,
 } from './food-eligibility';
 import type { CreateFoodItemDto } from './dto/create-food-item.dto';
 import type { ListFoodItemsDto } from './dto/list-food-items.dto';
@@ -22,6 +23,7 @@ import {
   type FoodItemResponse,
   type TaxonomyResponse,
 } from './food-item.mapper';
+import type { FoodItemRow, GenerationCandidate } from './food-item.types';
 
 const DEFAULT_LIMIT = 20;
 
@@ -207,6 +209,96 @@ export class FoodItemsService {
       })),
       roles: roles.map((role) => ({ id: role.id, name: role.name })),
     };
+  }
+
+  // Name-keyed, unlike getTaxonomy()'s nested response: generation and
+  // Food Replacement both start from a Role or Category name in code and
+  // need its id to query or to resolve a slot.
+  async getTaxonomyIds(): Promise<TaxonomyIds> {
+    const [roleRows, categoryRows] = await Promise.all([
+      this.db
+        .select({ id: schema.foodRoles.id, name: schema.foodRoles.name })
+        .from(schema.foodRoles),
+      this.db
+        .select({
+          id: schema.foodCategories.id,
+          name: schema.foodCategories.name,
+        })
+        .from(schema.foodCategories),
+    ]);
+    return {
+      roleIdByName: new Map(roleRows.map((row) => [row.name, row.id])),
+      categoryIdByName: new Map(categoryRows.map((row) => [row.name, row.id])),
+    };
+  }
+
+  // The generation pool is the user's favorites and nothing else
+  // (ADR-025); exclusions still apply on top, since a food can be
+  // favorited and later excluded by a diet type.
+  async findGenerationCandidates(
+    roleIds: string[],
+    favoriteFoodItemIds: ReadonlySet<string>,
+    exclusions: ExclusionTargets,
+  ): Promise<GenerationCandidate[]> {
+    if (roleIds.length === 0 || favoriteFoodItemIds.size === 0) return [];
+
+    const rows = await this.db
+      .select({
+        id: schema.foodCalories.id,
+        roleId: schema.foodCalories.roleId,
+        caloriesPer100g: schema.foodCalories.caloriesPer100g,
+        proteinPer100g: schema.foodCalories.proteinPer100g,
+        carbsPer100g: schema.foodCalories.carbsPer100g,
+        fatPer100g: schema.foodCalories.fatPer100g,
+        familyName: schema.foodFamilies.name,
+        categoryName: schema.foodCategories.name,
+      })
+      .from(schema.foodCalories)
+      .leftJoin(
+        schema.foodFamilies,
+        eq(schema.foodFamilies.id, schema.foodCalories.familyId),
+      )
+      .leftJoin(
+        schema.foodCategories,
+        eq(schema.foodCategories.id, schema.foodCalories.categoryId),
+      )
+      .where(
+        and(
+          inArray(schema.foodCalories.roleId, roleIds),
+          inArray(schema.foodCalories.id, [...favoriteFoodItemIds]),
+          generationEligibleWhere(exclusions),
+        ),
+      );
+
+    return rows.map((row) => ({
+      ...row,
+      caloriesPer100g: Number(row.caloriesPer100g),
+      proteinPer100g: Number(row.proteinPer100g),
+      carbsPer100g: Number(row.carbsPer100g),
+      fatPer100g: Number(row.fatPer100g),
+    }));
+  }
+
+  // Unrestricted by the favorites, unlike findGenerationCandidates:
+  // reroll is the way out of them (ADR-025).
+  async findSlotCandidates(
+    slot: SlotConstraint,
+    exclusions: ExclusionTargets,
+    excludeFoodItemId: string,
+  ): Promise<FoodItemRow[]> {
+    return this.db.query.foodCalories.findMany({
+      where: and(
+        slotEligibleWhere(slot),
+        ne(schema.foodCalories.id, excludeFoodItemId),
+        generationEligibleWhere(exclusions),
+      ),
+    });
+  }
+
+  async findRow(id: string): Promise<FoodItemRow | undefined> {
+    return this.db.query.foodCalories.findFirst({
+      where: eq(schema.foodCalories.id, id),
+    });
   }
 
   // The four catalog tables a Food Preference's target_id can point at -

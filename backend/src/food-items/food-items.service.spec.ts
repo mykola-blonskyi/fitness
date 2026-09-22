@@ -112,3 +112,147 @@ describe('FoodItemsService.list', () => {
     expect(where()).toBeUndefined();
   });
 });
+
+describe('FoodItemsService.findGenerationCandidates', () => {
+  function buildService(): { service: FoodItemsService; where: () => SQL } {
+    let captured: SQL | undefined;
+    const joined = {
+      leftJoin: () => joined,
+      where: (clause: SQL | undefined) => {
+        captured = clause;
+        return Promise.resolve([]);
+      },
+    };
+    const db = { select: () => ({ from: () => joined }) };
+    return {
+      service: new FoodItemsService(db as never),
+      where: () => captured!,
+    };
+  }
+
+  it('asks the database only for Family-classified, favorited rows', async () => {
+    const { service, where } = buildService();
+
+    await service.findGenerationCandidates(
+      ['role-complex-carb'],
+      new Set(['rice']),
+      noExclusions(),
+    );
+
+    const sql = new PgDialect().sqlToQuery(where()).sql;
+    expect(sql).toContain('"food_calories"."family_id" is not null');
+    expect(sql).toContain('"food_calories"."id" in');
+  });
+
+  it('returns nothing rather than querying when the favorites set is empty', async () => {
+    const { service, where } = buildService();
+
+    const rows = await service.findGenerationCandidates(
+      ['role-complex-carb'],
+      new Set<string>(),
+      noExclusions(),
+    );
+
+    expect(rows).toEqual([]);
+    expect(where()).toBeUndefined();
+  });
+
+  it('returns nothing rather than querying when every role is excluded', async () => {
+    const { service, where } = buildService();
+
+    const rows = await service.findGenerationCandidates(
+      [],
+      new Set(['rice']),
+      noExclusions(),
+    );
+
+    expect(rows).toEqual([]);
+    expect(where()).toBeUndefined();
+  });
+
+  it('hands back the macros as numbers, not the decimals the driver returns', async () => {
+    const db = {
+      select: () => ({
+        from: () => {
+          const joined = {
+            leftJoin: () => joined,
+            where: () =>
+              Promise.resolve([
+                {
+                  id: 'rice',
+                  roleId: 'role-complex-carb',
+                  caloriesPer100g: '130',
+                  proteinPer100g: '2.7',
+                  carbsPer100g: '28',
+                  fatPer100g: '0.3',
+                  familyName: 'grain_garnish',
+                  categoryName: 'grains',
+                },
+              ]),
+          };
+          return joined;
+        },
+      }),
+    };
+
+    const [candidate] = await new FoodItemsService(
+      db as never,
+    ).findGenerationCandidates(
+      ['role-complex-carb'],
+      new Set(['rice']),
+      noExclusions(),
+    );
+
+    expect(candidate).toEqual({
+      id: 'rice',
+      roleId: 'role-complex-carb',
+      caloriesPer100g: 130,
+      proteinPer100g: 2.7,
+      carbsPer100g: 28,
+      fatPer100g: 0.3,
+      familyName: 'grain_garnish',
+      categoryName: 'grains',
+    });
+  });
+});
+
+describe('FoodItemsService.findSlotCandidates', () => {
+  async function slotWhere(): Promise<string> {
+    let captured: SQL | undefined;
+    const db = {
+      query: {
+        foodCalories: {
+          findMany: (config: { where?: SQL }) => {
+            captured = config.where;
+            return Promise.resolve([]);
+          },
+        },
+      },
+    };
+
+    await new FoodItemsService(db as never).findSlotCandidates(
+      proteinSlot,
+      noExclusions(),
+      'cottage-cheese',
+    );
+
+    return new PgDialect().sqlToQuery(captured!).sql;
+  }
+
+  it('asks the database only for Family-classified rows', async () => {
+    expect(await slotWhere()).toContain(
+      '"food_calories"."family_id" is not null',
+    );
+  });
+
+  it('does not require is_verified, which generation ignores', async () => {
+    expect(await slotWhere()).not.toContain('is_verified');
+  });
+
+  it('reaches every role in the slot, not just the current one', async () => {
+    const sql = await slotWhere();
+
+    expect(sql).toContain('"food_calories"."role_id" in');
+    expect(sql).not.toContain('"food_calories"."role_id" = ');
+  });
+});

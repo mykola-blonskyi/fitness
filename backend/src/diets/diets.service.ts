@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray, ne } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -14,11 +14,9 @@ import { DietPreferencesService } from '../diet-preferences/diet-preferences.ser
 import type { DietType } from '../diet-preferences/diet-preference.types';
 import type { ListFoodItemsDto } from '../food-items/dto/list-food-items.dto';
 import {
-  generationEligibleWhere,
   generationIneligibility,
   resolveSlotConstraint,
   satisfiesSlot,
-  slotEligibleWhere,
   type SlotConstraint,
   type TaxonomyIds,
 } from '../food-items/food-eligibility';
@@ -26,6 +24,7 @@ import {
   FoodItemsService,
   type FoodItemPage,
 } from '../food-items/food-items.service';
+import type { FoodItemRow } from '../food-items/food-item.types';
 import { FoodPreferencesService } from '../food-preferences/food-preferences.service';
 import type { ExclusionTargets } from '../food-preferences/food-preference.types';
 import { resolveUserLocale } from '../shared/locale';
@@ -53,8 +52,6 @@ function defaultPick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-type FoodItemRow = typeof schema.foodCalories.$inferSelect;
-
 type Tx = Parameters<
   Parameters<NodePgDatabase<typeof schema>['transaction']>[0]
 >[0];
@@ -70,35 +67,13 @@ export class DietsService {
     private readonly foodItemsService: FoodItemsService,
   ) {}
 
-  private async getTaxonomyIdMaps(): Promise<{
-    roleIdByName: Map<string, string>;
-    categoryIdByName: Map<string, string>;
-  }> {
-    const [roleRows, categoryRows] = await Promise.all([
-      this.db
-        .select({ id: schema.foodRoles.id, name: schema.foodRoles.name })
-        .from(schema.foodRoles),
-      this.db
-        .select({
-          id: schema.foodCategories.id,
-          name: schema.foodCategories.name,
-        })
-        .from(schema.foodCategories),
-    ]);
-    return {
-      roleIdByName: new Map(roleRows.map((row) => [row.name, row.id])),
-      categoryIdByName: new Map(categoryRows.map((row) => [row.name, row.id])),
-    };
-  }
-
   private async withDietPreferenceExclusions(
     userId: string,
     base: ExclusionTargets,
-    categoryIdByName: Map<string, string>,
-    roleIdByName: Map<string, string>,
+    categoryIdByName: ReadonlyMap<string, string>,
+    roleIdByName: ReadonlyMap<string, string>,
   ): Promise<{ merged: ExclusionTargets; dietTypes: DietType[] }> {
-    const dietPreferences = await this.dietPreferencesService.list(userId);
-    const dietTypes: DietType[] = dietPreferences.map((p) => p.dietType);
+    const dietTypes = await this.dietPreferencesService.listTypes(userId);
 
     const merged: ExclusionTargets = {
       category: new Set(base.category),
@@ -119,80 +94,36 @@ export class DietsService {
     return { merged, dietTypes };
   }
 
-  // A whole-role exclusion short-circuits to an empty candidate list
-  // without that role taking part in the query. One query covers every
-  // non-excluded role rather than one query per role - roleIdByName is a
-  // bijection (food_roles.name is unique), so each role id maps back to
-  // exactly one role name. The pool is the user's favorites and nothing
-  // else (ADR-025); exclusions still apply on top, since a food can be
-  // favorited and later excluded by a diet type.
+  // A whole-role exclusion drops that role before the query rather than
+  // filtering after it. roleIdByName is a bijection (food_roles.name is
+  // unique), so each returned role id maps back to exactly one role name.
   private async findCandidatesByRole(
     exclusions: ExclusionTargets,
     roleIdByName: ReadonlyMap<string, string>,
     favoriteFoodItemIds: ReadonlySet<string>,
   ): Promise<Map<string, FoodCandidate[]>> {
-    const roleNames = [...new Set(MEAL_ROLE_CHAINS.flat())];
-
     const candidatesByRole = new Map<string, FoodCandidate[]>();
     const roleNameById = new Map<string, string>();
-    for (const roleName of roleNames) {
-      const roleId = roleIdByName.get(roleName);
-      if (!roleId || exclusions.role.has(roleId)) {
-        candidatesByRole.set(roleName, []);
-        continue;
-      }
-      roleNameById.set(roleId, roleName);
+    for (const roleName of new Set(MEAL_ROLE_CHAINS.flat())) {
       candidatesByRole.set(roleName, []);
+      const roleId = roleIdByName.get(roleName);
+      if (roleId && !exclusions.role.has(roleId)) {
+        roleNameById.set(roleId, roleName);
+      }
     }
 
-    const queryableRoleIds = [...roleNameById.keys()];
-    if (queryableRoleIds.length === 0 || favoriteFoodItemIds.size === 0) {
-      return candidatesByRole;
-    }
+    const rows = await this.foodItemsService.findGenerationCandidates(
+      [...roleNameById.keys()],
+      favoriteFoodItemIds,
+      exclusions,
+    );
 
-    const rows = await this.db
-      .select({
-        id: schema.foodCalories.id,
-        roleId: schema.foodCalories.roleId,
-        caloriesPer100g: schema.foodCalories.caloriesPer100g,
-        proteinPer100g: schema.foodCalories.proteinPer100g,
-        carbsPer100g: schema.foodCalories.carbsPer100g,
-        fatPer100g: schema.foodCalories.fatPer100g,
-        familyName: schema.foodFamilies.name,
-        categoryName: schema.foodCategories.name,
-      })
-      .from(schema.foodCalories)
-      .leftJoin(
-        schema.foodFamilies,
-        eq(schema.foodFamilies.id, schema.foodCalories.familyId),
-      )
-      .leftJoin(
-        schema.foodCategories,
-        eq(schema.foodCategories.id, schema.foodCalories.categoryId),
-      )
-      .where(
-        and(
-          inArray(schema.foodCalories.roleId, queryableRoleIds),
-          inArray(schema.foodCalories.id, [...favoriteFoodItemIds]),
-          generationEligibleWhere(exclusions),
-        ),
-      );
-
-    for (const row of rows) {
+    for (const { roleId, ...candidate } of rows) {
       // Excludes 0-calorie items (e.g. water) - greedy-heuristic.ts
       // divides by this value when portion-scaling.
-      if (Number(row.caloriesPer100g) <= 0) continue;
-      const roleName = roleNameById.get(row.roleId);
-      if (!roleName) continue;
-      candidatesByRole.get(roleName)!.push({
-        id: row.id,
-        caloriesPer100g: Number(row.caloriesPer100g),
-        proteinPer100g: Number(row.proteinPer100g),
-        carbsPer100g: Number(row.carbsPer100g),
-        fatPer100g: Number(row.fatPer100g),
-        familyName: row.familyName,
-        categoryName: row.categoryName,
-      });
+      if (candidate.caloriesPer100g <= 0) continue;
+      const roleName = roleNameById.get(roleId);
+      if (roleName) candidatesByRole.get(roleName)!.push(candidate);
     }
 
     return candidatesByRole;
@@ -207,7 +138,7 @@ export class DietsService {
   }> {
     const [foodPreferenceExclusions, taxonomyIds] = await Promise.all([
       this.foodPreferencesService.getExclusionTargets(userId),
-      this.getTaxonomyIdMaps(),
+      this.foodItemsService.getTaxonomyIds(),
     ]);
     const { merged: exclusions, dietTypes } =
       await this.withDietPreferenceExclusions(
@@ -358,9 +289,7 @@ export class DietsService {
     exclusions: ExclusionTargets,
     favoriteFoodItemIds: ReadonlySet<string>,
   ): Promise<FoodItemRow> {
-    const replacement = await this.db.query.foodCalories.findFirst({
-      where: eq(schema.foodCalories.id, foodItemId),
-    });
+    const replacement = await this.foodItemsService.findRow(foodItemId);
     if (!replacement) {
       throw new NotFoundException('Food item not found');
     }
@@ -402,13 +331,11 @@ export class DietsService {
     exclusions: ExclusionTargets,
     pickRandom: <T>(items: T[]) => T,
   ): Promise<FoodItemRow> {
-    const sameSlotRows = await this.db.query.foodCalories.findMany({
-      where: and(
-        slotEligibleWhere(slot),
-        ne(schema.foodCalories.id, currentFoodItem.id),
-        generationEligibleWhere(exclusions),
-      ),
-    });
+    const sameSlotRows = await this.foodItemsService.findSlotCandidates(
+      slot,
+      exclusions,
+      currentFoodItem.id,
+    );
     // 0-calorie items can't be portion-scaled - same exclusion generate makes.
     const candidates = sameSlotRows.filter(
       (row) => Number(row.caloriesPer100g) > 0,
@@ -472,9 +399,9 @@ export class DietsService {
       );
     }
 
-    const currentFoodItem = await this.db.query.foodCalories.findFirst({
-      where: eq(schema.foodCalories.id, dietItem.foodItemId),
-    });
+    const currentFoodItem = await this.foodItemsService.findRow(
+      dietItem.foodItemId,
+    );
     // Unreachable in practice - dietItem.foodItemId is a not-null FK.
     if (!currentFoodItem) {
       throw new NotFoundException('Original food item not found');

@@ -1,3 +1,5 @@
+import type { foodCalories } from '../db/schema';
+
 // The four macro fields always travel together - CreateFoodItemDto,
 // FoodItemResponse, and seed-food-catalog.ts's CuratedItem each used to
 // redefine them independently. One shared shape keeps a future rename or
@@ -43,4 +45,22 @@ const FAMILY_SET: ReadonlySet<string> = new Set(FOOD_FAMILIES);
 
 export function isFoodFamily(value: string): value is FoodFamily {
   return FAMILY_SET.has(value);
+}
+
+// The full catalog row, as the generation and replacement rules in
+// food-eligibility.ts judge it. Distinct from FoodItemResponse, which is
+// the browse surface's locale-resolved, taxonomy-named view.
+export type FoodItemRow = typeof foodCalories.$inferSelect;
+
+// One row the generator may draw for a macro slot, with the decimals
+// already numbers so no consumer has to know they arrive as strings.
+export interface GenerationCandidate {
+  id: string;
+  roleId: string;
+  caloriesPer100g: number;
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
+  familyName: string | null;
+  categoryName: string | null;
 }
