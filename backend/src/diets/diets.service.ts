@@ -150,20 +150,6 @@ export class DietsService {
     return { exclusions, taxonomy: taxonomyIds, dietTypes };
   }
 
-  // Shared by findCurrent()'s and swapItem()'s lookup of the algorithm a
-  // stored Diet row was generated with - which may be an older algorithm
-  // than the one CalorieTargetsService currently looks up by code, since
-  // Diet rows are never migrated when the registered algorithm changes.
-  private async getAlgorithmById(id: string) {
-    const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
-      where: eq(schema.dietCalculationAlgorithms.id, id),
-    });
-    if (!algorithm) {
-      throw new NotFoundException('Calorie algorithm not configured');
-    }
-    return algorithm;
-  }
-
   async generate(userId: string): Promise<DietResponse> {
     const user = await this.usersService.findById(userId);
     if (!user) {
@@ -266,7 +252,9 @@ export class DietsService {
       throw new NotFoundException('No Diet generated yet');
     }
 
-    const algorithm = await this.getAlgorithmById(dietRow.algorithmId);
+    const algorithm = await this.calorieTargetsService.getAlgorithmById(
+      dietRow.algorithmId,
+    );
     return this.buildResponse(dietRow, algorithm);
   }
 
@@ -446,7 +434,9 @@ export class DietsService {
       return this.recalculateTotals(tx, diet.id);
     });
 
-    const algorithm = await this.getAlgorithmById(updatedDiet.algorithmId);
+    const algorithm = await this.calorieTargetsService.getAlgorithmById(
+      updatedDiet.algorithmId,
+    );
     return this.buildResponse(updatedDiet, algorithm);
   }
 
@@ -529,7 +519,9 @@ export class DietsService {
       return this.recalculateTotals(tx, diet.id);
     });
 
-    const algorithm = await this.getAlgorithmById(updatedDiet.algorithmId);
+    const algorithm = await this.calorieTargetsService.getAlgorithmById(
+      updatedDiet.algorithmId,
+    );
     return this.buildResponse(updatedDiet, algorithm);
   }
 
@@ -577,13 +569,9 @@ export class DietsService {
       );
     });
 
-    const algorithm = await this.db.query.dietCalculationAlgorithms.findFirst({
-      where: eq(schema.dietCalculationAlgorithms.id, diet.algorithmId),
-    });
-    if (!algorithm) {
-      throw new NotFoundException('Calorie algorithm not configured');
-    }
-
+    const algorithm = await this.calorieTargetsService.getAlgorithmById(
+      diet.algorithmId,
+    );
     return this.buildResponse(diet, algorithm);
   }
 

@@ -47,11 +47,6 @@ const EXCEPTIONS: { file: string; table: string; why: string }[] = [
   },
 ];
 
-// Emptied over the rest of this branch, one migration per commit.
-const PENDING_MIGRATIONS = [
-  'diets/diets.service.ts queries dietCalculationAlgorithms (calorie-targets)',
-];
-
 const ROOTING_CALL = /\.(?:from|insert|update|delete)\(\s*schema\.(\w+)/g;
 const RELATIONAL_QUERY = /\.query\.(\w+)\./g;
 
@@ -100,6 +95,6 @@ describe('table ownership', () => {
       }
     }
 
-    expect([...new Set(violations)].sort()).toEqual(PENDING_MIGRATIONS);
+    expect([...new Set(violations)].sort()).toEqual([]);
   });
 });
