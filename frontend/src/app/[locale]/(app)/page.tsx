@@ -542,7 +542,7 @@ export default async function Home({
         }
       />
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4 md:[grid-auto-rows:120px] xl:grid-cols-12">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4 md:[grid-auto-rows:minmax(120px,auto)] xl:grid-cols-12">
         <Suspense fallback={<TileSkeleton span={SPAN.weight} lines={2} />}>
           <WeightTile locale={locale} />
         </Suspense>
