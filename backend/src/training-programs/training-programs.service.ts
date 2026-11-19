@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -346,5 +346,28 @@ export class TrainingProgramsService {
       );
 
     return this.findOne(userId, programId);
+  }
+
+  async exportRows(userId: string) {
+    const trainingPrograms = await this.db
+      .select()
+      .from(schema.trainingPrograms)
+      .where(eq(schema.trainingPrograms.userId, userId));
+    const programExercises = await this.db
+      .select(getTableColumns(schema.programExercises))
+      .from(schema.programExercises)
+      .innerJoin(
+        schema.trainingPrograms,
+        eq(
+          schema.trainingPrograms.id,
+          schema.programExercises.trainingProgramId,
+        ),
+      )
+      .where(eq(schema.trainingPrograms.userId, userId));
+    const userActivePrograms = await this.db
+      .select()
+      .from(schema.userActivePrograms)
+      .where(eq(schema.userActivePrograms.userId, userId));
+    return { trainingPrograms, programExercises, userActivePrograms };
   }
 }

@@ -1,4 +1,5 @@
 import {
+  Equals,
   IsDateString,
   IsIn,
   IsInt,
@@ -71,4 +72,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsIn(WEIGHT_UNITS)
   defaultWeightUnit?: WeightUnit;
+
+  // One consent covering health-data processing and an age of at least 16.
+  @Equals(true)
+  healthDataConsent: true;
 }

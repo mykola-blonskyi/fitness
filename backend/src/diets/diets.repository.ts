@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -245,5 +245,23 @@ export class DietsRepository {
       .returning();
 
     return updated;
+  }
+
+  async exportRows(userId: string) {
+    const diets = await this.db
+      .select()
+      .from(schema.diets)
+      .where(eq(schema.diets.userId, userId));
+    const dietItems = await this.db
+      .select(getTableColumns(schema.dietItems))
+      .from(schema.dietItems)
+      .innerJoin(schema.diets, eq(schema.diets.id, schema.dietItems.dietId))
+      .where(eq(schema.diets.userId, userId));
+    const dietMealOrder = await this.db
+      .select(getTableColumns(schema.dietMealOrder))
+      .from(schema.dietMealOrder)
+      .innerJoin(schema.diets, eq(schema.diets.id, schema.dietMealOrder.dietId))
+      .where(eq(schema.diets.userId, userId));
+    return { diets, dietItems, dietMealOrder };
   }
 }

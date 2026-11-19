@@ -60,6 +60,7 @@ export class UsersService {
           ...(dto.mealCount !== undefined ? { mealCount: dto.mealCount } : {}),
           locale: dto.locale,
           defaultWeightUnit: dto.defaultWeightUnit,
+          healthDataConsentAt: new Date(),
         })
         .returning();
     } catch (err) {
@@ -92,5 +93,20 @@ export class UsersService {
       .returning();
 
     return toUserResponse(updated);
+  }
+
+  async exportRow(id: string) {
+    const user = await this.db.query.users.findFirst({
+      where: eq(schema.users.id, id),
+    });
+    if (!user) {
+      throw new NotFoundException('Profile not found');
+    }
+    return user;
+  }
+
+  // Every user-owned row goes with it through ON DELETE CASCADE.
+  async remove(id: string): Promise<void> {
+    await this.db.delete(schema.users).where(eq(schema.users.id, id));
   }
 }

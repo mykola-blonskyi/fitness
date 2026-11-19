@@ -4,6 +4,7 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup';
+import { AccountModule } from './account/account.module';
 import { AdminExercisesModule } from './admin/exercises/admin-exercises.module';
 import { AdminFoodItemsModule } from './admin/food-items/admin-food-items.module';
 import { AppController } from './app.controller';
@@ -46,6 +47,7 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     PhotoSessionsModule,
     AdminExercisesModule,
     AdminFoodItemsModule,
+    AccountModule,
   ],
   controllers: [AppController],
   providers: [

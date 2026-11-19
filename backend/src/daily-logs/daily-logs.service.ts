@@ -168,4 +168,11 @@ export class DailyLogsService {
       })),
     };
   }
+
+  exportRows(userId: string) {
+    return this.db
+      .select()
+      .from(schema.dailyLogs)
+      .where(eq(schema.dailyLogs.userId, userId));
+  }
 }

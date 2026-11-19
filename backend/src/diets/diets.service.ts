@@ -504,4 +504,8 @@ export class DietsService {
 
     return toDietResponse(dietRow, algorithm, itemRows, mealOrder);
   }
+
+  exportRows(userId: string) {
+    return this.dietsRepository.exportRows(userId);
+  }
 }
