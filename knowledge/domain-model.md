@@ -219,6 +219,7 @@ A catalog entry (from wger/ExerciseDB or manually created) used to build program
 Fields:
 
 - name, image_url, category (chest/back/shoulders/biceps/triceps/legs/core/cardio/full_body)
+- is_verified, author_id (nullable — set on a user-created entry, which only its author sees until verified)
 
 Relationships:
 
@@ -319,6 +320,7 @@ Fields:
 
 - name, image_url, protein, carbs, fat, calories (per reference unit — dry/raw weight for anything cooked before eating, see ADR-020)
 - source (open_food_facts/usda/manual), is_verified
+- author_id (nullable — set on a user-created entry, which only its author sees until verified)
 - family_id (nullable — a Food Item with no Food Family is never generated into a Diet; ADR-020)
 - serving_unit, serving_grams (both nullable — only foods nobody weighs carry a Serving; ADR-020)
 

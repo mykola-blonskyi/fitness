@@ -10,7 +10,10 @@ import type { ValidationTranslator } from '@shared/schemas/validation-translator
 export function startWorkoutLogSchema() {
   return z.object({
     trainingProgramId: z.preprocess(blankToUndefined, z.uuid().optional()),
-    title: z.preprocess(blankToUndefined, z.string().min(1).optional()),
+    title: z.preprocess(
+      blankToUndefined,
+      z.string().min(1).max(100).optional(),
+    ),
   });
 }
 

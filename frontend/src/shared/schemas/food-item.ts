@@ -10,21 +10,28 @@ export function createFoodItemSchema(t: ValidationTranslator) {
   const macrosSchema = z.object({
     caloriesPer100g: z
       .number(t('common.numberRequired'))
-      .min(0, t('foodItem.macroMin')),
+      .min(0, t('foodItem.macroMin'))
+      .max(900, t('foodItem.macroMax', { max: 900 })),
     proteinPer100g: z
       .number(t('common.numberRequired'))
-      .min(0, t('foodItem.macroMin')),
+      .min(0, t('foodItem.macroMin'))
+      .max(100, t('foodItem.macroMax', { max: 100 })),
     carbsPer100g: z
       .number(t('common.numberRequired'))
-      .min(0, t('foodItem.macroMin')),
+      .min(0, t('foodItem.macroMin'))
+      .max(100, t('foodItem.macroMax', { max: 100 })),
     fatPer100g: z
       .number(t('common.numberRequired'))
-      .min(0, t('foodItem.macroMin')),
+      .min(0, t('foodItem.macroMin'))
+      .max(100, t('foodItem.macroMax', { max: 100 })),
   }) satisfies z.ZodType<Macros>;
 
   return z
     .object({
-      name: z.string().min(1, t('foodItem.nameRequired')),
+      name: z
+        .string()
+        .min(1, t('foodItem.nameRequired'))
+        .max(100, t('common.tooLong', { max: 100 })),
       categoryId: z.uuid(t('foodItem.categoryRequired')),
       subcategoryId: z.uuid(t('foodItem.subcategoryRequired')),
       roleId: z.uuid(t('foodItem.roleRequired')),

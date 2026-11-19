@@ -30,6 +30,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET}
+      BACKEND_SECRET: ${BACKEND_SECRET}
       # Literal, not ${REDIS_URL}: Coolify also runs its own `coolify-redis`
       # (password-protected) aliased `redis` on the shared network, so the
       # bare hostname `redis` round-robins between the two. `photo-queue-redis`
@@ -66,6 +67,9 @@ services:
       MINIO_SECRET_KEY: ${WORKER_MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET}
     restart: unless-stopped
+    # The host has about 1.4 GB free; an image that decodes too large is
+    # killed here instead of starving the backend and Postgres.
+    mem_limit: 768m
     # Internal-only, same as backend - no ports/domain (docs/architecture.md
     # "Photo Analysis Worker").
     healthcheck:
@@ -120,6 +124,7 @@ services:
       HUB_URL: ${HUB_URL}
       NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
       BACKEND_URL: http://backend:3001
+      BACKEND_SECRET: ${BACKEND_SECRET}
     depends_on:
       - backend
     restart: unless-stopped

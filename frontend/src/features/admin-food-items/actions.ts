@@ -11,14 +11,17 @@ export interface AdminActionResult {
 }
 
 export async function listAdminFoodItems(
-  cursor?: string,
+  cursor: string | undefined,
+  authored: boolean,
 ): Promise<CursorPage<AdminFoodItem>> {
   return Sentry.withServerActionInstrumentation(
     'listAdminFoodItems',
     {},
     async () => {
-      const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
-      return apiFetch<CursorPage<AdminFoodItem>>(`/admin/food-items${query}`);
+      const query = new URLSearchParams();
+      if (cursor) query.set('cursor', cursor);
+      if (authored) query.set('authored', 'true');
+      return apiFetch<CursorPage<AdminFoodItem>>(`/admin/food-items?${query}`);
     },
   );
 }

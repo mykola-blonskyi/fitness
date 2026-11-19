@@ -16,9 +16,11 @@ const ROW_HEIGHT = 88;
 export function AdminExerciseQueue({
   initialItems,
   initialCursor,
+  authored,
 }: {
   initialItems: AdminExercise[];
   initialCursor: string | null;
+  authored: boolean;
 }) {
   const t = useTranslations('Admin.queue');
   const tc = useTranslations('ExerciseCategories');
@@ -43,7 +45,7 @@ export function AdminExerciseQueue({
   async function loadMore(after: string) {
     setLoadingMore(true);
     try {
-      const page = await listAdminExercises(after);
+      const page = await listAdminExercises(after, authored);
       setItems((prev) => [...prev, ...page.items]);
       setCursor(page.nextCursor);
     } catch {

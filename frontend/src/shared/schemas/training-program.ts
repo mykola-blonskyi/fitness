@@ -7,7 +7,10 @@ import type { ValidationTranslator } from '@shared/schemas/validation-translator
 // authoritative.
 export function createTrainingProgramSchema(t: ValidationTranslator) {
   return z.object({
-    title: z.string().min(1, t('trainingProgram.titleRequired')),
+    title: z
+      .string()
+      .min(1, t('trainingProgram.titleRequired'))
+      .max(100, t('common.tooLong', { max: 100 })),
   });
 }
 

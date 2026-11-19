@@ -42,6 +42,7 @@ export async function apiFetch<T>(
       ...init,
       headers: {
         'Content-Type': 'application/json',
+        'x-backend-secret': process.env.BACKEND_SECRET ?? '',
         ...(sub ? { 'x-user-id': sub } : {}),
         ...(email ? { 'x-user-email': email } : {}),
         ...init?.headers,

@@ -46,10 +46,12 @@ const proteinSlot = {
 };
 
 describe('FoodItemsService.list', () => {
-  it('shows the whole verified catalog when no generation scope is passed', async () => {
+  it('shows the verified catalog plus the caller own entries when no generation scope is passed', async () => {
     const sql = await listWhere();
 
-    expect(sql).toContain('"food_calories"."is_verified" = $1');
+    expect(sql).toContain(
+      '("food_calories"."is_verified" = $1 or "food_calories"."author_id" = $2)',
+    );
     expect(sql).not.toContain('family_id');
     expect(sql).not.toContain('not in');
   });
@@ -82,7 +84,7 @@ describe('FoodItemsService.list', () => {
       slot: proteinSlot,
     });
 
-    expect(sql).toContain('"food_calories"."role_id" in ($2, $3)');
+    expect(sql).toContain('"food_calories"."role_id" in ($3, $4)');
   });
 
   it('also narrows the protein slot by Category, as generation does', async () => {
@@ -254,5 +256,36 @@ describe('FoodItemsService.findSlotCandidates', () => {
 
     expect(sql).toContain('"food_calories"."role_id" in');
     expect(sql).not.toContain('"food_calories"."role_id" = ');
+  });
+});
+
+describe('FoodItemsService.create', () => {
+  it('records the author and leaves the entry unverified, so only they see it', async () => {
+    const values = jest
+      .fn()
+      .mockReturnValue({ returning: () => Promise.resolve([{ id: 'f1' }]) });
+    const joined = {
+      innerJoin: () => joined,
+      where: () => Promise.resolve([{ id: 'f1' }]),
+    };
+    const service = new FoodItemsService({
+      insert: () => ({ values }),
+      select: () => ({ from: () => joined }),
+    } as never);
+
+    await service.create('user-1', {
+      name: 'Kefir',
+      categoryId: 'c',
+      subcategoryId: 's',
+      roleId: 'r',
+      caloriesPer100g: 40,
+      proteinPer100g: 3,
+      carbsPer100g: 4,
+      fatPer100g: 1,
+    });
+
+    const [inserted] = values.mock.calls[0] as [Record<string, unknown>];
+    expect(inserted.authorId).toBe('user-1');
+    expect(inserted).not.toHaveProperty('isVerified');
   });
 });
