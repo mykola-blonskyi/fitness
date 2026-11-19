@@ -241,3 +241,21 @@ Why: "gym usage without internet" only holds if the core action (logging a set) 
 A body-weight entry (`daily_logs.weight`) and a workout set's weight (`workout_sets.weight`) each carry their own `weight_unit` (`kg`/`lb`), set once at write time from `users.default_weight_unit` or a per-entry override, and never converted afterward — viewing or re-submitting an entry always shows its original unit. Rows predating the `weight_unit` column, and any row where it's left `null`, are treated as `kg`.
 
 The one exception is the calorie-target calculation's Mifflin input, which needs a single unit to do the math — `calorie-targets.service.ts` converts the latest weigh-in to kg for that formula input only, via `shared/weight-unit.ts`'s `toKg()`; the stored row and the API's own `weighIn.weight`/`weighIn.unit` fields stay unconverted. Broader read-time conversion (the weight-trend chart, a user-facing display-unit toggle) is FITNESS-48, not yet built.
+
+---
+
+## Health-data consent is taken once, at onboarding
+
+Creating a profile requires one consent covering health-data processing and an age of at least 16 (`healthDataConsent: true` on `POST /users/me`). Its time is stored in `users.health_data_consent_at`. Accounts created before the consent existed have `null` there. Withdrawing consent means deleting the account.
+
+---
+
+## Account deletion is immediate, complete and retryable
+
+`DELETE /account` first removes every object under `progress-photos/<userId>/` and lists the prefix again to confirm nothing is left, then deletes the `users` row. Every foreign key under `users` cascades, so that one delete removes all user-owned rows. If any step fails the request fails, the `users` row stays, and the user can retry. The login account at `login.blonskyi.dev` is shared across projects and is not deleted.
+
+---
+
+## Data export is one zip
+
+`GET /account/export` returns a zip with `data.json` (the user's rows from every user-owned table) and `photos/<progressPhotoId>.<ext>` for each progress photo.
