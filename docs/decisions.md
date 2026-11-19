@@ -452,6 +452,8 @@ Status: Accepted
 
 **New catalog entries belong to their author.** An exercise or food item a user creates is visible only to them until an admin promotes it. Entries that existed before this ADR stay shared.
 
+**Backups stay on the host.** Database dumps and a copy of the photo bucket live on the same Hetzner host as the data, so a lost disk or Hetzner account loses both. This risk is accepted in exchange for no third-party storage.
+
 **A demo account is one click away.** fitness signs a visitor in as one fixed demo user, without login. The account is shared, writable, reset to its seed nightly, and has no photos section.
 
 **The app serves every market, so EU health-data rules apply.** Onboarding takes explicit consent to health-data processing and confirms an age of at least 16. Account deletion is immediate and irreversible, and covers every user-owned row and stored object. Users can export their data. The login account is shared across projects and is not deleted by fitness.
