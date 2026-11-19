@@ -168,4 +168,17 @@ export class DailyLogsService {
       })),
     };
   }
+
+  exportRows(userId: string) {
+    return this.db
+      .select()
+      .from(schema.dailyLogs)
+      .where(eq(schema.dailyLogs.userId, userId));
+  }
+
+  async deleteForUser(userId: string): Promise<void> {
+    await this.db
+      .delete(schema.dailyLogs)
+      .where(eq(schema.dailyLogs.userId, userId));
+  }
 }

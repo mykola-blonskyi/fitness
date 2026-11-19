@@ -57,56 +57,16 @@ function isoDaysAgo(today: Date, days: number): string {
 // caller generates the diet afterwards, through the real generator.
 export async function resetDemoData(db: Db, today = new Date()) {
   await db.transaction(async (tx) => {
-    const dietIds = tx
-      .select({ id: schema.diets.id })
-      .from(schema.diets)
-      .where(eq(schema.diets.userId, DEMO_USER_ID));
-    await tx
-      .delete(schema.dietMealOrder)
-      .where(inArray(schema.dietMealOrder.dietId, dietIds));
-    await tx
-      .delete(schema.dietItems)
-      .where(inArray(schema.dietItems.dietId, dietIds));
-    await tx.delete(schema.diets).where(eq(schema.diets.userId, DEMO_USER_ID));
-
-    const dailyLogIds = tx
-      .select({ id: schema.dailyLogs.id })
-      .from(schema.dailyLogs)
-      .where(eq(schema.dailyLogs.userId, DEMO_USER_ID));
-    const workoutLogIds = tx
-      .select({ id: schema.workoutLogs.id })
-      .from(schema.workoutLogs)
-      .where(inArray(schema.workoutLogs.dailyLogId, dailyLogIds));
-    await tx
-      .delete(schema.workoutSets)
-      .where(inArray(schema.workoutSets.workoutLogId, workoutLogIds));
-    await tx
-      .delete(schema.workoutLogs)
-      .where(inArray(schema.workoutLogs.dailyLogId, dailyLogIds));
-    await tx
-      .delete(schema.dailyLogs)
-      .where(eq(schema.dailyLogs.userId, DEMO_USER_ID));
-
-    const programIds = tx
-      .select({ id: schema.trainingPrograms.id })
-      .from(schema.trainingPrograms)
-      .where(eq(schema.trainingPrograms.userId, DEMO_USER_ID));
-    await tx
-      .delete(schema.userActivePrograms)
-      .where(eq(schema.userActivePrograms.userId, DEMO_USER_ID));
-    await tx
-      .delete(schema.programExercises)
-      .where(inArray(schema.programExercises.trainingProgramId, programIds));
-    await tx
-      .delete(schema.trainingPrograms)
-      .where(eq(schema.trainingPrograms.userId, DEMO_USER_ID));
-
-    await tx
-      .delete(schema.foodPreferences)
-      .where(eq(schema.foodPreferences.userId, DEMO_USER_ID));
-    await tx
-      .delete(schema.dietPreferences)
-      .where(eq(schema.dietPreferences.userId, DEMO_USER_ID));
+    // Children go through ON DELETE CASCADE.
+    for (const table of [
+      schema.diets,
+      schema.dailyLogs,
+      schema.trainingPrograms,
+      schema.foodPreferences,
+      schema.dietPreferences,
+    ]) {
+      await tx.delete(table).where(eq(table.userId, DEMO_USER_ID));
+    }
 
     const profile = {
       identitySub: DEMO_IDENTITY_SUB,
@@ -122,6 +82,7 @@ export async function resetDemoData(db: Db, today = new Date()) {
       mealCount: 4,
       locale: 'en',
       defaultWeightUnit: 'kg' as const,
+      healthDataConsentAt: new Date('2026-01-01T00:00:00Z'),
       updatedAt: new Date(),
     };
     await tx

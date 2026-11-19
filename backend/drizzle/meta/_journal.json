@@ -197,6 +197,13 @@
       "when": 1795048664847,
       "tag": "0027_aspiring_mac_gargan",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795049385434,
+      "tag": "0028_exotic_sharon_ventura",
+      "breakpoints": true
     }
   ]
 }

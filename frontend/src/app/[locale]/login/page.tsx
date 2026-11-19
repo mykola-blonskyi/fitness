@@ -1,12 +1,16 @@
 import { getTranslations } from 'next-intl/server';
 import { SignInButton } from '@features/auth';
+import { LegalLinks } from '@features/legal';
 
 export default async function SignInPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
-  const [{ callbackUrl }, t] = await Promise.all([
+  const [{ locale }, { callbackUrl }, t] = await Promise.all([
+    params,
     searchParams,
     getTranslations('SignIn'),
   ]);
@@ -22,6 +26,7 @@ export default async function SignInPage({
       <div className="w-full max-w-xs">
         <SignInButton callbackUrl={callbackUrl} />
       </div>
+      <LegalLinks locale={locale} />
     </main>
   );
 }

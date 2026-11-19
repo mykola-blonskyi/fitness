@@ -451,4 +451,11 @@ export class FoodItemsService {
 
     return toFoodItemResponse(row);
   }
+
+  exportRows(userId: string) {
+    return this.db
+      .select()
+      .from(schema.foodCalories)
+      .where(eq(schema.foodCalories.authorId, userId));
+  }
 }

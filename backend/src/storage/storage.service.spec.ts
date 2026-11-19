@@ -58,3 +58,35 @@ describe('StorageService.objectExists', () => {
     );
   });
 });
+
+describe('StorageService.removeUserObjects', () => {
+  function withListings(...listings: string[][]) {
+    const listObjectsV2 = jest.fn();
+    for (const names of listings) {
+      listObjectsV2.mockReturnValueOnce(names.map((name) => ({ name })));
+    }
+    const removeObjects = jest.fn().mockResolvedValue([]);
+    const service = buildService(jest.fn());
+    (service as unknown as { client: object }).client = {
+      listObjectsV2,
+      removeObjects,
+    };
+    return { service, removeObjects };
+  }
+
+  it('removes every object under the user prefix', async () => {
+    const { service, removeObjects } = withListings(['a', 'b'], []);
+
+    await service.removeUserObjects('u');
+
+    expect(removeObjects).toHaveBeenCalledWith(expect.any(String), ['a', 'b']);
+  });
+
+  it('throws when an object survives a delete MinIO reported as done', async () => {
+    const { service } = withListings(['a', 'b'], ['b']);
+
+    await expect(service.removeUserObjects('u')).rejects.toThrow(
+      '1 of 2 objects were not removed',
+    );
+  });
+});

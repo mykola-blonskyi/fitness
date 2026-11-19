@@ -7,7 +7,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, count, desc, eq, gt, inArray, sql } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  gt,
+  inArray,
+  sql,
+} from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -366,10 +375,9 @@ export class PhotoSessionsService {
     return toProgressPhotoResponse(updated);
   }
 
-  // DB rows are deleted first (schema.ts has no ON DELETE CASCADE, so both
-  // tables are cleared explicitly, same as every other delete here) - MinIO
-  // cleanup runs after and is best-effort per photo, so one object failing
-  // to delete can never leave a DB row pointing at storage that's gone.
+  // DB rows are deleted first - MinIO cleanup runs after and is best-effort
+  // per photo, so one object failing to delete can never leave a DB row
+  // pointing at storage that's gone.
   async remove(userId: string, id: string): Promise<PhotoSessionResponse> {
     const session = await this.findOwnedSession(userId, id);
     const photos = await this.db
@@ -402,5 +410,21 @@ export class PhotoSessionsService {
     );
 
     return toPhotoSessionResponse(session, photos);
+  }
+
+  async exportRows(userId: string) {
+    const photoSessions = await this.db
+      .select()
+      .from(schema.photoSessions)
+      .where(eq(schema.photoSessions.userId, userId));
+    const progressPhotos = await this.db
+      .select(getTableColumns(schema.progressPhotos))
+      .from(schema.progressPhotos)
+      .innerJoin(
+        schema.photoSessions,
+        eq(schema.photoSessions.id, schema.progressPhotos.photoSessionId),
+      )
+      .where(eq(schema.photoSessions.userId, userId));
+    return { photoSessions, progressPhotos };
   }
 }

@@ -15,7 +15,9 @@ const APP_URL = requireEnv('APP_URL');
 const BACKEND_URL = requireEnv('BACKEND_URL');
 
 const HEALTH_PATH = new RegExp(`^/(${routing.locales.join('|')})/health$`);
-const SIGN_IN_PATH = new RegExp(`^/(${routing.locales.join('|')})/login$`);
+const PUBLIC_PATH = new RegExp(
+  `^/(${routing.locales.join('|')})/(login|terms|privacy)$`,
+);
 
 const handleI18nRouting = createIntlMiddleware(routing);
 
@@ -72,8 +74,8 @@ export async function proxy(req: NextRequest) {
 
   // The sign-in page itself must never be gated, or an unauthenticated
   // visit redirects to it forever.
-  if (SIGN_IN_PATH.test(req.nextUrl.pathname)) {
-    const response = forward(req);
+  if (PUBLIC_PATH.test(req.nextUrl.pathname)) {
+    const response = forward(req, { 'X-NEXT-INTL-LOCALE': locale });
     for (const cookie of intlResponse.cookies.getAll()) {
       response.cookies.set(cookie);
     }

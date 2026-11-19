@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 
-const TAB_KEYS = ['profile', 'preferences', 'appearance'] as const;
+const TAB_KEYS = ['profile', 'preferences', 'appearance', 'privacy'] as const;
 
 // Sub-nav between Settings' own pages - the app shell's rail only goes one
 // level deep (top-level sections).

@@ -273,4 +273,11 @@ export class FoodPreferencesService {
       await this.affectsGenerationOf(userId, existing.type, existing.targetId),
     );
   }
+
+  exportRows(userId: string) {
+    return this.db
+      .select()
+      .from(schema.foodPreferences)
+      .where(eq(schema.foodPreferences.userId, userId));
+  }
 }

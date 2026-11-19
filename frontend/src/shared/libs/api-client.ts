@@ -21,6 +21,19 @@ export async function apiFetch<T>(
   init?: RequestInit,
   identity?: Identity,
 ): Promise<T> {
+  const res = await backendFetch(path, init, identity);
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  return res.json() as Promise<T>;
+}
+
+// apiFetch without the JSON parse, for a route handler that streams the body.
+export async function backendFetch(
+  path: string,
+  init?: RequestInit,
+  identity?: Identity,
+): Promise<Response> {
   let sub: string | null = identity?.sub ?? null;
   let email: string | null = identity?.email ?? null;
 
@@ -75,7 +88,7 @@ export async function apiFetch<T>(
     );
   }
 
-  return res.json() as Promise<T>;
+  return res;
 }
 
 // 404 is the expected "nothing yet" signal for the many endpoints backed
