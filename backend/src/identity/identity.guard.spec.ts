@@ -64,7 +64,7 @@ describe('IdentityGuard', () => {
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
 
-    expect(findByIdentity).toHaveBeenCalledWith('sub-1', 'user1@example.com');
+    expect(findByIdentity).toHaveBeenCalledWith('sub-1');
     expect(req.identity).toEqual({
       sub: 'sub-1',
       email: 'user1@example.com',
