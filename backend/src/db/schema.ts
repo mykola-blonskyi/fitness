@@ -118,7 +118,9 @@ export const exercises = pgTable(
     source: text('source'),
     sourceId: text('source_id'),
     isVerified: boolean('is_verified').notNull().default(false),
-    authorId: uuid('author_id').references(() => users.id),
+    authorId: uuid('author_id').references(() => users.id, {
+      onDelete: 'cascade',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -324,7 +326,9 @@ export const foodCalories = pgTable(
     source: text('source'),
     sourceId: text('source_id'),
     isVerified: boolean('is_verified').notNull().default(false),
-    authorId: uuid('author_id').references(() => users.id),
+    authorId: uuid('author_id').references(() => users.id, {
+      onDelete: 'cascade',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -110,3 +110,25 @@ describe('AdminExercisesService.list', () => {
     );
   });
 });
+
+describe('AdminExercisesService.setVerified', () => {
+  function serviceCapturingSet() {
+    const set = jest.fn().mockReturnValue({
+      where: () => ({ returning: () => Promise.resolve([{ id: 'e1' }]) }),
+    });
+    const db = { update: () => ({ set }) };
+    return { service: new AdminExercisesService(db as never), set };
+  }
+
+  it('clears the author on promotion, so the entry outlives its author', async () => {
+    const { service, set } = serviceCapturingSet();
+    await service.setVerified('e1', true).catch(() => undefined);
+    expect(set).toHaveBeenCalledWith({ isVerified: true, authorId: null });
+  });
+
+  it('leaves the author alone on unapprove', async () => {
+    const { service, set } = serviceCapturingSet();
+    await service.setVerified('e1', false).catch(() => undefined);
+    expect(set).toHaveBeenCalledWith({ isVerified: false });
+  });
+});

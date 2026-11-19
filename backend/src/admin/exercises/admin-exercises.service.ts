@@ -92,7 +92,8 @@ export class AdminExercisesService {
   ): Promise<AdminExerciseResponse> {
     const [updated] = await this.db
       .update(schema.exercises)
-      .set({ isVerified })
+      // A promoted entry is shared, so it must not cascade away with its author.
+      .set(isVerified ? { isVerified, authorId: null } : { isVerified })
       .where(eq(schema.exercises.id, id))
       .returning(exerciseColumns);
 

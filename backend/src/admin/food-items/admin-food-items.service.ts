@@ -108,7 +108,8 @@ export class AdminFoodItemsService {
   ): Promise<AdminFoodItemResponse> {
     const [updated] = await this.db
       .update(schema.foodCalories)
-      .set({ isVerified })
+      // A promoted entry is shared, so it must not cascade away with its author.
+      .set(isVerified ? { isVerified, authorId: null } : { isVerified })
       .where(eq(schema.foodCalories.id, id))
       .returning({ id: schema.foodCalories.id });
 
