@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import {
   CanActivate,
   ExecutionContext,
@@ -15,6 +16,19 @@ import { IS_PROFILE_OPTIONAL_KEY } from './profile-optional.decorator';
 import { ResolvedIdentity } from './identity.types';
 import { parseIdentity } from './parse-identity';
 
+const digest = (value: string) => createHash('sha256').update(value).digest();
+
+// Unset on the backend fails closed: no header can match an empty secret.
+function hasSharedSecret(req: Request): boolean {
+  const expected = process.env.BACKEND_SECRET;
+  const given = req.headers['x-backend-secret'];
+  return (
+    !!expected &&
+    typeof given === 'string' &&
+    timingSafeEqual(digest(given), digest(expected))
+  );
+}
+
 @Injectable()
 export class IdentityGuard implements CanActivate {
   constructor(
@@ -30,6 +44,9 @@ export class IdentityGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest<Request>();
+    if (!hasSharedSecret(req)) {
+      throw new UnauthorizedException('Missing backend secret');
+    }
     const parsed = parseIdentity(req);
     if (!parsed) {
       throw new UnauthorizedException('Missing trusted identity headers');
@@ -45,10 +62,7 @@ export class IdentityGuard implements CanActivate {
     // The one seam translating login's `sub` into this app's own
     // users.id — every other route reads identity.userId and never sees a
     // sub (ADR-018).
-    const user = await this.usersService.findByIdentity(
-      parsed.sub,
-      parsed.email,
-    );
+    const user = await this.usersService.findByIdentity(parsed.sub);
     const profileOptional = this.reflector.getAllAndOverride<boolean>(
       IS_PROFILE_OPTIONAL_KEY,
       targets,

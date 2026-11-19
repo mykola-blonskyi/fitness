@@ -284,7 +284,9 @@
       "photosLabel": "Фотографії (до {max})",
       "photosHint": "Спереду, збоку та ззаду — ми розберемося, що є чим.",
       "uploading": "Завантаження…",
-      "submit": "Завантажити сесію"
+      "submit": "Завантажити сесію",
+      "tooLarge": "Кожне фото має бути не більше {max} МБ",
+      "dailyLimit": "Ви досягли сьогоднішнього ліміту в {max} фотосесії — спробуйте завтра."
     },
     "list": {
       "empty": "Фото прогресу ще немає.",
@@ -541,7 +543,9 @@
       "loadingMore": "Завантажуємо ще…",
       "loadError": "Не вдалося завантажити ще — спробуйте ще раз.",
       "manualSource": "вручну",
-      "nutritionSummary": "{calories} ккал · Б {protein, number}г · В {carbs, number}г · Ж {fat, number}г"
+      "nutritionSummary": "{calories} ккал · Б {protein, number}г · В {carbs, number}г · Ж {fat, number}г",
+      "authoredOnly": "Лише записи від користувачів",
+      "showAll": "Показати всю чергу"
     },
     "errors": {
       "approveExerciseFailed": "Не вдалося затвердити цю вправу — спробуйте ще раз.",
@@ -663,7 +667,8 @@
   },
   "Validation": {
     "common": {
-      "numberRequired": "Введіть число"
+      "numberRequired": "Введіть число",
+      "tooLong": "Не більше {max} символів"
     },
     "exercise": {
       "nameRequired": "Вкажіть назву",
@@ -674,7 +679,8 @@
       "categoryRequired": "Виберіть категорію",
       "subcategoryRequired": "Виберіть підкатегорію",
       "roleRequired": "Оберіть роль",
-      "macroMin": "Повинно дорівнювати 0 або більшому числу"
+      "macroMin": "Повинно дорівнювати 0 або більшому числу",
+      "macroMax": "Не більше {max}"
     },
     "foodPreference": {
       "typeRequired": "Виберіть тип",

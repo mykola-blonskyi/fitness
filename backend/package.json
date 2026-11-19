@@ -28,7 +28,6 @@
     "db:seed:food-catalog": "ts-node -r tsconfig-paths/register src/scripts/seed-food-catalog.ts",
     "db:seed:food-table-ru": "ts-node -r tsconfig-paths/register src/scripts/seed-food-table-ru.ts",
     "db:seed:food-staples": "ts-node -r tsconfig-paths/register src/scripts/seed-food-staples.ts",
-    "db:check:identity-migration": "ts-node -r tsconfig-paths/register src/scripts/check-identity-migration.ts",
     "db:classify:food-families": "ts-node -r tsconfig-paths/register src/scripts/classify-food-families.ts",
     "db:seed:exercise-translations": "ts-node -r tsconfig-paths/register src/scripts/seed-exercise-translations.ts"
   },
@@ -38,6 +37,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "^2.1.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/throttler": "^6.8.0",
     "@sentry/nestjs": "^10.70.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",

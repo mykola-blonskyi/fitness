@@ -6,7 +6,10 @@ import type { ValidationTranslator } from '@shared/schemas/validation-translator
 // backend DTO stays authoritative, this is a client-side UX layer only.
 export function createExerciseSchema(t: ValidationTranslator) {
   return z.object({
-    name: z.string().min(1, t('exercise.nameRequired')),
+    name: z
+      .string()
+      .min(1, t('exercise.nameRequired'))
+      .max(100, t('common.tooLong', { max: 100 })),
     category: z.enum(EXERCISE_CATEGORIES, t('exercise.categoryRequired')),
   });
 }

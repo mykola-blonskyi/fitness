@@ -12,6 +12,7 @@ export async function fetchProfileStatus(
   try {
     res = await fetch(`${backendUrl}/users/me`, {
       headers: {
+        'x-backend-secret': process.env.BACKEND_SECRET ?? '',
         'x-user-id': identity.sub,
         'x-user-email': identity.email,
       },

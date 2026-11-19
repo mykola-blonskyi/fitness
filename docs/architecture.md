@@ -37,7 +37,7 @@ flowchart LR
   ui -->|"host-only session cookie"| next
   ui -->|"append while offline"| idb
   idb -.->|"replay in order once online"| ui
-  ui -->|"presigned PUT / GET only"| minio
+  ui -->|"presigned POST / GET only"| minio
   next -->|"authorization code + PKCE"| idp
   next -->|"x-user-id, x-user-email"| api
   api --> pg
@@ -283,6 +283,22 @@ flowchart LR
   migrate -->|"succeeds"| serve["new container serves"]
   migrate -->|"fails"| crash["crashloop: the previous container keeps serving,<br/>and main still shows a green tick"]
 ```
+
+### Backups
+
+- **Database.** Coolify's scheduled backup on the shared Postgres 18 resource (`shared-database`) runs `pg_dumpall` daily at 03:30 UTC, so `fitness` is dumped together with every other project's database. Gzipped dumps stay on the host under `/data/coolify/backups/databases/root-team-0/shared-database-*/`, with no retention limit. Coolify also uploads each dump to the `coolify-backups` bucket on the same host's MinIO. That upload has failed since 2026-10-16, and when it works the copy still sits on the same disk. Nothing leaves the host.
+- **Photo bucket.** `fitness-progress-photos` on the same MinIO is not backed up.
+
+Restore `fitness` from the newest dump: cut the cluster globals (roles) and the `fitness` section out of it, then replay them as the superuser.
+
+```bash
+ssh blonskyi 'sudo sh -c "zcat \$(ls -t /data/coolify/backups/databases/root-team-0/shared-database-*/pg-dump-all-*.gz | head -1)"' \
+  | awk 'NR==1{g=1} /^-- Database "/{g=0; f=/"fitness"/} g||f' > fitness.sql
+docker run -d --name fitness-restore -e POSTGRES_PASSWORD=scratch postgres:18-alpine
+docker exec -i fitness-restore psql -U postgres < fitness.sql
+```
+
+`role "postgres" already exists` is the one expected error. Restoring over production is the same replay against the shared instance after stopping the backend and dropping `fitness`. Only the scratch restore has been tried: on 2026-11-19 it matched the live row counts.
 
 ### Demo account
 

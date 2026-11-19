@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import * as Sentry from '@sentry/nextjs';
-import { apiFetch } from '@libs/api-client';
+import { ApiError, apiFetch } from '@libs/api-client';
 
 export type PhotoPose = 'front' | 'side' | 'back';
 export type AnalysisStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -27,21 +27,34 @@ export interface PhotoSession {
   photos: ProgressPhoto[];
 }
 
-// Two-leg upload (docs/architecture.md's "Photo upload + analysis" data
-// flow): this only mints the PUT URL - the browser uploads the file
-// bytes directly to MinIO itself, never through this server.
-export async function requestUploadUrl(): Promise<{
+export interface UploadTarget {
   objectKey: string;
   uploadUrl: string;
-}> {
+  fields: Record<string, string>;
+}
+
+// Two-leg upload (docs/architecture.md's "Photo upload + analysis" data
+// flow): this only mints the POST policy - the browser uploads the file
+// bytes directly to MinIO itself, never through this server. The daily
+// limit is returned, not thrown, since production hides a thrown message.
+export async function requestUploadUrl(): Promise<
+  UploadTarget | { dailyLimitReached: true }
+> {
   return Sentry.withServerActionInstrumentation(
     'requestUploadUrl',
     {},
-    async () =>
-      apiFetch<{ objectKey: string; uploadUrl: string }>(
-        `/photo-sessions/upload-url`,
-        { method: 'POST' },
-      ),
+    async () => {
+      try {
+        return await apiFetch<UploadTarget>(`/photo-sessions/upload-url`, {
+          method: 'POST',
+        });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 429) {
+          return { dailyLimitReached: true as const };
+        }
+        throw err;
+      }
+    },
   );
 }
 

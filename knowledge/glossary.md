@@ -76,7 +76,7 @@ The `login.blonskyi.dev` OpenID Provider that owns authentication for all subdom
 
 ### Identity Sub
 
-login's OIDC `sub` for a user, stored on `users.identity_sub`. Deliberately separate from `users.id`, which is this app's own key and never changes — resolution from one to the other happens once per request in `IdentityGuard`, and falls back to an email match that reconciles the row in place. See ADR-018.
+login's OIDC `sub` for a user, stored on `users.identity_sub`. Deliberately separate from `users.id`, which is this app's own key and never changes — resolution from one to the other happens once per request in `IdentityGuard`. A `sub` with no row is a new user. See ADR-018.
 
 ### Hub
 

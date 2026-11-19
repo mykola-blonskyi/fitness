@@ -1,7 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class ListAdminExercisesDto {
+  @IsOptional()
+  @IsIn(['true'])
+  authored?: 'true';
+
   @IsOptional()
   @IsString()
   cursor?: string;
