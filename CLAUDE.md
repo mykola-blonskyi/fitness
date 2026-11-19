@@ -10,6 +10,8 @@ This repository follows the global Claude configuration.
 
 All six phases of `plans/current.md` are implemented and merged into `main` — training, diet, photo/pose analysis, i18n, offline PWA, Sentry error tracking (ADR-006), and the Phase 6 move to an independent OIDC client of `login.blonskyi.dev` (ADR-018). Work continues past those phases on the ADR-020 menu-composition rework; GitHub issues are the live ticket state, not this file.
 
+The app is public (ADR-028): anyone can register through login's open-registration flag on the `fitness` client, a shared demo account is one click from the sign-in page, and there is no paid tier. Frontend and backend must carry the same `BACKEND_SECRET` in Coolify; without it the backend refuses every request.
+
 `login.blonskyi.dev` is live, the `fitness` client is registered against it, and signing in now goes to that issuer instead of the Hub. The one path still unproven from outside is the token exchange, which only a real sign-in exercises — so if a login ever fails at the callback rather than at the prompt, suspect `OIDC_CLIENT_SECRET` in Coolify first.
 
 Production tracks `main` automatically. A push to `main` runs CI, and the `deploy` job calls Coolify's deploy API using the `COOLIFY_WEBHOOK_URL`/`COOLIFY_WEBHOOK_TOKEN` repo secrets (Coolify token `fitness auto-deploy`, `deploy` ability). A red check therefore means no release, by design — the job used to skip itself when the secrets were missing, which hid the fact that they were never set.
