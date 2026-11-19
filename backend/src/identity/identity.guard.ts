@@ -36,10 +36,7 @@ export class IdentityGuard implements CanActivate {
     // The one seam translating login's `sub` into this app's own
     // users.id — every other route reads identity.userId and never sees a
     // sub (ADR-018).
-    const user = await this.usersService.findByIdentity(
-      parsed.sub,
-      parsed.email,
-    );
+    const user = await this.usersService.findByIdentity(parsed.sub);
     const profileOptional = this.reflector.getAllAndOverride<boolean>(
       IS_PROFILE_OPTIONAL_KEY,
       targets,
