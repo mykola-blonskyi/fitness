@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -9,6 +10,7 @@ import * as Sentry from '@sentry/nestjs';
 import type { Request } from 'express';
 import { UsersService } from '../users/users.service';
 import { IS_PUBLIC_KEY } from './public.decorator';
+import { DEMO_IDENTITY_SUB, IS_NOT_FOR_DEMO_KEY } from './demo-identity';
 import { IS_PROFILE_OPTIONAL_KEY } from './profile-optional.decorator';
 import { ResolvedIdentity } from './identity.types';
 import { parseIdentity } from './parse-identity';
@@ -31,6 +33,13 @@ export class IdentityGuard implements CanActivate {
     const parsed = parseIdentity(req);
     if (!parsed) {
       throw new UnauthorizedException('Missing trusted identity headers');
+    }
+
+    if (
+      parsed.sub === DEMO_IDENTITY_SUB &&
+      this.reflector.getAllAndOverride<boolean>(IS_NOT_FOR_DEMO_KEY, targets)
+    ) {
+      throw new ForbiddenException('Not available in the demo account');
     }
 
     // The one seam translating login's `sub` into this app's own

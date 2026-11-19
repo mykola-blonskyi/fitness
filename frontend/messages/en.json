@@ -742,7 +742,8 @@
     },
     "hub": "Open blonskyi.dev",
     "mobileNavLabel": "Main navigation",
-    "closeMore": "Close menu"
+    "closeMore": "Close menu",
+    "demoBanner": "Shared demo account: anyone can change it, and it resets every night. Photos are turned off here."
   },
   "LanguageSwitcher": {
     "label": "Language"
@@ -754,7 +755,9 @@
     "error": "Could not prepare the sign-in form.",
     "retry": "Try again",
     "expired": "Your session expired. Sign in again to save this.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "demo": "View demo",
+    "demoHint": "A shared account with sample data. No sign-up, and it resets every night."
   },
   "ErrorPage": {
     "title": "Something went wrong",

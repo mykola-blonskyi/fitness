@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
+import { NotForDemo } from '../identity/demo-identity';
 import type { Identity } from '../identity/identity.types';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { ListExercisesDto } from './dto/list-exercises.dto';
@@ -20,6 +21,7 @@ export class ExercisesController {
     return this.exercisesService.list(identity.userId, query);
   }
 
+  @NotForDemo()
   @Post()
   async create(@Body() dto: CreateExerciseDto): Promise<ExerciseResponse> {
     return this.exercisesService.create(dto);

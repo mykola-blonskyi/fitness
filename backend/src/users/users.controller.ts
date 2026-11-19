@@ -11,6 +11,7 @@ import {
   CurrentUser,
 } from '../identity/current-user.decorator';
 import type { Identity, ResolvedIdentity } from '../identity/identity.types';
+import { NotForDemo } from '../identity/demo-identity';
 import { ProfileOptional } from '../identity/profile-optional.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -44,6 +45,7 @@ export class UsersController {
 
   @Post()
   @ProfileOptional()
+  @NotForDemo()
   async createMe(
     @CurrentIdentity() identity: ResolvedIdentity,
     @Body() dto: CreateUserDto,

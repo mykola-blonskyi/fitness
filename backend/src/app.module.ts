@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { CalorieTargetsModule } from './calorie-targets/calorie-targets.module';
 import { DailyLogsModule } from './daily-logs/daily-logs.module';
 import { DbModule } from './db/db.module';
+import { DemoModule } from './demo/demo.module';
 import { DietPreferencesModule } from './diet-preferences/diet-preferences.module';
 import { DietsModule } from './diets/diets.module';
 import { ExercisesModule } from './exercises/exercises.module';
@@ -38,6 +39,7 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     PhotoSessionsModule,
     AdminExercisesModule,
     AdminFoodItemsModule,
+    DemoModule,
   ],
   controllers: [AppController],
   providers: [

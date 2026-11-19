@@ -48,10 +48,12 @@ export default async function FoodCatalogPage({
         profile={profile}
       />
 
-      <div className="card flex w-full flex-col gap-3 p-4 md:p-5">
-        <h2 className="text-[15px] font-bold">{t('addCustomHeading')}</h2>
-        <CreateFoodItemForm taxonomy={taxonomy} />
-      </div>
+      {!profile.isDemo && (
+        <div className="card flex w-full flex-col gap-3 p-4 md:p-5">
+          <h2 className="text-[15px] font-bold">{t('addCustomHeading')}</h2>
+          <CreateFoodItemForm taxonomy={taxonomy} />
+        </div>
+      )}
     </main>
   );
 }
