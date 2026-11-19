@@ -2,6 +2,8 @@ import { getTranslations } from 'next-intl/server';
 import { DeleteAccountButton } from '@features/account';
 import { LegalLinks } from '@features/legal';
 import { SettingsNav } from '@features/settings';
+import { apiFetch } from '@libs/api-client';
+import type { UserProfile } from '@shared/types/user';
 
 export default async function PrivacySettingsPage({
   params,
@@ -9,7 +11,10 @@ export default async function PrivacySettingsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations('Settings.privacyPage');
+  const [t, profile] = await Promise.all([
+    getTranslations('Settings.privacyPage'),
+    apiFetch<UserProfile>('/users/me'),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-10 md:px-7 md:py-6">
@@ -21,25 +26,29 @@ export default async function PrivacySettingsPage({
         <LegalLinks locale={locale} />
       </section>
 
-      <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
-        <h2 className="text-[15px] font-bold">{t('export.heading')}</h2>
-        <p className="text-sm text-muted">{t('export.description')}</p>
-        <a
-          href={`/${locale}/settings/export`}
-          download
-          className="btn-ghost self-start"
-        >
-          {t('export.submit')}
-        </a>
-      </section>
+      {!profile.isDemo && (
+        <>
+          <section className="card flex w-full flex-col gap-3 p-4 md:p-5">
+            <h2 className="text-[15px] font-bold">{t('export.heading')}</h2>
+            <p className="text-sm text-muted">{t('export.description')}</p>
+            <a
+              href={`/${locale}/settings/export`}
+              download
+              className="btn-ghost self-start"
+            >
+              {t('export.submit')}
+            </a>
+          </section>
 
-      <section className="card flex w-full flex-col gap-3 border-danger p-4 md:p-5">
-        <h2 className="text-[15px] font-bold text-danger">
-          {t('delete.heading')}
-        </h2>
-        <p className="text-sm text-muted">{t('delete.description')}</p>
-        <DeleteAccountButton />
-      </section>
+          <section className="card flex w-full flex-col gap-3 border-danger p-4 md:p-5">
+            <h2 className="text-[15px] font-bold text-danger">
+              {t('delete.heading')}
+            </h2>
+            <p className="text-sm text-muted">{t('delete.description')}</p>
+            <DeleteAccountButton />
+          </section>
+        </>
+      )}
     </main>
   );
 }

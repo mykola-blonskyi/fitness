@@ -1,10 +1,12 @@
 import { Controller, Delete, Get, HttpCode, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { CurrentUser } from '../identity/current-user.decorator';
+import { NotForDemo } from '../identity/demo-identity';
 import type { Identity } from '../identity/identity.types';
 import { AccountService } from './account.service';
 
 @Controller('account')
+@NotForDemo()
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
