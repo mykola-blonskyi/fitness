@@ -748,7 +748,8 @@
     },
     "hub": "Abrir blonskyi.dev",
     "mobileNavLabel": "Navegación principal",
-    "closeMore": "Cerrar menú"
+    "closeMore": "Cerrar menú",
+    "demoBanner": "Cuenta demo compartida: cualquiera puede modificarla y se restablece cada noche. Las fotos están desactivadas aquí."
   },
   "LanguageSwitcher": {
     "label": "Idioma"
@@ -760,7 +761,9 @@
     "error": "No se pudo preparar el formulario de inicio de sesión.",
     "retry": "Reintentar",
     "expired": "Tu sesión ha caducado. Inicia sesión de nuevo para guardarlo.",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "demo": "Ver demo",
+    "demoHint": "Una cuenta compartida con datos de ejemplo. Sin registro, y se restablece cada noche."
   },
   "ErrorPage": {
     "title": "Algo ha salido mal",

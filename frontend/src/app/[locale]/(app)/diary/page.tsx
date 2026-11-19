@@ -260,25 +260,27 @@ export default async function DiaryPage({
           )}
         </Entry>
 
-        <div className="last-entry">
-          <Entry
-            label={t('timeline.anytime')}
-            icon={<CameraIcon />}
-            state="todo"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <b className="font-display text-[15px] font-bold">
-                {t('timeline.photo')}
-              </b>
-              <Link href={`/${locale}/photos`} className="btn-ghost btn-sm">
-                {t('timeline.addPhoto')}
-              </Link>
-            </div>
-            <span className="text-xs text-muted">
-              {t('timeline.photoHint')}
-            </span>
-          </Entry>
-        </div>
+        {!profile.isDemo && (
+          <div className="last-entry">
+            <Entry
+              label={t('timeline.anytime')}
+              icon={<CameraIcon />}
+              state="todo"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <b className="font-display text-[15px] font-bold">
+                  {t('timeline.photo')}
+                </b>
+                <Link href={`/${locale}/photos`} className="btn-ghost btn-sm">
+                  {t('timeline.addPhoto')}
+                </Link>
+              </div>
+              <span className="text-xs text-muted">
+                {t('timeline.photoHint')}
+              </span>
+            </Entry>
+          </div>
+        )}
       </section>
 
       <section className="card flex w-full flex-col gap-4 p-4">

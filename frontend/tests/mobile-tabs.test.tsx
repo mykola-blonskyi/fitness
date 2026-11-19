@@ -14,7 +14,7 @@ function openSheet() {
 describe('MobileTabs "More" sheet', () => {
   it('points aria-controls at the panel and moves focus into it on open', async () => {
     const user = userEvent.setup();
-    renderWithIntl(<MobileTabs locale="en" isAdmin={false} />);
+    renderWithIntl(<MobileTabs locale="en" isAdmin={false} isDemo={false} />);
 
     const trigger = openSheet();
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -32,7 +32,7 @@ describe('MobileTabs "More" sheet', () => {
 
   it('closes on Escape and hands focus back to the trigger', async () => {
     const user = userEvent.setup();
-    renderWithIntl(<MobileTabs locale="en" isAdmin={false} />);
+    renderWithIntl(<MobileTabs locale="en" isAdmin={false} isDemo={false} />);
 
     const trigger = openSheet();
     await user.click(trigger);
@@ -48,12 +48,23 @@ describe('MobileTabs "More" sheet', () => {
 
   it('hands focus back to the trigger when the close button is used', async () => {
     const user = userEvent.setup();
-    renderWithIntl(<MobileTabs locale="en" isAdmin={false} />);
+    renderWithIntl(<MobileTabs locale="en" isAdmin={false} isDemo={false} />);
 
     const trigger = openSheet();
     await user.click(trigger);
     await user.click(screen.getByRole('button', { name: 'Close menu' }));
 
     expect(trigger).toHaveFocus();
+  });
+
+  it('leaves Photos out of the sheet for the demo account', async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<MobileTabs locale="en" isAdmin={false} isDemo />);
+
+    await user.click(openSheet());
+
+    expect(
+      screen.queryByRole('link', { name: 'Photos' }),
+    ).not.toBeInTheDocument();
   });
 });

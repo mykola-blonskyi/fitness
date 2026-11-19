@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import createIntlMiddleware from 'next-intl/middleware';
 import * as Sentry from '@sentry/nextjs';
 import { resolveIdentity } from '@libs/identity';
+import { DEMO_IDENTITY_SUB } from '@libs/demo';
 import { requireEnv } from '@libs/require-env';
 import { fetchProfileStatus } from '@libs/profile-status';
 import {
@@ -84,6 +85,14 @@ export async function proxy(req: NextRequest) {
     return isServerActionRequest(req)
       ? sessionExpiredResponse()
       : signInRedirect(req, locale);
+  }
+
+  // The shared demo account has no photos section (ADR-028).
+  if (
+    identity.sub === DEMO_IDENTITY_SUB &&
+    req.nextUrl.pathname.split('/')[2] === 'photos'
+  ) {
+    return NextResponse.redirect(new URL(`/${locale}`, req.url));
   }
 
   // Only the UUID, never email - ADR-006, this app handles real health

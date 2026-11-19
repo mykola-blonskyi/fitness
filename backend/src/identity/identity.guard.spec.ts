@@ -1,9 +1,14 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { IdentityGuard } from './identity.guard';
 import { ResolvedIdentity } from './identity.types';
 import { IS_PUBLIC_KEY } from './public.decorator';
+import { DEMO_IDENTITY_SUB, IS_NOT_FOR_DEMO_KEY } from './demo-identity';
 import type { UsersService } from '../users/users.service';
 
 jest.mock('@sentry/nestjs', () => ({ setUser: jest.fn() }));
@@ -44,10 +49,16 @@ describe('IdentityGuard', () => {
   let guard: IdentityGuard;
 
   // Public and profile-optional are separate metadata keys.
-  function metadata(flags: { public?: boolean; profileOptional?: boolean }) {
-    getAllAndOverride.mockImplementation((key: string) =>
-      key === IS_PUBLIC_KEY ? !!flags.public : !!flags.profileOptional,
-    );
+  function metadata(flags: {
+    public?: boolean;
+    profileOptional?: boolean;
+    notForDemo?: boolean;
+  }) {
+    getAllAndOverride.mockImplementation((key: string) => {
+      if (key === IS_PUBLIC_KEY) return !!flags.public;
+      if (key === IS_NOT_FOR_DEMO_KEY) return !!flags.notForDemo;
+      return !!flags.profileOptional;
+    });
   }
 
   beforeEach(() => {
@@ -183,5 +194,24 @@ describe('IdentityGuard', () => {
       handler,
       klass,
     ]);
+  });
+  it('forbids the demo identity on a @NotForDemo() route', async () => {
+    metadata({ notForDemo: true });
+    const { context } = buildContext({
+      ...validHeaders,
+      'x-user-id': DEMO_IDENTITY_SUB,
+      'x-user-email': 'demo@fitness.invalid',
+    });
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(findByIdentity).not.toHaveBeenCalled();
+  });
+
+  it('lets a real identity through a @NotForDemo() route', async () => {
+    metadata({ notForDemo: true });
+    findByIdentity.mockResolvedValue({ id: 'local-1' });
+    const { context } = buildContext(validHeaders);
+    await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 });
