@@ -156,7 +156,7 @@ A low-confidence or ambiguous `detect` result is a distinct `needs_review` outco
 
 ## A new catalog entry is private to its author until an admin verifies it
 
-An Exercise or Food Item a user creates is stored with `author_id` set and `is_verified = false`. Catalog lists show verified rows plus the caller's own. An admin promotes an entry by verifying it in the moderation queue; unverifying it makes it private to its author again. Rows that existed before ADR-028 have no author and keep their verified state.
+An Exercise or Food Item a user creates is stored with `author_id` set and `is_verified = false`. Catalog lists show verified rows plus the caller's own. An admin promotes an entry by verifying it in the moderation queue, which can be narrowed to user-submitted entries; unverifying it makes it private to its author again. Rows that existed before ADR-028 have no author and keep their verified state.
 
 ---
 

@@ -258,3 +258,34 @@ describe('FoodItemsService.findSlotCandidates', () => {
     expect(sql).not.toContain('"food_calories"."role_id" = ');
   });
 });
+
+describe('FoodItemsService.create', () => {
+  it('records the author and leaves the entry unverified, so only they see it', async () => {
+    const values = jest
+      .fn()
+      .mockReturnValue({ returning: () => Promise.resolve([{ id: 'f1' }]) });
+    const joined = {
+      innerJoin: () => joined,
+      where: () => Promise.resolve([{ id: 'f1' }]),
+    };
+    const service = new FoodItemsService({
+      insert: () => ({ values }),
+      select: () => ({ from: () => joined }),
+    } as never);
+
+    await service.create('user-1', {
+      name: 'Kefir',
+      categoryId: 'c',
+      subcategoryId: 's',
+      roleId: 'r',
+      caloriesPer100g: 40,
+      proteinPer100g: 3,
+      carbsPer100g: 4,
+      fatPer100g: 1,
+    });
+
+    const [inserted] = values.mock.calls[0] as [Record<string, unknown>];
+    expect(inserted.authorId).toBe('user-1');
+    expect(inserted).not.toHaveProperty('isVerified');
+  });
+});

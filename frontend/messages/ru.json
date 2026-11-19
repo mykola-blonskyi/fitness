@@ -543,7 +543,9 @@
       "loadingMore": "Загружаем ещё…",
       "loadError": "Не удалось загрузить ещё — попробуйте ещё раз.",
       "manualSource": "вручную",
-      "nutritionSummary": "{calories} ккал · Б {protein, number}г · У {carbs, number}г · Ж {fat, number}г"
+      "nutritionSummary": "{calories} ккал · Б {protein, number}г · У {carbs, number}г · Ж {fat, number}г",
+      "authoredOnly": "Только записи от пользователей",
+      "showAll": "Показать всю очередь"
     },
     "errors": {
       "approveExerciseFailed": "Не удалось утвердить это упражнение — попробуйте ещё раз.",

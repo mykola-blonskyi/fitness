@@ -543,7 +543,9 @@
       "loadingMore": "Cargando más…",
       "loadError": "No se ha podido cargar más. Inténtalo de nuevo.",
       "manualSource": "manual",
-      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · G {fat, number}g"
+      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · G {fat, number}g",
+      "authoredOnly": "Solo entradas enviadas por usuarios",
+      "showAll": "Mostrar toda la cola"
     },
     "errors": {
       "approveExerciseFailed": "No se ha podido aprobar este ejercicio. Inténtalo de nuevo.",

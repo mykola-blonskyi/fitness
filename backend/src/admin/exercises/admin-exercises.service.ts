@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, count, eq, gt, or } from 'drizzle-orm';
+import { and, asc, count, eq, gt, isNotNull, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../../db/db.module';
 import * as schema from '../../db/schema';
@@ -55,6 +55,7 @@ export class AdminExercisesService {
       .where(
         and(
           eq(schema.exercises.isVerified, false),
+          query.authored ? isNotNull(schema.exercises.authorId) : undefined,
           cursor
             ? or(
                 gt(schema.exercises.createdAt, new Date(cursor.createdAt)),

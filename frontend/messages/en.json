@@ -543,7 +543,9 @@
       "loadingMore": "Loading more…",
       "loadError": "Couldn't load more — try again.",
       "manualSource": "manual",
-      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · F {fat, number}g"
+      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · F {fat, number}g",
+      "authoredOnly": "Only user-submitted entries",
+      "showAll": "Show the whole queue"
     },
     "errors": {
       "approveExerciseFailed": "Couldn't approve this exercise — try again.",

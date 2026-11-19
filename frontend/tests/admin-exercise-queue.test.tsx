@@ -43,7 +43,11 @@ describe('AdminExerciseQueue infinite load', () => {
     listAdminExercises.mockRejectedValue(new Error('offline'));
 
     renderWithIntl(
-      <AdminExerciseQueue initialItems={[exercise]} initialCursor="cursor-1" />,
+      <AdminExerciseQueue
+        initialItems={[exercise]}
+        initialCursor="cursor-1"
+        authored={false}
+      />,
     );
 
     expect(
