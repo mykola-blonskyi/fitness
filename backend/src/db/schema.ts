@@ -142,7 +142,7 @@ export const exerciseTranslations = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     exerciseId: uuid('exercise_id')
       .notNull()
-      .references(() => exercises.id),
+      .references(() => exercises.id, { onDelete: 'cascade' }),
     locale: text('locale').notNull(),
     name: text('name').notNull(),
     isVerified: boolean('is_verified').notNull().default(false),
@@ -356,7 +356,7 @@ export const foodCalorieTranslations = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     foodCalorieId: uuid('food_calorie_id')
       .notNull()
-      .references(() => foodCalories.id),
+      .references(() => foodCalories.id, { onDelete: 'cascade' }),
     locale: text('locale').notNull(),
     name: text('name').notNull(),
     isVerified: boolean('is_verified').notNull().default(false),

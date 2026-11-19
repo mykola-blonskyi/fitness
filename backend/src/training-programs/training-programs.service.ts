@@ -370,4 +370,10 @@ export class TrainingProgramsService {
       .where(eq(schema.userActivePrograms.userId, userId));
     return { trainingPrograms, programExercises, userActivePrograms };
   }
+
+  async deleteForUser(userId: string): Promise<void> {
+    await this.db
+      .delete(schema.trainingPrograms)
+      .where(eq(schema.trainingPrograms.userId, userId));
+  }
 }

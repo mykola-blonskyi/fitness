@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { DailyLogsModule } from '../daily-logs/daily-logs.module';
 import { DietPreferencesModule } from '../diet-preferences/diet-preferences.module';
 import { DietsModule } from '../diets/diets.module';
+import { ExercisesModule } from '../exercises/exercises.module';
+import { FoodItemsModule } from '../food-items/food-items.module';
 import { FoodPreferencesModule } from '../food-preferences/food-preferences.module';
 import { PhotoSessionsModule } from '../photo-sessions/photo-sessions.module';
 import { StorageModule } from '../storage/storage.module';
@@ -21,6 +23,8 @@ import { AccountService } from './account.service';
     DietPreferencesModule,
     DietsModule,
     PhotoSessionsModule,
+    ExercisesModule,
+    FoodItemsModule,
     StorageModule,
   ],
   controllers: [AccountController],

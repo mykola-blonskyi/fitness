@@ -252,10 +252,10 @@ Creating a profile requires one consent covering health-data processing and an a
 
 ## Account deletion is immediate, complete and retryable
 
-`DELETE /account` first removes every object under `progress-photos/<userId>/` and lists the prefix again to confirm nothing is left, then deletes the `users` row. Every foreign key under `users` cascades, so that one delete removes all user-owned rows. If any step fails the request fails, the `users` row stays, and the user can retry. The login account at `login.blonskyi.dev` is shared across projects and is not deleted.
+`DELETE /account` first removes every object under `progress-photos/<userId>/` and lists the prefix again to confirm nothing is left, then deletes the user's daily logs, training programs and diets, then the `users` row, which cascades to everything else. The three go first because their children can reference the user's own catalog entries, which also cascade from `users`, and Postgres can reach an entry before the rows that use it. If any step fails the request fails, the `users` row stays, and the user can retry. The login account at `login.blonskyi.dev` is shared across projects and is not deleted.
 
 ---
 
 ## Data export is one zip
 
-`GET /account/export` returns a zip with `data.json` (the user's rows from every user-owned table) and `photos/<progressPhotoId>.<ext>` for each progress photo.
+`GET /account/export` returns a zip with `data.json` (the user's rows from every user-owned table, including the exercises and food items they authored) and `photos/<progressPhotoId>.<ext>` for each progress photo.

@@ -5,6 +5,8 @@ import type { Writable } from 'node:stream';
 import { DailyLogsService } from '../daily-logs/daily-logs.service';
 import { DietPreferencesService } from '../diet-preferences/diet-preferences.service';
 import { DietsService } from '../diets/diets.service';
+import { ExercisesService } from '../exercises/exercises.service';
+import { FoodItemsService } from '../food-items/food-items.service';
 import { FoodPreferencesService } from '../food-preferences/food-preferences.service';
 import { PhotoSessionsService } from '../photo-sessions/photo-sessions.service';
 import { StorageService } from '../storage/storage.service';
@@ -23,13 +25,20 @@ export class AccountService {
     private readonly dietPreferencesService: DietPreferencesService,
     private readonly dietsService: DietsService,
     private readonly photoSessionsService: PhotoSessionsService,
+    private readonly exercisesService: ExercisesService,
+    private readonly foodItemsService: FoodItemsService,
     private readonly storageService: StorageService,
   ) {}
 
-  // Objects go before the user row: once the row is gone the caller has no
-  // profile left to retry with, so a partial failure must leave it in place.
+  // The user row goes last: once it is gone the caller has no profile left
+  // to retry with, so every earlier step must be safe to repeat.
   async delete(userId: string): Promise<void> {
     await this.storageService.removeUserObjects(userId);
+    // These rows reference catalog entries, and a private entry cascades
+    // from users before Postgres reaches them through the users cascade.
+    await this.dailyLogsService.deleteForUser(userId);
+    await this.trainingProgramsService.deleteForUser(userId);
+    await this.dietsService.deleteForUser(userId);
     await this.usersService.remove(userId);
   }
 
@@ -43,6 +52,8 @@ export class AccountService {
       dietPreferences,
       diets,
       photoSessions,
+      exercises,
+      foodItems,
     ] = await Promise.all([
       this.usersService.exportRow(userId),
       this.dailyLogsService.exportRows(userId),
@@ -52,6 +63,8 @@ export class AccountService {
       this.dietPreferencesService.exportRows(userId),
       this.dietsService.exportRows(userId),
       this.photoSessionsService.exportRows(userId),
+      this.exercisesService.exportRows(userId),
+      this.foodItemsService.exportRows(userId),
     ]);
     return {
       user,
@@ -62,6 +75,8 @@ export class AccountService {
       dietPreferences,
       ...diets,
       ...photoSessions,
+      exercises,
+      foodItems,
     };
   }
 

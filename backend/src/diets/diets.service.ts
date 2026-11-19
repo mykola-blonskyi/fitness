@@ -508,4 +508,8 @@ export class DietsService {
   exportRows(userId: string) {
     return this.dietsRepository.exportRows(userId);
   }
+
+  deleteForUser(userId: string): Promise<void> {
+    return this.dietsRepository.deleteForUser(userId);
+  }
 }

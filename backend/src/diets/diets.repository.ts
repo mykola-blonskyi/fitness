@@ -264,4 +264,8 @@ export class DietsRepository {
       .where(eq(schema.diets.userId, userId));
     return { diets, dietItems, dietMealOrder };
   }
+
+  async deleteForUser(userId: string): Promise<void> {
+    await this.db.delete(schema.diets).where(eq(schema.diets.userId, userId));
+  }
 }

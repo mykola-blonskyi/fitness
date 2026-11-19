@@ -3,12 +3,7 @@ import { Agent as HttpAgent } from 'node:http';
 import { Agent as HttpsAgent } from 'node:https';
 import { Injectable } from '@nestjs/common';
 import type { Readable } from 'node:stream';
-import {
-  type BucketItem,
-  Client,
-  S3Error,
-  type PostPolicyResult,
-} from 'minio';
+import { type BucketItem, Client, S3Error, type PostPolicyResult } from 'minio';
 
 const UPLOAD_URL_EXPIRY_SECONDS = 15 * 60;
 const READ_URL_EXPIRY_SECONDS = 5 * 60;

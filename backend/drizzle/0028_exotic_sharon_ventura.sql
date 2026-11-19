@@ -8,6 +8,10 @@ ALTER TABLE "diet_preferences" DROP CONSTRAINT "diet_preferences_user_id_users_i
 --> statement-breakpoint
 ALTER TABLE "diets" DROP CONSTRAINT "diets_user_id_users_id_fk";
 --> statement-breakpoint
+ALTER TABLE "exercise_translations" DROP CONSTRAINT "exercise_translations_exercise_id_exercises_id_fk";
+--> statement-breakpoint
+ALTER TABLE "food_calorie_translations" DROP CONSTRAINT "food_calorie_translations_food_calorie_id_food_calories_id_fk";
+--> statement-breakpoint
 ALTER TABLE "food_preferences" DROP CONSTRAINT "food_preferences_user_id_users_id_fk";
 --> statement-breakpoint
 ALTER TABLE "photo_sessions" DROP CONSTRAINT "photo_sessions_user_id_users_id_fk";
@@ -36,6 +40,8 @@ ALTER TABLE "diet_items" ADD CONSTRAINT "diet_items_diet_id_diets_id_fk" FOREIGN
 ALTER TABLE "diet_meal_order" ADD CONSTRAINT "diet_meal_order_diet_id_diets_id_fk" FOREIGN KEY ("diet_id") REFERENCES "public"."diets"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_preferences" ADD CONSTRAINT "diet_preferences_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diets" ADD CONSTRAINT "diets_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "exercise_translations" ADD CONSTRAINT "exercise_translations_exercise_id_exercises_id_fk" FOREIGN KEY ("exercise_id") REFERENCES "public"."exercises"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "food_calorie_translations" ADD CONSTRAINT "food_calorie_translations_food_calorie_id_food_calories_id_fk" FOREIGN KEY ("food_calorie_id") REFERENCES "public"."food_calories"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_preferences" ADD CONSTRAINT "food_preferences_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "photo_sessions" ADD CONSTRAINT "photo_sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "program_exercises" ADD CONSTRAINT "program_exercises_training_program_id_training_programs_id_fk" FOREIGN KEY ("training_program_id") REFERENCES "public"."training_programs"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

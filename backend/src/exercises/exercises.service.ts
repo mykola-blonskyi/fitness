@@ -131,4 +131,11 @@ export class ExercisesService {
 
     return toExerciseResponse(inserted);
   }
+
+  exportRows(userId: string) {
+    return this.db
+      .select()
+      .from(schema.exercises)
+      .where(eq(schema.exercises.authorId, userId));
+  }
 }
