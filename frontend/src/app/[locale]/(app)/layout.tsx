@@ -26,6 +26,7 @@ export default async function AppLayout({
         name: profile.name,
         email: profile.email,
         isAdmin: profile.isAdmin,
+        isDemo: profile.isDemo,
       }}
     >
       {children}

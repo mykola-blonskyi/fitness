@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../identity/current-user.decorator';
+import { NotForDemo } from '../identity/demo-identity';
 import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
 import { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
@@ -29,6 +30,7 @@ const EXPENSIVE_ROUTE_LIMIT = { ttl: 10 * 60_000, limit: 10 };
 // Every route here operates on the caller's own Photo Sessions/Progress
 // Photos only - ownership is re-checked in the service, never assumed
 // from the URL.
+@NotForDemo()
 @Controller('photo-sessions')
 export class PhotoSessionsController {
   constructor(private readonly photoSessionsService: PhotoSessionsService) {}

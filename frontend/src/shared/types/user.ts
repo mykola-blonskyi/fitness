@@ -37,6 +37,7 @@ export interface UserProfile {
   mealCount: MealCount;
   avatarUrl: string | null;
   isAdmin: boolean;
+  isDemo: boolean;
   locale: Locale;
   defaultWeightUnit: WeightUnit;
   createdAt: string;

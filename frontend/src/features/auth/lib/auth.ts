@@ -1,10 +1,12 @@
 import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
 import { jwtCallback } from '@features/auth/lib/jwt-callback';
 import {
   SESSION_COOKIE_NAME,
   SESSION_COOKIE_SECURE,
 } from '@libs/session-cookie';
 import { requireEnv } from '@libs/require-env';
+import { DEMO_EMAIL, DEMO_IDENTITY_SUB } from '@libs/demo';
 
 const OIDC_ISSUER = requireEnv('OIDC_ISSUER');
 const OIDC_CLIENT_SECRET = requireEnv('OIDC_CLIENT_SECRET');
@@ -31,6 +33,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     },
+    // The shared demo account (ADR-028); login is never contacted.
+    // jwt-callback.ts takes its sub from providerAccountId.
+    Credentials({
+      id: 'demo',
+      credentials: {},
+      authorize: () => ({
+        id: DEMO_IDENTITY_SUB,
+        email: DEMO_EMAIL,
+        name: 'Demo',
+      }),
+    }),
   ],
   session: {
     strategy: 'jwt',

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { requireEnv } from '@libs/require-env';
-import { NAV_GROUPS } from '@shared/ui/shell/navigation';
+import { NAV_GROUPS, isNavItemVisible } from '@shared/ui/shell/navigation';
 import { NavLink } from '@shared/ui/shell/NavLink';
 
 const HUB_URL = requireEnv('HUB_URL');
@@ -11,9 +11,11 @@ const HUB_URL = requireEnv('HUB_URL');
 export function Rail({
   locale,
   isAdmin,
+  isDemo,
 }: {
   locale: string;
   isAdmin: boolean;
+  isDemo: boolean;
 }) {
   const t = useTranslations('Header');
 
@@ -30,7 +32,9 @@ export function Rail({
       </Link>
 
       {NAV_GROUPS.map((group) => {
-        const items = group.items.filter((item) => !item.adminOnly || isAdmin);
+        const items = group.items.filter((item) =>
+          isNavItemVisible(item, { isAdmin, isDemo }),
+        );
         if (items.length === 0) return null;
         return (
           <div key={group.key} className="flex flex-col gap-0.5">

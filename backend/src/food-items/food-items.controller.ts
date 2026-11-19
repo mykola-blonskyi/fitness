@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { CurrentUser } from '../identity/current-user.decorator';
+import { NotForDemo } from '../identity/demo-identity';
 import type { Identity } from '../identity/identity.types';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
 import { ListFoodItemsDto } from './dto/list-food-items.dto';
@@ -23,6 +24,7 @@ export class FoodItemsController {
     return this.foodItemsService.getTaxonomy();
   }
 
+  @NotForDemo()
   @Post()
   async create(
     @CurrentUser() identity: Identity,

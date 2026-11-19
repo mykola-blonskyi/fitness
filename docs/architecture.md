@@ -300,6 +300,14 @@ docker exec -i fitness-restore psql -U postgres < fitness.sql
 
 `role "postgres" already exists` is the one expected error. Restoring over production is the same replay against the shared instance after stopping the backend and dropping `fitness`. Only the scratch restore has been tried: on 2026-11-19 it matched the live row counts.
 
+### Demo account
+
+The sign-in page's "View demo" button posts to an Auth.js credentials provider (`demo`) that mints a session for one fixed identity, `fitness-demo`, without contacting login (ADR-028). Every visitor shares that account.
+
+The backend's `DemoResetService` restores the account to its seed when the container starts and every night at 03:00 UTC, using an in-process timer, so no Coolify scheduled task is involved. Each run deletes every row the demo user owns, upserts the `users` row under a fixed id so open demo sessions survive, writes back six weeks of weigh-ins, an active program with three weeks of logged workouts and a set of favorites, then generates the diet through `DietsService`. Running it twice leaves the same state. A failed run logs, reports to Sentry, and leaves the app serving.
+
+Routes marked `@NotForDemo()` (photo sessions, catalog create, profile create) answer 403 to the demo identity in `IdentityGuard`. The demo user is not an admin. The frontend hides the photos section and the catalog create forms for it, and `proxy.ts` redirects its `/photos` requests home.
+
 ---
 
 ## Security

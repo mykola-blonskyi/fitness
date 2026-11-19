@@ -30,6 +30,7 @@ export interface NavItem {
   path: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   adminOnly?: boolean;
+  hiddenInDemo?: boolean;
 }
 
 export interface NavGroup {
@@ -45,7 +46,12 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { key: 'home', path: '', icon: HomeIcon },
       { key: 'diary', path: '/diary', icon: DiaryIcon },
-      { key: 'photos', path: '/photos', icon: PhotosIcon },
+      {
+        key: 'photos',
+        path: '/photos',
+        icon: PhotosIcon,
+        hiddenInDemo: true,
+      },
     ],
   },
   {
@@ -71,6 +77,13 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+export function isNavItemVisible(
+  item: NavItem,
+  { isAdmin, isDemo }: { isAdmin: boolean; isDemo: boolean },
+): boolean {
+  return (!item.adminOnly || isAdmin) && !(item.hiddenInDemo && isDemo);
+}
 
 export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items);
 
