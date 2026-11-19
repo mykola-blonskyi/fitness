@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import type { Macros } from '../food-item.types';
 
 // Manually created items get category/subcategory/role ids from the
@@ -10,6 +18,7 @@ import type { Macros } from '../food-item.types';
 export class CreateFoodItemDto implements Macros {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   name: string;
 
   @IsUUID()
@@ -23,17 +32,21 @@ export class CreateFoodItemDto implements Macros {
 
   @IsNumber()
   @Min(0)
+  @Max(900)
   caloriesPer100g: number;
 
   @IsNumber()
   @Min(0)
+  @Max(100)
   proteinPer100g: number;
 
   @IsNumber()
   @Min(0)
+  @Max(100)
   carbsPer100g: number;
 
   @IsNumber()
   @Min(0)
+  @Max(100)
   fatPer100g: number;
 }

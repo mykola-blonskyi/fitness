@@ -1,4 +1,6 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import type { SQL } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { AdminExercisesService } from './admin-exercises.service';
 
 function buildDb(overrides: {
@@ -81,5 +83,52 @@ describe('AdminExercisesService.remove', () => {
       NotFoundException,
     );
     expect(db.transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('AdminExercisesService.list', () => {
+  async function listWhere(authored?: 'true'): Promise<string> {
+    let captured: SQL | undefined;
+    const db = {
+      select: () => ({
+        from: () => ({
+          where: (clause: SQL) => {
+            captured = clause;
+            return { orderBy: () => ({ limit: () => Promise.resolve([]) }) };
+          },
+        }),
+      }),
+    };
+    await new AdminExercisesService(db as never).list({ authored });
+    return new PgDialect().sqlToQuery(captured!).sql;
+  }
+
+  it('narrows the queue to user-authored entries on request', async () => {
+    expect(await listWhere()).not.toContain('author_id');
+    expect(await listWhere('true')).toContain(
+      '"exercises"."author_id" is not null',
+    );
+  });
+});
+
+describe('AdminExercisesService.setVerified', () => {
+  function serviceCapturingSet() {
+    const set = jest.fn().mockReturnValue({
+      where: () => ({ returning: () => Promise.resolve([{ id: 'e1' }]) }),
+    });
+    const db = { update: () => ({ set }) };
+    return { service: new AdminExercisesService(db as never), set };
+  }
+
+  it('clears the author on promotion, so the entry outlives its author', async () => {
+    const { service, set } = serviceCapturingSet();
+    await service.setVerified('e1', true).catch(() => undefined);
+    expect(set).toHaveBeenCalledWith({ isVerified: true, authorId: null });
+  });
+
+  it('leaves the author alone on unapprove', async () => {
+    const { service, set } = serviceCapturingSet();
+    await service.setVerified('e1', false).catch(() => undefined);
+    expect(set).toHaveBeenCalledWith({ isVerified: false });
   });
 });

@@ -1,4 +1,5 @@
 import {
+  Equals,
   IsDateString,
   IsIn,
   IsInt,
@@ -8,6 +9,7 @@ import {
   IsString,
   IsUrl,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { LOCALES, type Locale } from '../../shared/locale';
@@ -26,6 +28,7 @@ const ACTIVITY_LEVELS = [
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   name: string;
 
   @IsIn(GENDERS)
@@ -47,6 +50,7 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsUrl()
+  @MaxLength(2048)
   avatarUrl?: string;
 
   // Optional - schema defaults to 3 when omitted, see db/schema.ts's
@@ -68,4 +72,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsIn(WEIGHT_UNITS)
   defaultWeightUnit?: WeightUnit;
+
+  // One consent covering health-data processing and an age of at least 16.
+  @Equals(true)
+  healthDataConsent: true;
 }

@@ -24,18 +24,31 @@ export function SignInButton({ callbackUrl }: { callbackUrl?: string }) {
   }
 
   return (
-    <form method="POST" action="/api/auth/signin/login" className="w-full">
-      <input type="hidden" name="csrfToken" value={csrfToken ?? ''} />
-      {callbackUrl && (
-        <input type="hidden" name="callbackUrl" value={callbackUrl} />
-      )}
-      <button
-        type="submit"
-        disabled={!csrfToken}
-        className="btn-primary w-full"
-      >
-        {t('button')}
-      </button>
-    </form>
+    <div className="flex w-full flex-col gap-3">
+      <form method="POST" action="/api/auth/signin/login" className="w-full">
+        <input type="hidden" name="csrfToken" value={csrfToken ?? ''} />
+        {callbackUrl && (
+          <input type="hidden" name="callbackUrl" value={callbackUrl} />
+        )}
+        <button
+          type="submit"
+          disabled={!csrfToken}
+          className="btn-primary w-full"
+        >
+          {t('button')}
+        </button>
+      </form>
+      <form method="POST" action="/api/auth/callback/demo" className="w-full">
+        <input type="hidden" name="csrfToken" value={csrfToken ?? ''} />
+        <button
+          type="submit"
+          disabled={!csrfToken}
+          className="btn-ghost w-full"
+        >
+          {t('demo')}
+        </button>
+        <p className="mt-2 text-center text-xs text-muted">{t('demoHint')}</p>
+      </form>
+    </div>
   );
 }

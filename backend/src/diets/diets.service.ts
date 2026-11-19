@@ -504,4 +504,12 @@ export class DietsService {
 
     return toDietResponse(dietRow, algorithm, itemRows, mealOrder);
   }
+
+  exportRows(userId: string) {
+    return this.dietsRepository.exportRows(userId);
+  }
+
+  deleteForUser(userId: string): Promise<void> {
+    return this.dietsRepository.deleteForUser(userId);
+  }
 }

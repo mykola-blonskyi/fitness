@@ -44,7 +44,11 @@ describe('AdminFoodItemQueue nutrition summary', () => {
 
   it('renders kcal and English macro letters in English', () => {
     renderWithIntl(
-      <AdminFoodItemQueue initialItems={[item]} initialCursor={null} />,
+      <AdminFoodItemQueue
+        initialItems={[item]}
+        initialCursor={null}
+        authored={false}
+      />,
     );
 
     expect(
@@ -54,7 +58,11 @@ describe('AdminFoodItemQueue nutrition summary', () => {
 
   it('renders ккал, a comma decimal separator, and Cyrillic macro letters in Russian', () => {
     renderWithIntl(
-      <AdminFoodItemQueue initialItems={[item]} initialCursor={null} />,
+      <AdminFoodItemQueue
+        initialItems={[item]}
+        initialCursor={null}
+        authored={false}
+      />,
       { locale: 'ru', messages: ruMessages },
     );
 

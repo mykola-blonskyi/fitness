@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -24,40 +24,11 @@ export class UsersService {
     return user ? toUserResponse(user) : null;
   }
 
-  // The email fallback carries pre-conversion rows over: their backfilled
-  // identity_sub is a Hub id that no real login `sub` can match (ADR-018).
-  async findByIdentity(
-    sub: string,
-    email: string,
-  ): Promise<UserResponse | null> {
-    const bySub = await this.db.query.users.findFirst({
+  async findByIdentity(sub: string): Promise<UserResponse | null> {
+    const user = await this.db.query.users.findFirst({
       where: eq(schema.users.identitySub, sub),
     });
-    if (bySub) {
-      return toUserResponse(bySub);
-    }
-
-    // identity_sub = id restricts this to rows migration 0024 backfilled and
-    // no login has reconciled. On email alone, any `sub` claiming a known
-    // address takes over that account. db:check:identity-migration reports
-    // when the last row clears and this branch can go.
-    const byEmail = await this.db.query.users.findFirst({
-      where: and(
-        eq(sql`lower(${schema.users.email})`, email.toLowerCase()),
-        eq(schema.users.identitySub, sql`${schema.users.id}::text`),
-      ),
-    });
-    if (!byEmail) {
-      return null;
-    }
-
-    const [reconciled] = await this.db
-      .update(schema.users)
-      .set({ identitySub: sub, email, updatedAt: new Date() })
-      .where(eq(schema.users.id, byEmail.id))
-      .returning();
-
-    return toUserResponse(reconciled);
+    return user ? toUserResponse(user) : null;
   }
 
   async create(
@@ -89,6 +60,7 @@ export class UsersService {
           ...(dto.mealCount !== undefined ? { mealCount: dto.mealCount } : {}),
           locale: dto.locale,
           defaultWeightUnit: dto.defaultWeightUnit,
+          healthDataConsentAt: new Date(),
         })
         .returning();
     } catch (err) {
@@ -121,5 +93,20 @@ export class UsersService {
       .returning();
 
     return toUserResponse(updated);
+  }
+
+  async exportRow(id: string) {
+    const user = await this.db.query.users.findFirst({
+      where: eq(schema.users.id, id),
+    });
+    if (!user) {
+      throw new NotFoundException('Profile not found');
+    }
+    return user;
+  }
+
+  // Cascades to the user's rows; AccountService.delete says what must go first.
+  async remove(id: string): Promise<void> {
+    await this.db.delete(schema.users).where(eq(schema.users.id, id));
   }
 }

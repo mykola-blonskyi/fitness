@@ -1,9 +1,14 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { IdentityGuard } from './identity.guard';
 import { ResolvedIdentity } from './identity.types';
 import { IS_PUBLIC_KEY } from './public.decorator';
+import { DEMO_IDENTITY_SUB, IS_NOT_FOR_DEMO_KEY } from './demo-identity';
 import type { UsersService } from '../users/users.service';
 
 jest.mock('@sentry/nestjs', () => ({ setUser: jest.fn() }));
@@ -29,7 +34,10 @@ function buildContext(headers: Record<string, unknown>): {
   return { context, req };
 }
 
+const SECRET = 'test-secret';
+
 const validHeaders = {
+  'x-backend-secret': SECRET,
   'x-user-id': 'sub-1',
   'x-user-email': 'user1@example.com',
 };
@@ -41,13 +49,20 @@ describe('IdentityGuard', () => {
   let guard: IdentityGuard;
 
   // Public and profile-optional are separate metadata keys.
-  function metadata(flags: { public?: boolean; profileOptional?: boolean }) {
-    getAllAndOverride.mockImplementation((key: string) =>
-      key === IS_PUBLIC_KEY ? !!flags.public : !!flags.profileOptional,
-    );
+  function metadata(flags: {
+    public?: boolean;
+    profileOptional?: boolean;
+    notForDemo?: boolean;
+  }) {
+    getAllAndOverride.mockImplementation((key: string) => {
+      if (key === IS_PUBLIC_KEY) return !!flags.public;
+      if (key === IS_NOT_FOR_DEMO_KEY) return !!flags.notForDemo;
+      return !!flags.profileOptional;
+    });
   }
 
   beforeEach(() => {
+    process.env.BACKEND_SECRET = SECRET;
     getAllAndOverride = jest.fn();
     findByIdentity = jest.fn();
     reflector = { getAllAndOverride } as unknown as Reflector;
@@ -64,7 +79,7 @@ describe('IdentityGuard', () => {
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
 
-    expect(findByIdentity).toHaveBeenCalledWith('sub-1', 'user1@example.com');
+    expect(findByIdentity).toHaveBeenCalledWith('sub-1');
     expect(req.identity).toEqual({
       sub: 'sub-1',
       email: 'user1@example.com',
@@ -115,7 +130,34 @@ describe('IdentityGuard', () => {
   });
 
   it('throws UnauthorizedException when x-user-id is present but x-user-email is missing', async () => {
-    const { context } = buildContext({ 'x-user-id': 'sub-1' });
+    const { context } = buildContext({
+      'x-backend-secret': SECRET,
+      'x-user-id': 'sub-1',
+    });
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+  });
+
+  it.each([
+    ['missing', { ...validHeaders, 'x-backend-secret': undefined }],
+    ['wrong', { ...validHeaders, 'x-backend-secret': 'guess' }],
+  ])('rejects a request whose backend secret is %s', async (_, headers) => {
+    const { context } = buildContext(headers);
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+    expect(findByIdentity).not.toHaveBeenCalled();
+  });
+
+  it('rejects every request when the backend has no secret configured', async () => {
+    delete process.env.BACKEND_SECRET;
+    const { context } = buildContext({
+      ...validHeaders,
+      'x-backend-secret': '',
+    });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       UnauthorizedException,
@@ -152,5 +194,24 @@ describe('IdentityGuard', () => {
       handler,
       klass,
     ]);
+  });
+  it('forbids the demo identity on a @NotForDemo() route', async () => {
+    metadata({ notForDemo: true });
+    const { context } = buildContext({
+      ...validHeaders,
+      'x-user-id': DEMO_IDENTITY_SUB,
+      'x-user-email': 'demo@fitness.invalid',
+    });
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(findByIdentity).not.toHaveBeenCalled();
+  });
+
+  it('lets a real identity through a @NotForDemo() route', async () => {
+    metadata({ notForDemo: true });
+    findByIdentity.mockResolvedValue({ id: 'local-1' });
+    const { context } = buildContext(validHeaders);
+    await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 });

@@ -284,7 +284,9 @@
       "photosLabel": "Fotos (hasta {max})",
       "photosHint": "Delante, de lado y detrás: ya veremos cuál es cuál.",
       "uploading": "Subiendo…",
-      "submit": "Subir sesión"
+      "submit": "Subir sesión",
+      "tooLarge": "Cada foto debe pesar {max} MB o menos",
+      "dailyLimit": "Has alcanzado el límite de hoy de {max} sesiones de fotos; inténtalo mañana."
     },
     "list": {
       "empty": "Aún no hay fotos de progreso.",
@@ -483,7 +485,8 @@
     "nav": {
       "profile": "Perfil",
       "preferences": "Preferencias",
-      "appearance": "Apariencia"
+      "appearance": "Apariencia",
+      "privacy": "Privacidad"
     },
     "profilePage": {
       "title": "Perfil"
@@ -509,6 +512,25 @@
       },
       "followSystem": "Seguir el sistema",
       "followSystemHint": "Lime Pulse de día, Midnight cuando el dispositivo está en modo oscuro"
+    },
+    "privacyPage": {
+      "title": "Privacidad",
+      "legalHeading": "Documentos legales",
+      "export": {
+        "heading": "Exportar tus datos",
+        "description": "Descarga todo lo que fitness guarda sobre ti en un solo archivo zip: tus datos en JSON y tus fotos de progreso.",
+        "submit": "Descargar mis datos"
+      },
+      "delete": {
+        "heading": "Eliminar cuenta",
+        "description": "Elimina al instante tu perfil, registros, programas, dietas y fotos de progreso. No se puede deshacer. Tu cuenta de acceso de blonskyi.dev se comparte con otros proyectos y se conserva.",
+        "submit": "Eliminar cuenta",
+        "confirmText": "¿Eliminar todo ahora? No habrá forma de recuperarlo.",
+        "confirm": "Sí, eliminar todo",
+        "confirming": "Eliminando…",
+        "cancel": "Cancelar",
+        "error": "La eliminación no terminó. Tu cuenta sigue existiendo; inténtalo de nuevo."
+      }
     }
   },
   "Onboarding": {
@@ -518,7 +540,8 @@
     "submit": "Completar perfil",
     "errors": {
       "saveFailed": "No se ha podido guardar tu perfil. Comprueba los datos que has introducido e inténtalo de nuevo."
-    }
+    },
+    "consent": "Tengo al menos 16 años y acepto que fitness trate mis datos de salud (peso, medidas, entrenamientos, dieta y fotos corporales) para prestar la aplicación, según se describe en la <privacy>Política de privacidad</privacy>. Acepto los <terms>Términos de uso</terms>."
   },
   "Admin": {
     "nav": {
@@ -541,7 +564,9 @@
       "loadingMore": "Cargando más…",
       "loadError": "No se ha podido cargar más. Inténtalo de nuevo.",
       "manualSource": "manual",
-      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · G {fat, number}g"
+      "nutritionSummary": "{calories} kcal · P {protein, number}g · C {carbs, number}g · G {fat, number}g",
+      "authoredOnly": "Solo entradas enviadas por usuarios",
+      "showAll": "Mostrar toda la cola"
     },
     "errors": {
       "approveExerciseFailed": "No se ha podido aprobar este ejercicio. Inténtalo de nuevo.",
@@ -663,7 +688,8 @@
   },
   "Validation": {
     "common": {
-      "numberRequired": "Introduce un número"
+      "numberRequired": "Introduce un número",
+      "tooLong": "Máximo {max} caracteres"
     },
     "exercise": {
       "nameRequired": "Es obligatorio introducir el nombre",
@@ -674,7 +700,8 @@
       "categoryRequired": "Elige una categoría",
       "subcategoryRequired": "Elige una subcategoría",
       "roleRequired": "Elige una función",
-      "macroMin": "Debe ser 0 o mayor"
+      "macroMin": "Debe ser 0 o mayor",
+      "macroMax": "Debe ser como máximo {max}"
     },
     "foodPreference": {
       "typeRequired": "Selecciona un tipo",
@@ -703,7 +730,8 @@
       "activityLevelRequired": "Selecciona un nivel de actividad",
       "mealCountRequired": "Selecciona el número de comidas al día",
       "localeRequired": "Selecciona un idioma",
-      "weightUnitRequired": "Selecciona una unidad de peso"
+      "weightUnitRequired": "Selecciona una unidad de peso",
+      "consentRequired": "Necesitas aceptar para continuar"
     },
     "weight": {
       "mustBePositive": "El peso debe ser superior a 0",
@@ -742,7 +770,8 @@
     },
     "hub": "Abrir blonskyi.dev",
     "mobileNavLabel": "Navegación principal",
-    "closeMore": "Cerrar menú"
+    "closeMore": "Cerrar menú",
+    "demoBanner": "Cuenta demo compartida: cualquiera puede modificarla y se restablece cada noche. Las fotos están desactivadas aquí."
   },
   "LanguageSwitcher": {
     "label": "Idioma"
@@ -754,7 +783,9 @@
     "error": "No se pudo preparar el formulario de inicio de sesión.",
     "retry": "Reintentar",
     "expired": "Tu sesión ha caducado. Inicia sesión de nuevo para guardarlo.",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "demo": "Ver demo",
+    "demoHint": "Una cuenta compartida con datos de ejemplo. Sin registro, y se restablece cada noche."
   },
   "ErrorPage": {
     "title": "Algo ha salido mal",
@@ -769,5 +800,130 @@
   },
   "Loading": {
     "label": "Cargando…"
+  },
+  "Legal": {
+    "lastUpdated": "Última actualización: {date}",
+    "translationNotice": "Esta traducción se ofrece solo como referencia. El texto en inglés es la versión vinculante.",
+    "readEnglish": "Leer la versión en inglés",
+    "backToApp": "Volver a fitness",
+    "terms": {
+      "title": "Términos de uso",
+      "sections": [
+        {
+          "title": "Sobre estos términos",
+          "paragraphs": [
+            "Estos términos regulan el uso de fitness en fitness.blonskyi.dev, un proyecto personal gratuito gestionado por Mykola Blonskyi. Al crear un perfil los aceptas. Si no estás de acuerdo, no uses la aplicación."
+          ]
+        },
+        {
+          "title": "Quién puede usar fitness",
+          "paragraphs": [
+            "Debes tener al menos 16 años. Inicias sesión con una cuenta de blonskyi.dev y eres responsable de mantenerla segura."
+          ]
+        },
+        {
+          "title": "No es consejo médico",
+          "paragraphs": [
+            "Los objetivos de calorías, las dietas, los programas de entrenamiento y el análisis de fotos se generan automáticamente con fines generales de forma física. No son consejo médico, nutricional ni de salud. Consulta a un médico antes de cambiar tu dieta o entrenamiento, sobre todo si tienes una afección, estás embarazada o has tenido un trastorno alimentario."
+          ]
+        },
+        {
+          "title": "Tu contenido",
+          "paragraphs": [
+            "Todo lo que introduces o subes sigue siendo tuyo. Permites que fitness lo almacene y trate solo para prestarte la aplicación. Sube únicamente fotos tuyas y nada ilícito.",
+            "Los ejercicios y alimentos que añades solo los ves tú, salvo que el operador los revise y los añada al catálogo compartido."
+          ]
+        },
+        {
+          "title": "Uso justo",
+          "paragraphs": [
+            "La aplicación limita las subidas y las solicitudes para seguir disponible para todos. No intentes eludir esos límites, acceder a datos ajenos ni perturbar el servicio. Las cuentas que lo hagan pueden ser suspendidas o eliminadas."
+          ]
+        },
+        {
+          "title": "Dejar de usarla",
+          "paragraphs": [
+            "Puedes exportar tus datos y eliminar tu cuenta en cualquier momento en Ajustes → Privacidad. La eliminación es inmediata y definitiva. El operador puede cambiar o cerrar el servicio; cuando sea posible, se te dará la oportunidad de exportar tus datos antes."
+          ]
+        },
+        {
+          "title": "Sin garantía",
+          "paragraphs": [
+            "fitness se ofrece gratis y tal cual, sin garantía de disponibilidad, exactitud ni idoneidad para un fin concreto. En la medida en que la ley lo permita, el operador no responde de las pérdidas derivadas de su uso. Nada en estos términos limita los derechos que tengas como consumidor según la ley de tu país."
+          ]
+        },
+        {
+          "title": "Cambios y contacto",
+          "paragraphs": [
+            "Estos términos pueden cambiar; la fecha de arriba indica la versión más reciente. Preguntas: {email}."
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Política de privacidad",
+      "sections": [
+        {
+          "title": "Responsable",
+          "paragraphs": [
+            "El responsable del tratamiento es Mykola Blonskyi, que gestiona fitness como proyecto personal. Contacto: {email}."
+          ]
+        },
+        {
+          "title": "Qué guardamos",
+          "paragraphs": [
+            "Cuenta: tu dirección de correo y el identificador de tu cuenta de acceso de blonskyi.dev.",
+            "Perfil: nombre, sexo, fecha de nacimiento, altura, objetivo, nivel de actividad, número de comidas, idioma y unidad de peso, y el momento en que diste tu consentimiento.",
+            "Datos de salud y forma física: pesajes, entrenamientos y series, programas de entrenamiento, preferencias y exclusiones de alimentos, tipos de dieta, dietas generadas, y ejercicios y alimentos que añades.",
+            "Fotos de progreso: las imágenes que subes, y los puntos de referencia de postura y los datos de alineación calculados a partir de ellas en nuestro propio servidor."
+          ]
+        },
+        {
+          "title": "Para qué y con qué base",
+          "paragraphs": [
+            "Usamos estos datos solo para prestar la aplicación: calcular objetivos, generar dietas y programas, registrar el progreso y comparar tus fotos. El peso, las medidas corporales y las fotos corporales son datos de salud, que tratamos con tu consentimiento explícito (RGPD art. 9(2)(a)). Tu cuenta y tu perfil se tratan para prestar el servicio que solicitaste (art. 6(1)(b)).",
+            "No vendemos tus datos, no mostramos anuncios, no te perfilamos con fines de marketing ni usamos tus datos para entrenar modelos de IA."
+          ]
+        },
+        {
+          "title": "Quién los trata",
+          "paragraphs": [
+            "Alojamiento: la aplicación, su base de datos y el almacenamiento de fotos (MinIO) funcionan en un servidor privado virtual alquilado a un proveedor de alojamiento y gestionado con Coolify. Las fotos se guardan en almacenamiento privado y solo se te sirven a ti mediante enlaces de corta duración.",
+            "Inicio de sesión: login.blonskyi.dev, un servicio de identidad del mismo responsable, guarda tu cuenta de acceso. Si inicias sesión con Google, Google trata ese inicio de sesión según su propia política de privacidad.",
+            "Seguimiento de errores: Sentry (Functional Software, Inc., EE. UU.) recibe informes técnicos de errores. Solo contienen un identificador de usuario aleatorio, nunca tu correo, nombre, datos de salud ni fotos. Esto puede implicar una transferencia a Estados Unidos."
+          ]
+        },
+        {
+          "title": "Cuánto tiempo los conservamos",
+          "paragraphs": [
+            "Hasta que elimines tu cuenta. La eliminación es inmediata e irreversible y borra todos los registros y fotos que fitness tiene sobre ti. Las copias de seguridad del servidor pueden contener datos eliminados hasta que se sobrescriban en su rotación normal. Tu cuenta de acceso de blonskyi.dev se comparte con otros proyectos y fitness no la elimina."
+          ]
+        },
+        {
+          "title": "Tus derechos",
+          "paragraphs": [
+            "Puedes ver y corregir tus datos en la aplicación, descargarlos todos en Ajustes → Privacidad (acceso y portabilidad) y eliminar tu cuenta allí mismo (supresión). Puedes retirar tu consentimiento en cualquier momento eliminando tu cuenta; fitness no puede funcionar sin tratar datos de salud. También puedes oponerte al tratamiento o hacer preguntas en {email}, y reclamar ante tu autoridad de protección de datos."
+          ]
+        },
+        {
+          "title": "Cookies y almacenamiento local",
+          "paragraphs": [
+            "fitness solo usa las cookies que la aplicación necesita para funcionar: una cookie de sesión que mantiene tu sesión iniciada, cookies de seguridad de corta duración durante el inicio de sesión, y cookies que recuerdan tu idioma y tu tema. El navegador también guarda tu tema y los cambios hechos sin conexión hasta que se sincronizan. No hay cookies de analítica, publicidad ni seguimiento, por eso no hay banner de cookies."
+          ]
+        },
+        {
+          "title": "Edad",
+          "paragraphs": [
+            "fitness no está dirigido a menores de 16 años. Si crees que una persona más joven tiene una cuenta, contáctanos y la eliminaremos."
+          ]
+        },
+        {
+          "title": "Cambios",
+          "paragraphs": [
+            "Esta política puede cambiar; la fecha de arriba indica la versión más reciente."
+          ]
+        }
+      ]
+    }
   }
 }

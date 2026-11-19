@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import createIntlMiddleware from 'next-intl/middleware';
 import * as Sentry from '@sentry/nextjs';
 import { resolveIdentity } from '@libs/identity';
+import { DEMO_IDENTITY_SUB } from '@libs/demo';
 import { requireEnv } from '@libs/require-env';
 import { fetchProfileStatus } from '@libs/profile-status';
 import {
@@ -14,7 +15,9 @@ const APP_URL = requireEnv('APP_URL');
 const BACKEND_URL = requireEnv('BACKEND_URL');
 
 const HEALTH_PATH = new RegExp(`^/(${routing.locales.join('|')})/health$`);
-const SIGN_IN_PATH = new RegExp(`^/(${routing.locales.join('|')})/login$`);
+const PUBLIC_PATH = new RegExp(
+  `^/(${routing.locales.join('|')})/(login|terms|privacy)$`,
+);
 
 const handleI18nRouting = createIntlMiddleware(routing);
 
@@ -71,8 +74,8 @@ export async function proxy(req: NextRequest) {
 
   // The sign-in page itself must never be gated, or an unauthenticated
   // visit redirects to it forever.
-  if (SIGN_IN_PATH.test(req.nextUrl.pathname)) {
-    const response = forward(req);
+  if (PUBLIC_PATH.test(req.nextUrl.pathname)) {
+    const response = forward(req, { 'X-NEXT-INTL-LOCALE': locale });
     for (const cookie of intlResponse.cookies.getAll()) {
       response.cookies.set(cookie);
     }
@@ -84,6 +87,14 @@ export async function proxy(req: NextRequest) {
     return isServerActionRequest(req)
       ? sessionExpiredResponse()
       : signInRedirect(req, locale);
+  }
+
+  // The shared demo account has no photos section (ADR-028).
+  if (
+    identity.sub === DEMO_IDENTITY_SUB &&
+    req.nextUrl.pathname.split('/')[2] === 'photos'
+  ) {
+    return NextResponse.redirect(new URL(`/${locale}`, req.url));
   }
 
   // Only the UUID, never email - ADR-006, this app handles real health

@@ -8,7 +8,9 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../identity/current-user.decorator';
+import { NotForDemo } from '../identity/demo-identity';
 import type { Identity } from '../identity/identity.types';
 import { assertValidDate } from '../shared/date';
 import { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
@@ -23,9 +25,12 @@ import {
   type UploadUrlResponse,
 } from './photo-sessions.service';
 
+const EXPENSIVE_ROUTE_LIMIT = { ttl: 10 * 60_000, limit: 10 };
+
 // Every route here operates on the caller's own Photo Sessions/Progress
 // Photos only - ownership is re-checked in the service, never assumed
 // from the URL.
+@NotForDemo()
 @Controller('photo-sessions')
 export class PhotoSessionsController {
   constructor(private readonly photoSessionsService: PhotoSessionsService) {}
@@ -33,6 +38,7 @@ export class PhotoSessionsController {
   // Registered ahead of the `:date` route below - same static-vs-dynamic
   // ordering issue as daily-logs.controller.ts's weight-trend route.
   @Post('upload-url')
+  @Throttle({ default: EXPENSIVE_ROUTE_LIMIT })
   async requestUploadUrl(
     @CurrentUser() identity: Identity,
   ): Promise<UploadUrlResponse> {
@@ -55,6 +61,7 @@ export class PhotoSessionsController {
   }
 
   @Post('photos/:photoId/retry-analysis')
+  @Throttle({ default: EXPENSIVE_ROUTE_LIMIT })
   async retryAnalysis(
     @CurrentUser() identity: Identity,
     @Param('photoId', ParseUUIDPipe) photoId: string,

@@ -18,5 +18,6 @@ import { DietsService } from './diets.service';
   ],
   controllers: [DietsController],
   providers: [DietsRepository, DietsService],
+  exports: [DietsService],
 })
 export class DietsModule {}

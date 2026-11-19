@@ -27,6 +27,7 @@ describe('UsersService.create', () => {
     height: 180,
     goal: 'maintenance',
     activityLevel: 'moderate',
+    healthDataConsent: true,
   };
 
   it('rejects a second profile for the same identity found by the pre-check', async () => {

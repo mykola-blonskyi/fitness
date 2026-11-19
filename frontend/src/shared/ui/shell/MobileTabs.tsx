@@ -4,7 +4,11 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CloseIcon, MoreIcon } from '@shared/ui/icons';
-import { MOBILE_TAB_KEYS, NAV_ITEMS } from '@shared/ui/shell/navigation';
+import {
+  MOBILE_TAB_KEYS,
+  NAV_ITEMS,
+  isNavItemVisible,
+} from '@shared/ui/shell/navigation';
 import { NavLink, useActiveNavKey } from '@shared/ui/shell/NavLink';
 
 const tabClass =
@@ -14,9 +18,11 @@ const tabActiveClass = '!bg-accent-soft !text-accent-strong';
 export function MobileTabs({
   locale,
   isAdmin,
+  isDemo,
 }: {
   locale: string;
   isAdmin: boolean;
+  isDemo: boolean;
 }) {
   const t = useTranslations('Header');
   const [open, setOpen] = useState(false);
@@ -45,7 +51,8 @@ export function MobileTabs({
   );
   const more = NAV_ITEMS.filter(
     (item) =>
-      !MOBILE_TAB_KEYS.includes(item.key) && (!item.adminOnly || isAdmin),
+      !MOBILE_TAB_KEYS.includes(item.key) &&
+      isNavItemVisible(item, { isAdmin, isDemo }),
   );
   const moreIsActive =
     active !== undefined && more.some((i) => i.key === active);

@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup';
+import { AccountModule } from './account/account.module';
 import { AdminExercisesModule } from './admin/exercises/admin-exercises.module';
 import { AdminFoodItemsModule } from './admin/food-items/admin-food-items.module';
 import { AppController } from './app.controller';
@@ -9,6 +12,7 @@ import { AppService } from './app.service';
 import { CalorieTargetsModule } from './calorie-targets/calorie-targets.module';
 import { DailyLogsModule } from './daily-logs/daily-logs.module';
 import { DbModule } from './db/db.module';
+import { DemoModule } from './demo/demo.module';
 import { DietPreferencesModule } from './diet-preferences/diet-preferences.module';
 import { DietsModule } from './diets/diets.module';
 import { ExercisesModule } from './exercises/exercises.module';
@@ -24,6 +28,12 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
   imports: [
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
+    // Keyed on the caller: every request comes from the frontend's one IP.
+    // IdentityGuard runs first and has checked the secret, so the header holds.
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60_000, limit: 300 }],
+      getTracker: (req: Request) => req.header('x-user-id') ?? req.ip ?? '',
+    }),
     DbModule,
     UsersModule,
     DailyLogsModule,
@@ -38,6 +48,8 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     PhotoSessionsModule,
     AdminExercisesModule,
     AdminFoodItemsModule,
+    DemoModule,
+    AccountModule,
   ],
   controllers: [AppController],
   providers: [
@@ -46,6 +58,7 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     // still capture exceptions the guard itself throws.
     { provide: APP_FILTER, useClass: SentryGlobalFilter },
     { provide: APP_GUARD, useClass: IdentityGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

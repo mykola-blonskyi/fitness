@@ -40,6 +40,7 @@ const SPAN = {
   diary: 'col-span-2 md:col-span-3 md:row-span-2 xl:col-span-4 xl:row-span-1',
   training: 'col-span-2 md:col-span-3 md:row-span-2 xl:col-span-4',
   plan: 'col-span-2 md:col-span-4 md:row-span-2 xl:col-span-5',
+  planWide: 'col-span-2 md:col-span-6 md:row-span-2 xl:col-span-8',
   photos: 'col-span-2 md:col-span-2 md:row-span-2 xl:col-span-3',
 };
 
@@ -412,7 +413,7 @@ async function TrainingTile({ locale }: { locale: string }) {
   );
 }
 
-async function PlanTile({ locale }: { locale: string }) {
+async function PlanTile({ locale, span }: { locale: string; span: string }) {
   const t = await getTranslations('Home');
   const [calorieTarget, diet] = await Promise.all([
     fetchOr404<CalorieTarget>('/calorie-targets'),
@@ -439,7 +440,7 @@ async function PlanTile({ locale }: { locale: string }) {
     .reduce((sum, meal) => sum + meal.calories, 0);
 
   return (
-    <Tile className={SPAN.plan}>
+    <Tile className={span}>
       <TileTitle icon={<FoodIcon />}>
         {diet
           ? t('plan.label', { kcal: Math.round(diet.totalCalories) })
@@ -524,6 +525,7 @@ export default async function Home({
   // (app)/layout.tsx already awaited this one, and repeated endpoints across
   // the tiles below collapse the same way - fetch memoization per render pass.
   const profile = await apiFetch<UserProfile>('/users/me');
+  const planSpan = profile.isDemo ? SPAN.planWide : SPAN.plan;
 
   return (
     <Page>
@@ -561,12 +563,14 @@ export default async function Home({
         <Suspense fallback={<TileSkeleton span={SPAN.training} lines={2} />}>
           <TrainingTile locale={locale} />
         </Suspense>
-        <Suspense fallback={<TileSkeleton span={SPAN.plan} lines={3} />}>
-          <PlanTile locale={locale} />
+        <Suspense fallback={<TileSkeleton span={planSpan} lines={3} />}>
+          <PlanTile locale={locale} span={planSpan} />
         </Suspense>
-        <Suspense fallback={<TileSkeleton span={SPAN.photos} lines={2} />}>
-          <PhotosTile locale={locale} />
-        </Suspense>
+        {!profile.isDemo && (
+          <Suspense fallback={<TileSkeleton span={SPAN.photos} lines={2} />}>
+            <PhotosTile locale={locale} />
+          </Suspense>
+        )}
       </section>
     </Page>
   );

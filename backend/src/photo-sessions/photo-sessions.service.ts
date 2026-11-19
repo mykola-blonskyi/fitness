@@ -1,11 +1,22 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  gt,
+  inArray,
+  sql,
+} from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -25,9 +36,12 @@ import {
 } from './photo-session.mapper';
 import { assertRetryableAnalysis } from './retry-analysis';
 
+const MAX_SESSIONS_PER_DAY = 3;
+
 export interface UploadUrlResponse {
   objectKey: string;
   uploadUrl: string;
+  fields: Record<string, string>;
 }
 
 export interface PhotoViewUrlResponse {
@@ -44,9 +58,30 @@ export class PhotoSessionsService {
   ) {}
 
   async requestUploadUrl(userId: string): Promise<UploadUrlResponse> {
+    await this.assertUnderDailyLimit(userId);
     const objectKey = this.storageService.buildObjectKey(userId);
-    const uploadUrl = await this.storageService.getUploadUrl(objectKey);
-    return { objectKey, uploadUrl };
+    const { postURL, formData } =
+      await this.storageService.getUploadPolicy(objectKey);
+    return { objectKey, uploadUrl: postURL, fields: formData };
+  }
+
+  // A rolling 24 hours, so the limit does not depend on the caller's timezone.
+  private async assertUnderDailyLimit(userId: string): Promise<void> {
+    const [{ value }] = await this.db
+      .select({ value: count() })
+      .from(schema.photoSessions)
+      .where(
+        and(
+          eq(schema.photoSessions.userId, userId),
+          gt(schema.photoSessions.createdAt, sql`now() - interval '1 day'`),
+        ),
+      );
+    if (value >= MAX_SESSIONS_PER_DAY) {
+      throw new HttpException(
+        `At most ${MAX_SESSIONS_PER_DAY} photo sessions per day`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
   }
 
   private async fetchPhotos(
@@ -100,6 +135,8 @@ export class PhotoSessionsService {
     if (new Set(objectKeys).size !== objectKeys.length) {
       throw new BadRequestException('Each photo may only appear once');
     }
+
+    await this.assertUnderDailyLimit(userId);
 
     for (const objectKey of objectKeys) {
       this.assertOwnedObjectKey(userId, objectKey);
@@ -338,10 +375,9 @@ export class PhotoSessionsService {
     return toProgressPhotoResponse(updated);
   }
 
-  // DB rows are deleted first (schema.ts has no ON DELETE CASCADE, so both
-  // tables are cleared explicitly, same as every other delete here) - MinIO
-  // cleanup runs after and is best-effort per photo, so one object failing
-  // to delete can never leave a DB row pointing at storage that's gone.
+  // DB rows are deleted first - MinIO cleanup runs after and is best-effort
+  // per photo, so one object failing to delete can never leave a DB row
+  // pointing at storage that's gone.
   async remove(userId: string, id: string): Promise<PhotoSessionResponse> {
     const session = await this.findOwnedSession(userId, id);
     const photos = await this.db
@@ -374,5 +410,21 @@ export class PhotoSessionsService {
     );
 
     return toPhotoSessionResponse(session, photos);
+  }
+
+  async exportRows(userId: string) {
+    const photoSessions = await this.db
+      .select()
+      .from(schema.photoSessions)
+      .where(eq(schema.photoSessions.userId, userId));
+    const progressPhotos = await this.db
+      .select(getTableColumns(schema.progressPhotos))
+      .from(schema.progressPhotos)
+      .innerJoin(
+        schema.photoSessions,
+        eq(schema.photoSessions.id, schema.progressPhotos.photoSessionId),
+      )
+      .where(eq(schema.photoSessions.userId, userId));
+    return { photoSessions, progressPhotos };
   }
 }

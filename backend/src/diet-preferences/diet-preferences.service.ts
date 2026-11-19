@@ -73,4 +73,11 @@ export class DietPreferencesService {
 
     return toDietPreferenceResponse(existing);
   }
+
+  exportRows(userId: string) {
+    return this.db
+      .select()
+      .from(schema.dietPreferences)
+      .where(eq(schema.dietPreferences.userId, userId));
+  }
 }

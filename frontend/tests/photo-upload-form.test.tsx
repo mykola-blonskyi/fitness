@@ -59,13 +59,16 @@ describe('PhotoUploadForm', () => {
       .mockResolvedValueOnce({
         objectKey: 'key-1',
         uploadUrl: 'http://minio/1',
+        fields: { key: 'key-1', policy: 'p', 'Content-Type': 'image/' },
       })
       .mockResolvedValueOnce({
         objectKey: 'key-2',
         uploadUrl: 'http://minio/2',
+        fields: { key: 'key-2', policy: 'p' },
       });
     confirmPhotoSession.mockResolvedValue({});
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true } as Response));
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true } as Response);
+    vi.stubGlobal('fetch', fetchMock);
 
     render(<PhotoUploadForm date="2026-08-29" />);
     await user.upload(screen.getByLabelText(/photos/i), [
@@ -75,10 +78,41 @@ describe('PhotoUploadForm', () => {
     await user.click(screen.getByRole('button', { name: /upload session/i }));
 
     expect(requestUploadUrl).toHaveBeenCalledTimes(2);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = init.body as FormData;
+    expect(url).toBe('http://minio/1');
+    expect(init.method).toBe('POST');
+    expect(body.get('key')).toBe('key-1');
+    expect(body.getAll('Content-Type')).toEqual(['image/png']);
+    expect([...body.keys()].at(-1)).toBe('file');
     expect(confirmPhotoSession).toHaveBeenCalledWith('2026-08-29', [
       'key-1',
       'key-2',
     ]);
     vi.unstubAllGlobals();
+  });
+
+  it('rejects a photo over 10 MB before uploading', async () => {
+    const user = userEvent.setup();
+    render(<PhotoUploadForm date="2026-08-29" />);
+    const big = imageFile('big.png');
+    Object.defineProperty(big, 'size', { value: 11 * 1024 * 1024 });
+
+    await user.upload(screen.getByLabelText(/photos/i), [big]);
+
+    expect(screen.getByText(/10 MB or smaller/i)).toBeInTheDocument();
+  });
+
+  it('explains the daily limit instead of a generic failure', async () => {
+    const user = userEvent.setup();
+    requestUploadUrl.mockReset().mockResolvedValue({ dailyLimitReached: true });
+    confirmPhotoSession.mockReset();
+
+    render(<PhotoUploadForm date="2026-08-29" />);
+    await user.upload(screen.getByLabelText(/photos/i), [imageFile('a.png')]);
+    await user.click(screen.getByRole('button', { name: /upload session/i }));
+
+    expect(screen.getByText(/today's limit of 3/i)).toBeInTheDocument();
+    expect(confirmPhotoSession).not.toHaveBeenCalled();
   });
 });

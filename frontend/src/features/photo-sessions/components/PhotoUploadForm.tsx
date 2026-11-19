@@ -10,6 +10,8 @@ import {
 } from '@features/photo-sessions/actions';
 
 const MAX_PHOTOS = 3;
+const MAX_PHOTO_MB = 10;
+const MAX_SESSIONS_PER_DAY = 3;
 
 export function PhotoUploadForm({ date }: { date: string }) {
   const t = useTranslations('PhotoSessions.uploadForm');
@@ -23,6 +25,12 @@ export function PhotoUploadForm({ date }: { date: string }) {
     const selected = Array.from(event.target.files ?? []);
     if (selected.length > MAX_PHOTOS) {
       setError(t('maxPhotosError', { max: MAX_PHOTOS }));
+      setFiles([]);
+      event.target.value = '';
+      return;
+    }
+    if (selected.some((file) => file.size > MAX_PHOTO_MB * 1024 * 1024)) {
+      setError(t('tooLarge', { max: MAX_PHOTO_MB }));
       setFiles([]);
       event.target.value = '';
       return;
@@ -43,14 +51,25 @@ export function PhotoUploadForm({ date }: { date: string }) {
     try {
       const objectKeys: string[] = [];
       for (const file of files) {
-        const { objectKey, uploadUrl } = await requestUploadUrl();
+        const target = await requestUploadUrl();
+        if ('dailyLimitReached' in target) {
+          setError(t('dailyLimit', { max: MAX_SESSIONS_PER_DAY }));
+          return;
+        }
         // Uploads straight to MinIO, bypassing this app's server - see
-        // docs/architecture.md's "Photo upload + analysis" data flow.
-        const res = await fetch(uploadUrl, { method: 'PUT', body: file });
+        // docs/architecture.md's "Photo upload + analysis" data flow. The
+        // fields hold Content-Type as the policy's `image/` prefix; set, not append.
+        const body = new FormData();
+        for (const [key, value] of Object.entries(target.fields)) {
+          body.append(key, value);
+        }
+        body.set('Content-Type', file.type);
+        body.append('file', file);
+        const res = await fetch(target.uploadUrl, { method: 'POST', body });
         if (!res.ok) {
           throw new Error('Upload failed');
         }
-        objectKeys.push(objectKey);
+        objectKeys.push(target.objectKey);
       }
 
       await confirmPhotoSession(date, objectKeys);

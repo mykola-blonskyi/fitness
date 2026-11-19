@@ -14,7 +14,10 @@ import type { ValidationTranslator } from '@shared/schemas/validation-translator
 // avatarUrl is omitted - no UI sets it yet.
 export function userProfileSchema(t: ValidationTranslator) {
   return z.object({
-    name: z.string().min(1, t('userProfile.nameRequired')),
+    name: z
+      .string()
+      .min(1, t('userProfile.nameRequired'))
+      .max(100, t('common.tooLong', { max: 100 })),
     gender: z.enum(GENDERS, t('userProfile.genderRequired')),
     dateOfBirth: z.iso.date(t('userProfile.dateInvalid')),
     height: z
@@ -40,3 +43,11 @@ export function userProfileSchema(t: ValidationTranslator) {
 }
 
 export type UserProfileInput = z.infer<ReturnType<typeof userProfileSchema>>;
+
+export function onboardingSchema(t: ValidationTranslator) {
+  return userProfileSchema(t).extend({
+    healthDataConsent: z.literal(true, t('userProfile.consentRequired')),
+  });
+}
+
+export type OnboardingInput = z.infer<ReturnType<typeof onboardingSchema>>;

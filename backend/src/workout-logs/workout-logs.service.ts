@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -176,7 +176,10 @@ export class WorkoutLogsService {
   ): Promise<WorkoutSetResponse> {
     await this.findOwnedWorkoutLog(userId, workoutLogId);
 
-    const exercise = await this.exercisesService.getById(dto.exerciseId);
+    const exercise = await this.exercisesService.getById(
+      userId,
+      dto.exerciseId,
+    );
     const values = resolveWorkoutSetValues(exercise.category, dto);
 
     const [inserted] = await this.db
@@ -203,5 +206,29 @@ export class WorkoutLogsService {
       reps: inserted.reps,
       durationSeconds: inserted.durationSeconds,
     });
+  }
+
+  async exportRows(userId: string) {
+    const workoutLogs = await this.db
+      .select(getTableColumns(schema.workoutLogs))
+      .from(schema.workoutLogs)
+      .innerJoin(
+        schema.dailyLogs,
+        eq(schema.dailyLogs.id, schema.workoutLogs.dailyLogId),
+      )
+      .where(eq(schema.dailyLogs.userId, userId));
+    const workoutSets = await this.db
+      .select(getTableColumns(schema.workoutSets))
+      .from(schema.workoutSets)
+      .innerJoin(
+        schema.workoutLogs,
+        eq(schema.workoutLogs.id, schema.workoutSets.workoutLogId),
+      )
+      .innerJoin(
+        schema.dailyLogs,
+        eq(schema.dailyLogs.id, schema.workoutLogs.dailyLogId),
+      )
+      .where(eq(schema.dailyLogs.userId, userId));
+    return { workoutLogs, workoutSets };
   }
 }

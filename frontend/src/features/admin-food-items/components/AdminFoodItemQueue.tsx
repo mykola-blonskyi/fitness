@@ -16,9 +16,11 @@ const ROW_HEIGHT = 104;
 export function AdminFoodItemQueue({
   initialItems,
   initialCursor,
+  authored,
 }: {
   initialItems: AdminFoodItem[];
   initialCursor: string | null;
+  authored: boolean;
 }) {
   const t = useTranslations('Admin.queue');
   const tCategories = useTranslations('FoodCategories');
@@ -45,7 +47,7 @@ export function AdminFoodItemQueue({
   async function loadMore(after: string) {
     setLoadingMore(true);
     try {
-      const page = await listAdminFoodItems(after);
+      const page = await listAdminFoodItems(after, authored);
       setItems((prev) => [...prev, ...page.items]);
       setCursor(page.nextCursor);
     } catch {

@@ -1,4 +1,5 @@
 import { users } from '../db/schema';
+import { DEMO_IDENTITY_SUB } from '../identity/demo-identity';
 import type { WeightUnit } from '../shared/weight-unit';
 
 export type UserRow = typeof users.$inferSelect;
@@ -15,6 +16,7 @@ export interface UserResponse {
   activityLevel: string;
   avatarUrl: string | null;
   isAdmin: boolean;
+  isDemo: boolean;
   mealCount: number;
   locale: string;
   defaultWeightUnit: WeightUnit;
@@ -48,6 +50,7 @@ export function toUserResponse(user: UserRow): UserResponse {
     activityLevel: user.activityLevel,
     avatarUrl: user.avatarUrl,
     isAdmin: user.isAdmin,
+    isDemo: user.identitySub === DEMO_IDENTITY_SUB,
     mealCount: user.mealCount,
     locale: user.locale,
     defaultWeightUnit: user.defaultWeightUnit,

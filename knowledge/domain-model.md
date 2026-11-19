@@ -56,6 +56,7 @@ Fields:
 - goal (weight_loss/maintenance/muscle_gain)
 - activity_level (sedentary/light/moderate/active/very_active) — used for calorie calculation
 - avatar_url
+- health_data_consent_at — when onboarding's health-data and age consent was given; null only on accounts created before it existed
 - meal_count (3-6, default 3) — how many meals a generated day has; meal 1 takes the breakfast Archetype, the last the dinner Archetype, the rest are mains (ADR-020 narrowed the range from 1-6: below 3 the Archetypes can't produce a plan worth showing)
 - breakfast_variant, dinner_variant (default `vary`) — pins that end of the day to one Archetype variant, or lets generation pick a different one each time (ADR-020)
 - locale (en/uk/ru/es, default en) — the user's stored UI locale preference, set at onboarding and editable in Settings; catalog browse endpoints resolve translated display names against it (see [[business-rules]])
@@ -219,6 +220,7 @@ A catalog entry (from wger/ExerciseDB or manually created) used to build program
 Fields:
 
 - name, image_url, category (chest/back/shoulders/biceps/triceps/legs/core/cardio/full_body)
+- is_verified, author_id (nullable — set on a user-created entry, which only its author sees until verified)
 
 Relationships:
 
@@ -319,6 +321,7 @@ Fields:
 
 - name, image_url, protein, carbs, fat, calories (per reference unit — dry/raw weight for anything cooked before eating, see ADR-020)
 - source (open_food_facts/usda/manual), is_verified
+- author_id (nullable — set on a user-created entry, which only its author sees until verified)
 - family_id (nullable — a Food Item with no Food Family is never generated into a Diet; ADR-020)
 - serving_unit, serving_grams (both nullable — only foods nobody weighs carry a Serving; ADR-020)
 

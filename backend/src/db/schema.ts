@@ -31,9 +31,8 @@ export const activityLevelEnum = pgEnum('activity_level', [
 export const weightUnitEnum = pgEnum('weight_unit', ['kg', 'lb']);
 
 // identitySub is login.blonskyi.dev's OIDC `sub`, kept as its own column
-// rather than reused as `id`: every other table references users.id
-// without a cascade, so a re-issued sub must never move the primary key
-// (ADR-018).
+// rather than reused as `id`: every other table references users.id, so a
+// re-issued sub must never move the primary key (ADR-018).
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   identitySub: text('identity_sub').notNull().unique(),
@@ -59,6 +58,10 @@ export const users = pgTable('users', {
   defaultWeightUnit: weightUnitEnum('default_weight_unit')
     .notNull()
     .default('kg'),
+  // Null only on accounts created before onboarding asked for consent.
+  healthDataConsentAt: timestamp('health_data_consent_at', {
+    withTimezone: true,
+  }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -77,7 +80,7 @@ export const dailyLogs = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     weight: numeric('weight'),
     weightUnit: weightUnitEnum('weight_unit'),
@@ -106,7 +109,8 @@ export const exerciseCategoryEnum = pgEnum('exercise_category', [
 // source/sourceId let a re-run of the import script upsert idempotently
 // without duplicating; manually created exercises leave both null.
 // isVerified starts false for every seeded row and is flipped only by a
-// human reviewer, never by the import script.
+// human reviewer, never by the import script. An unverified row with an
+// authorId is visible to its author alone until an admin verifies it.
 export const exercises = pgTable(
   'exercises',
   {
@@ -117,6 +121,9 @@ export const exercises = pgTable(
     source: text('source'),
     sourceId: text('source_id'),
     isVerified: boolean('is_verified').notNull().default(false),
+    authorId: uuid('author_id').references(() => users.id, {
+      onDelete: 'cascade',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -135,7 +142,7 @@ export const exerciseTranslations = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     exerciseId: uuid('exercise_id')
       .notNull()
-      .references(() => exercises.id),
+      .references(() => exercises.id, { onDelete: 'cascade' }),
     locale: text('locale').notNull(),
     name: text('name').notNull(),
     isVerified: boolean('is_verified').notNull().default(false),
@@ -152,7 +159,7 @@ export const trainingPrograms = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     isArchived: boolean('is_archived').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -174,10 +181,10 @@ export const userActivePrograms = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     trainingProgramId: uuid('training_program_id')
       .notNull()
-      .references(() => trainingPrograms.id),
+      .references(() => trainingPrograms.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -194,7 +201,7 @@ export const programExercises = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     trainingProgramId: uuid('training_program_id')
       .notNull()
-      .references(() => trainingPrograms.id),
+      .references(() => trainingPrograms.id, { onDelete: 'cascade' }),
     exerciseId: uuid('exercise_id')
       .notNull()
       .references(() => exercises.id),
@@ -220,9 +227,10 @@ export const workoutLogs = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     dailyLogId: uuid('daily_log_id')
       .notNull()
-      .references(() => dailyLogs.id),
+      .references(() => dailyLogs.id, { onDelete: 'cascade' }),
     trainingProgramId: uuid('training_program_id').references(
       () => trainingPrograms.id,
+      { onDelete: 'set null' },
     ),
     title: text('title').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -249,7 +257,7 @@ export const workoutSets = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     workoutLogId: uuid('workout_log_id')
       .notNull()
-      .references(() => workoutLogs.id),
+      .references(() => workoutLogs.id, { onDelete: 'cascade' }),
     exerciseId: uuid('exercise_id')
       .notNull()
       .references(() => exercises.id),
@@ -322,6 +330,9 @@ export const foodCalories = pgTable(
     source: text('source'),
     sourceId: text('source_id'),
     isVerified: boolean('is_verified').notNull().default(false),
+    authorId: uuid('author_id').references(() => users.id, {
+      onDelete: 'cascade',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -345,7 +356,7 @@ export const foodCalorieTranslations = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     foodCalorieId: uuid('food_calorie_id')
       .notNull()
-      .references(() => foodCalories.id),
+      .references(() => foodCalories.id, { onDelete: 'cascade' }),
     locale: text('locale').notNull(),
     name: text('name').notNull(),
     isVerified: boolean('is_verified').notNull().default(false),
@@ -377,7 +388,7 @@ export const foodPreferences = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     type: foodPreferenceTypeEnum('type').notNull(),
     targetType: foodPreferenceTargetTypeEnum('target_type').notNull(),
     targetId: uuid('target_id').notNull(),
@@ -405,7 +416,7 @@ export const dietPreferences = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     dietType: dietTypeEnum('diet_type').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -441,7 +452,7 @@ export const diets = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     algorithmId: uuid('algorithm_id')
       .notNull()
       .references(() => dietCalculationAlgorithms.id),
@@ -469,7 +480,7 @@ export const dietItems = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     dietId: uuid('diet_id')
       .notNull()
-      .references(() => diets.id),
+      .references(() => diets.id, { onDelete: 'cascade' }),
     foodItemId: uuid('food_item_id')
       .notNull()
       .references(() => foodCalories.id),
@@ -496,7 +507,7 @@ export const dietMealOrder = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     dietId: uuid('diet_id')
       .notNull()
-      .references(() => diets.id),
+      .references(() => diets.id, { onDelete: 'cascade' }),
     mealPosition: integer('meal_position').notNull(),
     displayOrder: integer('display_order').notNull(),
   },
@@ -526,7 +537,7 @@ export const photoSessions = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     isBaseline: boolean('is_baseline').notNull().default(false),
     status: photoSessionStatusEnum('status').notNull().default('uploading'),
@@ -555,10 +566,10 @@ export const progressPhotos = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     photoSessionId: uuid('photo_session_id')
       .notNull()
-      .references(() => photoSessions.id),
+      .references(() => photoSessions.id, { onDelete: 'cascade' }),
     dailyLogId: uuid('daily_log_id')
       .notNull()
-      .references(() => dailyLogs.id),
+      .references(() => dailyLogs.id, { onDelete: 'cascade' }),
     pose: photoPoseEnum('pose'),
     objectKey: text('object_key').notNull().unique(),
     analysisStatus: photoAnalysisStatusEnum('analysis_status')

@@ -10,14 +10,17 @@ export interface AdminActionResult {
 }
 
 export async function listAdminExercises(
-  cursor?: string,
+  cursor: string | undefined,
+  authored: boolean,
 ): Promise<CursorPage<AdminExercise>> {
   return Sentry.withServerActionInstrumentation(
     'listAdminExercises',
     {},
     async () => {
-      const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
-      return apiFetch<CursorPage<AdminExercise>>(`/admin/exercises${query}`);
+      const query = new URLSearchParams();
+      if (cursor) query.set('cursor', cursor);
+      if (authored) query.set('authored', 'true');
+      return apiFetch<CursorPage<AdminExercise>>(`/admin/exercises?${query}`);
     },
   );
 }

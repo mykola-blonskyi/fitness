@@ -37,7 +37,7 @@ flowchart LR
   ui -->|"host-only session cookie"| next
   ui -->|"append while offline"| idb
   idb -.->|"replay in order once online"| ui
-  ui -->|"presigned PUT / GET only"| minio
+  ui -->|"presigned POST / GET only"| minio
   next -->|"authorization code + PKCE"| idp
   next -->|"x-user-id, x-user-email"| api
   api --> pg
@@ -283,6 +283,37 @@ flowchart LR
   migrate -->|"succeeds"| serve["new container serves"]
   migrate -->|"fails"| crash["crashloop: the previous container keeps serving,<br/>and main still shows a green tick"]
 ```
+
+### Backups
+
+Every backup sits on the one Hetzner host it protects. Losing that disk or the Hetzner account loses the data and the backups together; the owner accepted that risk on 2026-11-19 (#147).
+
+- **Database.** Coolify's scheduled backup on the shared Postgres 18 resource (`shared-database`) runs `pg_dumpall` daily at 03:30 UTC, so `fitness` is dumped together with every other project's database. Coolify keeps the newest 14 gzipped dumps under `/data/coolify/backups/databases/root-team-0/shared-database-*/`. Its S3 upload is off.
+- **Photo bucket.** `ops/backup/backup.sh` runs from `mykola`'s crontab at 04:15 UTC and syncs `fitness-progress-photos` to `~/backup/photos/current/`, reading through a MinIO user (`offhost-backup`) that can only list and read that bucket. Objects deleted from the bucket move to `~/backup/photos/deleted/<date>/` and are removed after 30 days. `backup-canary/sample.bin` in the bucket is a test object for restore checks, not user data.
+- **Alerts.** The script sends a Telegram message through the uptime bot when any step fails or no dump is newer than 26 hours. Nothing alerts if cron itself stops running.
+
+Install: copy `ops/backup/backup.sh` to `~/backup/` on the host, fill `~/backup/.env` from `ops/backup/env.example` (`chmod 600`), and add `15 4 * * * /home/mykola/backup/backup.sh >> /home/mykola/backup/backup.log 2>&1` to the crontab.
+
+Restore `fitness` from the newest dump: cut the cluster globals (roles) and the `fitness` section out of it, then replay them as the superuser.
+
+```bash
+ssh blonskyi 'sudo sh -c "zcat \$(ls -t /data/coolify/backups/databases/root-team-0/shared-database-*/pg-dump-all-*.gz | head -1)"' \
+  | awk 'NR==1{g=1} /^-- Database "/{g=0; f=/"fitness"/} g||f' > fitness.sql
+docker run -d --name fitness-restore -e POSTGRES_PASSWORD=scratch postgres:18-alpine
+docker exec -i fitness-restore psql -U postgres < fitness.sql
+```
+
+`role "postgres" already exists` is the one expected error. Restoring over production is the same replay against the shared instance after stopping the backend and dropping `fitness`.
+
+Restore photos on the host by copying the backup into the MinIO container and mirroring it into the bucket (add `deleted/<date>/` for objects removed since):
+
+```bash
+M=$(docker ps -qf name=minio-3jhjnrvkwf0oozjqo3sz0vsr)
+docker cp ~/backup/photos/current/. "$M":/tmp/photos-restore
+docker exec "$M" sh -c 'mc alias set bk http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc mirror /tmp/photos-restore bk/fitness-progress-photos && rm -r /tmp/photos-restore'
+```
+
+Only scratch restores have been tried. On 2026-11-19 the dump restored into a scratch container matched the live row count of every `fitness` table, and the canary restored into a scratch bucket matched its checksum.
 
 ---
 

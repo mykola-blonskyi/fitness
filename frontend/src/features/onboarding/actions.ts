@@ -4,8 +4,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { apiFetch } from '@libs/api-client';
 import {
-  userProfileSchema,
-  type UserProfileInput,
+  onboardingSchema,
+  type OnboardingInput,
 } from '@shared/schemas/user-profile';
 import type { UserProfile } from '@shared/types/user';
 import {
@@ -13,10 +13,10 @@ import {
   type FormActionError,
 } from '@shared/libs/form-action';
 
-export type OnboardingState = FormActionError<UserProfileInput>;
+export type OnboardingState = FormActionError<OnboardingInput>;
 
 export async function completeOnboarding(
-  input: UserProfileInput,
+  input: OnboardingInput,
 ): Promise<OnboardingState | undefined> {
   // Deliberately not passing `formData` here - Sentry's own docs describe
   // that option as "attach form data to events", which would put this
@@ -29,7 +29,7 @@ export async function completeOnboarding(
   ]);
   const result = await submitFormAction({
     name: 'completeOnboarding',
-    schema: userProfileSchema(tv),
+    schema: onboardingSchema(tv),
     input,
     errorMessage: t('saveFailed'),
     async mutate(parsed) {

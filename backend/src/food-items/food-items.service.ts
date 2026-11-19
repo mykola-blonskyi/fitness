@@ -68,8 +68,9 @@ export class FoodItemsService {
   // name resolved to the caller's stored locale - falling back to the
   // English base name when no translation row exists yet (untranslated or
   // the locale itself is 'en', which never gets its own translation row -
-  // see knowledge/domain-model.md). Verified-only, cursor-paginated on
-  // (createdAt, id) - same keyset machinery as AdminExercisesService.list().
+  // see knowledge/domain-model.md). Verified rows plus the caller's own,
+  // cursor-paginated on (createdAt, id) - same keyset machinery as
+  // AdminExercisesService.list().
   //
   // Newest-first (unlike the admin queue's oldest-first FIFO): a food
   // item created via the form below then lands on page 1 right away,
@@ -125,7 +126,10 @@ export class FoodItemsService {
       )
       .where(
         and(
-          eq(schema.foodCalories.isVerified, true),
+          or(
+            eq(schema.foodCalories.isVerified, true),
+            eq(schema.foodCalories.authorId, userId),
+          ),
           generationScope
             ? and(
                 generationEligibleWhere(generationScope.exclusions),
@@ -409,10 +413,10 @@ export class FoodItemsService {
     );
   }
 
-  // source/sourceId stay null (unlike seeded rows). isVerified is set
-  // immediately, unlike imported rows - it already has an accountable
-  // author, and must show up in the verified-only browse list right away.
-  async create(dto: CreateFoodItemDto): Promise<FoodItemResponse> {
+  async create(
+    userId: string,
+    dto: CreateFoodItemDto,
+  ): Promise<FoodItemResponse> {
     const [inserted] = await this.db
       .insert(schema.foodCalories)
       .values({
@@ -424,7 +428,7 @@ export class FoodItemsService {
         proteinPer100g: String(dto.proteinPer100g),
         carbsPer100g: String(dto.carbsPer100g),
         fatPer100g: String(dto.fatPer100g),
-        isVerified: true,
+        authorId: userId,
       })
       .returning();
 
@@ -446,5 +450,12 @@ export class FoodItemsService {
       .where(eq(schema.foodCalories.id, inserted.id));
 
     return toFoodItemResponse(row);
+  }
+
+  exportRows(userId: string) {
+    return this.db
+      .select()
+      .from(schema.foodCalories)
+      .where(eq(schema.foodCalories.authorId, userId));
   }
 }

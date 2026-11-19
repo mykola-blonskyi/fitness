@@ -23,6 +23,22 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
+  it('refuses an identity without the backend secret', () => {
+    return request(app.getHttpServer())
+      .get('/me')
+      .set('x-user-id', 'sub-1')
+      .set('x-user-email', 'user1@example.com')
+      .expect(401);
+  });
+
+  it('rate limits a caller past 300 requests a minute', async () => {
+    const server = app.getHttpServer();
+    for (let i = 0; i < 300; i++) {
+      await request(server).get('/').expect(200);
+    }
+    await request(server).get('/').expect(429);
+  });
+
   afterEach(async () => {
     await app.close();
   });

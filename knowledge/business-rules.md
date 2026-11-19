@@ -154,6 +154,18 @@ A low-confidence or ambiguous `detect` result is a distinct `needs_review` outco
 
 ---
 
+## A new catalog entry is private to its author until an admin verifies it
+
+An Exercise or Food Item a user creates is stored with `author_id` set and `is_verified = false`. Catalog lists show verified rows plus the caller's own. An admin promotes an entry by verifying it in the moderation queue, which can be narrowed to user-submitted entries. Promotion clears `author_id`, because deleting an account cascades to the entries it still authors and a shared entry must survive that. Unverifying a promoted entry therefore hides it from everyone, like an unreviewed seed row. Rows that existed before ADR-028 have no author and keep their verified state.
+
+---
+
+## Per-user limits
+
+Every user gets the same limits (ADR-028). A photo upload is a presigned POST policy that MinIO enforces: at most 10 MB, `image/*` content type. At most 3 photo sessions in any rolling 24 hours, checked when an upload URL is issued and when a session is confirmed. Requests are throttled per user at 300 a minute, and upload-url and retry-analysis at 10 per 10 minutes. Names are at most 100 characters; per-100 g calories at most 900, protein, carbs and fat at most 100 g.
+
+---
+
 ## Progress photos are private
 
 Photos are stored in a private MinIO bucket. `progress_photos` stores an object key, never a permanent public URL. The backend generates a short-lived presigned GET URL per authenticated request after checking ownership — the same presigning pattern already used for uploads, applied symmetrically to reads.
@@ -229,3 +241,21 @@ Why: "gym usage without internet" only holds if the core action (logging a set) 
 A body-weight entry (`daily_logs.weight`) and a workout set's weight (`workout_sets.weight`) each carry their own `weight_unit` (`kg`/`lb`), set once at write time from `users.default_weight_unit` or a per-entry override, and never converted afterward — viewing or re-submitting an entry always shows its original unit. Rows predating the `weight_unit` column, and any row where it's left `null`, are treated as `kg`.
 
 The one exception is the calorie-target calculation's Mifflin input, which needs a single unit to do the math — `calorie-targets.service.ts` converts the latest weigh-in to kg for that formula input only, via `shared/weight-unit.ts`'s `toKg()`; the stored row and the API's own `weighIn.weight`/`weighIn.unit` fields stay unconverted. Broader read-time conversion (the weight-trend chart, a user-facing display-unit toggle) is FITNESS-48, not yet built.
+
+---
+
+## Health-data consent is taken once, at onboarding
+
+Creating a profile requires one consent covering health-data processing and an age of at least 16 (`healthDataConsent: true` on `POST /users/me`). Its time is stored in `users.health_data_consent_at`. Accounts created before the consent existed have `null` there. Withdrawing consent means deleting the account.
+
+---
+
+## Account deletion is immediate, complete and retryable
+
+`DELETE /account` first removes every object under `progress-photos/<userId>/` and lists the prefix again to confirm nothing is left, then deletes the user's daily logs, training programs and diets, then the `users` row, which cascades to everything else. The three go first because their children can reference the user's own catalog entries, which also cascade from `users`, and Postgres can reach an entry before the rows that use it. If any step fails the request fails, the `users` row stays, and the user can retry. The login account at `login.blonskyi.dev` is shared across projects and is not deleted.
+
+---
+
+## Data export is one zip
+
+`GET /account/export` returns a zip with `data.json` (the user's rows from every user-owned table, including the exercises and food items they authored) and `photos/<progressPhotoId>.<ext>` for each progress photo.
