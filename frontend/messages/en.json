@@ -485,7 +485,8 @@
     "nav": {
       "profile": "Profile",
       "preferences": "Preferences",
-      "appearance": "Appearance"
+      "appearance": "Appearance",
+      "privacy": "Privacy"
     },
     "profilePage": {
       "title": "Profile"
@@ -511,6 +512,25 @@
       },
       "followSystem": "Follow system",
       "followSystemHint": "Lime Pulse by day, Midnight when your device is in dark mode"
+    },
+    "privacyPage": {
+      "title": "Privacy",
+      "legalHeading": "Legal",
+      "export": {
+        "heading": "Export your data",
+        "description": "Download everything fitness stores about you as one zip file: your data in JSON and your progress photos.",
+        "submit": "Download my data"
+      },
+      "delete": {
+        "heading": "Delete account",
+        "description": "Deletes your profile, logs, programs, diets and progress photos at once. This cannot be undone. Your blonskyi.dev sign-in account is shared with other projects and stays.",
+        "submit": "Delete account",
+        "confirmText": "Delete everything now? There is no way to recover it.",
+        "confirm": "Yes, delete everything",
+        "confirming": "Deleting…",
+        "cancel": "Cancel",
+        "error": "Deletion did not finish. Your account still exists; try again."
+      }
     }
   },
   "Onboarding": {
@@ -520,7 +540,8 @@
     "submit": "Complete profile",
     "errors": {
       "saveFailed": "Couldn't save your profile — check your inputs and try again."
-    }
+    },
+    "consent": "I am at least 16 years old, and I agree that fitness processes my health data (weight, measurements, workouts, diet and body photos) to provide the app, as described in the <privacy>Privacy Policy</privacy>. I accept the <terms>Terms of Use</terms>."
   },
   "Admin": {
     "nav": {
@@ -709,7 +730,8 @@
       "activityLevelRequired": "Select an activity level",
       "mealCountRequired": "Select how many meals per day",
       "localeRequired": "Select a language",
-      "weightUnitRequired": "Select a weight unit"
+      "weightUnitRequired": "Select a weight unit",
+      "consentRequired": "You need to agree before continuing"
     },
     "weight": {
       "mustBePositive": "Weight must be greater than 0",
@@ -775,5 +797,130 @@
   },
   "Loading": {
     "label": "Loading…"
+  },
+  "Legal": {
+    "lastUpdated": "Last updated {date}",
+    "translationNotice": "This translation is provided for reference. The English version is the authoritative text.",
+    "readEnglish": "Read the English version",
+    "backToApp": "Back to fitness",
+    "terms": {
+      "title": "Terms of Use",
+      "sections": [
+        {
+          "title": "About these terms",
+          "paragraphs": [
+            "These terms govern your use of fitness at fitness.blonskyi.dev, a free personal project run by Mykola Blonskyi. By creating a profile you accept them. If you do not agree, do not use the app."
+          ]
+        },
+        {
+          "title": "Who can use fitness",
+          "paragraphs": [
+            "You must be at least 16 years old. You sign in with a blonskyi.dev account, and you are responsible for keeping it secure."
+          ]
+        },
+        {
+          "title": "Not medical advice",
+          "paragraphs": [
+            "Calorie targets, diets, training programs and photo analysis are generated automatically for general fitness purposes. They are not medical, nutritional or health advice. Talk to a doctor before changing your diet or training, especially if you have a health condition, are pregnant, or have a history of eating disorders."
+          ]
+        },
+        {
+          "title": "Your content",
+          "paragraphs": [
+            "You keep ownership of everything you enter or upload. You allow fitness to store and process it only to provide the app to you. Upload only photos of yourself, and nothing unlawful.",
+            "Exercises and food items you add are visible only to you unless the operator reviews them and adds them to the shared catalog."
+          ]
+        },
+        {
+          "title": "Fair use",
+          "paragraphs": [
+            "The app has limits on uploads and requests so it stays available to everyone. Do not try to get around them, access other people's data, or disrupt the service. Accounts that do may be suspended or deleted."
+          ]
+        },
+        {
+          "title": "Ending your use",
+          "paragraphs": [
+            "You can export your data and delete your account at any time in Settings → Privacy. Deletion is immediate and permanent. The operator may change or shut down the service; you will be given a chance to export your data first where possible."
+          ]
+        },
+        {
+          "title": "No warranty",
+          "paragraphs": [
+            "fitness is provided free of charge and as is, without any warranty of availability, accuracy or fitness for a particular purpose. To the extent the law allows, the operator is not liable for losses arising from its use. Nothing in these terms limits rights you have as a consumer under the law of your country."
+          ]
+        },
+        {
+          "title": "Changes and contact",
+          "paragraphs": [
+            "These terms may change; the date above shows the latest version. Questions: {email}."
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "sections": [
+        {
+          "title": "Who is responsible",
+          "paragraphs": [
+            "The data controller is Mykola Blonskyi, who runs fitness as a personal project. Contact: {email}."
+          ]
+        },
+        {
+          "title": "What we store",
+          "paragraphs": [
+            "Account: your email address and the identifier of your blonskyi.dev sign-in account.",
+            "Profile: name, sex, date of birth, height, goal, activity level, meal count, language and weight unit, and when you gave consent.",
+            "Health and fitness data: weigh-ins, workouts and sets, training programs, food preferences and exclusions, diet types, generated diets, exercises and foods you add.",
+            "Progress photos: the images you upload, and the body pose landmarks and alignment data computed from them on our own server."
+          ]
+        },
+        {
+          "title": "Why, and on what basis",
+          "paragraphs": [
+            "We use this data only to provide the app: calculating targets, generating diets and programs, logging progress and comparing your photos. Weight, body measurements and body photos are health data, which we process on the basis of your explicit consent (GDPR Art. 9(2)(a)). Your account and profile are processed to provide the service you asked for (Art. 6(1)(b)).",
+            "We do not sell your data, show ads, profile you for marketing, or use your data to train AI models."
+          ]
+        },
+        {
+          "title": "Who processes it",
+          "paragraphs": [
+            "Hosting: the app, its database and the photo storage (MinIO) run on a virtual private server rented from a hosting provider and managed with Coolify. Photos are kept in private storage and are only served to you through short-lived links.",
+            "Sign-in: login.blonskyi.dev, an identity service run by the same controller, holds your sign-in account. If you sign in with Google, Google processes that sign-in under its own privacy policy.",
+            "Error tracking: Sentry (Functional Software, Inc., USA) receives technical error reports. They carry only a random user ID, never your email, name, health data or photos. This can involve a transfer to the United States."
+          ]
+        },
+        {
+          "title": "How long we keep it",
+          "paragraphs": [
+            "Until you delete your account. Deletion is immediate and irreversible and removes every record and photo fitness holds about you. Server backups may hold deleted data until they are overwritten in their normal rotation. Your blonskyi.dev sign-in account is shared with other projects and is not deleted by fitness."
+          ]
+        },
+        {
+          "title": "Your rights",
+          "paragraphs": [
+            "You can see and correct your data in the app, download all of it in Settings → Privacy (access and portability), and delete your account there (erasure). You can withdraw consent at any time by deleting your account; fitness cannot work without processing health data. You can also object to processing or ask questions at {email}, and complain to your data protection authority."
+          ]
+        },
+        {
+          "title": "Cookies and local storage",
+          "paragraphs": [
+            "fitness sets only cookies the app needs to work: a session cookie that keeps you signed in, short-lived security cookies used during sign-in, and cookies remembering your language and theme. The browser also stores your theme and any changes made offline until they sync. There are no analytics, advertising or tracking cookies, so there is no cookie banner."
+          ]
+        },
+        {
+          "title": "Age",
+          "paragraphs": [
+            "fitness is not for anyone under 16. If you believe a younger person has an account, contact us and we will delete it."
+          ]
+        },
+        {
+          "title": "Changes",
+          "paragraphs": [
+            "This policy may change; the date above shows the latest version."
+          ]
+        }
+      ]
+    }
   }
 }

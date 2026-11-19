@@ -43,3 +43,11 @@ export function userProfileSchema(t: ValidationTranslator) {
 }
 
 export type UserProfileInput = z.infer<ReturnType<typeof userProfileSchema>>;
+
+export function onboardingSchema(t: ValidationTranslator) {
+  return userProfileSchema(t).extend({
+    healthDataConsent: z.literal(true, t('userProfile.consentRequired')),
+  });
+}
+
+export type OnboardingInput = z.infer<ReturnType<typeof onboardingSchema>>;
