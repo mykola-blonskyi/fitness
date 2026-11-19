@@ -178,7 +178,10 @@ export class TrainingProgramsService {
   ): Promise<ProgramExerciseResponse> {
     await this.getOwnedUnarchivedProgram(userId, programId);
 
-    const exercise = await this.exercisesService.getById(dto.exerciseId);
+    const exercise = await this.exercisesService.getById(
+      userId,
+      dto.exerciseId,
+    );
     const targets = resolveProgramExerciseTargets(exercise.category, dto);
 
     const [inserted] = await this.db

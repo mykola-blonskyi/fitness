@@ -109,9 +109,15 @@ export class ExercisesService {
     };
   }
 
-  async getById(exerciseId: string): Promise<ExerciseRef> {
+  async getById(userId: string, exerciseId: string): Promise<ExerciseRef> {
     const exercise = await this.db.query.exercises.findFirst({
-      where: eq(schema.exercises.id, exerciseId),
+      where: and(
+        eq(schema.exercises.id, exerciseId),
+        or(
+          eq(schema.exercises.isVerified, true),
+          eq(schema.exercises.authorId, userId),
+        ),
+      ),
       columns: { id: true, name: true, category: true, imageUrl: true },
     });
     if (!exercise) {

@@ -105,7 +105,7 @@ export class UsersService {
     return user;
   }
 
-  // Every user-owned row goes with it through ON DELETE CASCADE.
+  // Cascades to the user's rows; AccountService.delete says what must go first.
   async remove(id: string): Promise<void> {
     await this.db.delete(schema.users).where(eq(schema.users.id, id));
   }

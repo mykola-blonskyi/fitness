@@ -176,7 +176,10 @@ export class WorkoutLogsService {
   ): Promise<WorkoutSetResponse> {
     await this.findOwnedWorkoutLog(userId, workoutLogId);
 
-    const exercise = await this.exercisesService.getById(dto.exerciseId);
+    const exercise = await this.exercisesService.getById(
+      userId,
+      dto.exerciseId,
+    );
     const values = resolveWorkoutSetValues(exercise.category, dto);
 
     const [inserted] = await this.db

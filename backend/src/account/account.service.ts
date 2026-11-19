@@ -96,6 +96,7 @@ export class AccountService {
       const appended = once(archive, 'entry');
       archive.append(await this.storageService.getObject(photo.objectKey), {
         name: `photos/${photo.id}.${extension}`,
+        store: true,
       });
       await appended;
     }
