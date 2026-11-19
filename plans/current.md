@@ -4,6 +4,8 @@
 
 Build fitness.blonskyi.dev end-to-end per the resolved architecture ([[architecture]]), domain model ([[domain-model]]), and business rules ([[business-rules]]) — full scope in one pass, not a phased MVP. Source grooming note: `~/Documents/obsidian-notes/fit/Grooming plan for fitness.blonskyi.dev project.md`.
 
+**Public launch — 2026-11-19.** fitness opens to the public per ADR-028, tracked by epic #145 on branch `epic/public-launch`.
+
 **Status — 2026-09-12.** The original build (Phases 1-6 below) is closed: every item is built, merged and deployed. The active plan is now the menu-composition rework (ADR-020), tracked immediately below.
 
 ---
