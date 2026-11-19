@@ -437,3 +437,23 @@ grep -rl "drizzle-orm" backend/src --include='*.service.ts' | grep -v spec | wc 
 A repository for each of those twelve would add a layer over an already thin ORM and hide no decision.
 
 Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
+
+---
+
+## ADR-028: fitness is open to the public, with limits instead of tiers
+
+Date: 2026-11-19
+
+Status: Accepted
+
+**Anyone can register.** The `fitness` client at `login.blonskyi.dev` is marked open-registration, so a first sign-in grants access to fitness without manual approval. Every other client keeps the approval gate. Google comes first and email with password follows, both in login. There is no Apple sign-in until an App Store app exists.
+
+**There is no paid tier.** Every user gets the same limits: photo uploads up to 10 MB and image types only, at most 3 photo sessions per day, a global request rate limit, and bounded catalog fields. The app stays on the shared host and the shared Postgres.
+
+**New catalog entries belong to their author.** An exercise or food item a user creates is visible only to them until an admin promotes it. Entries that existed before this ADR stay shared.
+
+**A demo account is one click away.** fitness signs a visitor in as one fixed demo user, without login. The account is shared, writable, reset to its seed nightly, and has no photos section.
+
+**The app serves every market, so EU health-data rules apply.** Onboarding takes explicit consent to health-data processing and confirms an age of at least 16. Account deletion is immediate and irreversible, and covers every user-owned row and stored object. Users can export their data. The login account is shared across projects and is not deleted by fitness.
+
+Full rationale/alternatives: `~/Documents/obsidian-notes/projects_history/fitness/docs/decisions.md`.
