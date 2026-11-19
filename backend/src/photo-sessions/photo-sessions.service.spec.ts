@@ -1,4 +1,8 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseError } from 'pg';
 import { PhotoSessionsService } from './photo-sessions.service';
 import type { ConfirmPhotoSessionDto } from './dto/confirm-photo-session.dto';
@@ -138,8 +142,16 @@ describe('PhotoSessionsService.confirm', () => {
     pushDetectJob: jest.fn().mockResolvedValue(undefined),
   };
 
+  const sessionsToday = (value: number) =>
+    jest.fn().mockReturnValue({
+      from: () => ({ where: () => Promise.resolve([{ value }]) }),
+    });
+
   it('turns a replayed confirm into a 409 instead of an unhandled unique violation', async () => {
-    const db = { transaction: jest.fn().mockRejectedValue(uniqueViolation()) };
+    const db = {
+      select: sessionsToday(0),
+      transaction: jest.fn().mockRejectedValue(uniqueViolation()),
+    };
     const service = new PhotoSessionsService(
       db as never,
       dailyLogsService as never,
@@ -151,5 +163,20 @@ describe('PhotoSessionsService.confirm', () => {
       ConflictException,
     );
     expect(photoAnalysisQueueService.pushDetectJob).not.toHaveBeenCalled();
+  });
+
+  it('refuses a fourth session within a day with a 429', async () => {
+    const db = { select: sessionsToday(3), transaction: jest.fn() };
+    const service = new PhotoSessionsService(
+      db as never,
+      dailyLogsService as never,
+      storageService as never,
+      photoAnalysisQueueService as never,
+    );
+
+    await expect(
+      service.confirm('user-1', '2026-09-14', dto),
+    ).rejects.toMatchObject({ status: HttpStatus.TOO_MANY_REQUESTS });
+    expect(db.transaction).not.toHaveBeenCalled();
   });
 });

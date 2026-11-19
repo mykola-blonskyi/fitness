@@ -2,10 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { Agent as HttpAgent } from 'node:http';
 import { Agent as HttpsAgent } from 'node:https';
 import { Injectable } from '@nestjs/common';
-import { Client, S3Error } from 'minio';
+import { Client, S3Error, type PostPolicyResult } from 'minio';
 
 const UPLOAD_URL_EXPIRY_SECONDS = 15 * 60;
 const READ_URL_EXPIRY_SECONDS = 5 * 60;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 // minio-js exposes no connect/request timeout of its own, only a socket-level
 // idle timeout via a custom agent - so this one value bounds both phases.
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -40,12 +41,16 @@ export class StorageService {
     return objectKey.startsWith(`progress-photos/${userId}/`);
   }
 
-  getUploadUrl(objectKey: string): Promise<string> {
-    return this.client.presignedPutObject(
-      this.bucket,
-      objectKey,
-      UPLOAD_URL_EXPIRY_SECONDS,
-    );
+  // A POST policy, not a presigned PUT: only a policy lets MinIO itself
+  // refuse an oversized or non-image body before storing it.
+  getUploadPolicy(objectKey: string): Promise<PostPolicyResult> {
+    const policy = this.client.newPostPolicy();
+    policy.setBucket(this.bucket);
+    policy.setKey(objectKey);
+    policy.setExpires(new Date(Date.now() + UPLOAD_URL_EXPIRY_SECONDS * 1000));
+    policy.setContentLengthRange(1, MAX_UPLOAD_BYTES);
+    policy.setContentTypeStartsWith('image/');
+    return this.client.presignedPostPolicy(policy);
   }
 
   getReadUrl(objectKey: string): Promise<string> {

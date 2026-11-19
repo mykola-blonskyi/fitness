@@ -37,7 +37,7 @@ flowchart LR
   ui -->|"host-only session cookie"| next
   ui -->|"append while offline"| idb
   idb -.->|"replay in order once online"| ui
-  ui -->|"presigned PUT / GET only"| minio
+  ui -->|"presigned POST / GET only"| minio
   next -->|"authorization code + PKCE"| idp
   next -->|"x-user-id, x-user-email"| api
   api --> pg

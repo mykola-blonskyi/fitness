@@ -6,8 +6,6 @@ import { ListExercisesDto } from './dto/list-exercises.dto';
 import type { ExerciseResponse } from './exercise.mapper';
 import { ExercisesService, type ExercisePage } from './exercises.service';
 
-// list() takes @CurrentUser() only to resolve the caller's stored locale
-// preference - the catalog itself is shared/global reference data.
 @Controller('exercises')
 export class ExercisesController {
   constructor(private readonly exercisesService: ExercisesService) {}
@@ -21,7 +19,10 @@ export class ExercisesController {
   }
 
   @Post()
-  async create(@Body() dto: CreateExerciseDto): Promise<ExerciseResponse> {
-    return this.exercisesService.create(dto);
+  async create(
+    @CurrentUser() identity: Identity,
+    @Body() dto: CreateExerciseDto,
+  ): Promise<ExerciseResponse> {
+    return this.exercisesService.create(identity.userId, dto);
   }
 }

@@ -1,11 +1,13 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DB } from '../db/db.module';
 import * as schema from '../db/schema';
@@ -25,9 +27,12 @@ import {
 } from './photo-session.mapper';
 import { assertRetryableAnalysis } from './retry-analysis';
 
+const MAX_SESSIONS_PER_DAY = 3;
+
 export interface UploadUrlResponse {
   objectKey: string;
   uploadUrl: string;
+  fields: Record<string, string>;
 }
 
 export interface PhotoViewUrlResponse {
@@ -44,9 +49,30 @@ export class PhotoSessionsService {
   ) {}
 
   async requestUploadUrl(userId: string): Promise<UploadUrlResponse> {
+    await this.assertUnderDailyLimit(userId);
     const objectKey = this.storageService.buildObjectKey(userId);
-    const uploadUrl = await this.storageService.getUploadUrl(objectKey);
-    return { objectKey, uploadUrl };
+    const { postURL, formData } =
+      await this.storageService.getUploadPolicy(objectKey);
+    return { objectKey, uploadUrl: postURL, fields: formData };
+  }
+
+  // A rolling 24 hours, so the limit does not depend on the caller's timezone.
+  private async assertUnderDailyLimit(userId: string): Promise<void> {
+    const [{ value }] = await this.db
+      .select({ value: count() })
+      .from(schema.photoSessions)
+      .where(
+        and(
+          eq(schema.photoSessions.userId, userId),
+          gt(schema.photoSessions.createdAt, sql`now() - interval '1 day'`),
+        ),
+      );
+    if (value >= MAX_SESSIONS_PER_DAY) {
+      throw new HttpException(
+        `At most ${MAX_SESSIONS_PER_DAY} photo sessions per day`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
   }
 
   private async fetchPhotos(
@@ -100,6 +126,8 @@ export class PhotoSessionsService {
     if (new Set(objectKeys).size !== objectKeys.length) {
       throw new BadRequestException('Each photo may only appear once');
     }
+
+    await this.assertUnderDailyLimit(userId);
 
     for (const objectKey of objectKeys) {
       this.assertOwnedObjectKey(userId, objectKey);

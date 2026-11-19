@@ -154,6 +154,18 @@ A low-confidence or ambiguous `detect` result is a distinct `needs_review` outco
 
 ---
 
+## A new catalog entry is private to its author until an admin verifies it
+
+An Exercise or Food Item a user creates is stored with `author_id` set and `is_verified = false`. Catalog lists show verified rows plus the caller's own. An admin promotes an entry by verifying it in the moderation queue; unverifying it makes it private to its author again. Rows that existed before ADR-028 have no author and keep their verified state.
+
+---
+
+## Per-user limits
+
+Every user gets the same limits (ADR-028). A photo upload is a presigned POST policy that MinIO enforces: at most 10 MB, `image/*` content type. At most 3 photo sessions in any rolling 24 hours, checked when an upload URL is issued and when a session is confirmed. Requests are throttled per user at 300 a minute, and upload-url and retry-analysis at 10 per 10 minutes. Names are at most 100 characters; per-100 g calories at most 900, protein, carbs and fat at most 100 g.
+
+---
+
 ## Progress photos are private
 
 Photos are stored in a private MinIO bucket. `progress_photos` stores an object key, never a permanent public URL. The backend generates a short-lived presigned GET URL per authenticated request after checking ownership — the same presigning pattern already used for uploads, applied symmetrically to reads.

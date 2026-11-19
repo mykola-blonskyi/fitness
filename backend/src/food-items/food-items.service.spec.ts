@@ -46,10 +46,12 @@ const proteinSlot = {
 };
 
 describe('FoodItemsService.list', () => {
-  it('shows the whole verified catalog when no generation scope is passed', async () => {
+  it('shows the verified catalog plus the caller own entries when no generation scope is passed', async () => {
     const sql = await listWhere();
 
-    expect(sql).toContain('"food_calories"."is_verified" = $1');
+    expect(sql).toContain(
+      '("food_calories"."is_verified" = $1 or "food_calories"."author_id" = $2)',
+    );
     expect(sql).not.toContain('family_id');
     expect(sql).not.toContain('not in');
   });
@@ -82,7 +84,7 @@ describe('FoodItemsService.list', () => {
       slot: proteinSlot,
     });
 
-    expect(sql).toContain('"food_calories"."role_id" in ($2, $3)');
+    expect(sql).toContain('"food_calories"."role_id" in ($3, $4)');
   });
 
   it('also narrows the protein slot by Category, as generation does', async () => {

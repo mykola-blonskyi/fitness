@@ -29,7 +29,10 @@ function buildContext(headers: Record<string, unknown>): {
   return { context, req };
 }
 
+const SECRET = 'test-secret';
+
 const validHeaders = {
+  'x-backend-secret': SECRET,
   'x-user-id': 'sub-1',
   'x-user-email': 'user1@example.com',
 };
@@ -48,6 +51,7 @@ describe('IdentityGuard', () => {
   }
 
   beforeEach(() => {
+    process.env.BACKEND_SECRET = SECRET;
     getAllAndOverride = jest.fn();
     findByIdentity = jest.fn();
     reflector = { getAllAndOverride } as unknown as Reflector;
@@ -115,7 +119,34 @@ describe('IdentityGuard', () => {
   });
 
   it('throws UnauthorizedException when x-user-id is present but x-user-email is missing', async () => {
-    const { context } = buildContext({ 'x-user-id': 'sub-1' });
+    const { context } = buildContext({
+      'x-backend-secret': SECRET,
+      'x-user-id': 'sub-1',
+    });
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+  });
+
+  it.each([
+    ['missing', { ...validHeaders, 'x-backend-secret': undefined }],
+    ['wrong', { ...validHeaders, 'x-backend-secret': 'guess' }],
+  ])('rejects a request whose backend secret is %s', async (_, headers) => {
+    const { context } = buildContext(headers);
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+    expect(findByIdentity).not.toHaveBeenCalled();
+  });
+
+  it('rejects every request when the backend has no secret configured', async () => {
+    delete process.env.BACKEND_SECRET;
+    const { context } = buildContext({
+      ...validHeaders,
+      'x-backend-secret': '',
+    });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       UnauthorizedException,

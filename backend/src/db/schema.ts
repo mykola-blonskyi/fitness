@@ -106,7 +106,8 @@ export const exerciseCategoryEnum = pgEnum('exercise_category', [
 // source/sourceId let a re-run of the import script upsert idempotently
 // without duplicating; manually created exercises leave both null.
 // isVerified starts false for every seeded row and is flipped only by a
-// human reviewer, never by the import script.
+// human reviewer, never by the import script. An unverified row with an
+// authorId is visible to its author alone until an admin verifies it.
 export const exercises = pgTable(
   'exercises',
   {
@@ -117,6 +118,7 @@ export const exercises = pgTable(
     source: text('source'),
     sourceId: text('source_id'),
     isVerified: boolean('is_verified').notNull().default(false),
+    authorId: uuid('author_id').references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -322,6 +324,7 @@ export const foodCalories = pgTable(
     source: text('source'),
     sourceId: text('source_id'),
     isVerified: boolean('is_verified').notNull().default(false),
+    authorId: uuid('author_id').references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

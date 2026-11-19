@@ -31,6 +31,7 @@ const foodItem = (overrides: Partial<FoodItemRow> = {}): FoodItemRow => ({
   source: null,
   sourceId: null,
   isVerified: false,
+  authorId: null,
   createdAt: new Date('2026-01-01'),
   ...overrides,
 });

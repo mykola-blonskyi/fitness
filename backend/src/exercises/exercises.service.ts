@@ -63,7 +63,10 @@ export class ExercisesService {
       )
       .where(
         and(
-          eq(schema.exercises.isVerified, true),
+          or(
+            eq(schema.exercises.isVerified, true),
+            eq(schema.exercises.authorId, userId),
+          ),
           params.category
             ? eq(schema.exercises.category, params.category)
             : undefined,
@@ -117,16 +120,13 @@ export class ExercisesService {
     return exercise;
   }
 
-  // isVerified: true - a manually-created Exercise is implicitly
-  // self-reviewed by its creator, unlike an imported seed row.
-  async create(dto: CreateExerciseDto): Promise<ExerciseResponse> {
+  async create(
+    userId: string,
+    dto: CreateExerciseDto,
+  ): Promise<ExerciseResponse> {
     const [inserted] = await this.db
       .insert(schema.exercises)
-      .values({
-        name: dto.name,
-        category: dto.category,
-        isVerified: true,
-      })
+      .values({ name: dto.name, category: dto.category, authorId: userId })
       .returning(exerciseColumns);
 
     return toExerciseResponse(inserted);

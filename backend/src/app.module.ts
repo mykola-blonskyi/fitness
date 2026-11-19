@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AdminExercisesModule } from './admin/exercises/admin-exercises.module';
 import { AdminFoodItemsModule } from './admin/food-items/admin-food-items.module';
@@ -24,6 +26,12 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
   imports: [
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
+    // Keyed on the caller: every request comes from the frontend's one IP.
+    // IdentityGuard runs first and has checked the secret, so the header holds.
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60_000, limit: 300 }],
+      getTracker: (req: Request) => req.header('x-user-id') ?? req.ip ?? '',
+    }),
     DbModule,
     UsersModule,
     DailyLogsModule,
@@ -46,6 +54,7 @@ import { WorkoutLogsModule } from './workout-logs/workout-logs.module';
     // still capture exceptions the guard itself throws.
     { provide: APP_FILTER, useClass: SentryGlobalFilter },
     { provide: APP_GUARD, useClass: IdentityGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

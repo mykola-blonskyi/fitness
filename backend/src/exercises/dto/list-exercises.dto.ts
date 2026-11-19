@@ -1,5 +1,13 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { EXERCISE_CATEGORIES } from '../exercise.types';
 
 // No `locale` query param, unlike list-food-items.dto.ts - resolved
@@ -11,6 +19,7 @@ export class ListExercisesDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   search?: string;
 
   @IsOptional()

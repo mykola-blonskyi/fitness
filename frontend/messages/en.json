@@ -284,7 +284,9 @@
       "photosLabel": "Photos (up to {max})",
       "photosHint": "Front, side, and back — we'll sort out which is which.",
       "uploading": "Uploading…",
-      "submit": "Upload session"
+      "submit": "Upload session",
+      "tooLarge": "Each photo must be {max} MB or smaller",
+      "dailyLimit": "You've reached today's limit of {max} photo sessions — try again tomorrow."
     },
     "list": {
       "empty": "No progress photos yet.",
@@ -663,7 +665,8 @@
   },
   "Validation": {
     "common": {
-      "numberRequired": "Enter a number"
+      "numberRequired": "Enter a number",
+      "tooLong": "At most {max} characters"
     },
     "exercise": {
       "nameRequired": "Name is required",
@@ -674,7 +677,8 @@
       "categoryRequired": "Choose a category",
       "subcategoryRequired": "Choose a subcategory",
       "roleRequired": "Choose a role",
-      "macroMin": "Must be 0 or greater"
+      "macroMin": "Must be 0 or greater",
+      "macroMax": "Must be at most {max}"
     },
     "foodPreference": {
       "typeRequired": "Select a type",

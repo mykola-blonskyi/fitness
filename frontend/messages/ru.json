@@ -284,7 +284,9 @@
       "photosLabel": "Фотографии (до {max})",
       "photosHint": "Спереди, сбоку и сзади — мы разберемся, что к чему.",
       "uploading": "Загрузка…",
-      "submit": "Загрузить сессию"
+      "submit": "Загрузить сессию",
+      "tooLarge": "Каждое фото должно быть не больше {max} МБ",
+      "dailyLimit": "Вы достигли сегодняшнего лимита в {max} фотосессии — попробуйте завтра."
     },
     "list": {
       "empty": "Фото прогресса пока нет.",
@@ -663,7 +665,8 @@
   },
   "Validation": {
     "common": {
-      "numberRequired": "Введите число"
+      "numberRequired": "Введите число",
+      "tooLong": "Не более {max} символов"
     },
     "exercise": {
       "nameRequired": "Укажите название",
@@ -674,7 +677,8 @@
       "categoryRequired": "Выберите категорию",
       "subcategoryRequired": "Выберите подкатегорию",
       "roleRequired": "Выберите роль",
-      "macroMin": "Должно быть равно 0 или больше"
+      "macroMin": "Должно быть равно 0 или больше",
+      "macroMax": "Не более {max}"
     },
     "foodPreference": {
       "typeRequired": "Выберите тип",

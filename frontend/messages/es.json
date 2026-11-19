@@ -284,7 +284,9 @@
       "photosLabel": "Fotos (hasta {max})",
       "photosHint": "Delante, de lado y detrás: ya veremos cuál es cuál.",
       "uploading": "Subiendo…",
-      "submit": "Subir sesión"
+      "submit": "Subir sesión",
+      "tooLarge": "Cada foto debe pesar {max} MB o menos",
+      "dailyLimit": "Has alcanzado el límite de hoy de {max} sesiones de fotos; inténtalo mañana."
     },
     "list": {
       "empty": "Aún no hay fotos de progreso.",
@@ -663,7 +665,8 @@
   },
   "Validation": {
     "common": {
-      "numberRequired": "Introduce un número"
+      "numberRequired": "Introduce un número",
+      "tooLong": "Máximo {max} caracteres"
     },
     "exercise": {
       "nameRequired": "Es obligatorio introducir el nombre",
@@ -674,7 +677,8 @@
       "categoryRequired": "Elige una categoría",
       "subcategoryRequired": "Elige una subcategoría",
       "roleRequired": "Elige una función",
-      "macroMin": "Debe ser 0 o mayor"
+      "macroMin": "Debe ser 0 o mayor",
+      "macroMax": "Debe ser como máximo {max}"
     },
     "foodPreference": {
       "typeRequired": "Selecciona un tipo",
